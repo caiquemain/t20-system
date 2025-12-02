@@ -9,8 +9,11 @@ from src.dados_pericias import DADOS_PERICIAS
 
 
 def calcular_modificador(valor_atributo: int) -> int:
-    """Regra T20: Modificador = (Valor - 10) / 2 arredondado para baixo."""
-    return math.floor((valor_atributo - 10) / 2)
+    """
+    Regra T20 Jogo do Ano:
+    O valor do atributo JÁ É o modificador.
+    """
+    return valor_atributo
 
 
 def aplicar_dados_raciais(ficha: Personagem):
@@ -44,11 +47,13 @@ def calcular_pv_pm(ficha: Personagem, mod_con: int, mods: dict):
                 if nivel > 1:
                     pm_classe += (nivel - 1) * dados["pm_niv"]
 
+                # Soma atributo chave nos PMs se for classe primária
                 attr_key = dados.get("attr_chave")
                 if attr_key in mods:
                     pm_classe += mods[attr_key]
 
             else:
+                # Classes secundárias
                 pv_classe = nivel * (dados["pv_niv"] + mod_con)
                 pm_classe = nivel * dados["pm_niv"]
 
@@ -65,7 +70,6 @@ def calcular_pv_pm(ficha: Personagem, mod_con: int, mods: dict):
 
 
 def calcular_bonus_treino(grau: int) -> int:
-    """Converte o grau (0, 1, 2...) em bónus numérico (+2, +4...)"""
     if grau == 0:
         return 0
     if grau == 1:
@@ -78,12 +82,7 @@ def calcular_bonus_treino(grau: int) -> int:
 
 
 def calcular_pericias(ficha: Personagem, metade_nivel: int, mods: dict):
-    """
-    Garante que todas as perícias existam na ficha e calcula seus totais.
-    Fórmula: 1/2 Nível + Mod. Atributo + Treino + Bônus Item + Outros
-    """
     for nome_pericia, attr_chave in DADOS_PERICIAS.items():
-        # Cria se não existir
         if nome_pericia not in ficha.pericias:
             ficha.pericias[nome_pericia] = PericiaInfo(
                 treino=0,
@@ -91,15 +90,11 @@ def calcular_pericias(ficha: Personagem, metade_nivel: int, mods: dict):
             )
 
         pericia = ficha.pericias[nome_pericia]
-
-        # Garante atributo correto
         pericia.atributo_chave = attr_chave
 
-        # Pega valores
         mod_attr = mods.get(attr_chave, 0)
         bonus_treino = calcular_bonus_treino(pericia.treino)
 
-        # SOMA FINAL
         pericia.total = (
             metade_nivel +
             mod_attr +
@@ -126,8 +121,6 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     }
 
     calcular_pv_pm(ficha, mods["con"], mods)
-
-    # 3. Calcular Perícias (Agora soma no campo .total)
     calcular_pericias(ficha, metade_nivel, mods)
 
     defesa = ficha.status.defesa
@@ -143,7 +136,23 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     maior_atributo_mental = max(mods["int"], mods["sab"], mods["car"])
     ficha.combate.cd_magias = 10 + metade_nivel + maior_atributo_mental
 
-    ficha.inventario.carga_maxima = 3 * ficha.atributos.forca
+    # --- NOVA REGRA DE CARGA (ESPAÇOS) ---
+    # Base: 10 espaços
+    # Se Força positiva: +2 por ponto
+    # Se Força negativa: -1 por ponto
+
+    forca_valor = ficha.atributos.forca
+    limite_carga = 10
+
+    if forca_valor > 0:
+        limite_carga += (2 * forca_valor)
+    else:
+        # Se for negativo (ex: -2), somar -2 é o mesmo que subtrair 2 (1 ponto por ponto negativo)
+        limite_carga += forca_valor
+
+    # Garante que não fique negativo (mínimo 0 espaços)
+    ficha.inventario.carga_maxima = max(0, limite_carga)
+
     peso_total = sum(
         [item.espaco * item.qtd for item in ficha.inventario.equipamentos])
     ficha.inventario.carga_total = peso_total

@@ -20,3 +20,14 @@ services:
       - MONGO_URI=mongodb://db:27017/tormenta20
     volumes:
       - ./app:/app
+
+  web:
+    build: ./frontend
+    container_name: t20_web
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # REMOVIDA A LINHA QUE BLOQUEAVA O NODE_MODULES
+    environment:
+      - VITE_API_URL=http://localhost:8000
