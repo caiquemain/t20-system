@@ -1,0 +1,14 @@
+# --- BANCO DE DADOS (NUNCA COMMITAR) ---
+data/
+
+# --- PYTHON ---
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# --- AMBIENTE E IDE ---
+.env
+.vscode/
+.idea/
+.DS_Store
