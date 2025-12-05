@@ -1,9 +1,9 @@
 from enum import Enum
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
-# --- ENUMS (Opções Fixas) ---
+# --- ENUMS ---
 
 
 class TamanhoEnum(str, Enum):
@@ -14,7 +14,29 @@ class TamanhoEnum(str, Enum):
     ENORME = "Enorme"
     COLOSSAL = "Colossal"
 
-# --- SUB-MODELOS (Peças da Ficha) ---
+# --- SUB-MODELOS DE DETALHES (NOVO) ---
+
+
+class DetalhesPV(BaseModel):
+    inicial: int = 0
+    nivel: int = 0
+    con: int = 0
+    outros: int = 0
+
+
+class DetalhesPM(BaseModel):
+    inicial: int = 0
+    nivel: int = 0
+    atributo: int = 0
+    outros: int = 0
+
+
+class DetalhesDeslocamento(BaseModel):
+    base: float = 9.0
+    armadura: float = 0.0
+    outros: float = 0.0
+
+# --- SUB-MODELOS EXISTENTES ---
 
 
 class XP(BaseModel):
@@ -40,7 +62,7 @@ class ClasseInfo(BaseModel):
 
 
 class Descricao(BaseModel):
-    idade: Optional[str] = None
+    idade: Optional[str] = "20"
     altura: Optional[str] = None
     tamanho: TamanhoEnum = TamanhoEnum.MEDIO
     genero: Optional[str] = None
@@ -51,21 +73,24 @@ class Descricao(BaseModel):
 
 
 class Atributos(BaseModel):
-    forca: int = 10
-    destreza: int = 10
-    constituicao: int = 10
-    inteligencia: int = 10
-    sabedoria: int = 10
-    carisma: int = 10
+    forca: int = 0
+    destreza: int = 0
+    constituicao: int = 0
+    inteligencia: int = 0
+    sabedoria: int = 0
+    carisma: int = 0
 
 
 class StatusBarra(BaseModel):
-    atual: int
-    maximo: int
+    atual: int = 0
+    maximo: int = 0
     temporario: int = 0
+    # Detalhes adicionados aqui (Opcionais para compatibilidade)
+    detalhes_pv: Optional[DetalhesPV] = None
+    detalhes_pm: Optional[DetalhesPM] = None
 
 
-class DefesaDetalhe(BaseModel):
+class ModificadorDetalhes(BaseModel):
     base: int = 10
     des_mod: int = 0
     armadura: int = 0
@@ -73,30 +98,33 @@ class DefesaDetalhe(BaseModel):
     outros: int = 0
 
 
-class Defesa(BaseModel):
-    total: int = 10
-    detalhes: DefesaDetalhe = Field(default_factory=DefesaDetalhe)
-
-
 class RD(BaseModel):
-    tipo: str  # Ex: Fogo, Corte, Geral
+    tipo: str
     valor: int
     fonte: Optional[str] = None
 
 
+class Defesa(BaseModel):
+    total: int = 10
+    detalhes: ModificadorDetalhes = Field(default_factory=ModificadorDetalhes)
+
+
 class Status(BaseModel):
-    pv: StatusBarra
-    pm: StatusBarra
+    pv: StatusBarra = Field(default_factory=StatusBarra)
+    pm: StatusBarra = Field(default_factory=StatusBarra)
     defesa: Defesa = Field(default_factory=Defesa)
     rd: List[RD] = []
+    deslocamento: float = 9.0
+    detalhes_deslocamento: DetalhesDeslocamento = Field(
+        default_factory=DetalhesDeslocamento)
 
 
 class PericiaInfo(BaseModel):
-    total: int = 0  # <--- CAMPO NOVO (Calculado pelo Backend)
-    treino: int = 0  # 0=Destr, 1=Treinado, 2=Vet, 3=Expert
+    total: int = 0
+    treino: int = 0
     bonus_item: int = 0
     outros: int = 0
-    atributo_chave: str = "for"
+    atributo_chave: str = "int"
 
 
 class Ataque(BaseModel):
@@ -124,6 +152,8 @@ class Combate(BaseModel):
     ataques: List[Ataque] = []
     magias: List[Magia] = []
     cd_magias: int = 10
+    bba: int = 0
+    iniciativa: int = 0
 
 
 class Item(BaseModel):
@@ -149,28 +179,36 @@ class Inventario(BaseModel):
 
 class Habilidade(BaseModel):
     nome: str
-    tipo: str  # Racial, Classe, Poder Geral
+    tipo: str
     descricao: Optional[str] = None
-
-# --- MODELO PRINCIPAL (A Ficha Completa) ---
+    fonte: Optional[str] = None
+    escolhas_aplicadas: Dict[str, Any] = Field(default_factory=dict)
 
 
 class Personagem(BaseModel):
     id: UUID = Field(default_factory=uuid4, alias="_id")
     usuario_id: str = "admin"
 
-    cabecalho: Cabecalho
-    classes: List[ClasseInfo]
+    cabecalho: Cabecalho = Field(default_factory=Cabecalho)
+    classes: List[ClasseInfo] = Field(default_factory=list)
     descricao: Descricao = Field(default_factory=Descricao)
-    atributos: Atributos
-    status: Status
 
-    # Dict onde a chave é o nome da perícia (Ex: "Luta": {...})
-    pericias: Dict[str, PericiaInfo] = {}
+    atributos_base: Atributos = Field(default_factory=Atributos)
+    atributos: Atributos = Field(default_factory=Atributos)
 
-    proficiencias: List[str] = []
+    modificadores_raciais: Dict[str, int] = Field(default_factory=dict)
+    modificadores_envelhecimento: Dict[str, int] = Field(default_factory=dict)
+    modificadores_outros: Dict[str, int] = Field(default_factory=dict)
+    escolhas_atributos_raciais: List[str] = Field(default_factory=list)
+
+    escolhas_origem: List[str] = Field(default_factory=list)
+
+    status: Status = Field(default_factory=Status)
+    pericias: Dict[str, PericiaInfo] = Field(default_factory=dict)
+    proficiencias: List[str] = Field(default_factory=list)
     combate: Combate = Field(default_factory=Combate)
-    habilidades: List[Habilidade] = []
+
+    habilidades: List[Habilidade] = Field(default_factory=list)
     inventario: Inventario = Field(default_factory=Inventario)
 
     class Config:

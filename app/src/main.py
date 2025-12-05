@@ -1,18 +1,24 @@
 import os
 from contextlib import asynccontextmanager
-from typing import List
+from typing import List, Any, cast
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Body, status
+from fastapi import FastAPI, HTTPException, Body, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
 
-# Importando Modelos, Regras e DADOS
+# --- IMPORTAÇÕES DE DADOS ---
 from src.models import Personagem
 from src.regras import atualizar_ficha
 from src.dados_racas import DADOS_RACAS
 from src.dados_classes import DADOS_CLASSES
+from src.dados_itens import DADOS_ITENS
+from src.dados_origens import DADOS_ORIGENS
+from src.dados_pericias import DADOS_PERICIAS
+from src.dados_habilidades import HABILIDADES_GERAIS
+from src.dados_habilidades_classe import DADOS_HABILIDADES_CLASSE
+from src.dados_magias import DADOS_MAGIAS
 
 # --- CONFIGURAÇÃO ---
 MONGO_URL = os.getenv("MONGO_URI", "mongodb://localhost:27017/tormenta20")
@@ -22,20 +28,16 @@ MONGO_URL = os.getenv("MONGO_URI", "mongodb://localhost:27017/tormenta20")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app_with_db = cast(Any, app)
     client = AsyncIOMotorClient(MONGO_URL)
     db = client.get_database()
-    app.mongodb = db
+    app_with_db.mongodb = db
     print(f"✅ Conectado ao MongoDB em: {MONGO_URL}")
     yield
     client.close()
     print("🛑 Desconectado do MongoDB")
 
-app = FastAPI(
-    title="Tormenta 20 System API",
-    description="API inteligente para fichas de T20",
-    version="1.3.0",
-    lifespan=lifespan
-)
+app = FastAPI(title="Tormenta 20 API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,94 +47,149 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- ROTAS AUXILIARES ---
+
+def get_db_client(app: FastAPI):
+    return cast(Any, app).mongodb
+
+# --- ROTAS DE DADOS ESTÁTICOS ---
 
 
 @app.get("/racas", tags=["Dados"])
-def listar_opcoes_racas():
+def listar_nomes_racas():
     return sorted(list(DADOS_RACAS.keys()))
 
 
+@app.get("/dados/racas", tags=["Dados Estáticos"])
+def obter_detalhes_racas():
+    return DADOS_RACAS
+
+
 @app.get("/classes", tags=["Dados"])
-def listar_opcoes_classes():
+def listar_nomes_classes():
     return sorted(list(DADOS_CLASSES.keys()))
 
-# --- ROTAS DE PERSONAGEM (CRUD) ---
+
+@app.get("/dados/classes", tags=["Dados Estáticos"])
+def obter_detalhes_classes():
+    return DADOS_CLASSES
 
 
-@app.get("/", tags=["Health"])
-async def root():
-    return {"status": "online", "system": "T20 RPG"}
+@app.get("/origens", tags=["Dados"])
+def listar_nomes_origens():
+    return sorted(list(DADOS_ORIGENS.keys()))
+
+
+@app.get("/dados/origens", tags=["Dados Estáticos"])
+def listar_detalhes_origens():
+    return DADOS_ORIGENS
+
+
+@app.get("/pericias", tags=["Dados"])
+def listar_nomes_pericias():
+    return sorted(list(DADOS_PERICIAS.keys()))
+
+
+@app.get("/dados/habilidades", tags=["Dados Estáticos"])
+def listar_detalhes_habilidades():
+    return HABILIDADES_GERAIS
+
+
+@app.get("/dados/habilidades-classe", tags=["Dados Estáticos"])
+def listar_habilidades_classe():
+    return DADOS_HABILIDADES_CLASSE
+
+
+@app.get("/dados/magias", tags=["Dados Estáticos"])
+def listar_magias():
+    return DADOS_MAGIAS
+
+
+@app.get("/dados/itens", tags=["Dados Estáticos"])
+def listar_itens():
+    return DADOS_ITENS
+
+# --- ROTAS DE PERSONAGEM ---
 
 
 @app.post("/personagens/", response_model=Personagem, status_code=status.HTTP_201_CREATED, tags=["Personagens"])
-async def criar_personagem(personagem: Personagem):
+async def criar_personagem(personagem: Personagem, request: Request):
+    db_client = get_db_client(request.app)
     personagem_calculado = atualizar_ficha(personagem)
     personagem_dict = personagem_calculado.model_dump(
         by_alias=True, mode='json')
-    novo_personagem = await app.mongodb["personagens"].insert_one(personagem_dict)
-    criado = await app.mongodb["personagens"].find_one({"_id": novo_personagem.inserted_id})
+    novo_personagem = await db_client["personagens"].insert_one(personagem_dict)
+    criado = await db_client["personagens"].find_one({"_id": novo_personagem.inserted_id})
     return criado
 
 
 @app.get("/personagens/", response_model=List[Personagem], tags=["Personagens"])
-async def listar_personagens():
-    personagens = await app.mongodb["personagens"].find().to_list(100)
-    return personagens
+async def listar_personagens(request: Request):
+    db_client = get_db_client(request.app)
+    return await db_client["personagens"].find().to_list(100)
 
 
 @app.get("/personagens/{personagem_id}", response_model=Personagem, tags=["Personagens"])
-async def obter_personagem(personagem_id: UUID):
-    personagem = await app.mongodb["personagens"].find_one({"_id": str(personagem_id)})
+async def obter_personagem(personagem_id: UUID, request: Request):
+    db_client = get_db_client(request.app)
+    personagem = await db_client["personagens"].find_one({"_id": str(personagem_id)})
     if personagem is None:
         raise HTTPException(
             status_code=404, detail="Personagem não encontrado")
-    return personagem
+    personagem_obj = Personagem.model_validate(personagem)
+    return atualizar_ficha(personagem_obj)
 
 
-@app.patch("/personagens/{personagem_id}/status", response_model=Personagem, tags=["Jogabilidade"])
-async def atualizar_pv_pm(
-    personagem_id: UUID,
-    pv_atual: int = Body(None, embed=True),
-    pm_atual: int = Body(None, embed=True)
-):
-    updates = {}
-    if pv_atual is not None:
-        updates["status.pv.atual"] = pv_atual
-    if pm_atual is not None:
-        updates["status.pm.atual"] = pm_atual
-
-    if not updates:
-        raise HTTPException(status_code=400, detail="Nada para atualizar")
-
-    personagem_atualizado = await app.mongodb["personagens"].find_one_and_update(
+@app.put("/personagens/{personagem_id}", response_model=Personagem, tags=["Personagens"])
+async def atualizar_personagem(personagem_id: UUID, personagem: Personagem, request: Request):
+    db_client = get_db_client(request.app)
+    personagem_calculado = atualizar_ficha(personagem)
+    personagem_dict = personagem_calculado.model_dump(
+        by_alias=True, mode='json', exclude_unset=True)
+    result = await db_client["personagens"].find_one_and_update(
         {"_id": str(personagem_id)},
-        {"$set": updates},
+        {"$set": personagem_dict},
         return_document=ReturnDocument.AFTER
     )
-
-    if personagem_atualizado is None:
+    if result is None:
         raise HTTPException(
             status_code=404, detail="Personagem não encontrado")
-
-    return personagem_atualizado
-
-# --- NOVAS ROTAS DE DELETAR ---
+    return result
 
 
-@app.delete("/personagens/{personagem_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Personagens"])
-async def deletar_personagem(personagem_id: UUID):
-    delete_result = await app.mongodb["personagens"].delete_one({"_id": str(personagem_id)})
-
-    if delete_result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Personagem não encontrado para deleção")
-
+@app.delete("/personagens/{personagem_id}", status_code=204, tags=["Personagens"])
+async def deletar_personagem(personagem_id: UUID, request: Request):
+    db_client = get_db_client(request.app)
+    await db_client["personagens"].delete_one({"_id": str(personagem_id)})
     return None
 
+# --- ROTA CORRIGIDA: INCLUI REQUISITOS ---
 
-@app.delete("/personagens/", tags=["Admin"])
-async def deletar_todos_personagens():
-    """PERIGO: Apaga todas as fichas do banco."""
-    result = await app.mongodb["personagens"].delete_many({})
-    return {"mensagem": f"{result.deleted_count} fichas foram apagadas."}
+
+@app.get("/poderes", tags=["Dados"])
+def listar_poderes_categorizados():
+    lista_poderes = []
+    for chave, dados in HABILIDADES_GERAIS.items():
+        tipo = dados.get("tipo", "")
+        if "Poder" in tipo or "Origem" in tipo:
+            categoria = "Geral"
+            if "Combate" in tipo:
+                categoria = "Combate"
+            elif "Destino" in tipo:
+                categoria = "Destino"
+            elif "Magia" in tipo:
+                categoria = "Magia"
+            elif "Concedido" in tipo:
+                categoria = "Concedido"
+            elif "Tormenta" in tipo:
+                categoria = "Tormenta"
+            elif "Origem" in tipo:
+                categoria = "Origem"
+
+            lista_poderes.append({
+                "nome": dados["nome"],
+                "categoria": categoria,
+                "descricao": dados.get("descricao", ""),
+                # <--- LINHA CRUCIAL ADICIONADA
+                "requisitos": dados.get("requisitos", [])
+            })
+    return sorted(lista_poderes, key=lambda x: x["nome"])
