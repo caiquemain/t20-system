@@ -16,11 +16,12 @@ interface PowerSelectorModalProps {
     listaRestrita?: string[];
     categoriaFixa?: string;
     itensBloqueados?: string[];
+    subclasse?: string;
 }
 
 // CORREÇÃO DE EXPORTAÇÃO: Garante que 'export const' está claro
 export const PowerSelectorModal: React.FC<PowerSelectorModalProps> = ({
-    isOpen, onClose, onSelect, ficha,
+    isOpen, onClose, onSelect, ficha,subclasse,
     listaPoderes, listaPericias, tipoEscolha, titulo,
     listaRestrita = [], categoriaFixa, itensBloqueados = []
 }) => {

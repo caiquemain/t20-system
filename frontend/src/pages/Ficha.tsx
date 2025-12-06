@@ -15,7 +15,7 @@ import { RacialAttributeModal } from '../components/RacialAttributeModal';
 // Tipos
 import type { Magia } from '../types';
 
-// --- REGRAS DE SISTEMA (T20 Jogo do Ano) ---
+// --- REGRAS DE SISTEMA ---
 const PONTOS_INICIAIS = 10;
 
 const MAPA_ATTR_KEY: Record<string, string> = {
@@ -50,20 +50,38 @@ const RACAS_METADATA: Record<string, { attrs: Record<string, number>, escolhas: 
     "Trog": { attrs: { con: 2, for: 1, int: -1 }, escolhas: 0 }
 };
 
+// --- HELPER: Extrair Poderes de Classe ---
+const extrairPoderesDaClasse = (dadosHabilidadesClasse: any, nomeClasse: string) => {
+    return Object.values(dadosHabilidadesClasse || {})
+        // @ts-ignore
+        .filter((h: any) => h.classe === nomeClasse && h.tipo && h.tipo.includes("Poder de"))
+        .map((h: any) => ({
+            nome: h.nome,
+            tipo: h.tipo, // Mantém "Poder de Arcanista" para estilização
+            categoria: h.classe, // Usa o nome da classe como categoria
+            descricao: h.descricao,
+            requisitos: h.requisitos || []
+        }));
+};
+
 function Ficha() {
     const { id } = useParams();
     const navigate = useNavigate();
 
     const {
         ficha, loading,
+        // Dados
         dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
 
+        // Estados de Edição do Hook
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
         classPowersEmEdicao, setClassPowersEmEdicao,
+        subclasseEmEdicao, setSubclasseEmEdicao,
 
+        // Ações
         updateFicha,
         handleAtributoBaseChange,
         montarHabilidadesParaPanel,
@@ -75,6 +93,7 @@ function Ficha() {
     const [showRacialModal, setShowRacialModal] = useState(false);
     const [showGrimorio, setShowGrimorio] = useState(false);
 
+    // Estado local para o seletor genérico
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
 
@@ -90,16 +109,14 @@ function Ficha() {
         setShowRacialModal(false);
     };
 
-    // --- CORREÇÃO: Função auxiliar robusta para abrir seletores ---
     const abrirSeletor = (
         tipo: string,
         titulo: string,
         listaRestrita: string[] = [],
         categoriaFixa: string | undefined = undefined,
         onConfirm?: (val: string) => void,
-        itensBloqueados: string[] = [] // Recebe a Blacklist
+        itensBloqueados: string[] = []
     ) => {
-        // Define o modo corretamente
         let tipoModo = 'ambos';
         if (tipo === 'pericia') tipoModo = 'pericia';
         else if (tipo === 'poder') tipoModo = 'poder';
@@ -110,7 +127,7 @@ function Ficha() {
             titulo,
             listaRestrita,
             categoriaFixa,
-            itensBloqueados, // Salva no estado para passar pro modal
+            itensBloqueados,
             callback: (val: string) => {
                 if (onConfirm) onConfirm(val);
                 setSelectorModalOpen(false);
@@ -121,7 +138,7 @@ function Ficha() {
 
     if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
 
-    // --- CÁLCULOS ---
+    // --- CÁLCULOS AUXILIARES ---
     const calcularPontosGastos = () => {
         let gastos = 0;
         Object.values(ficha.atributos_base).forEach(val => gastos += TABELA_CUSTO[String(val)] || 0);
@@ -147,6 +164,10 @@ function Ficha() {
         }
     };
 
+    // --- LÓGICA DE PODERES MISTOS (Classe + Gerais) ---
+    const poderesDaClasse = ficha ? extrairPoderesDaClasse(dadosHabilidadesClasse, ficha.classes[0].nome) : [];
+    const poderesMistos = [...listaPoderes, ...poderesDaClasse];
+
     // --- MAGIAS ---
     const handleAprenderMagias = (novas: Magia[]) => {
         if (!ficha) return;
@@ -167,7 +188,7 @@ function Ficha() {
     return (
         <div className="ficha-container">
 
-            {/* MODAL CONFIG (HABILIDADES) */}
+            {/* MODAL CONFIGURAÇÃO (PRINCIPAL) */}
             <AbilityConfigModal
                 isOpen={showHabilidadesPanel}
                 onClose={() => setShowHabilidadesPanel(false)}
@@ -179,12 +200,16 @@ function Ficha() {
                 classeAtual={ficha.classes[0]?.nome}
                 nivelAtual={ficha.classes[0]?.nivel || 1}
                 dadosHabilidadesClasse={dadosHabilidadesClasse}
+                listaPoderesGerais={listaPoderes} // <--- Passa a lista geral para o modal poder usar
+
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}
                 setHabilidadesEmEdicao={setHabilidadesEmEdicao}
                 classPowersEmEdicao={classPowersEmEdicao}
                 setClassPowersEmEdicao={setClassPowersEmEdicao}
+                subclasseEmEdicao={subclasseEmEdicao}
+                setSubclasseEmEdicao={setSubclasseEmEdicao}
                 abrirSeletor={abrirSeletor}
             />
 
@@ -197,17 +222,13 @@ function Ficha() {
                 magiasConhecidas={ficha.combate.magias || []}
             />
 
-            {/* MODAL DE SELEÇÃO GENÉRICO */}
+            {/* MODAL SELETOR GENÉRICO */}
             <PowerSelectorModal
                 isOpen={selectorModalOpen}
                 onClose={() => setSelectorModalOpen(false)}
                 onSelect={selectorConfig.callback}
-
-                // --- NOVA PROP ---
                 ficha={ficha}
-                // ----------------
-
-                listaPoderes={listaPoderes}
+                listaPoderes={poderesMistos} // <--- Passa a lista combinada!
                 listaPericias={listaTodasPericias}
                 tipoEscolha={selectorConfig.tipo}
                 titulo={selectorConfig.titulo}
@@ -239,13 +260,25 @@ function Ficha() {
                         <span>•</span>
                         <select className="select-header" value={ficha.cabecalho.origem} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] })}>{listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}</select>
                         <span>•</span>
-                        <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
-                            const novasClasses = [...ficha.classes];
-                            novasClasses[0] = { ...novasClasses[0], nome: e.target.value };
-                            updateFicha({ classes: novasClasses });
-                        }}>
-                            {listaClasses.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+
+                        {/* Seletor de Classe + Badge de Subclasse */}
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
+                                const novasClasses = [...ficha.classes];
+                                novasClasses[0] = { ...novasClasses[0], nome: e.target.value, subclasse: undefined };
+                                updateFicha({ classes: novasClasses });
+                            }}>
+                                {listaClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+
+                            {ficha.classes[0]?.subclasse && (
+                                <span className="subclass-badge" title="Caminho / Subclasse">
+                                    {ficha.classes[0].subclasse}
+                                </span>
+                            )}
+                        </div>
+
+                        <label style={{ marginLeft: 10 }}>Nível:</label>
                         <input className="input-nivel" type="number" value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }); }} />
                     </div>
                 </div>

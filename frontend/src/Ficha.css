@@ -1304,3 +1304,19 @@
     /* Laranja */
     font-style: italic;
 }
+
+.subclass-badge {
+    background-color: #1a2a3a;
+    color: #64b5f6;
+    /* Azul claro para diferenciar */
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #2b4b6b;
+    margin-left: 8px;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    cursor: help;
+}

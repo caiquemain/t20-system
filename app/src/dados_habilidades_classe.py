@@ -24,7 +24,7 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Arcanista",
         "nivel": 1,
-        "descricao": "Escolha um caminho: Bruxo (foco, Int), Feiticeiro (linhagem, Car) ou Mago (grimório, Int). Define seu atributo-chave e mecânica de magia. ",
+        "descricao": "Escolha um caminho: Bruxo (foco, Int), Feiticeiro (linhagem, Car) ou Mago (grimório, Int). Define seu atributo-chave e mecânica de magia.",
         "efeitos": {"escolha_subclasse": ["Bruxo", "Feiticeiro", "Mago"]}
     },
     "ARCANISTA_MAGIAS": {
@@ -32,7 +32,7 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Arcanista",
         "nivel": 1,
-        "descricao": "Você pode lançar magias arcanas. Começa com 3 magias de 1º círculo (mais se for Mago). ",
+        "descricao": "Você pode lançar magias arcanas. Começa com 3 magias de 1º círculo (mais se for Mago).",
         "efeitos": {"habilita_magia": {"tipo": "Arcana", "circulo_max": 1}}
     },
     "ARCANISTA_ALTA_ARCANA": {
@@ -40,7 +40,7 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Arcanista",
         "nivel": 20,
-        "descricao": "O custo em PM de suas magias arcanas é reduzido à metade. ",
+        "descricao": "O custo em PM de suas magias arcanas é reduzido à metade.",
         "efeitos": {"reducao_custo_magia_global": 0.5}
     },
     # --- PODERES DE ARCANISTA ---
@@ -48,65 +48,175 @@ DADOS_HABILIDADES_CLASSE = {
         "nome": "Arcano de Batalha",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
-        "descricao": "Você soma seu atributo-chave nas rolagens de dano de suas magias. ",
+        "descricao": "Você soma seu atributo-chave nas rolagens de dano de suas magias.",
         "efeitos": {"dano_magia_soma_atributo": True}
+    },
+    "ARCANISTA_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "descricao": "Você recebe +1 em um atributo. Pode escolher várias vezes (1x por patamar por atributo).",
+        "efeitos": {"atributo_bonus_escolha": 1}
     },
     "ARCANISTA_CALDEIRAO_BRUXO": {
         "nome": "Caldeirão do Bruxo",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
         "requisitos": ["Caminho: Bruxo", "Treinado em Ofício (alquimista)"],
-        "descricao": "Você pode criar poções como se tivesse o poder Preparar Poção. Se tiver ambos, cria até 5º círculo. ",
-        "efeitos": {}
+        "descricao": "Pode criar poções como se tivesse Preparar Poção. Se tiver ambos, cria até 5º círculo.",
+        "efeitos": {"fabricar_pocao": True}
     },
     "ARCANISTA_CONHECIMENTO_MAGICO": {
         "nome": "Conhecimento Mágico",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
-        "descricao": "Você aprende duas magias de qualquer círculo que possa lançar. ",
+        "descricao": "Você aprende duas magias de qualquer círculo que possa lançar.",
         "efeitos": {"magias_adicionais": 2}
+    },
+    "ARCANISTA_CONTRAMAGICA_APRIMORADA": {
+        "nome": "Contramágica Aprimorada",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Magia: Dissipar Magia"],
+        "descricao": "1x/rodada: Pode fazer contramágica como reação.",
+        "efeitos": {}
+    },
+    "ARCANISTA_ENVOLTO_MISTERIO": {
+        "nome": "Envolto em Mistério",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "descricao": "+5 em Enganação e Intimidação contra pessoas não treinadas em Conhecimento ou Misticismo.",
+        "efeitos": {}
+    },
+    "ARCANISTA_ESCRIBA_ARCANO": {
+        "nome": "Escriba Arcano",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Caminho: Mago", "Treinado em Ofício (escriba)"],
+        "descricao": "Pode aprender magias copiando pergaminhos/grimórios (T$ 250/PM).",
+        "efeitos": {}
     },
     "ARCANISTA_ESPECIALISTA_ESCOLA": {
         "nome": "Especialista em Escola",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
         "requisitos": ["Caminho: Bruxo ou Mago"],
-        "descricao": "Escolha uma escola. A CD para resistir a suas magias dessa escola aumenta em +2. ",
+        "descricao": "Escolha uma escola. CD para resistir a magias dessa escola aumenta em +2.",
         "efeitos": {"cd_magia_escola_bonus": 2}
     },
     "ARCANISTA_FAMILIAR": {
         "nome": "Familiar",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
-        "descricao": "Você possui um animal mágico que concede bônus (Ex: Sapo +PV, Coruja +Alcance). ",
+        "descricao": "Você possui um animal mágico que concede bônus.",
         "efeitos": {"familiar_escolha": True}
+    },
+    "ARCANISTA_FLUXO_MANA": {
+        "nome": "Fluxo de Mana",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Nível 10"],
+        "descricao": "Pode manter dois efeitos sustentados com uma ação livre (pagando ambos).",
+        "efeitos": {}
+    },
+    "ARCANISTA_FOCO_VITAL": {
+        "nome": "Foco Vital",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Caminho: Bruxo"],
+        "descricao": "Se sofrer dano letal segurando foco, fica com 1 PV e foco absorve o resto (pode quebrar).",
+        "efeitos": {}
+    },
+    "ARCANISTA_FORTALECIMENTO_ARCANO": {
+        "nome": "Fortalecimento Arcano",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Nível 5"],
+        "descricao": "A CD de suas magias aumenta em +1. Se lançar 4º círculo, aumenta em +2.",
+        "efeitos": {"cd_magia_bonus": 1}
+    },
+    "ARCANISTA_HERANCA_APRIMORADA": {
+        "nome": "Herança Aprimorada",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Caminho: Feiticeiro", "Nível 6"],
+        "descricao": "Recebe a herança aprimorada de sua linhagem.",
+        "efeitos": {}
+    },
+    "ARCANISTA_HERANCA_SUPERIOR": {
+        "nome": "Herança Superior",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Herança Aprimorada", "Nível 11"],
+        "descricao": "Recebe a herança superior de sua linhagem.",
+        "efeitos": {}
+    },
+    "ARCANISTA_MAGIA_PUNGENTE": {
+        "nome": "Magia Pungente",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "descricao": "Ao lançar magia, pague +1 PM para aumentar a CD em +2.",
+        "efeitos": {}
+    },
+    "ARCANISTA_MESTRE_ESCOLA": {
+        "nome": "Mestre em Escola",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Especialista em Escola", "Nível 8"],
+        "descricao": "Custo de magias da escola escolhida diminui em -1 PM.",
+        "efeitos": {"reducao_custo_escola": 1}
     },
     "ARCANISTA_PODER_MAGICO": {
         "nome": "Poder Mágico",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
-        "descricao": "Recebe +1 PM por nível de arcanista. ",
+        "descricao": "Recebe +1 PM por nível de arcanista.",
         "efeitos": {"pm_max_nivel": 1}
     },
     "ARCANISTA_RAIO_ARCANO": {
         "nome": "Raio Arcano",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
-        "descricao": "Ação padrão: causa 1d8 (dano essência) em alcance curto. +1d8 por círculo máximo. Reflexos reduz metade. ",
+        "descricao": "Padrão: 1d8 essência (curto). +1d8 por círculo máximo. Reflexos metade.",
         "efeitos": {}
+    },
+    "ARCANISTA_RAIO_ELEMENTAL": {
+        "nome": "Raio Elemental",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Raio Arcano"],
+        "descricao": "+1 PM: Raio causa dano elemental (ácido/fogo/frio/eletricidade/trevas) e inflige condição na falha.",
+        "efeitos": {}
+    },
+    "ARCANISTA_RAIO_PODEROSO": {
+        "nome": "Raio Poderoso",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Raio Arcano"],
+        "descricao": "Dado do Raio aumenta para d12 e alcance para médio.",
+        "efeitos": {}
+    },
+    "ARCANISTA_TINTA_MAGO": {
+        "nome": "Tinta do Mago",
+        "tipo": "Poder de Arcanista",
+        "classe": "Arcanista",
+        "requisitos": ["Caminho: Mago", "Treinado em Ofício (escriba)"],
+        "descricao": "Pode criar pergaminhos (como Escrever Pergaminho). Se tiver ambos, custo é metade.",
+        "efeitos": {"escrever_pergaminho": True}
     },
 
     # ==========================================================================
     # BÁRBARO
     # ==========================================================================
+    # Habilidades de Classe (Fixas)
     "BARBARO_FURIA": {
         "nome": "Fúria",
         "tipo": "Habilidade de Classe",
         "classe": "Bárbaro",
         "nivel": 1,
-        "descricao": "Gaste 2 PM: +2 ataque e dano corpo a corpo. Não pode concentrar. +1/+1 a cada 5 níveis. ",
+        "descricao": "Gaste 2 PM: +2 ataque e dano corpo a corpo. Não pode concentrar. +1/+1 a cada 5 níveis. Termina se não atacar/ser atacado.",
         "efeitos": {
-            "acao_ativavel": {"custo_pm": 2, "ataque_bonus": 2, "dano_bonus": 2, "escala_nivel": 5}
+            "acao_ativavel": {"custo_pm": 2, "ataque_bonus": 2, "dano_bonus": 2, "restricao": "sem_concentracao", "escala_nivel": {"cada": 5, "bonus": 1}}
         }
     },
     "BARBARO_INSTINTO_SELVAGEM": {
@@ -114,10 +224,11 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Bárbaro",
         "nivel": 3,
-        "descricao": "Recebe +1 em Percepção, Reflexos e rolagens de dano. Aumenta a cada 6 níveis. ",
+        "descricao": "Recebe +1 em Percepção, Reflexos e rolagens de dano. Aumenta a cada 6 níveis.",
         "efeitos": {
             "bonus_pericia": {"Percepção": 1, "Reflexos": 1},
-            "dano_bonus": 1
+            "dano_bonus": 1,
+            "escala_nivel": {"cada": 6, "bonus": 1}
         }
     },
     "BARBARO_REDUCAO_DANO": {
@@ -125,23 +236,42 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Bárbaro",
         "nivel": 5,
-        "descricao": "Recebe RD 2. Aumenta em +2 a cada 3 níveis. ",
-        "efeitos": {"rd_fixa": 2}
+        "descricao": "Recebe RD 2. Aumenta em +2 a cada 3 níveis.",
+        "efeitos": {
+            "rd_fixa": 2,
+            "escala_nivel": {"cada": 3, "bonus": 2}
+        }
     },
     "BARBARO_FURIA_TITANICA": {
         "nome": "Fúria Titânica",
         "tipo": "Habilidade de Classe",
         "classe": "Bárbaro",
         "nivel": 20,
-        "descricao": "O bônus de ataque e dano da Fúria é dobrado. ",
+        "descricao": "O bônus de ataque e dano da Fúria é dobrado.",
         "efeitos": {}
     },
-    # --- PODERES DE BÁRBARO ---
+
+    # Poderes de Bárbaro
     "BARBARO_ALMA_BRONZE": {
         "nome": "Alma de Bronze",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
-        "descricao": "Ao entrar em Fúria, ganha PV temporários (Nível + Força). ",
+        "descricao": "Ao entrar em Fúria, ganha PV temporários iguais a Nível + Força.",
+        "efeitos": {}
+    },
+    "BARBARO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "Recebe +1 em um atributo. Pode ser escolhido várias vezes (1x por patamar por atributo).",
+        "efeitos": {"atributo_bonus_escolha": 1}
+    },
+    "BARBARO_BRADO_ASSUSTADOR": {
+        "nome": "Brado Assustador",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "requisitos": ["Treinado em Intimidação"],
+        "descricao": "1 PM (Movimento): Berro feroz deixa inimigos em alcance curto vulneráveis (fim da cena).",
         "efeitos": {}
     },
     "BARBARO_CRITICO_BRUTAL": {
@@ -149,21 +279,79 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "requisitos": ["Nível 6"],
-        "descricao": "Multiplicador de crítico com armas corpo a corpo/arremesso aumenta em +1. ",
+        "descricao": "Multiplicador de crítico com armas corpo a corpo/arremesso aumenta em +1.",
         "efeitos": {"multiplicador_critico_bonus": 1}
+    },
+    "BARBARO_DESTRUIDOR": {
+        "nome": "Destruidor",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "requisitos": ["For 1"],
+        "descricao": "Ao causar dano com arma de duas mãos corpo a corpo, rerola 1 ou 2 no dano.",
+        "efeitos": {}
+    },
+    "BARBARO_ESPIRITO_INQUEBRAVEL": {
+        "nome": "Espírito Inquebrável",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "requisitos": ["Alma de Bronze"],
+        "descricao": "Em fúria, não fica inconsciente com 0 PV (morre apenas com negativo = metade PV máx).",
+        "efeitos": {}
     },
     "BARBARO_ESQUIVA_SOBRENATURAL": {
         "nome": "Esquiva Sobrenatural",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
-        "descricao": "Você nunca fica surpreendido. ",
+        "descricao": "Você nunca fica surpreendido.",
         "efeitos": {"imunidade": ["surpreendido"]}
+    },
+    "BARBARO_FORCA_INDOMAVEL": {
+        "nome": "Força Indomável",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "1 PM: Soma nível em teste de Força ou Atletismo (pode usar após rolar).",
+        "efeitos": {}
     },
     "BARBARO_FRENESI": {
         "nome": "Frenesi",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
-        "descricao": "Em Fúria, gaste 2 PM para fazer um ataque extra por rodada. ",
+        "descricao": "Em Fúria, ao agredir, gaste 2 PM para fazer um ataque extra.",
+        "efeitos": {}
+    },
+    "BARBARO_FURIA_SAVANA": {
+        "nome": "Fúria da Savana",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "Deslocamento +3m. Fúria aplica bônus também a armas de arremesso.",
+        "efeitos": {"deslocamento_bonus": 3}
+    },
+    "BARBARO_FURIA_RAIVOSA": {
+        "nome": "Fúria Raivosa",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "1 PM: Mantém a fúria ativa na rodada mesmo se não atacar/ser atacado.",
+        "efeitos": {}
+    },
+    "BARBARO_GOLPE_PODEROSO": {
+        "nome": "Golpe Poderoso",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "Ao acertar ataque, 1 PM: Causa um dado extra de dano do mesmo tipo.",
+        "efeitos": {}
+    },
+    "BARBARO_IMPETO": {
+        "nome": "Ímpeto",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "1 PM: Aumenta deslocamento em +6m por uma rodada.",
+        "efeitos": {}
+    },
+    "BARBARO_INVESTIDA_IMPRUDENTE": {
+        "nome": "Investida Imprudente",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "Na investida, pode aceitar -5 Defesa para ganhar +1d12 dano.",
         "efeitos": {}
     },
     "BARBARO_PELE_ACO": {
@@ -171,23 +359,44 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "requisitos": ["Pele de Ferro", "Nível 8"],
-        "descricao": "O bônus de Pele de Ferro aumenta para +8. ",
-        "efeitos": {"defesa_bonus": 8}  # Substitui o anterior
+        "descricao": "O bônus de Pele de Ferro aumenta para +8.",
+        "efeitos": {"defesa_bonus": 8}
     },
     "BARBARO_PELE_FERRO": {
         "nome": "Pele de Ferro",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
-        "descricao": "Recebe +4 na Defesa (sem armadura pesada). ",
+        "descricao": "Recebe +4 na Defesa (se não usar armadura pesada).",
         "efeitos": {"defesa_bonus": 4}
+    },
+    "BARBARO_SANGUE_INIMIGOS": {
+        "nome": "Sangue dos Inimigos",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "Em fúria, ao criticar ou zerar PV inimigo: ganha +1 ataque/dano cumulativo (máx nível) pela cena.",
+        "efeitos": {}
+    },
+    "BARBARO_SUPERSTICAO": {
+        "nome": "Superstição",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "Recebe resistência a magia +5.",
+        "efeitos": {"resistencia_magia_bonus": 5}
     },
     "BARBARO_TOTEM_ESPIRITUAL": {
         "nome": "Totem Espiritual",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "requisitos": ["Sab 1", "Nível 4"],
-        "descricao": "Soma Sabedoria aos PM. Escolha um animal totêmico para aprender uma magia (pode lançar em fúria). ",
+        "descricao": "Soma Sabedoria aos PM. Aprende uma magia definida pelo animal (lança com Sab, mesmo em fúria).",
         "efeitos": {"pm_soma_atributo": "sab", "escolha_totem": True}
+    },
+    "BARBARO_VIGOR_PRIMAL": {
+        "nome": "Vigor Primal",
+        "tipo": "Poder de Bárbaro",
+        "classe": "Bárbaro",
+        "descricao": "Movimento: Gaste PM (limite Constituição). Recupera 1d12 PV por PM gasto.",
+        "efeitos": {}
     },
 
     # ==========================================================================
