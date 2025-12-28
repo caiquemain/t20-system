@@ -7,14 +7,16 @@ interface StatusBarsProps {
 }
 
 export const StatusBars: React.FC<StatusBarsProps> = ({ ficha }) => {
-
-    // Agora o TypeScript reconhecerá 'detalhes_deslocamento'
-    const { pv, pm, defesa, deslocamento, detalhes_deslocamento } = ficha.status;
+    const { pv, pm, defesa, deslocamento, detalhes_deslocamento, rd } = ficha.status;
     const detalhesDefesa = defesa.detalhes;
 
     // Cálculos de Porcentagem
     const pvPerc = Math.min(100, Math.max(0, (pv.atual / (pv.maximo || 1)) * 100));
     const pmPerc = Math.min(100, Math.max(0, (pm.atual / (pm.maximo || 1)) * 100));
+
+    // Helpers para compatibilidade (Novo Backend vs Velho Backend)
+    const calcPV = pv.calculo || pv.detalhes_pv;
+    const calcPM = pm.calculo || pm.detalhes_pm;
 
     return (
         <div className="section-card" style={{ marginTop: '25px' }}>
@@ -31,12 +33,12 @@ export const StatusBars: React.FC<StatusBarsProps> = ({ ficha }) => {
                 </div>
 
                 {/* Tooltip PV */}
-                {pv.detalhes_pv && (
+                {calcPV && (
                     <div className="attr-tooltip">
-                        <div className="tooltip-row"><span>Inicial:</span> <span>{pv.detalhes_pv.inicial}</span></div>
-                        <div className="tooltip-row"><span>Por Nível:</span> <span>{pv.detalhes_pv.nivel}</span></div>
-                        <div className="tooltip-row"><span>Con:</span> <span>{pv.detalhes_pv.con}</span></div>
-                        {pv.detalhes_pv.outros !== 0 && <div className="tooltip-row"><span>Outros:</span> <span>{pv.detalhes_pv.outros}</span></div>}
+                        <div className="tooltip-row"><span>Inicial:</span> <span>{calcPV.inicial}</span></div>
+                        <div className="tooltip-row"><span>Por Nível:</span> <span>{calcPV.nivel}</span></div>
+                        <div className="tooltip-row"><span>Con:</span> <span>{calcPV.con}</span></div>
+                        {calcPV.outros !== 0 && <div className="tooltip-row"><span>Outros:</span> <span>{calcPV.outros}</span></div>}
                         <div className="tooltip-total"><span>Total:</span> <span>{pv.maximo}</span></div>
                     </div>
                 )}
@@ -53,11 +55,11 @@ export const StatusBars: React.FC<StatusBarsProps> = ({ ficha }) => {
                 </div>
 
                 {/* Tooltip PM */}
-                {pm.detalhes_pm && (
+                {calcPM && (
                     <div className="attr-tooltip">
-                        <div className="tooltip-row"><span>Por Nível:</span> <span>{pm.detalhes_pm.nivel}</span></div>
-                        <div className="tooltip-row"><span>Atributo:</span> <span>{pm.detalhes_pm.atributo}</span></div>
-                        {pm.detalhes_pm.outros !== 0 && <div className="tooltip-row"><span>Outros:</span> <span>{pm.detalhes_pm.outros}</span></div>}
+                        <div className="tooltip-row"><span>Por Nível:</span> <span>{calcPM.nivel}</span></div>
+                        <div className="tooltip-row"><span>Atributo:</span> <span>{calcPM.atributo}</span></div>
+                        {calcPM.outros !== 0 && <div className="tooltip-row"><span>Outros:</span> <span>{calcPM.outros}</span></div>}
                         <div className="tooltip-total"><span>Total:</span> <span>{pm.maximo}</span></div>
                     </div>
                 )}
@@ -65,12 +67,10 @@ export const StatusBars: React.FC<StatusBarsProps> = ({ ficha }) => {
 
             {/* --- STATUS SECUNDÁRIOS --- */}
             <div className="stats-row-container">
-
                 {/* DEFESA */}
                 <div className="stat-box tooltip-container">
                     <span className="stat-value">🛡️ {defesa.total}</span>
                     <span className="stat-label">Defesa</span>
-
                     <div className="attr-tooltip">
                         <div className="tooltip-row"><span>Base:</span> <span>10</span></div>
                         <div className="tooltip-row"><span>Des/Atributo:</span> <span>{detalhesDefesa.des_mod}</span></div>
@@ -85,8 +85,6 @@ export const StatusBars: React.FC<StatusBarsProps> = ({ ficha }) => {
                 <div className="stat-box tooltip-container">
                     <span className="stat-value">🦵 {deslocamento}m</span>
                     <span className="stat-label">Deslocamento</span>
-
-                    {/* Tooltip Deslocamento */}
                     {detalhes_deslocamento && (
                         <div className="attr-tooltip">
                             <div className="tooltip-row"><span>Base:</span> <span>{detalhes_deslocamento.base}m</span></div>
@@ -97,6 +95,33 @@ export const StatusBars: React.FC<StatusBarsProps> = ({ ficha }) => {
                     )}
                 </div>
             </div>
+
+            {/* --- REDUÇÃO DE DANO (RD) --- */}
+            {rd && rd.length > 0 && (
+                <div className="rd-section" style={{ marginTop: '15px', paddingTop: '10px', borderTop: '1px solid #333' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
+                        Resistências / RD
+                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {rd.map((item: string, idx: number) => (
+                            <span key={idx} style={{
+                                background: '#3e2723',
+                                color: '#ffccbc',
+                                border: '1px solid #5d4037',
+                                padding: '3px 10px',
+                                borderRadius: '4px',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px'
+                            }}>
+                                🛡️ {item}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
