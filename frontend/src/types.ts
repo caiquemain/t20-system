@@ -45,7 +45,17 @@ export interface Atributos {
     carisma: number;
 }
 
-// --- NOVAS INTERFACES DE DETALHES (ADICIONADAS) ---
+// --- INTERFACES DE DETALHES ---
+// Interface unificada para o campo 'calculo' que vem do backend
+export interface DetalhesCalculo {
+    inicial: number;
+    nivel: number;
+    outros: number;
+    // Opcionais pois dependem se é PV ou PM
+    con?: number;
+    atributo?: number;
+}
+
 export interface DetalhesPV {
     inicial: number;
     nivel: number;
@@ -71,7 +81,11 @@ export interface StatusBarra {
     atual: number;
     maximo: number;
     temporario: number;
-    // Campos opcionais para detalhes (ADICIONADOS)
+
+    // Novo padrão do backend
+    calculo?: DetalhesCalculo;
+
+    // Campos antigos para retrocompatibilidade
     detalhes_pv?: DetalhesPV;
     detalhes_pm?: DetalhesPM;
 }
@@ -84,11 +98,9 @@ export interface ModificadorDetalhes {
     outros: number;
 }
 
-export interface RD {
-    tipo: string;
-    valor: number;
-    fonte?: string;
-}
+// RD agora é string simples no novo sistema (ex: "Fogo 10")
+// Mantemos a interface antiga comentada caso precise reverter
+// export interface RD { tipo: string; valor: number; fonte?: string; }
 
 export interface Defesa {
     total: number;
@@ -99,19 +111,21 @@ export interface Status {
     pv: StatusBarra;
     pm: StatusBarra;
     defesa: Defesa;
-    rd: RD[];
+
+    // CORREÇÃO: RD agora é uma lista de strings
+    rd: string[];
+
     deslocamento: number;
-    // Campo opcional para detalhe (ADICIONADO)
     detalhes_deslocamento?: DetalhesDeslocamento;
 }
 
 export interface PericiaInfo {
     treino: number;      // 0 = destreinado, 1 = treinado, 2 = expert
-    bonus_nivel: number; // <--- ADICIONE ESTA LINHA
-    atributo_valor: number; // <--- ADICIONE ESTA TAMBÉM (usada no backend)
+    bonus_nivel: number;
+    atributo_valor: number;
     outros: number;
     total: number;
-    // Opcional: atributo_override?: string; (para o futuro)
+    atributo_override?: string;
 }
 
 export interface Ataque {

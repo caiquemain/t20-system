@@ -169,6 +169,11 @@ export interface Habilidade {
     tipo: string;
     descricao?: string;
     fonte?: string;
+
+    // ADICIONE ESTAS DUAS LINHAS PARA CORRIGIR O ERRO:
+    classe?: string;
+    nivel?: number;
+
     escolhas_aplicadas?: Record<string, any>;
 
     // Propriedades opcionais de UI
