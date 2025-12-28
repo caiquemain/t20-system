@@ -1,7 +1,7 @@
-import React from 'react';
-// CORREÇÃO AQUI: Adicionado 'type'
-import type { Personagem, PericiaInfo } from '../types';
-import '../Ficha.css';
+import React, { useState } from 'react';
+import type { Personagem } from '../types';
+// Garanta que o caminho do arquivo de dados esteja correto
+import { DADOS_PERICIAS_FRONTEND } from '../data/pericias';
 
 interface SkillListProps {
     ficha: Personagem;
@@ -12,167 +12,316 @@ interface SkillListProps {
 
 export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updateFicha, listaTodasPericias }) => {
 
-    // --- CÁLCULOS DE REGRAS DE PERÍCIA ---
-    const dadosClasseAtual = ficha.classes[0] ? dadosClasses[ficha.classes[0].nome] : null;
-    const qtdBaseClasse = dadosClasseAtual?.qtd_escolhas || 0;
-    const bonusInteligencia = Math.max(0, ficha.atributos.inteligencia);
-    const limiteTotalEscolhas = qtdBaseClasse + bonusInteligencia;
+    // --- 1. DADOS BASE ---
+    const classePrincipal = ficha.classes[0]?.nome;
+    const dadosClasse = dadosClasses[classePrincipal] || {};
 
-    let countFixasClasse = 0;
-    let countOrigem = 0;
-    let countRacaPoder = 0;
-    let gastosTotalManual = 0;
-    let gastosForaDaClasse = 0;
+    const periciasFixas = dadosClasse.pericias_iniciais || dadosClasse.pericias_fixas || [];
+    const periciasEscolhaLista = dadosClasse.pericias_lista || [];
+    const qtdEscolhasClasse = dadosClasse.pericias_escolha || 0;
 
-    // Identifica quais perícias foram ganhas por habilidades (Raça/Poderes) para não cobrar do limite de Int/Classe
-    const periciasDeHabilidades = new Set<string>();
-    ficha.habilidades.forEach(hab => {
-        if (hab.escolhas_aplicadas) {
-            Object.entries(hab.escolhas_aplicadas).forEach(([key, v]) => {
-                if (!key.includes('bonus') && listaTodasPericias.includes(String(v))) {
-                    periciasDeHabilidades.add(String(v));
-                }
-            });
-        }
-    });
+    // Inteligência (Valor bruto ou modificador, dependendo de como seu backend retorna. 
+    // Assumindo que ficha.atributos.inteligencia já é o modificador final +0, +2 etc)
+    const intMod = Math.max(0, ficha.atributos.inteligencia || 0);
 
-    // Faz a contagem dos gastos
-    Object.entries(ficha.pericias).forEach(([nome, info]) => {
-        if (info.treino > 0) {
-            const isFixa = dadosClasseAtual?.pericias_fixas.includes(nome);
-            const isOrigem = ficha.escolhas_origem?.includes(nome);
-            const isHabilidadeChoice = periciasDeHabilidades.has(nome);
-            const isOpcaoClasse = dadosClasseAtual?.pericias_lista.includes(nome);
+    const qtdTotalEscolhas = qtdEscolhasClasse + intMod;
+    const periciasOrigem = ficha.escolhas_origem || [];
+    const periciasTreinadas = ficha.pericias || {};
 
-            if (isFixa) countFixasClasse++;
-            else if (isOrigem) countOrigem++;
-            else if (isHabilidadeChoice) countRacaPoder++;
-            else {
-                gastosTotalManual++;
-                // Se comprei manualmente e NÃO está na lista da classe, conta como gasto de Inteligência
-                if (!isOpcaoClasse) gastosForaDaClasse++;
+    // --- 2. CONTAGEM INTELIGENTE ---
+
+    // Lista de todas as perícias que o jogador marcou manualmente (exclui fixas e origem)
+    const periciasCompradas = Object.keys(periciasTreinadas).filter(p =>
+        periciasTreinadas[p].treino > 0 &&
+        !periciasFixas.includes(p) &&
+        !periciasOrigem.includes(p)
+    );
+
+    const totalGastos = periciasCompradas.length;
+
+    // Quantas dessas compradas NÃO pertencem à classe? (Gastam slots de INT)
+    // Consideramos Ofícios como "da classe" para simplificar, ou regra geral.
+    const gastosForaDaClasse = periciasCompradas.filter(p => {
+        const ehDaClasse = periciasEscolhaLista.includes(p) || p.startsWith("Ofício");
+        return !ehDaClasse;
+    }).length;
+
+    const slotsInteligenciaRestantes = Math.max(0, intMod - gastosForaDaClasse);
+    const slotsTotaisRestantes = Math.max(0, qtdTotalEscolhas - totalGastos);
+
+    // --- 3. LÓGICA DE TOGGLE ---
+    const togglePericia = (pericia: string) => {
+        // Bloqueia destreino de fixas
+        if (periciasFixas.includes(pericia)) return;
+
+        const novaLista = { ...periciasTreinadas };
+        const estaTreinada = novaLista[pericia]?.treino > 0;
+
+        if (estaTreinada) {
+            // Destreinar (sempre permitido)
+            novaLista[pericia] = { ...novaLista[pericia], treino: 0, total: 0 };
+        } else {
+            // Tentar Treinar
+
+            // 1. Tem espaço total?
+            if (totalGastos >= qtdTotalEscolhas) return;
+
+            // 2. É da classe?
+            const ehDaClasse = periciasEscolhaLista.includes(pericia) || pericia.startsWith("Ofício");
+
+            // 3. Regra de Inteligência:
+            // Se NÃO for da classe, preciso ter slot de inteligência sobrando.
+            if (!ehDaClasse && slotsInteligenciaRestantes <= 0) {
+                // Feedback visual ou sonoro poderia vir aqui
+                console.log("Sem slots de inteligência para perícia fora da classe.");
+                return;
             }
+
+            // Aplica o treino
+            novaLista[pericia] = {
+                treino: 1,
+                bonus_nivel: Math.floor((ficha.cabecalho.nivel_total || 1) / 2),
+                atributo_valor: 0,
+                outros: 0,
+                total: 0
+            };
         }
-    });
+        updateFicha({ pericias: novaLista });
+    };
 
-    const slotsRestantesTotal = limiteTotalEscolhas - gastosTotalManual;
-    const slotsRestantesInteligencia = bonusInteligencia - gastosForaDaClasse;
-    const totalTreinadas = countFixasClasse + countOrigem + countRacaPoder + gastosTotalManual;
+    const renderSkillRow = (nomeExibicao: string, chavePericia: string, index: number) => {
+        const info = periciasTreinadas[chavePericia] || { treino: 0, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 };
 
-    // Helper para mapear sigla do atributo
-    const attrMap: Record<string, string> = { 'for': 'forca', 'des': 'destreza', 'con': 'constituicao', 'int': 'inteligencia', 'sab': 'sabedoria', 'car': 'carisma' };
+        const chaveBase = chavePericia.startsWith("Ofício") ? "Ofício" : chavePericia;
+        const meta = DADOS_PERICIAS_FRONTEND[chaveBase] || { atributo: "???", treino_apenas: false, penalidade_armadura: false };
 
-    return (
-        <div className="section-card">
-            <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                Perícias
-                <div className="pericias-header-info">
-                    <span style={{ fontSize: '0.8rem', color: slotsRestantesTotal < 0 ? '#ef5350' : '#66bb6a', cursor: 'help' }}>
-                        (Livres: {slotsRestantesTotal})
-                    </span>
-                    <div className="info-tooltip">
-                        <div className="info-row"><strong>Total Treinadas:</strong> <span>{totalTreinadas}</span></div>
-                        <div className="info-row"><span>Classe (Fixas):</span> <span>{countFixasClasse}</span></div>
-                        <div className="info-row"><span>Classe (Escolhas):</span> <span>{qtdBaseClasse}</span></div>
-                        <div className="info-row"><span>Inteligência:</span> <span>{bonusInteligencia}</span></div>
-                        <div className="info-row"><span>Origem:</span> <span>{countOrigem}</span></div>
-                        <div className="info-row"><span>Raça/Poderes:</span> <span>{countRacaPoder}</span></div>
-                        <div className="info-row" style={{ borderTop: '1px solid #444', marginTop: 4, paddingTop: 4 }}>
-                            <strong>Gastos Manuais:</strong> <span>{gastosTotalManual} / {limiteTotalEscolhas}</span>
-                        </div>
-                        <div className="info-row" style={{ color: slotsRestantesInteligencia < 0 ? '#ef5350' : '#aaa', fontSize: '0.7rem' }}>
-                            *Extra Classe (INT): {gastosForaDaClasse} / {bonusInteligencia}
-                        </div>
+        const isFixa = periciasFixas.includes(chavePericia);
+        const isOrigem = periciasOrigem.includes(chavePericia);
+        const isTreinada = info.treino > 0;
+
+        // Verifica Disponibilidade
+        const ehDaClasse = periciasEscolhaLista.includes(chavePericia) || chavePericia.startsWith("Ofício");
+
+        // Pode clicar se:
+        // 1. Já está treinada (para destreinar)
+        // 2. É Fixa/Origem (mas a função toggle bloqueia a mudança, aqui só habilita o visual)
+        // 3. Tem vaga total E (É da classe OU Tem vaga de Inteligência)
+        const podeComprar = slotsTotaisRestantes > 0 && (ehDaClasse || slotsInteligenciaRestantes > 0);
+
+        const isInteractable = isTreinada || (!isFixa && !isOrigem && podeComprar);
+        const isDisabled = !isInteractable; // Visualmente desabilitado
+
+        // Cálculos visuais
+        const nivel = Math.max(1, ficha.cabecalho.nivel_total || 1);
+        const metadeNivel = Math.floor(nivel / 2);
+        const attrVal = info.atributo_valor;
+        const treinoVal = isTreinada ? (nivel >= 15 ? 6 : (nivel >= 7 ? 4 : 2)) : 0;
+        const outrosVal = info.outros;
+        const totalVal = info.total;
+
+        const rowBg = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
+
+        return (
+            <div key={chavePericia} className={`skill-row-grid ${isDisabled && !isFixa && !isOrigem ? 'disabled' : ''}`} style={{ background: rowBg }}>
+
+                <div className="col-check" onClick={() => !isFixa && !isOrigem && togglePericia(chavePericia)}>
+                    <div className={`checkbox-box ${isTreinada ? 'checked' : ''} ${isFixa || isOrigem ? 'locked' : ''}`}>
+                        {isTreinada && "✔"}
                     </div>
                 </div>
-            </h3>
 
-            <div className="pericias-wrapper">
-                {(Object.entries(ficha.pericias) as [string, PericiaInfo][]).sort((a, b) => a[0].localeCompare(b[0])).map(([nome, info]) => {
-                    const isTreinada = info.treino > 0;
-                    const metadeNivel = Math.floor(ficha.cabecalho.nivel_total / 2);
-                    // @ts-ignore
-                    const modAtributo = ficha.atributos[attrMap[info.atributo_chave]];
+                <div className="col-name" onClick={() => !isFixa && !isOrigem && togglePericia(chavePericia)} title={nomeExibicao}>
+                    <span className={`name-text ${isTreinada ? 'trained-text' : ''}`}>
+                        {nomeExibicao}
+                        {/* Indicador visual se foi comprada via INT */}
+                        {isTreinada && !isFixa && !isOrigem && !ehDaClasse && (
+                            <span title="Custo Inteligência" style={{ color: '#00bcd4', fontSize: '0.7em', marginLeft: 5 }}>🧠</span>
+                        )}
+                    </span>
+                    <div className="icons-container">
+                        {meta.treino_apenas && <span title="Somente Treinada" className="icon-badge star">✴️</span>}
+                        {meta.penalidade_armadura && <span title="Penalidade de Armadura" className="icon-badge shield">🛡️</span>}
+                        {isFixa && <span className="text-badge class">(C)</span>}
+                        {isOrigem && <span className="text-badge origin">(O)</span>}
+                    </div>
+                </div>
 
-                    // Regra de Bônus de Treino (2, 4 ou 6)
-                    let bonusTreino = 0;
-                    if (isTreinada) {
-                        if (ficha.cabecalho.nivel_total >= 15) bonusTreino = 6;
-                        else if (ficha.cabecalho.nivel_total >= 7) bonusTreino = 4;
-                        else bonusTreino = 2;
-                    }
+                <div className="col-total">
+                    <div className="total-box">{totalVal >= 0 ? `+${totalVal}` : totalVal}</div>
+                </div>
 
-                    const isFixaClasse = dadosClasseAtual?.pericias_fixas.includes(nome);
-                    const isOpcaoClasse = dadosClasseAtual?.pericias_lista.includes(nome);
-                    const isOrigem = ficha.escolhas_origem?.includes(nome);
-                    const isHabilidadeChoice = periciasDeHabilidades.has(nome);
+                <div className="col-equal">=</div>
 
-                    // Lógica de Desabilitar Checkbox
-                    let disabled = false;
-                    if (isFixaClasse || isOrigem || isHabilidadeChoice) {
-                        disabled = true; // Já ganho por fonte externa, não pode destreinar
-                    } else if (!isTreinada) {
-                        // Se não sou treinado e quero treinar:
-                        if (slotsRestantesTotal <= 0) {
-                            disabled = true; // Sem pontos totais
-                        } else if (!isOpcaoClasse && slotsRestantesInteligencia <= 0) {
-                            disabled = true; // Sem inteligência para pegar fora da classe
-                        }
-                    }
-
-                    return (
-                        <div key={nome} className={`pericia-card ${isTreinada ? 'treinado' : ''} ${disabled && !isTreinada ? 'disabled-card' : ''}`}>
-                            <label className="p-check-label">
-                                <input
-                                    type="checkbox"
-                                    className="p-checkbox"
-                                    checked={isTreinada}
-                                    disabled={disabled}
-                                    onChange={() => {
-                                        const novasPericias = { ...ficha.pericias };
-                                        // Toggle treino (0 ou 1) - Backend recalcula o total
-                                        novasPericias[nome].treino = isTreinada ? 0 : 1;
-                                        updateFicha({ pericias: novasPericias });
-                                    }}
-                                />
-                                <div className="p-info-col">
-                                    <div className="p-nome-row">
-                                        <span className="p-nome">{nome}</span>
-                                        <span className="p-attr">({info.atributo_chave.toUpperCase().substring(0, 3)})</span>
-                                    </div>
-                                    <div className="source-badges">
-                                        {isFixaClasse && <span className="badge-source bg-classe-fixa">CLASSE</span>}
-                                        {isOrigem && <span className="badge-source bg-origem">ORIGEM</span>}
-                                        {isHabilidadeChoice && <span className="badge-source bg-raca">RAÇA/PODER</span>}
-
-                                        {!isFixaClasse && !isOrigem && !isHabilidadeChoice && isTreinada && (
-                                            isOpcaoClasse
-                                                ? <span className="badge-source bg-classe-escolha">CLASSE</span>
-                                                : <span className="badge-source" style={{ border: '1px solid #9c27b0', color: '#9c27b0' }}>INTELIGÊNCIA</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </label>
-
-                            <span className="p-valor">{info.total >= 0 ? `+${info.total}` : info.total}</span>
-
-                            {/* TOOLTIP DETALHADO AO PASSAR O MOUSE */}
-                            <div className="pericia-tooltip">
-                                <div className="tooltip-row"><span>1/2 Nível:</span> <span>{isTreinada ? metadeNivel : 0}</span></div>
-                                <div className="tooltip-row"><span>Atributo:</span> <span>{modAtributo}</span></div>
-                                <div className="tooltip-row"><span>Treino:</span> <span>{bonusTreino}</span></div>
-                                {info.outros !== 0 && <div className="tooltip-row"><span>Racial/Outros:</span> <span>{info.outros}</span></div>}
-                                <div className="tooltip-row tooltip-total"><span>Total:</span> <span>{info.total}</span></div>
-
-                                {isHabilidadeChoice && <div style={{ color: '#d32f2f', fontSize: '0.7rem', marginTop: 5 }}>Treinada por Habilidade Racial</div>}
-                                {!isOpcaoClasse && !isTreinada && slotsRestantesInteligencia <= 0 && (
-                                    <div style={{ color: '#f44336', fontSize: '0.7rem', marginTop: 5 }}>Requer Inteligência</div>
-                                )}
-                            </div>
-                        </div>
-                    )
-                })}
+                <div className="col-formula">
+                    <span className="val-item" title="1/2 Nível">+{metadeNivel}</span>
+                    <span className="plus">+</span>
+                    <div className="val-item attr-item" title={`Atributo ${meta.atributo}`}>
+                        <span>{attrVal >= 0 ? `+${attrVal}` : attrVal}</span>
+                        <small>{meta.atributo}</small>
+                    </div>
+                    <span className="plus">+</span>
+                    <span className="val-item" title="Treino">+{treinoVal}</span>
+                    <span className="plus">+</span>
+                    <span className="val-item" title="Outros">+{outrosVal}</span>
+                </div>
             </div>
+        );
+    };
+
+    // --- OFÍCIOS ---
+    const [novoOficio, setNovoOficio] = useState("");
+    const adicionarOficio = () => {
+        if (!novoOficio) return;
+        const nomeCompleto = `Ofício (${novoOficio})`;
+        if (!periciasTreinadas[nomeCompleto]) {
+            // Ofícios contam como perícia de classe, então só checa slots totais
+            if (slotsTotaisRestantes > 0) {
+                const novaLista = { ...periciasTreinadas };
+                novaLista[nomeCompleto] = { treino: 1, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 };
+                updateFicha({ pericias: novaLista });
+            } else {
+                // Pode adicionar destreinado se quiser, mas aqui vamos assumir que quer treinar
+                const novaLista = { ...periciasTreinadas };
+                novaLista[nomeCompleto] = { treino: 0, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 };
+                updateFicha({ pericias: novaLista });
+            }
+            setNovoOficio("");
+        }
+    };
+
+    const listaExibicao = [...listaTodasPericias];
+    Object.keys(periciasTreinadas).forEach(p => {
+        if (p.startsWith("Ofício") && !listaExibicao.includes(p)) {
+            listaExibicao.push(p);
+        }
+    });
+    listaExibicao.sort();
+
+    return (
+        <div className="section-card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="section-header" style={{ padding: '8px 12px', background: '#222', borderBottom: '1px solid #444', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff' }}>PERÍCIAS</h3>
+                <div style={{ fontSize: '0.8rem', color: '#aaa', display: 'flex', gap: '15px' }}>
+                    <span>
+                        Classe: <strong style={{ color: '#ffd700' }}>{qtdTotalEscolhas - intMod}</strong>
+                    </span>
+                    <span>
+                        Inteligência: <strong style={{ color: '#00bcd4' }}>{slotsInteligenciaRestantes}</strong>/<strong style={{ color: '#00bcd4' }}>{intMod}</strong>
+                    </span>
+                    <span>
+                        Total Restante: <strong style={{ color: slotsTotaisRestantes > 0 ? '#4caf50' : '#f44336' }}>{slotsTotaisRestantes}</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div className="skill-header-grid">
+                <div className="h-check"></div>
+                <div className="h-name">PERÍCIA</div>
+                <div className="h-total">TOTAL</div>
+                <div className="h-equal"></div>
+                <div className="h-formula">
+                    <span style={{ width: 25 }}>1/2</span>
+                    <span style={{ width: 10 }}></span>
+                    <span style={{ width: 25 }}>ATR</span>
+                    <span style={{ width: 10 }}></span>
+                    <span style={{ width: 25 }}>TR</span>
+                    <span style={{ width: 10 }}></span>
+                    <span style={{ width: 25 }}>OUT</span>
+                </div>
+            </div>
+
+            <div className="skills-container" style={{ padding: '0 5px' }}>
+                {listaExibicao.map((pericia, index) => renderSkillRow(pericia, pericia, index))}
+            </div>
+
+            <div className="add-skill-row" style={{ padding: '8px 12px', borderTop: '1px solid #333' }}>
+                <input
+                    type="text"
+                    placeholder="Novo Ofício..."
+                    value={novoOficio}
+                    onChange={(e) => setNovoOficio(e.target.value)}
+                />
+                <button onClick={adicionarOficio}>+</button>
+            </div>
+
+            <style>{`
+                /* Mantendo o estilo Grid que ajustamos anteriormente */
+                .skill-row-grid, .skill-header-grid {
+                    display: grid;
+                    grid-template-columns: 22px 1fr 35px 10px 135px; /* Compactado para dar espaço ao nome */
+                    align-items: center;
+                    padding: 4px 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                }
+
+                .skill-header-grid {
+                    font-size: 0.6rem; color: #888; font-weight: bold;
+                    border-bottom: 1px solid #444; padding: 5px 10px;
+                    text-transform: uppercase; letter-spacing: 0.5px;
+                }
+
+                .col-check { display: flex; justify-content: center; cursor: pointer; }
+                .checkbox-box {
+                    width: 12px; height: 12px; border: 1px solid #555; border-radius: 2px;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 9px; color: #000; background: #222;
+                }
+                .checkbox-box.checked { background: #ffd700; border-color: #ffd700; }
+                .checkbox-box.locked { background: #4caf50; border-color: #4caf50; color: #fff; }
+
+                .col-name { 
+                    display: flex; align-items: center; padding-left: 5px; cursor: pointer; 
+                    white-space: nowrap; overflow: hidden;
+                }
+                .name-text { 
+                    font-size: 0.85rem; color: #ccc; 
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+                }
+                .name-text.trained-text { color: #fff; font-weight: 600; }
+                
+                .icons-container { margin-left: 4px; display: flex; gap: 2px; flex-shrink: 0; }
+                .icon-badge { font-size: 0.65rem; }
+                .text-badge { font-size: 0.5rem; padding: 0 3px; border-radius: 2px; color:#000; font-weight:bold; }
+                .text-badge.class { background: #4caf50; }
+                .text-badge.origin { background: #2196f3; }
+
+                .col-total { display: flex; justify-content: center; }
+                .total-box {
+                    width: 30px; height: 22px; border: 1px solid #444; background: #1a1a1a;
+                    display: flex; align-items: center; justify-content: center;
+                    font-weight: bold; font-size: 0.9rem; color: #fff; border-radius: 3px;
+                }
+
+                .col-equal { text-align: center; color: #555; font-weight: bold; font-size: 0.8rem; }
+
+                .col-formula, .h-formula {
+                    display: flex; justify-content: space-around; 
+                    color: #666; font-family: monospace; font-size: 0.75rem;
+                }
+                
+                .val-item { width: 25px; text-align: center; color: #999; display: inline-block; }
+                .plus { width: 8px; text-align: center; color: #444; display: inline-block; }
+                .h-formula span { text-align: center; display: inline-block; }
+
+                .val-item.attr-item {
+                    display: flex; flex-direction: column; align-items: center; line-height: 0.8;
+                }
+                .attr-item span { color: #eee; }
+                .attr-item small { font-size: 0.5rem; color: #555; margin-top: 1px; }
+
+                .skill-row-grid.disabled { opacity: 0.3; pointer-events: none; }
+
+                .add-skill-row { display: flex; gap: 5px; }
+                .add-skill-row input {
+                    flex: 1; padding: 4px 8px; background: #111; border: 1px solid #444; 
+                    color: #fff; border-radius: 3px; font-size: 0.8rem;
+                }
+                .add-skill-row button {
+                    padding: 0 10px; background: #333; color: #fff; border: 1px solid #444; 
+                    border-radius: 3px; cursor: pointer; font-size: 1.1rem; line-height: 1;
+                }
+                .add-skill-row button:hover { background: #444; border-color: #555; }
+            `}</style>
         </div>
     );
 };

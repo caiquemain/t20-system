@@ -10,6 +10,7 @@ export interface Cabecalho {
     jogador: string;
     raca: string;
     origem: string;
+    deus: string;
     divindade?: string;
     nivel_total: number;
     xp: XP;
@@ -105,11 +106,12 @@ export interface Status {
 }
 
 export interface PericiaInfo {
-    total: number;
-    treino: number;
-    bonus_item: number;
+    treino: number;      // 0 = destreinado, 1 = treinado, 2 = expert
+    bonus_nivel: number; // <--- ADICIONE ESTA LINHA
+    atributo_valor: number; // <--- ADICIONE ESTA TAMBÉM (usada no backend)
     outros: number;
-    atributo_chave: string;
+    total: number;
+    // Opcional: atributo_override?: string; (para o futuro)
 }
 
 export interface Ataque {

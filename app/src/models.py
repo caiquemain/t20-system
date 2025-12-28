@@ -1,9 +1,14 @@
+from typing import List, Dict, Optional, Any, Union
 from enum import Enum
-from typing import List, Optional, Dict, Any
-from uuid import UUID, uuid4
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator, field_validator
 
-# --- ENUMS ---
+# Tenta importar ObjectId do BSON (MongoDB), se falhar usa Any
+try:
+    from bson import ObjectId
+except ImportError:
+    ObjectId = Any
+
+# --- ENUMS (Essenciais para regras.py) ---
 
 
 class TamanhoEnum(str, Enum):
@@ -14,29 +19,40 @@ class TamanhoEnum(str, Enum):
     ENORME = "Enorme"
     COLOSSAL = "Colossal"
 
-# --- SUB-MODELOS DE DETALHES (NOVO) ---
+    @classmethod
+    def _missing_(cls, value):
+        # Se vier algo inválido do banco, assume Médio para não travar a API
+        return cls.MEDIO
+
+# --- SUB-MODELOS DE DETALHES (Cálculos) ---
 
 
 class DetalhesPV(BaseModel):
     inicial: int = 0
     nivel: int = 0
     con: int = 0
+    habilidades: int = 0
     outros: int = 0
+    total: int = 0
 
 
 class DetalhesPM(BaseModel):
     inicial: int = 0
     nivel: int = 0
     atributo: int = 0
+    habilidades: int = 0
     outros: int = 0
+    total: int = 0
 
 
 class DetalhesDeslocamento(BaseModel):
     base: float = 9.0
     armadura: float = 0.0
+    habilidades: float = 0.0
     outros: float = 0.0
+    total: float = 9.0
 
-# --- SUB-MODELOS EXISTENTES ---
+# --- SUB-MODELOS DE DADOS BÁSICOS ---
 
 
 class XP(BaseModel):
@@ -45,31 +61,30 @@ class XP(BaseModel):
 
 
 class Cabecalho(BaseModel):
-    nome: str
-    jogador: str
-    raca: str
-    origem: str
-    divindade: Optional[str] = None
+    nome: str = "Sem Nome"
+    jogador: str = ""
+    raca: str = ""
+    origem: str = ""
+    deus: str = ""
     nivel_total: int = 1
     xp: XP = Field(default_factory=XP)
 
+    # VALIDADOR: Migração e Limpeza de Nulos
+    @model_validator(mode='before')
+    @classmethod
+    def corrigir_dados(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Migra divindade -> deus (Fichas antigas)
+            if 'divindade' in data:
+                val = data.pop('divindade')
+                if not data.get('deus'):
+                    data['deus'] = val if val else ""
 
-class ClasseInfo(BaseModel):
-    nome: str
-    nivel: int
-    subclasse: Optional[str] = None
-    primaria: bool = False
-
-
-class Descricao(BaseModel):
-    idade: Optional[str] = "20"
-    altura: Optional[str] = None
-    tamanho: TamanhoEnum = TamanhoEnum.MEDIO
-    genero: Optional[str] = None
-    idiomas: List[str] = []
-    aparencia: Optional[str] = None
-    historia: Optional[str] = None
-    anotacoes: Optional[str] = None
+            # Garante que campos string nunca sejam None (evita erro 500)
+            for campo in ['nome', 'jogador', 'raca', 'origem', 'deus']:
+                if data.get(campo) is None:
+                    data[campo] = ""
+        return data
 
 
 class Atributos(BaseModel):
@@ -81,71 +96,80 @@ class Atributos(BaseModel):
     carisma: int = 0
 
 
-class StatusBarra(BaseModel):
+class Descricao(BaseModel):
+    tamanho: TamanhoEnum = TamanhoEnum.MEDIO
+    idiomas: List[str] = []
+    aparencia: str = ""
+    historia: str = ""
+    anotacoes: str = ""
+
+    # VALIDADOR: Proteção para campos de texto longos
+    @field_validator('aparencia', 'historia', 'anotacoes', mode='before')
+    @classmethod
+    def empty_string_if_none(cls, v):
+        return v if v is not None else ""
+
+    @field_validator('tamanho', mode='before')
+    @classmethod
+    def fallback_tamanho(cls, v):
+        if not v:
+            return TamanhoEnum.MEDIO
+        return v
+
+# --- STATUS ---
+
+
+class StatusDetalhe(BaseModel):
     atual: int = 0
     maximo: int = 0
     temporario: int = 0
-    # Detalhes adicionados aqui (Opcionais para compatibilidade)
-    detalhes_pv: Optional[DetalhesPV] = None
-    detalhes_pm: Optional[DetalhesPM] = None
+    calculo: Optional[Union[DetalhesPV, DetalhesPM]] = None
 
 
-class ModificadorDetalhes(BaseModel):
-    base: int = 10
-    des_mod: int = 0
-    armadura: int = 0
-    escudo: int = 0
-    outros: int = 0
-
-
-class RD(BaseModel):
-    tipo: str
-    valor: int
-    fonte: Optional[str] = None
-
-
-class Defesa(BaseModel):
+class DefesaDetalhe(BaseModel):
     total: int = 10
-    detalhes: ModificadorDetalhes = Field(default_factory=ModificadorDetalhes)
+    detalhes: Dict[str, int] = {}
 
 
 class Status(BaseModel):
-    pv: StatusBarra = Field(default_factory=StatusBarra)
-    pm: StatusBarra = Field(default_factory=StatusBarra)
-    defesa: Defesa = Field(default_factory=Defesa)
-    rd: List[RD] = []
+    pv: StatusDetalhe = Field(default_factory=StatusDetalhe)
+    pm: StatusDetalhe = Field(default_factory=StatusDetalhe)
+    defesa: DefesaDetalhe = Field(default_factory=DefesaDetalhe)
+    rd: List[str] = []
     deslocamento: float = 9.0
-    detalhes_deslocamento: DetalhesDeslocamento = Field(
-        default_factory=DetalhesDeslocamento)
+    detalhes_deslocamento: Optional[DetalhesDeslocamento] = None
+
+# --- PERÍCIAS E COMBATE ---
 
 
 class PericiaInfo(BaseModel):
-    total: int = 0
     treino: int = 0
-    bonus_item: int = 0
+    bonus_nivel: int = 0
+    atributo_valor: int = 0
     outros: int = 0
-    atributo_chave: str = "int"
+    total: int = 0
 
 
 class Ataque(BaseModel):
-    nome: str
-    bonus_ataque: int
-    dano: str
-    critico: str
-    tipo: str
-    alcance: str
+    nome: str = ""
+    bonus_ataque: str = "+0"
+    dano: str = "1d4"
+    critico: str = "x2"
+    tipo: str = "Corte"
+    alcance: str = "Curto"
 
 
 class Magia(BaseModel):
     nome: str
-    circulo: int
-    escola: str
-    custo_pm: int
-    execucao: str
-    alcance: str
-    duracao: str
-    resistencia: Optional[str] = None
-    descricao: Optional[str] = None
+    circulo: int = 1
+    custo_pm: int = 1
+    execucao: str = "Padrão"
+    alcance: str = "Curto"
+    duracao: str = "Instantânea"
+    alvo_area: str = ""
+    resistencia: str = ""
+    escola: str = ""
+    descricao: str = ""
 
 
 class Combate(BaseModel):
@@ -155,13 +179,16 @@ class Combate(BaseModel):
     bba: int = 0
     iniciativa: int = 0
 
+# --- HABILIDADES E EQUIPAMENTO ---
 
-class Item(BaseModel):
+
+class Habilidade(BaseModel):
     nome: str
-    qtd: int = 1
-    espaco: float = 0
-    equipado: bool = False
-    local: str = "Mochila"
+    tipo: str
+    descricao: str = ""
+    fonte: str = ""
+    custo_pm: int = 0
+    escolhas_aplicadas: Dict[str, Any] = {}
 
 
 class Dinheiro(BaseModel):
@@ -170,46 +197,68 @@ class Dinheiro(BaseModel):
     to: int = 0
 
 
+class Item(BaseModel):
+    nome: str
+    qtd: int = 1
+    espaco: int = 1
+    descricao: str = ""
+    tipo: str = "Geral"
+    equipado: bool = False
+
+
 class Inventario(BaseModel):
     dinheiro: Dinheiro = Field(default_factory=Dinheiro)
     equipamentos: List[Item] = []
-    carga_total: float = 0.0
-    carga_maxima: float = 0.0
+    carga_total: int = 0
+    carga_maxima: int = 0
 
 
-class Habilidade(BaseModel):
+class ClasseInfo(BaseModel):
     nome: str
-    tipo: str
-    descricao: Optional[str] = None
-    fonte: Optional[str] = None
-    escolhas_aplicadas: Dict[str, Any] = Field(default_factory=dict)
+    nivel: int = 1
+    primaria: bool = False
+    subclasse: str = ""
+
+# --- MODELO PRINCIPAL ---
 
 
 class Personagem(BaseModel):
-    id: UUID = Field(default_factory=uuid4, alias="_id")
-    usuario_id: str = "admin"
+    # Alias _id é importante para mapear o campo do MongoDB
+    id: Optional[str] = Field(default=None, alias="_id")
+    usuario_id: str = "guest"
 
     cabecalho: Cabecalho = Field(default_factory=Cabecalho)
-    classes: List[ClasseInfo] = Field(default_factory=list)
-    descricao: Descricao = Field(default_factory=Descricao)
+    classes: List[ClasseInfo] = []
 
     atributos_base: Atributos = Field(default_factory=Atributos)
     atributos: Atributos = Field(default_factory=Atributos)
 
-    modificadores_raciais: Dict[str, int] = Field(default_factory=dict)
-    modificadores_envelhecimento: Dict[str, int] = Field(default_factory=dict)
-    modificadores_outros: Dict[str, int] = Field(default_factory=dict)
-    escolhas_atributos_raciais: List[str] = Field(default_factory=list)
+    modificadores_raciais: Dict[str, int] = {}
+    modificadores_envelhecimento: Dict[str, int] = {}
+    modificadores_outros: Dict[str, int] = {}
 
-    escolhas_origem: List[str] = Field(default_factory=list)
+    escolhas_atributos_raciais: List[str] = []
+    escolhas_origem: List[str] = []
 
+    descricao: Descricao = Field(default_factory=Descricao)
     status: Status = Field(default_factory=Status)
-    pericias: Dict[str, PericiaInfo] = Field(default_factory=dict)
-    proficiencias: List[str] = Field(default_factory=list)
-    combate: Combate = Field(default_factory=Combate)
 
-    habilidades: List[Habilidade] = Field(default_factory=list)
+    pericias: Dict[str, PericiaInfo] = {}
+    proficiencias: List[str] = []
+
+    combate: Combate = Field(default_factory=Combate)
+    habilidades: List[Habilidade] = []
     inventario: Inventario = Field(default_factory=Inventario)
+
+    # VALIDADOR CRUCIAL: Conversão de ObjectId -> String
+    # Isso impede o erro "Input should be a valid string" na saída da API
+    @field_validator('id', mode='before')
+    @classmethod
+    def converter_objectid(cls, v):
+        if v is None:
+            return None
+        # Converte qualquer objeto (inclusive ObjectId do Mongo) para string
+        return str(v)
 
     class Config:
         populate_by_name = True

@@ -1,165 +1,136 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api'; // Usando o serviço centralizado
-import type { Personagem } from '../types';
-import './Home.css';
+import { fetchPersonagens, createPersonagem, deletePersonagem } from '../services/api';
+import '../Ficha.css'; // Reutilizando estilos ou crie um Home.css
 
-// Objeto padrão para criar um novo personagem
-const NOVO_PERSONAGEM_TEMPLATE: Partial<Personagem> = {
-    usuario_id: "guest",
+// Definição simplificada para a lista
+interface PersonagemResumo {
+    _id: string;
     cabecalho: {
-        nome: "Novo Aventureiro",
-        jogador: "",
-        raca: "Humano",
-        origem: "Amnésico",
-        nivel_total: 1,
-        xp: { atual: 0, proximo_nivel: 1000 }
-    },
-    classes: [{ nome: "Guerreiro", nivel: 1, primaria: true }],
-    atributos_base: { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 },
-    atributos: { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 },
-    status: {
-        pv: { atual: 20, maximo: 20, temporario: 0 },
-        pm: { atual: 3, maximo: 3, temporario: 0 },
-        defesa: { total: 10, detalhes: { base: 10, des_mod: 0, armadura: 0, escudo: 0, outros: 0 } },
-        rd: [],
-        deslocamento: 9
-    },
-    pericias: {},
-    proficiencias: [],
-    habilidades: [],
-    inventario: { dinheiro: { tl: 0, tp: 0, to: 0 }, equipamentos: [], carga_total: 0, carga_maxima: 10 },
-    combate: { ataques: [], magias: [], cd_magias: 10, bba: 0, iniciativa: 0 }
-};
+        nome: string;
+        raca: string;
+        classe: string; // ou classes[0].nome se for complexo
+        nivel_total: number;
+    };
+}
 
-function Home() {
+const Home = () => {
     const navigate = useNavigate();
-    const [personagens, setPersonagens] = useState<Personagem[]>([]);
+    const [personagens, setPersonagens] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // Carregar lista ao montar
-    useEffect(() => {
-        carregarPersonagens();
-    }, []);
 
     const carregarPersonagens = async () => {
         try {
-            setLoading(true);
-            const response = await api.get('/personagens/');
-            setPersonagens(response.data);
+            const res = await fetchPersonagens();
+            setPersonagens(res.data);
         } catch (error) {
-            console.error("Erro ao carregar personagens:", error);
-            alert("Não foi possível carregar a lista de personagens.");
+            console.error("Erro ao listar personagens", error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCriarNovo = async () => {
+    useEffect(() => {
+        carregarPersonagens();
+    }, []);
+
+    const handleNovoPersonagem = async () => {
+        // Objeto mínimo para criar ficha (o backend preenche o resto)
+        const novaFicha = {
+            cabecalho: { nome: "Novo Aventureiro", raca: "Humano", origem: "Camponês", nivel_total: 1 },
+            classes: [{ nome: "Guerreiro", nivel: 1 }],
+            atributos_base: { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 }
+        };
+
         try {
-            const response = await api.post('/personagens/', NOVO_PERSONAGEM_TEMPLATE);
-            const novoId = response.data._id;
-            navigate(`/ficha/${novoId}`);
+            // @ts-ignore
+            const res = await createPersonagem(novaFicha);
+            navigate(`/ficha/${res.data._id}`);
         } catch (error) {
-            console.error("Erro ao criar personagem:", error);
-            alert("Erro ao criar novo personagem.");
+            console.error("Erro ao criar", error);
+            alert("Erro ao criar personagem.");
         }
     };
 
-    const handleExcluir = async (e: React.MouseEvent, id?: string) => {
-        e.stopPropagation(); // Evita abrir a ficha ao clicar no botão de excluir
-        if (!id) return;
-
-        if (window.confirm("Tem certeza que deseja excluir este personagem? Esta ação é irreversível.")) {
-            try {
-                await api.delete(`/personagens/${id}`);
-                // Atualiza a lista localmente
-                setPersonagens(prev => prev.filter(p => p._id !== id));
-            } catch (error) {
-                console.error("Erro ao excluir:", error);
-                alert("Erro ao excluir personagem.");
-            }
+    const handleDeletar = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (confirm("Tem certeza que deseja apagar esta ficha?")) {
+            await deletePersonagem(id);
+            carregarPersonagens();
         }
     };
-
-    if (loading) {
-        return (
-            <div className="home-container loading-state">
-                <div className="spinner"></div>
-                <h2>Carregando Grimório...</h2>
-            </div>
-        );
-    }
 
     return (
-        <div className="home-container">
-            <header className="home-header">
-                <div className="logo-area">
-                    <h1>Grimório T20</h1>
-                    <p>Gerenciador de Fichas de Tormenta 20</p>
-                </div>
-                <button className="btn-new-char" onClick={handleCriarNovo}>
+        <div className="ficha-container" style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                <h1 style={{ color: '#ffd700', margin: 0 }}>Grimório T20</h1>
+                <button className="btn-action" onClick={handleNovoPersonagem} style={{ fontSize: '1rem', padding: '10px 20px' }}>
                     + Novo Personagem
                 </button>
-            </header>
+            </div>
 
-            <main className="char-grid-area">
-                {personagens.length === 0 ? (
-                    <div className="empty-state">
-                        <h3>Nenhum personagem encontrado.</h3>
-                        <p>Crie sua primeira ficha para começar a aventura!</p>
-                        <button className="btn-new-char large" onClick={handleCriarNovo}>
-                            Criar Ficha Agora
-                        </button>
-                    </div>
-                ) : (
-                    <div className="char-grid">
-                        {personagens.map((char) => (
+            {loading ? (
+                <div className="loading-screen">Carregando fichas...</div>
+            ) : (
+                <div className="char-list" style={{ display: 'grid', gap: '15px' }}>
+                    {personagens.map((p) => {
+                        // Tratamento seguro para exibir classes
+                        const classeDisplay = p.classes && p.classes.length > 0
+                            ? `${p.classes[0].nome} ${p.classes[0].nivel}`
+                            : 'Nível 1';
+
+                        return (
                             <div
-                                key={char._id}
-                                className="char-card"
-                                onClick={() => navigate(`/ficha/${char._id}`)}
+                                key={p._id}
+                                onClick={() => navigate(`/ficha/${p._id}`)}
+                                style={{
+                                    background: '#252525',
+                                    padding: '20px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #333',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    transition: 'transform 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.01)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
-                                <div className="char-card-header">
-                                    <h3 className="char-name">{char.cabecalho.nome || "Sem Nome"}</h3>
-                                    <span className="char-level">Nível {char.cabecalho.nivel_total}</span>
+                                <div>
+                                    <h3 style={{ margin: '0 0 5px 0', color: '#e0e0e0' }}>
+                                        {p.cabecalho?.nome || "Sem Nome"}
+                                    </h3>
+                                    <span style={{ color: '#888', fontSize: '0.9rem' }}>
+                                        {p.cabecalho?.raca} • {classeDisplay}
+                                    </span>
                                 </div>
-
-                                <div className="char-info">
-                                    <div className="info-pill race">{char.cabecalho.raca || "Raça?"}</div>
-                                    <div className="info-pill class">
-                                        {char.classes.map(c => c.nome).join(' / ') || "Classe?"}
-                                    </div>
-                                </div>
-
-                                <div className="char-stats-preview">
-                                    <div className="stat-mini">
-                                        <span className="label">PV</span>
-                                        <span className="value">{char.status.pv.atual}/{char.status.pv.maximo}</span>
-                                    </div>
-                                    <div className="stat-mini">
-                                        <span className="label">PM</span>
-                                        <span className="value">{char.status.pm.atual}/{char.status.pm.maximo}</span>
-                                    </div>
-                                </div>
-
-                                <div className="char-actions">
-                                    <button className="btn-open">Abrir Ficha</button>
-                                    <button
-                                        className="btn-delete"
-                                        onClick={(e) => handleExcluir(e, char._id)}
-                                        title="Excluir Personagem"
-                                    >
-                                        🗑️
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={(e) => handleDeletar(e, p._id)}
+                                    style={{
+                                        background: 'transparent',
+                                        border: '1px solid #d32f2f',
+                                        color: '#d32f2f',
+                                        padding: '5px 10px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Excluir
+                                </button>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </main>
+                        );
+                    })}
+
+                    {personagens.length === 0 && (
+                        <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>
+                            Nenhum personagem encontrado. Crie o primeiro!
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
     );
-}
+};
 
 export default Home;

@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     fetchRacas, fetchClasses, fetchOrigens, fetchPericias, fetchPoderes,
     fetchDadosClasses, fetchDadosOrigens, fetchDadosRacas, fetchDadosHabilidadesClasse,
-    fetchDadosMagias, fetchDadosHabilidades, // <--- Importante para carregar regras de habilidades (Versátil)
+    fetchDadosMagias, fetchDadosHabilidades,
+    fetchDeuses, fetchDadosDeuses, fetchDadosPoderesConcedidos,
     fetchPersonagem, updatePersonagem
 } from '../services/api';
 import type { Personagem, Habilidade } from '../types';
 
-// Modelo de Ficha Vazia para inicialização
+// Valor padrão
 const FICHA_VAZIA: Personagem = {
     _id: '',
     usuario_id: 'guest',
-    cabecalho: { nome: '', jogador: '', raca: '', origem: '', nivel_total: 1, xp: { atual: 0, proximo_nivel: 1000 } },
-    classes: [{ nome: 'Guerreiro', nivel: 1, primaria: true }],
+    cabecalho: { nome: '', jogador: '', raca: '', origem: '', deus: '', nivel_total: 1, xp: { atual: 0, proximo_nivel: 1000 } },
+    classes: [{ nome: 'Guerreiro', nivel: 1, primaria: true, subclasse: '' }],
     descricao: { tamanho: 'Médio', idiomas: [], aparencia: '', historia: '', anotacoes: '' },
     atributos_base: { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 },
     atributos: { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 },
@@ -31,44 +32,57 @@ const FICHA_VAZIA: Personagem = {
 };
 
 export const useFicha = (id: string | undefined) => {
+    // --- ESTADOS PRINCIPAIS ---
     const [ficha, setFicha] = useState<Personagem | null>(null);
-    const [loading, setLoading] = useState(true)
-    // --- DADOS ESTÁTICOS (Listas) ---
+    const [loading, setLoading] = useState(true);
+    const [salvando, setSalvando] = useState(false);
+
+    // --- DADOS ESTÁTICOS ---
     const [listaRacas, setListaRacas] = useState<string[]>([]);
     const [listaClasses, setListaClasses] = useState<string[]>([]);
     const [listaOrigens, setListaOrigens] = useState<string[]>([]);
     const [listaTodasPericias, setListaTodasPericias] = useState<string[]>([]);
     const [listaPoderes, setListaPoderes] = useState<any[]>([]);
+    const [listaDeuses, setListaDeuses] = useState<string[]>([]);
 
-    // --- DADOS DE REGRAS (Objetos Completos) ---
+    // --- DADOS DE REGRAS ---
     const [dadosClasses, setDadosClasses] = useState<any>({});
     const [dadosOrigens, setDadosOrigens] = useState<any>({});
     const [dadosRacas, setDadosRacas] = useState<any>({});
     const [dadosHabilidadesClasse, setDadosHabilidadesClasse] = useState<any>({});
     const [dadosMagias, setDadosMagias] = useState<any>({});
-    const [dadosHabilidades, setDadosHabilidades] = useState<any>({}); // <--- Novo: Regras gerais de habilidades
+    const [dadosHabilidades, setDadosHabilidades] = useState<any>({});
+    const [dadosDeuses, setDadosDeuses] = useState<any>({});
+    const [dadosPoderesConcedidos, setDadosPoderesConcedidos] = useState<any>({});
 
-    // --- ESTADOS DE EDIÇÃO (Modal) ---
+    // --- ESTADOS DE EDIÇÃO (MODAL) ---
     const [showHabilidadesPanel, setShowHabilidadesPanel] = useState(false);
     const [habilidadesEmEdicao, setHabilidadesEmEdicao] = useState<any[]>([]);
     const [origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao] = useState<string[]>([]);
     const [classPowersEmEdicao, setClassPowersEmEdicao] = useState<string[]>([]);
-
-    // Estado de Subclasse (ex: Caminho do Arcanista)
     const [subclasseEmEdicao, setSubclasseEmEdicao] = useState<string>("");
+    const [devocaoEmEdicao, setDevocaoEmEdicao] = useState<string>("");
 
-    // CARREGAMENTO INICIAL
+    // Refs para controle
+    const fichaRef = useRef<Personagem | null>(null);
+    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // --- CARREGAMENTO INICIAL ---
     useEffect(() => {
         const carregarDados = async () => {
             try {
-                console.log("🔄 [useFicha] Carregando dados...");
+                console.log("🔄 [useFicha] Carregando sistema...");
+                setLoading(true);
 
                 const results = await Promise.all([
                     fetchRacas(), fetchClasses(), fetchOrigens(), fetchPericias(), fetchPoderes(),
                     fetchDadosClasses(), fetchDadosOrigens(), fetchDadosRacas(),
                     fetchDadosHabilidadesClasse(),
                     fetchDadosMagias().catch(() => ({ data: {} })),
-                    fetchDadosHabilidades().catch(() => ({ data: {} })) // <--- Carrega habilidades gerais
+                    fetchDadosHabilidades().catch(() => ({ data: {} })),
+                    fetchDeuses().catch(() => ({ data: [] })),
+                    fetchDadosDeuses().catch(() => ({ data: {} })),
+                    fetchDadosPoderesConcedidos().catch(() => ({ data: {} }))
                 ]);
 
                 setListaRacas(results[0].data);
@@ -82,18 +96,32 @@ export const useFicha = (id: string | undefined) => {
                 setDadosRacas(results[7].data);
                 setDadosHabilidadesClasse(results[8].data);
                 setDadosMagias(results[9].data);
-                setDadosHabilidades(results[10].data); // Salva no estado
+                setDadosHabilidades(results[10].data);
 
-                if (id && id !== 'novo') {
-                    const fichaRes = await fetchPersonagem(id);
-                    setFicha(fichaRes.data);
+                setListaDeuses(results[11].data);
+                setDadosDeuses(results[12].data);
+                setDadosPoderesConcedidos(results[13].data);
+
+                const idValido = id && id !== 'novo' && id !== 'null' && id !== 'undefined';
+
+                if (idValido) {
+                    console.log(`📡 Buscando ficha ID: ${id}`);
+                    try {
+                        const fichaRes = await fetchPersonagem(id);
+                        setFicha(fichaRes.data);
+                        fichaRef.current = fichaRes.data;
+                    } catch (err) {
+                        console.error("❌ Erro ao buscar ficha, iniciando vazia.", err);
+                        setFicha(FICHA_VAZIA);
+                    }
                 } else {
+                    console.log("📝 Iniciando ficha nova.");
                     setFicha(FICHA_VAZIA);
                 }
 
-                console.log("✅ [useFicha] Dados carregados com sucesso.");
+                console.log("✅ [useFicha] Sistema pronto.");
             } catch (error) {
-                console.error("❌ Erro ao carregar dados:", error);
+                console.error("❌ Erro fatal:", error);
             } finally {
                 setLoading(false);
             }
@@ -101,145 +129,185 @@ export const useFicha = (id: string | undefined) => {
         carregarDados();
     }, [id]);
 
-    // --- UPDATE INTELIGENTE ---
-    const updateFicha = async (novosDados: Partial<Personagem>) => {
-        if (!ficha) return;
+    // --- SALVAMENTO AUTOMÁTICO ---
+    const salvarAutomaticamente = useCallback((dados: Personagem) => {
+        if (!dados._id) return;
+        if (id === 'novo') return;
 
-        // 1. Atualização Otimista (UI rápida)
-        const fichaOtimista = { ...ficha, ...novosDados };
-        setFicha(fichaOtimista);
-
-        if (id && id !== 'novo') {
-            try {
-                // 2. Envia para o Backend processar as regras
-                const response = await updatePersonagem(id, fichaOtimista);
-
-                // 3. Atualiza estado com o retorno do Backend (Cálculos de PV, PM, Defesa atualizados)
-                setFicha(response.data);
-            } catch (e) {
-                console.error("Erro ao salvar ficha:", e);
-            }
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
         }
-    };
 
-    // Handler para Atributos Base
+        setSalvando(true);
+
+        saveTimeoutRef.current = setTimeout(async () => {
+            try {
+                const targetId = id || dados._id;
+                if (targetId) {
+                    // CORREÇÃO: Atualiza o estado local com a resposta do servidor (que contém os cálculos oficiais)
+                    const response = await updatePersonagem(targetId, dados);
+                    if (response.data) {
+                        setFicha(prev => {
+                            if (!prev) return response.data;
+                            // Mescla suave para não perder edições feitas durante o request (race condition raro)
+                            return { ...prev, ...response.data };
+                        });
+                        console.log("💾 Ficha sincronizada com sucesso.");
+                    }
+                }
+            } catch (e) {
+                console.error("Erro no autosave:", e);
+            } finally {
+                setSalvando(false);
+            }
+        }, 1500); // 1.5s delay
+    }, [id]);
+
+    // --- FUNÇÃO DE ATUALIZAÇÃO ---
+    const updateFicha = useCallback(async (novosDados: Partial<Personagem>) => {
+        setFicha((prev) => {
+            if (!prev) return null;
+            const novaFicha = { ...prev, ...novosDados };
+            fichaRef.current = novaFicha;
+
+            // Dispara salvamento
+            salvarAutomaticamente(novaFicha);
+
+            return novaFicha;
+        });
+    }, [salvarAutomaticamente]);
+
+    // Limpa o timer ao desmontar
+    useEffect(() => {
+        return () => {
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        };
+    }, []);
+
+    // --- HELPERS ---
+
+    // CORREÇÃO AQUI: Atualiza também o Total (otimista) para a UI não piscar
     const handleAtributoBaseChange = (key: string, valorStr: string) => {
         if (!ficha) return;
-        const valor = parseInt(valorStr);
-        if (isNaN(valor)) return;
-        const novosAtributosBase = { ...ficha.atributos_base, [key]: valor };
-        updateFicha({ atributos_base: novosAtributosBase });
+        const novoValorBase = parseInt(valorStr) || 0;
+
+        // 1. Calcula a diferença
+        const valorAntigoBase = ficha.atributos_base[key as keyof typeof ficha.atributos_base] || 0;
+        const delta = novoValorBase - valorAntigoBase;
+
+        // 2. Atualiza a Base
+        const novosAtributosBase = { ...ficha.atributos_base, [key]: novoValorBase };
+
+        // 3. Atualiza o Total (Otimista)
+        // Isso faz o cálculo visual na tela (base + outros) bater imediatamente
+        const valorAntigoTotal = ficha.atributos[key as keyof typeof ficha.atributos] || 0;
+        const novosAtributosTotal = { ...ficha.atributos, [key]: valorAntigoTotal + delta };
+
+        updateFicha({
+            atributos_base: novosAtributosBase,
+            atributos: novosAtributosTotal
+        });
     };
 
-    // PREPARAÇÃO DO MODAL DE CONFIGURAÇÃO
     const montarHabilidadesParaPanel = () => {
         if (!ficha) return;
 
+        // 1. Raciais
         const habsRaciais = ficha.habilidades
             .filter(h => h.tipo && h.tipo.toLowerCase().includes('raça'))
             .map(h => {
-                // CORREÇÃO: Busca a definição original da regra para saber se tem escolhas
-                // 1. Tenta achar pelo nome exato no banco de habilidades gerais
-                let definicaoOriginal = dadosHabilidades[h.nome];
+                let def = dadosHabilidades[h.nome];
+                if (!def) def = Object.values(dadosHabilidades).find((d: any) => d.nome === h.nome);
 
-                // 2. Se falhar, tenta buscar em dadosRacas (caso a chave seja diferente do nome)
-                if (!definicaoOriginal) {
-                    // Tenta encontrar a habilidade iterando
-                    const found = Object.values(dadosHabilidades).find((d: any) => d.nome === h.nome);
-                    if (found) definicaoOriginal = found;
-                }
-
-                const efeitosRegra = definicaoOriginal?.efeitos || {};
-
-                // Verifica se a regra exige escolhas (chaves terminando em _escolha)
-                const temEscolhaNaRegra = Object.keys(efeitosRegra).some(k => k.endsWith('_escolha'));
-
-                // Fallback para nomes conhecidos se o backend não retornou efeitos completos
-                const nomesConhecidos = ['Versátil', 'Herança', 'Tatuagem', 'Perícia', 'Poder'];
-                const ehConhecido = nomesConhecidos.some(n => h.nome.includes(n));
+                const efeitos = def?.efeitos || {};
+                const precisa = Object.keys(efeitos).some(k => k.endsWith('_escolha')) ||
+                    ['Versátil', 'Herança', 'Tatuagem', 'Perícia'].some(n => h.nome.includes(n));
 
                 return {
                     ...h,
-                    precisaEscolha: temEscolhaNaRegra || ehConhecido,
-                    // Passa os efeitos da REGRA para o componente saber QUAIS botões desenhar
-                    // Mescla com as escolhas JÁ FEITAS (h.escolhas_aplicadas) para preencher os valores
-                    efeitos: { ...efeitosRegra, ...h.escolhas_aplicadas }
+                    precisaEscolha: precisa,
+                    efeitos: { ...efeitos, ...h.escolhas_aplicadas }
                 };
             });
-
         setHabilidadesEmEdicao(habsRaciais);
 
+        // 2. Origem
         setOrigemBeneficiosEmEdicao(ficha.escolhas_origem || []);
 
+        // 3. Classe
         const poderesAtuais = ficha.habilidades
             .filter(h => h.tipo.includes('Poder de'))
             .map(h => h.nome);
-
         setClassPowersEmEdicao(poderesAtuais);
 
-        // Carrega subclasse atual
-        const classeAtual = ficha.classes[0];
-        setSubclasseEmEdicao(classeAtual.subclasse || "");
+        // 4. Subclasse
+        setSubclasseEmEdicao(ficha.classes[0]?.subclasse || "");
+
+        // 5. Devoção
+        const deus = ficha.cabecalho.deus;
+        const infoDeus = dadosDeuses[deus];
+        if (deus && infoDeus) {
+            const poder = ficha.habilidades.find(h => infoDeus.poderes.includes(h.nome));
+            setDevocaoEmEdicao(poder ? poder.nome : "");
+        } else {
+            setDevocaoEmEdicao("");
+        }
 
         setShowHabilidadesPanel(true);
     };
 
-    // SALVAR DO MODAL
     const handleSaveEscolhas = async () => {
         if (!ficha) return;
 
-        const fichaComOrigem = { ...ficha, escolhas_origem: origemBeneficiosEmEdicao };
+        const novaFicha = { ...ficha };
 
-        // Salva Subclasse
-        const novasClasses = [...ficha.classes];
-        if (novasClasses.length > 0) {
-            novasClasses[0] = { ...novasClasses[0], subclasse: subclasseEmEdicao };
+        // 1. Origem
+        novaFicha.escolhas_origem = origemBeneficiosEmEdicao;
+
+        // 2. Subclasse
+        if (novaFicha.classes.length > 0) {
+            novaFicha.classes[0] = { ...novaFicha.classes[0], subclasse: subclasseEmEdicao };
         }
-        fichaComOrigem.classes = novasClasses;
 
-        // Remove poderes antigos de classe para substituir pelos novos
-        // (Mas mantém habilidades fixas e de origem)
-        const habilidadesBase = ficha.habilidades.filter(h =>
-            !h.tipo.includes('Poder de')
+        // 3. Habilidades
+        let habilidadesFinais = novaFicha.habilidades.filter(h =>
+            !h.tipo.includes('Poder de') &&
+            !h.tipo.includes('Poder Concedido') &&
+            h.tipo !== 'Classe'
         );
 
-        // Reconstrói os objetos de Poderes de Classe com dados completos
-        const novosPoderesObj: Habilidade[] = classPowersEmEdicao.map(nomePoder => {
-            // Tenta achar nos dados de classe
-            let dados = Object.values(dadosHabilidadesClasse).find((d: any) => d.nome === nomePoder) as any;
-
-            // Se não achar, tenta nos poderes gerais (listaPoderes é apenas nomes/categorias, precisamos dos dados completos)
-            // A lista completa de poderes gerais está em dadosHabilidades (que carregamos agora)
-            if (!dados) {
-                dados = Object.values(dadosHabilidades).find((d: any) => d.nome === nomePoder);
-            }
-
-            if (dados) {
-                return {
-                    nome: dados.nome,
-                    tipo: dados.tipo, // Mantém o tipo original (ex: Poder Geral (Combate))
-                    descricao: dados.descricao,
-                    fonte: dados.classe || "Poder Geral"
-                };
-            }
-            // Fallback extremo
-            return { nome: nomePoder, tipo: 'Poder de Classe', descricao: 'Poder selecionado.', fonte: 'Classe' };
-        });
-
-        // Atualiza as escolhas internas das habilidades raciais
-        const habilidadesFinais = habilidadesBase.map(h => {
+        habilidadesFinais = habilidadesFinais.map(h => {
             const editada = habilidadesEmEdicao.find(he => he.nome === h.nome);
-            if (editada) {
-                // Salva apenas o que foi escolhido (escolhas_aplicadas)
-                return { ...h, escolhas_aplicadas: editada.escolhas_aplicadas };
-            }
-            return h;
+            return editada ? { ...h, escolhas_aplicadas: editada.escolhas_aplicadas } : h;
         });
 
-        habilidadesFinais.push(...novosPoderesObj);
+        const novosPoderesClasse: Habilidade[] = classPowersEmEdicao.map(nome => {
+            let d = Object.values(dadosHabilidadesClasse).find((x: any) => x.nome === nome) as any;
+            if (!d) d = Object.values(dadosHabilidades).find((x: any) => x.nome === nome);
+
+            return {
+                nome: nome,
+                tipo: d?.tipo || 'Poder de Classe',
+                descricao: d?.descricao || 'Poder selecionado',
+                fonte: d?.classe || 'Classe'
+            };
+        });
+        habilidadesFinais.push(...novosPoderesClasse);
+
+        if (novaFicha.cabecalho.deus && devocaoEmEdicao) {
+            const dPoder = dadosPoderesConcedidos[devocaoEmEdicao];
+            if (dPoder) {
+                habilidadesFinais.push({
+                    nome: dPoder.nome,
+                    tipo: "Poder Concedido",
+                    descricao: dPoder.descricao,
+                    fonte: `Devoção: ${novaFicha.cabecalho.deus}`
+                });
+            }
+        }
 
         await updateFicha({
-            ...fichaComOrigem,
+            ...novaFicha,
             habilidades: habilidadesFinais
         });
 
@@ -247,17 +315,19 @@ export const useFicha = (id: string | undefined) => {
     };
 
     return {
-        ficha, loading,
-        // Dados
-        listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
+        ficha, loading, salvando,
+
+        listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes, listaDeuses,
         dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias, dadosHabilidades,
-        // UI States
+        dadosDeuses, dadosPoderesConcedidos,
+
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
         classPowersEmEdicao, setClassPowersEmEdicao,
-        subclasseEmEdicao, setSubclasseEmEdicao, // Exporta estados de subclasse
-        // Ações
+        subclasseEmEdicao, setSubclasseEmEdicao,
+        devocaoEmEdicao, setDevocaoEmEdicao,
+
         updateFicha,
         handleAtributoBaseChange,
         montarHabilidadesParaPanel,

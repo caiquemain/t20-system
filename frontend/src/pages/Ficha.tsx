@@ -15,7 +15,7 @@ import { RacialAttributeModal } from '../components/RacialAttributeModal';
 // Tipos
 import type { Magia } from '../types';
 
-// --- REGRAS DE SISTEMA ---
+// --- REGRAS DE SISTEMA (MANTIDAS) ---
 const PONTOS_INICIAIS = 10;
 
 const MAPA_ATTR_KEY: Record<string, string> = {
@@ -50,15 +50,14 @@ const RACAS_METADATA: Record<string, { attrs: Record<string, number>, escolhas: 
     "Trog": { attrs: { con: 2, for: 1, int: -1 }, escolhas: 0 }
 };
 
-// --- HELPER: Extrair Poderes de Classe ---
 const extrairPoderesDaClasse = (dadosHabilidadesClasse: any, nomeClasse: string) => {
     return Object.values(dadosHabilidadesClasse || {})
         // @ts-ignore
         .filter((h: any) => h.classe === nomeClasse && h.tipo && h.tipo.includes("Poder de"))
         .map((h: any) => ({
             nome: h.nome,
-            tipo: h.tipo, // Mantém "Poder de Arcanista" para estilização
-            categoria: h.classe, // Usa o nome da classe como categoria
+            tipo: h.tipo,
+            categoria: h.classe,
             descricao: h.descricao,
             requisitos: h.requisitos || []
         }));
@@ -74,12 +73,16 @@ function Ficha() {
         dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
 
+        // Novos Dados de Devoção
+        listaDeuses, dadosDeuses,
+
         // Estados de Edição do Hook
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
         classPowersEmEdicao, setClassPowersEmEdicao,
         subclasseEmEdicao, setSubclasseEmEdicao,
+        devocaoEmEdicao, setDevocaoEmEdicao,
 
         // Ações
         updateFicha,
@@ -93,11 +96,9 @@ function Ficha() {
     const [showRacialModal, setShowRacialModal] = useState(false);
     const [showGrimorio, setShowGrimorio] = useState(false);
 
-    // Estado local para o seletor genérico
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
 
-    // Sincronização Inicial do Estado Racial
     useEffect(() => {
         if (ficha) {
             setEscolhasRaciais(ficha.escolhas_atributos_raciais || []);
@@ -138,7 +139,6 @@ function Ficha() {
 
     if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
 
-    // --- CÁLCULOS AUXILIARES ---
     const calcularPontosGastos = () => {
         let gastos = 0;
         Object.values(ficha.atributos_base).forEach(val => gastos += TABELA_CUSTO[String(val)] || 0);
@@ -164,11 +164,33 @@ function Ficha() {
         }
     };
 
-    // --- LÓGICA DE PODERES MISTOS (Classe + Gerais) ---
     const poderesDaClasse = ficha ? extrairPoderesDaClasse(dadosHabilidadesClasse, ficha.classes[0].nome) : [];
     const poderesMistos = [...listaPoderes, ...poderesDaClasse];
 
-    // --- MAGIAS ---
+    const getDeusesPermitidos = () => {
+        if (!ficha) return [];
+        const raca = ficha.cabecalho.raca;
+        const classe = ficha.classes[0]?.nome;
+
+        if (raca === 'Humano' || classe === 'Clérigo') return listaDeuses;
+
+        return listaDeuses.filter(nomeDeus => {
+            const dados = dadosDeuses[nomeDeus];
+            if (!dados) return false;
+
+            const permitidos = dados.devotos || [];
+            if (permitidos.includes("Todos") || permitidos.includes("Quaisquer")) return true;
+            if (permitidos.includes(raca)) return true;
+            if (permitidos.includes(classe)) return true;
+
+            const goblinoide = ["Goblin", "Hobgoblin", "Bugbear", "Orc", "Ogro"];
+            if (nomeDeus === "Thwor" && goblinoide.includes(raca)) return true;
+
+            return false;
+        });
+    };
+    const deusesDisponiveis = getDeusesPermitidos();
+
     const handleAprenderMagias = (novas: Magia[]) => {
         if (!ficha) return;
         const listaAtual = ficha.combate.magias || [];
@@ -200,8 +222,8 @@ function Ficha() {
                 classeAtual={ficha.classes[0]?.nome}
                 nivelAtual={ficha.classes[0]?.nivel || 1}
                 dadosHabilidadesClasse={dadosHabilidadesClasse}
-                listaPoderesGerais={listaPoderes} // <--- Passa a lista geral para o modal poder usar
-
+                listaPoderesGerais={listaPoderes}
+                dadosDeuses={dadosDeuses}
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}
@@ -210,6 +232,8 @@ function Ficha() {
                 setClassPowersEmEdicao={setClassPowersEmEdicao}
                 subclasseEmEdicao={subclasseEmEdicao}
                 setSubclasseEmEdicao={setSubclasseEmEdicao}
+                devocaoEmEdicao={devocaoEmEdicao}
+                setDevocaoEmEdicao={setDevocaoEmEdicao}
                 abrirSeletor={abrirSeletor}
             />
 
@@ -228,13 +252,14 @@ function Ficha() {
                 onClose={() => setSelectorModalOpen(false)}
                 onSelect={selectorConfig.callback}
                 ficha={ficha}
-                listaPoderes={poderesMistos} // <--- Passa a lista combinada!
+                listaPoderes={poderesMistos}
                 listaPericias={listaTodasPericias}
                 tipoEscolha={selectorConfig.tipo}
                 titulo={selectorConfig.titulo}
                 listaRestrita={selectorConfig.listaRestrita}
                 categoriaFixa={selectorConfig.categoriaFixa}
                 itensBloqueados={selectorConfig.itensBloqueados}
+                subclasse={subclasseEmEdicao}
             />
 
             {/* MODAL ATRIBUTOS RACIAIS */}
@@ -250,18 +275,33 @@ function Ficha() {
                 infoRacaAtual={infoRacaAtual}
             />
 
-            {/* HEADER */}
+            {/* HEADER ATUALIZADO */}
             <header className="ficha-header">
                 <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button>
                 <div className="header-inputs">
                     <input className="input-nome" value={ficha.cabecalho.nome} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, nome: e.target.value } })} />
                     <div className="header-sub">
+
                         <select className="select-header" value={ficha.cabecalho.raca} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value } })}>{listaRacas.map(r => <option key={r} value={r}>{r}</option>)}</select>
                         <span>•</span>
                         <select className="select-header" value={ficha.cabecalho.origem} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] })}>{listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}</select>
                         <span>•</span>
 
-                        {/* Seletor de Classe + Badge de Subclasse */}
+                        {/* SELETOR DE DEUS */}
+                        <select
+                            className="select-header"
+                            value={ficha.cabecalho.deus || ""}
+                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } })}
+                            style={{ color: '#ffd700' }}
+                        >
+                            <option value="">Sem Devoção</option>
+                            {deusesDisponiveis.map(d => (
+                                <option key={d} value={d}>{d}</option>
+                            ))}
+                        </select>
+                        <span>•</span>
+
+                        {/* CLASSE E SUBCLASSE */}
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
                                 const novasClasses = [...ficha.classes];
@@ -284,8 +324,10 @@ function Ficha() {
                 </div>
             </header>
 
+            {/* AREA DE ORIGEM REMOVIDA AQUI (Agora fica somente dentro de Configurar) */}
+
             <div className="ficha-grid">
-                {/* COLUNA 1 */}
+                {/* COLUNA 1 - ATRIBUTOS & STATUS */}
                 <div className="col-stats">
                     <div className="section-card">
                         <h3 className="section-title">Atributos</h3>
@@ -340,7 +382,7 @@ function Ficha() {
                     <StatusBars ficha={ficha} />
                 </div>
 
-                {/* COLUNA 2 */}
+                {/* COLUNA 2 - INVENTÁRIO & HABILIDADES */}
                 <div className="col-inventory">
                     <div className="section-card">
                         <h3 className="section-title">Equipamento</h3>
@@ -363,7 +405,7 @@ function Ficha() {
                     </div>
                 </div>
 
-                {/* COLUNA 3 */}
+                {/* COLUNA 3 - PERÍCIAS */}
                 <div className="col-skills">
                     <SkillList
                         ficha={ficha}

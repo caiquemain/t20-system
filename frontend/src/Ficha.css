@@ -1320,3 +1320,119 @@
     white-space: nowrap;
     cursor: help;
 }
+
+/* Adicione ao final do Ficha.css */
+
+/* --- SELETOR DE ORIGEM --- */
+.origin-selector-container {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.origin-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.origin-counter {
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #333;
+}
+
+.origin-counter.warn {
+    color: #ffd700;
+    border: 1px solid #ffd700;
+}
+
+.origin-counter.ok {
+    color: #4caf50;
+    border: 1px solid #4caf50;
+}
+
+.origin-option-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.origin-option-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #555;
+}
+
+.origin-option-row.selected {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: #4caf50;
+}
+
+.origin-option-row.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.origin-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #666;
+    border-radius: 3px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #fff;
+    background: #111;
+}
+
+.origin-option-row.selected .origin-checkbox {
+    background: #4caf50;
+    border-color: #4caf50;
+}
+
+.origin-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #e0e0e0;
+}
+
+.origin-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.origin-badge.power {
+    background: #673ab7;
+    color: #fff;
+}
+
+.origin-badge.skill {
+    background: #00bcd4;
+    color: #000;
+}
+
+.origin-badge.warning {
+    background: #ff9800;
+    color: #000;
+}
