@@ -1436,3 +1436,120 @@
     background: #ff9800;
     color: #000;
 }
+
+/* --- ITEM DA LISTA (GRID) --- */
+.power-list-item {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    width: 100%;
+}
+
+.power-list-item:hover:not(:disabled) {
+    background-color: #2a2a2a;
+    border-color: #666;
+    transform: translateY(-2px);
+    /* Leve subida ao passar o mouse */
+}
+
+/* --- CABEÇALHO DO ITEM --- */
+.power-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.power-name {
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: #e0e0e0;
+}
+
+/* --- BADGES (BOLINHAS COLORIDAS) --- */
+.power-badge {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 12px;
+    /* Faz ficar arredondado */
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilo para Magia Arcana (Roxo) */
+.tag-arcane {
+    background: linear-gradient(135deg, #7b1fa2, #4a148c);
+    color: #e1bee7;
+    border: 1px solid #8e24aa;
+}
+
+/* Estilo para Magia Divina (Dourado) */
+.tag-divine {
+    background: linear-gradient(135deg, #ffd700, #ff8f00);
+    color: #3e2723;
+    /* Marrom escuro para contraste */
+    border: 1px solid #ffca28;
+}
+
+.tag-universal {
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    color: #ffcdd2;
+    /* Texto vermelho bem claro */
+    border: 1px solid #c62828;
+}
+
+/* Estilo Padrão/Geral (Cinza) */
+.tag-power,
+.tag-other {
+    background-color: #424242;
+    color: #ccc;
+    border: 1px solid #616161;
+}
+
+/* Estilo Perícia (Verde/Azul) */
+.tag-skill {
+    background-color: #00695c;
+    color: #b2dfdb;
+    border: 1px solid #00897b;
+}
+
+/* --- DESCRIÇÃO --- */
+.power-desc {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin: 0;
+    line-height: 1.4;
+
+    /* Limita a 3 linhas e põe reticências para não ficar gigante */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- BLOQUEADO --- */
+.power-list-item.blocked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #442222;
+    background-color: #1a0f0f;
+}
+
+.power-block-reason {
+    font-size: 0.75rem;
+    color: #ff5252;
+    margin-top: 5px;
+    font-weight: bold;
+}
