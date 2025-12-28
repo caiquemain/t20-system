@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../Ficha.css';
-import { validarTodosRequisitos } from '../utils/validators';
 
 interface AbilityConfigModalProps {
     isOpen: boolean;
@@ -19,6 +18,7 @@ interface AbilityConfigModalProps {
     // Dados para Filtros
     listaPoderesGerais: any[];
     dadosDeuses: any;
+    dadosMagias: any; // <--- NOVO: Recebe o dicionário de magias
 
     // Estados de Edição
     origemBeneficiosEmEdicao: string[];
@@ -50,7 +50,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     isOpen, onClose, onSave,
     ficha, origemNome, qtdEscolhasOrigem, listaBeneficiosOrigem = [],
     classeAtual, nivelAtual, dadosHabilidadesClasse,
-    listaPoderesGerais = [], dadosDeuses = {},
+    listaPoderesGerais = [], dadosDeuses = {}, dadosMagias = {}, // Default vazio
     origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
     habilidadesEmEdicao, setHabilidadesEmEdicao,
     classPowersEmEdicao = [], setClassPowersEmEdicao,
@@ -59,7 +59,18 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     abrirSeletor
 }) => {
 
+    // Estado local para controlar a UI de alternância do Versátil (Humano)
+    const [modosSlot2, setModosSlot2] = useState<Record<number, 'pericia' | 'poder'>>({});
+
     if (!isOpen) return null;
+
+    // --- PREPARAÇÃO DE DADOS ---
+
+    // Lista de Magias de 1º Círculo (Arcanas e Divinas) para Tatuagem Mística
+    const magiasCirculo1 = Object.values(dadosMagias)
+        .filter((m: any) => m.circulo === 1)
+        .map((m: any) => m.nome)
+        .sort();
 
     // --- FUNÇÃO CENTRAL DE BLOQUEIO ---
     const getBlacklistGlobal = (ignorarValor: string = "") => {
@@ -72,7 +83,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
             });
         }
 
-        // 2. Poder Concedido (Gratuito)
+        // 2. Poder Concedido
         if (devocaoEmEdicao && devocaoEmEdicao !== ignorarValor) {
             blocked.add(devocaoEmEdicao);
         }
@@ -91,7 +102,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
             }
         });
 
-        // 5. Poderes de Classe (Slots)
+        // 5. Poderes de Classe
         classPowersEmEdicao.forEach(val => {
             if (val && val !== ignorarValor) blocked.add(val);
         });
@@ -114,17 +125,13 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     const poderesDoMeuDeus = (deusAtual && dadosDeuses[deusAtual]) ? dadosDeuses[deusAtual].poderes : [];
 
     const poderesGeraisFiltrados = listaPoderesGerais.filter((p: any) => {
-        // Se for Poder Concedido, só mostra se for do meu deus
         if (p.categoria === 'Poder Concedido') {
             return poderesDoMeuDeus.includes(p.nome);
         }
-        // Se for Origem, esconde (já tem aba própria)
         if (p.categoria === 'Origem') return false;
-
         return true;
     });
 
-    // Lista unificada para os Slots de Nível
     const nomesPoderesDisponiveis = Array.from(new Set([
         ...poderesDaClasse.map((p: any) => p.nome),
         ...poderesGeraisFiltrados.map((p: any) => p.nome)
@@ -133,14 +140,20 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     const slotsPoderes = Math.max(0, nivelAtual - 1);
 
     // --- DETECÇÕES ESPECIAIS ---
-
-    // 1. Subclasse (Ex: Arcanista)
-    // Cast explícito para evitar erro TS
     const habilidadeComSubclasse: any = habilidadesAutomaticas.find((h: any) => h.efeitos && h.efeitos.escolha_subclasse);
     const opcoesSubclasse: string[] = habilidadeComSubclasse ? habilidadeComSubclasse.efeitos.escolha_subclasse : [];
 
-    // 2. Devoção (Ex: Poder Gratuito)
     const infoDeus = dadosDeuses[deusAtual];
+
+    // Helper para atualizar escolhas raciais
+    const updateRacialChoice = (index: number, key: string, value: string) => {
+        const novos = [...habilidadesEmEdicao];
+        novos[index].escolhas_aplicadas = {
+            ...novos[index].escolhas_aplicadas,
+            [key]: value
+        };
+        setHabilidadesEmEdicao(novos);
+    };
 
     return (
         <div className="habilidades-panel-overlay">
@@ -149,15 +162,12 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 <h2>⚙️ Configuração de Personagem</h2>
                 <hr />
 
-                {/* --- SEÇÃO: SUBCLASSE (AZUL) --- */}
+                {/* --- SEÇÃO: SUBCLASSE --- */}
                 {opcoesSubclasse.length > 0 && habilidadeComSubclasse && (
                     <div style={{ marginBottom: 20, padding: 15, background: '#253b50', borderRadius: 6, border: '1px solid #64b5f6' }}>
                         <h3 className="section-subtitle" style={{ marginTop: 0, color: '#64b5f6' }}>
                             {habilidadeComSubclasse.nome}
                         </h3>
-                        <p style={{ color: '#ccc', fontSize: '0.9rem', marginBottom: 10 }}>
-                            Escolha seu caminho:
-                        </p>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                             {opcoesSubclasse.map(opcao => (
                                 <button key={opcao} onClick={() => setSubclasseEmEdicao(opcao)}
@@ -170,32 +180,17 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                     </div>
                 )}
 
-                {/* --- SEÇÃO: DEVOÇÃO (AMARELO) --- */}
+                {/* --- SEÇÃO: DEVOÇÃO --- */}
                 {deusAtual && infoDeus && (
                     <div className="origem-box" style={{ borderColor: '#ffd700', background: '#2a2a20', marginBottom: 20 }}>
                         <h3 className="section-subtitle" style={{ marginTop: 0, color: '#ffd700' }}>
                             Devoção: {deusAtual}
                         </h3>
-                        <p style={{ color: '#ddd', fontSize: '0.85em', fontStyle: 'italic', marginBottom: 10 }}>
-                            "{infoDeus.crencas}"
-                        </p>
                         <div style={{ marginBottom: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
-                            <label>Poder Concedido (Gratuito):</label>
-                            <input
-                                value={devocaoEmEdicao}
-                                readOnly
-                                className="input-dark"
-                                placeholder="Selecione..."
-                                style={{ flex: 1 }}
-                            />
-                            <button onClick={() => abrirSeletor(
-                                'poder',
-                                `Poderes de ${deusAtual}`,
-                                infoDeus.poderes, // Lista APENAS do deus
-                                undefined,
-                                (val) => setDevocaoEmEdicao(val),
-                                [] // Sem blacklist no gratuito (ou adicione se quiser evitar pegar o mesmo que já tem em slot de nivel, mas raro)
-                            )} className="btn-action" style={{ background: '#ffd700', color: 'black' }}>
+                            <label>Poder Concedido:</label>
+                            <input value={devocaoEmEdicao} readOnly className="input-dark" placeholder="Selecione..." style={{ flex: 1 }} />
+                            <button onClick={() => abrirSeletor('poder', `Poderes de ${deusAtual}`, infoDeus.poderes, undefined, (val) => setDevocaoEmEdicao(val), [])}
+                                className="btn-action" style={{ background: '#ffd700', color: 'black' }}>
                                 Selecionar
                             </button>
                         </div>
@@ -225,41 +220,201 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 {/* --- SEÇÃO: RACIAIS --- */}
                 <h3 className="section-subtitle" style={{ marginTop: 20 }}>Habilidades Raciais</h3>
                 <div className="habilidades-list-wrapper">
-                    {habilidadesEmEdicao.map((hab, idx) => (
-                        <div key={idx} className="habilidade-item" style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #333' }}>
-                            <div className="hab-header">
-                                <span><strong>{hab.nome}</strong></span>
-                                {hab.precisaEscolha && <span style={{ color: '#ffeb3b', fontSize: '0.8rem' }}>CONFIGURAR</span>}
-                            </div>
-                            {hab.precisaEscolha && (
-                                <div className="hab-config" style={{ marginTop: 10 }}>
-                                    {Object.entries(hab.efeitos).map(([keyEffect, _]) => {
-                                        if (keyEffect.endsWith('_escolha')) {
-                                            const valorAtual = hab.escolhas_aplicadas?.[keyEffect] || '';
-                                            const blocked = getBlacklistGlobal(valorAtual);
-                                            let tipoSeletor = 'pericia'; let label = 'Perícia';
+                    {habilidadesEmEdicao.map((hab, idx) => {
 
-                                            if (keyEffect.includes('pericia_ou_poder')) { tipoSeletor = 'ambos'; label = 'Perícia ou Poder'; }
-                                            else if (keyEffect.includes('poder')) { tipoSeletor = 'poder'; label = 'Poder'; if (keyEffect.includes('tormenta')) label = 'Poder da Tormenta'; }
+                        // --- CASO 1: HUMANO (VERSÁTIL) ---
+                        if (hab.nome === "Versátil") {
+                            const p1 = hab.escolhas_aplicadas?.pericia_1 || "";
 
-                                            return (
-                                                <div key={keyEffect} style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                                                    <label style={{ fontSize: '0.8rem', color: '#aaa' }}>{label}:</label>
-                                                    <div style={{ display: 'flex', gap: 10 }}>
-                                                        <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecionar..." />
-                                                        <button onClick={() => abrirSeletor(tipoSeletor, `Escolha para ${hab.nome}`, [], keyEffect.includes('tormenta') ? 'Tormenta' : undefined, (v) => {
-                                                            const n = [...habilidadesEmEdicao]; n[idx].escolhas_aplicadas = { ...hab.escolhas_aplicadas, [keyEffect]: v }; setHabilidadesEmEdicao(n);
-                                                        }, blocked)} className="btn-action" style={{ background: '#2196f3', border: 'none', color: 'white' }}>Escolher</button>
-                                                    </div>
+                            // Define valores do segundo slot
+                            const p2 = hab.escolhas_aplicadas?.pericia_2 || "";
+                            const pg = hab.escolhas_aplicadas?.poder_geral || "";
+
+                            // Determina modo atual (se já tem poder salvo, é 'poder', senão é o que tá no state ou 'pericia')
+                            const modoAtual = pg ? 'poder' : (modosSlot2[idx] || 'pericia');
+
+                            // Função para alternar o modo e limpar o valor antigo
+                            const toggleModo = (novoModo: 'pericia' | 'poder') => {
+                                setModosSlot2(prev => ({ ...prev, [idx]: novoModo }));
+
+                                // Limpa o valor da escolha anterior no objeto
+                                const novos = [...habilidadesEmEdicao];
+                                const novasEscolhas = { ...novos[idx].escolhas_aplicadas };
+
+                                if (novoModo === 'pericia') {
+                                    delete novasEscolhas.poder_geral;
+                                    novasEscolhas.pericia_2 = "";
+                                } else {
+                                    delete novasEscolhas.pericia_2;
+                                    novasEscolhas.poder_geral = "";
+                                }
+
+                                novos[idx].escolhas_aplicadas = novasEscolhas;
+                                setHabilidadesEmEdicao(novos);
+                            };
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong> (Humano)</span>
+                                        <span style={{ color: '#ffeb3b', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc', fontStyle: 'italic' }}>
+                                        Escolha 2 Perícias <strong>OU</strong> 1 Perícia e 1 Poder Geral.
+                                    </p>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 15, marginTop: 10 }}>
+                                        {/* SLOT 1: PERÍCIA FIXA */}
+                                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                            <label style={{ width: 90, fontSize: '0.85rem', color: '#81c784' }}>Perícia Fixa:</label>
+                                            <input value={p1} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione uma perícia..." />
+                                            <button className="btn-action" onClick={() => abrirSeletor('pericia', 'Versátil: Perícia Fixa', [], undefined, (v) => updateRacialChoice(idx, 'pericia_1', v), getBlacklistGlobal(p1))}>Escolher</button>
+                                        </div>
+
+                                        {/* SLOT 2: FLEXÍVEL */}
+                                        <div style={{ padding: 10, border: '1px dashed #555', borderRadius: 4, background: 'rgba(255,255,255,0.02)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
+                                                <label style={{ fontSize: '0.85rem', color: '#ffd700' }}>Segundo Slot:</label>
+                                                <div style={{ display: 'flex', gap: 5 }}>
+                                                    <button onClick={() => toggleModo('pericia')}
+                                                        style={{ fontSize: '0.7rem', padding: '3px 8px', cursor: 'pointer', background: modoAtual === 'pericia' ? '#00bcd4' : '#333', color: modoAtual === 'pericia' ? '#000' : '#888', border: '1px solid #555', borderRadius: 3 }}>
+                                                        Perícia
+                                                    </button>
+                                                    <button onClick={() => toggleModo('poder')}
+                                                        style={{ fontSize: '0.7rem', padding: '3px 8px', cursor: 'pointer', background: modoAtual === 'poder' ? '#9c27b0' : '#333', color: modoAtual === 'poder' ? '#fff' : '#888', border: '1px solid #555', borderRadius: 3 }}>
+                                                        Poder Geral
+                                                    </button>
                                                 </div>
-                                            );
-                                        }
-                                        return null;
-                                    })}
+                                            </div>
+
+                                            {modoAtual === 'pericia' ? (
+                                                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                    <input value={p2} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione a 2ª perícia..." />
+                                                    <button className="btn-action" onClick={() => abrirSeletor('pericia', 'Versátil: 2ª Perícia', [], undefined, (v) => updateRacialChoice(idx, 'pericia_2', v), getBlacklistGlobal(p2))}>Escolher</button>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                    <input value={pg} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione um poder..." />
+                                                    <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', 'Versátil: Poder Geral', [], undefined, (v) => updateRacialChoice(idx, 'poder_geral', v), getBlacklistGlobal(pg))}>Escolher</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    ))}
+                            );
+                        }
+
+                        // --- CASO 2: QAREEN (TATUAGEM MÍSTICA) ---
+                        if (hab.nome.includes("Tatuagem")) {
+                            const magiaEscolhida = hab.escolhas_aplicadas?.magia_escolha || "";
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong> (Qareen)</span>
+                                        <span style={{ color: '#e040fb', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc' }}>
+                                        Você aprende uma magia de 1º círculo (Arcana ou Divina).
+                                    </p>
+
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
+                                        <label style={{ width: 90, fontSize: '0.85rem', color: '#e040fb' }}>Magia:</label>
+                                        <input value={magiaEscolhida} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione uma magia..." />
+                                        <button
+                                            className="btn-action"
+                                            style={{ background: '#e040fb', color: 'white' }}
+                                            onClick={() => abrirSeletor(
+                                                'ambos', // Usa 'ambos' para passar lista genérica
+                                                'Escolha sua Tatuagem Mística',
+                                                magiasCirculo1, // Passa a lista filtrada de magias
+                                                undefined,
+                                                (val) => updateRacialChoice(idx, 'magia_escolha', val)
+                                            )}
+                                        >
+                                            Escolher
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // --- CASO 3: QAREEN (RESISTÊNCIA ELEMENTAL) ---
+                        // Verifica se existe o efeito de escolha de RD
+                        const keyRd = Object.keys(hab.efeitos).find(k => k === 'resistencia_rd_escolha');
+
+                        if (keyRd) {
+                            const valorAtual = hab.escolhas_aplicadas?.[keyRd] || "";
+                            const listaElementos = ["Ácido", "Eletricidade", "Fogo", "Frio", "Luz", "Trevas"];
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong> (Qareen)</span>
+                                        <span style={{ color: '#ffeb3b', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc' }}>
+                                        Escolha sua ascendência para receber Resistência 10.
+                                    </p>
+
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
+                                        <label style={{ width: 90, fontSize: '0.85rem', color: '#ff5722' }}>Elemento:</label>
+                                        <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
+                                        <button
+                                            className="btn-action"
+                                            style={{ background: '#ff5722' }}
+                                            onClick={() => abrirSeletor(
+                                                'ambos',
+                                                'Ascendência Qareen',
+                                                listaElementos,
+                                                undefined,
+                                                (val) => updateRacialChoice(idx, keyRd, val)
+                                            )}
+                                        >
+                                            Escolher
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // --- CASO 4: GENÉRICO (OUTRAS RAÇAS) ---
+                        return (
+                            <div key={idx} className="habilidade-item" style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #333' }}>
+                                <div className="hab-header">
+                                    <span><strong>{hab.nome}</strong></span>
+                                    {hab.precisaEscolha && <span style={{ color: '#ffeb3b', fontSize: '0.8rem' }}>CONFIGURAR</span>}
+                                </div>
+                                {hab.precisaEscolha && (
+                                    <div className="hab-config" style={{ marginTop: 10 }}>
+                                        {Object.entries(hab.efeitos).map(([keyEffect, _]) => {
+                                            if (keyEffect.endsWith('_escolha')) {
+                                                const valorAtual = hab.escolhas_aplicadas?.[keyEffect] || '';
+                                                const blocked = getBlacklistGlobal(valorAtual);
+                                                let tipoSeletor = 'pericia'; let label = 'Perícia';
+
+                                                if (keyEffect.includes('pericia_ou_poder')) { tipoSeletor = 'ambos'; label = 'Perícia ou Poder'; }
+                                                else if (keyEffect.includes('poder')) { tipoSeletor = 'poder'; label = 'Poder'; if (keyEffect.includes('tormenta')) label = 'Poder da Tormenta'; }
+
+                                                return (
+                                                    <div key={keyEffect} style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                                        <label style={{ fontSize: '0.8rem', color: '#aaa' }}>{label}:</label>
+                                                        <div style={{ display: 'flex', gap: 10 }}>
+                                                            <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecionar..." />
+                                                            <button onClick={() => abrirSeletor(tipoSeletor, `Escolha para ${hab.nome}`, [], keyEffect.includes('tormenta') ? 'Tormenta' : undefined, (v) => {
+                                                                updateRacialChoice(idx, keyEffect, v);
+                                                            }, blocked)} className="btn-action" style={{ background: '#2196f3', border: 'none', color: 'white' }}>Escolher</button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* --- SEÇÃO: CLASSE AUTOMÁTICA --- */}
@@ -278,7 +433,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 {/* --- SEÇÃO: PODERES DE CLASSE + GERAIS (SLOTS) --- */}
                 <h3 className="section-subtitle" style={{ marginTop: 20 }}>
                     Poderes ({classPowersEmEdicao.length}/{slotsPoderes})
-                    <span style={{ fontSize: '0.7rem', marginLeft: 10, color: '#aaa' }}>(Classe + Gerais + Concedidos)</span>
                 </h3>
 
                 {slotsPoderes > 0 ? (
@@ -292,19 +446,12 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                     <div style={{ width: '25px', color: '#666', fontSize: '0.8rem', textAlign: 'right' }}>{i + 2}º</div>
                                     <input value={valorAtual} readOnly className="input-dark" placeholder="Selecionar Poder..." style={{ flex: 1 }} />
                                     <button
-                                        onClick={() => abrirSeletor(
-                                            'poder',
-                                            `Poder de Nível ${i + 2}`,
-                                            nomesPoderesDisponiveis, // LISTA FILTRADA
-                                            undefined,
-                                            (novoPoder) => {
-                                                const novosPoderes = [...classPowersEmEdicao];
-                                                while (novosPoderes.length <= i) novosPoderes.push("");
-                                                novosPoderes[i] = novoPoder;
-                                                setClassPowersEmEdicao(novosPoderes);
-                                            },
-                                            blocked
-                                        )}
+                                        onClick={() => abrirSeletor('poder', `Poder de Nível ${i + 2}`, nomesPoderesDisponiveis, undefined, (v) => {
+                                            const novosPoderes = [...classPowersEmEdicao];
+                                            while (novosPoderes.length <= i) novosPoderes.push("");
+                                            novosPoderes[i] = v;
+                                            setClassPowersEmEdicao(novosPoderes);
+                                        }, blocked)}
                                         className="btn-action"
                                         style={{ background: valorAtual ? '#4caf50' : '#2196f3', border: 'none', color: 'white' }}
                                     >

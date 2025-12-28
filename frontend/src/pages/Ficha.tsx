@@ -235,6 +235,7 @@ function Ficha() {
                 devocaoEmEdicao={devocaoEmEdicao}
                 setDevocaoEmEdicao={setDevocaoEmEdicao}
                 abrirSeletor={abrirSeletor}
+                dadosMagias={dadosMagias}
             />
 
             {/* MODAL GRIMÓRIO */}
@@ -254,6 +255,11 @@ function Ficha() {
                 ficha={ficha}
                 listaPoderes={poderesMistos}
                 listaPericias={listaTodasPericias}
+
+                // --- ADICIONE ESTA LINHA: ---
+                dadosMagias={dadosMagias}
+                // ----------------------------
+
                 tipoEscolha={selectorConfig.tipo}
                 titulo={selectorConfig.titulo}
                 listaRestrita={selectorConfig.listaRestrita}
@@ -275,23 +281,29 @@ function Ficha() {
                 infoRacaAtual={infoRacaAtual}
             />
 
-            {/* HEADER ATUALIZADO */}
+            {/* HEADER ATUALIZADO COM SALVAMENTO IMEDIATO */}
             <header className="ficha-header">
                 <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button>
                 <div className="header-inputs">
                     <input className="input-nome" value={ficha.cabecalho.nome} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, nome: e.target.value } })} />
                     <div className="header-sub">
 
-                        <select className="select-header" value={ficha.cabecalho.raca} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value } })}>{listaRacas.map(r => <option key={r} value={r}>{r}</option>)}</select>
+                        <select className="select-header" value={ficha.cabecalho.raca}
+                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [] }, true)}>
+                            {listaRacas.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
                         <span>•</span>
-                        <select className="select-header" value={ficha.cabecalho.origem} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] })}>{listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}</select>
+                        <select className="select-header" value={ficha.cabecalho.origem}
+                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}>
+                            {listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
                         <span>•</span>
 
                         {/* SELETOR DE DEUS */}
                         <select
                             className="select-header"
                             value={ficha.cabecalho.deus || ""}
-                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } })}
+                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } }, true)}
                             style={{ color: '#ffd700' }}
                         >
                             <option value="">Sem Devoção</option>
@@ -306,7 +318,7 @@ function Ficha() {
                             <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
                                 const novasClasses = [...ficha.classes];
                                 novasClasses[0] = { ...novasClasses[0], nome: e.target.value, subclasse: undefined };
-                                updateFicha({ classes: novasClasses });
+                                updateFicha({ classes: novasClasses }, true);
                             }}>
                                 {listaClasses.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
@@ -319,12 +331,16 @@ function Ficha() {
                         </div>
 
                         <label style={{ marginLeft: 10 }}>Nível:</label>
-                        <input className="input-nivel" type="number" value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }); }} />
+                        <input className="input-nivel" type="number" value={ficha.classes[0]?.nivel}
+                            onChange={e => {
+                                const nc = [...ficha.classes];
+                                nc[0].nivel = parseInt(e.target.value);
+                                updateFicha({ classes: nc }, true);
+                            }}
+                        />
                     </div>
                 </div>
             </header>
-
-            {/* AREA DE ORIGEM REMOVIDA AQUI (Agora fica somente dentro de Configurar) */}
 
             <div className="ficha-grid">
                 {/* COLUNA 1 - ATRIBUTOS & STATUS */}
@@ -380,6 +396,51 @@ function Ficha() {
                     </div>
 
                     <StatusBars ficha={ficha} />
+
+                    {/* --- NOVO: PROFICIÊNCIAS E SENTIDOS --- */}
+                    <div className="proficiencias-container" style={{
+                        background: '#1e1e1e',
+                        padding: '10px',
+                        borderRadius: '6px',
+                        marginTop: '15px',
+                        border: '1px solid #333'
+                    }}>
+                        <h4 style={{ margin: '0 0 8px 0', color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', borderBottom: '1px solid #333', paddingBottom: '4px' }}>
+                            🛠️ Proficiências & Sentidos
+                        </h4>
+
+                        {ficha.proficiencias && ficha.proficiencias.length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                {ficha.proficiencias.map((item: string, idx: number) => {
+                                    const isSentido = item.includes('Visão') || item.includes('Faro');
+                                    const isImunidade = item.includes('Movimento') || item.includes('Imune');
+
+                                    let bg = '#333';
+                                    let color = '#ccc';
+                                    let border = '#444';
+
+                                    if (isSentido) { bg = 'rgba(63, 81, 181, 0.2)'; border = '#3949ab'; color = '#c5cae9'; }
+                                    if (isImunidade) { bg = 'rgba(76, 175, 80, 0.2)'; border = '#2e7d32'; color = '#c8e6c9'; }
+
+                                    return (
+                                        <span key={idx} style={{
+                                            background: bg,
+                                            color: color,
+                                            border: `1px solid ${border}`,
+                                            padding: '2px 8px',
+                                            borderRadius: '4px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '500'
+                                        }}>
+                                            {item}
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <p style={{ color: '#555', fontStyle: 'italic', fontSize: '0.8rem', margin: 0 }}>Nenhuma listada.</p>
+                        )}
+                    </div>
                 </div>
 
                 {/* COLUNA 2 - INVENTÁRIO & HABILIDADES */}
