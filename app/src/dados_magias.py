@@ -14,7 +14,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Alimento para 1 criatura",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Você purifica e abençoa uma porção de comida ou dose de bebida. Isso torna um alimento sujo, estragado ou envenenado próprio para consumo[cite: 5, 6]. O alimento oferece 5 PV temporários ou 1 PM temporário[cite: 7].",
+        "descricao": "Você purifica e abençoa uma porção de comida ou dose de bebida. Isso torna um alimento sujo, estragado ou envenenado próprio para consumo. O alimento oferece 5 PV temporários ou 1 PM temporário.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "Truque", "descricao": "O alimento é purificado, mas não fornece bônus.", "efeitos": {}},
@@ -34,7 +34,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 animal",
         "duracao": "Cena",
         "resistencia": "Vontade anula",
-        "descricao": "O animal fica prestativo em relação a você[cite: 16]. Você recebe +10 nos testes de Adestramento e Diplomacia contra o animal[cite: 17].",
+        "descricao": "O animal fica prestativo em relação a você. Você recebe +10 nos testes de Adestramento e Diplomacia contra o animal.",
         "efeitos": {
             "pericia_adestramento_bonus": 10,
             "pericia_diplomacia_bonus": 10
@@ -57,7 +57,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura",
         "duracao": "Instantânea",
         "resistencia": "Vontade parcial",
-        "descricao": "Você manifesta e dispara uma adaga imaterial contra a mente do alvo, que sofre 2d6 pontos de dano psíquico e fica atordoado por uma rodada[cite: 26]. Se passar, sofre metade do dano e evita a condição[cite: 27].",
+        "descricao": "Você manifesta e dispara uma adaga imaterial contra a mente do alvo, que sofre 2d6 pontos de dano psíquico e fica atordoado por uma rodada. Se passar, sofre metade do dano e evita a condição.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+1 PM", "descricao": "Lança sem gesticular ou falar. Adaga invisível.", "efeitos": {}},
@@ -76,7 +76,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Esfera com 9m de raio",
         "duracao": "1 dia",
         "resistencia": "",
-        "descricao": "Cria uma barreira protetora invisível que detecta criaturas na área. Pode emitir aviso telepático ou sonoro[cite: 37, 39].",
+        "descricao": "Cria uma barreira protetora invisível que detecta criaturas na área. Pode emitir aviso telepático ou sonoro.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+2 PM",
@@ -97,7 +97,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 animal prestativo",
         "duracao": "1 dia",
         "resistencia": "",
-        "descricao": "Cria vínculo mental com animal. Ele funciona como parceiro veterano de um tipo a sua escolha[cite: 53, 55].",
+        "descricao": "Cria vínculo mental com animal. Ele funciona como parceiro veterano de um tipo a sua escolha.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+1 PM",
@@ -118,7 +118,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Você",
         "duracao": "Instantânea",
         "resistencia": "",
-        "descricao": "Permite rolar novamente um teste de resistência com +10 ou forçar inimigo a rolar ataque novamente com -10[cite: 69].",
+        "descricao": "Permite rolar novamente um teste de resistência com +10 ou forçar inimigo a rolar ataque novamente com -10.",
         "efeitos": {},
         "aprimoramentos": []
     },
@@ -133,7 +133,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura",
         "duracao": "Instantânea",
         "resistencia": "Vontade anula",
-        "descricao": "Altera ou apaga memórias do alvo da última hora[cite: 73].",
+        "descricao": "Altera ou apaga memórias do alvo da última hora.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+2 PM", "descricao": "Muda alcance para pessoal e alvo para cone de 4,5m.", "efeitos": {}},
@@ -151,7 +151,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 objeto",
         "duracao": "1 dia",
         "resistencia": "",
-        "descricao": "Aumenta ou diminui o tamanho de um item mundano em até três categorias. Pode mudar consistência[cite: 78, 79].",
+        "descricao": "Aumenta ou diminui o tamanho de um item mundano em até três categorias. Pode mudar consistência.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+1 PM", "descricao": "Aumenta o número de alvos em +1.", "efeitos": {}},
@@ -174,7 +174,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura",
         "duracao": "Cena",
         "resistencia": "Reflexos anula",
-        "descricao": "Três laços de energia deixam o alvo agarrado. Pode tentar se livrar (Atletismo). Laços têm Defesa 10, 10 PV, RD 5[cite: 95, 96, 98].",
+        "descricao": "Três laços de energia deixam o alvo agarrado. Pode tentar se livrar (Atletismo). Laços têm Defesa 10, 10 PV, RD 5.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+2 PM", "descricao": "Aumenta número de alvos em +1.", "efeitos": {}},
@@ -193,7 +193,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 animal ou humanoide",
         "duracao": "Cena",
         "resistencia": "Vontade parcial",
-        "descricao": "Se falhar na resistência, fica apavorado por 1 rodada, depois abalado. Se passar, fica abalado por 1d4 rodadas[cite: 109].",
+        "descricao": "Se falhar na resistência, fica apavorado por 1 rodada, depois abalado. Se passar, fica abalado por 1d4 rodadas.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+2 PM", "descricao": "Fica apavorado por 1d4+1 rodadas na falha.", "efeitos": {}},
@@ -212,7 +212,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura ou objeto",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Impede qualquer movimento planar, teletransporte ou incorpóreo[cite: 115, 116].",
+        "descricao": "Impede qualquer movimento planar, teletransporte ou incorpóreo.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+2 PM", "descricao": "Muda para alcance médio, área esfera 3m, alvos escolhidos.", "efeitos": {}},
@@ -237,7 +237,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Vários objetos (dep. tamanho)",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Concede vida a objetos, tornando-os parceiros sob seu controle[cite: 131]. Objetos são construtos.",
+        "descricao": "Concede vida a objetos, tornando-os parceiros sob seu controle. Objetos são construtos.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+5 PM", "descricao": "Muda duração para permanente. Custo material T$ 1.000.", "efeitos": {}}
@@ -254,7 +254,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Esfera com 6m de raio",
         "duracao": "Instantânea/Cena",
         "resistencia": "",
-        "descricao": "Onda de escuridão dissipa magias de luz/nível menor. Aliados recebem +4 na Defesa. Inimigos ficam enjoados (1d4 rodadas)[cite: 153, 154, 155].",
+        "descricao": "Onda de escuridão dissipa magias de luz/nível menor. Aliados recebem +4 na Defesa. Inimigos ficam enjoados (1d4 rodadas).",
         "efeitos": {
             "defesa_bonus_magia": 4
         },
@@ -276,7 +276,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Você",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Concede aparência idealizada. Se Carisma < 5, torna-se 5; senão recebe +2. Recebe +5 em Diplomacia e Enganação[cite: 164, 165].",
+        "descricao": "Concede aparência idealizada. Se Carisma < 5, torna-se 5; senão recebe +2. Recebe +5 em Diplomacia e Enganação.",
         "efeitos": {
             "pericia_diplomacia_bonus": 5,
             "pericia_enganacao_bonus": 5
@@ -296,7 +296,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura",
         "duracao": "Permanente",
         "resistencia": "Vontade anula",
-        "descricao": "Cria uma prisão mágica (acorrentamento, contenção mínima, prisão dimensional, sepultamento ou sono eterno). Requer componente material T$ 1.000[cite: 172, 178].",
+        "descricao": "Cria uma prisão mágica (acorrentamento, contenção mínima, prisão dimensional, sepultamento ou sono eterno). Requer componente material T$ 1.000.",
         "efeitos": {},
         "aprimoramentos": []
     },
@@ -311,7 +311,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Quadrado de 3m ou 1 objeto",
         "duracao": "Cena",
         "resistencia": "Reflexos (veja texto)",
-        "descricao": "Recobre superfície com substância escorregadia. Criaturas devem passar na resistência para não cair. Testes de Acrobacia (CD 10) para andar[cite: 198, 199, 200].",
+        "descricao": "Recobre superfície com substância escorregadia. Criaturas devem passar na resistência para não cair. Testes de Acrobacia (CD 10) para andar.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+1 PM", "descricao": "Aumenta a área em +1 quadrado de 1,5m.", "efeitos": {}},
@@ -330,7 +330,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Você",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Invoca arma da divindade. Uma vez por rodada, reage a ataque corpo a corpo causando 2d6 de dano automático no atacante[cite: 207, 208].",
+        "descricao": "Invoca arma da divindade. Uma vez por rodada, reage a ataque corpo a corpo causando 2d6 de dano automático no atacante.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+1 PM", "descricao": "A arma protege: +1 na Defesa.",
@@ -355,7 +355,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 arma empunhada",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Arma fornece +1 em testes de ataque e rolagens de dano. Pode usar atributo de magia no ataque[cite: 223, 224].",
+        "descricao": "Arma fornece +1 em testes de ataque e rolagens de dano. Pode usar atributo de magia no ataque.",
         "efeitos": {
             "ataque_bonus_magia": 1,
             "dano_bonus_magia": 1
@@ -379,7 +379,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Você",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Cria uma película protetora invisível, fornecendo +5 na Defesa. Cumulativo com outras magias, mas não armaduras[cite: 230].",
+        "descricao": "Cria uma película protetora invisível, fornecendo +5 na Defesa. Cumulativo com outras magias, mas não armaduras.",
         "efeitos": {
             "defesa_bonus_magia": 5
         },
@@ -402,7 +402,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 arma",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Fortalece arma mundana primitiva, natural ou desarmado. Aumenta dano em um passo e considerada mágica[cite: 237, 238].",
+        "descricao": "Fortalece arma mundana primitiva, natural ou desarmado. Aumenta dano em um passo e considerada mágica.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+1 PM", "descricao": "Fornece +1 nos testes de ataque.",
@@ -425,7 +425,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura",
         "duracao": "Cena (até descarregar)",
         "resistencia": "Vontade anula, Fortitude parcial",
-        "descricao": "Cria ilusão do maior medo do alvo. Se falhar em Vontade, espectro persegue. Se tocar (Fortitude), causa 6d6 trevas ou colapso (-1 PV e sangrando)[cite: 247, 250, 255, 256].",
+        "descricao": "Cria ilusão do maior medo do alvo. Se falhar em Vontade, espectro persegue. Se tocar (Fortitude), causa 6d6 trevas ou colapso (-1 PV e sangrando).",
         "efeitos": {},
         "aprimoramentos": []
     },
@@ -440,7 +440,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Você",
         "duracao": "Instantânea",
         "resistencia": "",
-        "descricao": "Diz se uma ação no próximo hora trará resultados bons, ruins, ambos ou nada. Chance de falha em 1 no d6[cite: 260, 261].",
+        "descricao": "Diz se uma ação no próximo hora trará resultados bons, ruins, ambos ou nada. Chance de falha em 1 no d6.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+3 PM",
@@ -464,7 +464,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Esfera com 9m de raio",
         "duracao": "Cena",
         "resistencia": "Vontade parcial",
-        "descricao": "Aura brilhante. Aliados devotos imunes a encantamento, +10 Defesa/Resistência. Outros aliados +5 Defesa/Resistência. Inimigos sofrem condição[cite: 284, 285, 287].",
+        "descricao": "Aura brilhante. Aliados devotos imunes a encantamento, +10 Defesa/Resistência. Outros aliados +5 Defesa/Resistência. Inimigos sofrem condição.",
         "efeitos": {
             "defesa_bonus_magia": 5,
             "resistencia_bonus_magia": 5
@@ -485,7 +485,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura",
         "duracao": "Instantânea",
         "resistencia": "",
-        "descricao": "Envia aviso telepático. Escolha: Alerta (+5 Iniciativa/Percepção), Mensagem (25 palavras) ou Localização[cite: 292, 294].",
+        "descricao": "Envia aviso telepático. Escolha: Alerta (+5 Iniciativa/Percepção), Mensagem (25 palavras) ou Localização.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+1 PM", "descricao": "Aumenta alcance fator x10.", "efeitos": {}},
@@ -507,7 +507,7 @@ DADOS_MAGIAS= {
         "alvo_area": "1 criatura",
         "duracao": "Instantânea",
         "resistencia": "Vontade parcial",
-        "descricao": "Expulsa criatura não nativa ou rompe conexão de morto-vivo (0 PV). Se passar, fica enjoado. CD aumenta com itens opostos[cite: 306, 307].",
+        "descricao": "Expulsa criatura não nativa ou rompe conexão de morto-vivo (0 PV). Se passar, fica enjoado. CD aumenta com itens opostos.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+0 PM",
@@ -525,7 +525,7 @@ DADOS_MAGIAS= {
         "alvo_area": "4 esferas elementais (Raio 12m)",
         "duracao": "Instantânea",
         "resistencia": "Reflexos parcial",
-        "descricao": "4 esferas (ácido, elétrica, fogo, frio) explodem causando 6d6 de dano cada e efeitos (vulnerável, atordoado, em chamas, lento)[cite: 315, 316, 319].",
+        "descricao": "4 esferas (ácido, elétrica, fogo, frio) explodem causando 6d6 de dano cada e efeitos (vulnerável, atordoado, em chamas, lento).",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+5 PM",
@@ -545,7 +545,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Aliados",
         "duracao": "Cena",
         "resistencia": "",
-        "descricao": "Abençoa aliados com +1 em testes de ataque e rolagens de dano. Anula Perdição[cite: 326, 327].",
+        "descricao": "Abençoa aliados com +1 em testes de ataque e rolagens de dano. Anula Perdição.",
         "efeitos": {
             "ataque_bonus_magia": 1,
             "dano_bonus_magia": 1
@@ -568,7 +568,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Esfera com 6m de raio",
         "duracao": "Instantânea",
         "resistencia": "Reflexos reduz à metade",
-        "descricao": "Explosão causa 6d6 pontos de dano de fogo em criaturas e objetos livres na área[cite: 333].",
+        "descricao": "Explosão causa 6d6 pontos de dano de fogo em criaturas e objetos livres na área.",
         "efeitos": {},
         "aprimoramentos": [
             {"custo": "+2 PM", "descricao": "Aumenta o dano em +2d6.", "efeitos": {}},
@@ -589,7 +589,7 @@ DADOS_MAGIAS= {
         "alvo_area": "Buraco negro",
         "duracao": "3 rodadas",
         "resistencia": "Fortitude parcial",
-        "descricao": "Cria vácuo que suga tudo. Criaturas devem fazer Fortitude ou são puxadas 30m e caem. Se terminar turno no centro, é sugada para sempre[cite: 345, 350, 355].",
+        "descricao": "Cria vácuo que suga tudo. Criaturas devem fazer Fortitude ou são puxadas 30m e caem. Se terminar turno no centro, é sugada para sempre.",
         "efeitos": {},
         "aprimoramentos": []
     },

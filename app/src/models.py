@@ -8,7 +8,7 @@ try:
 except ImportError:
     ObjectId = Any
 
-# --- ENUMS (Essenciais para regras.py) ---
+# --- ENUMS ---
 
 
 class TamanhoEnum(str, Enum):
@@ -21,25 +21,18 @@ class TamanhoEnum(str, Enum):
 
     @classmethod
     def _missing_(cls, value):
-        # Se vier algo inválido do banco, assume Médio para não travar a API
         return cls.MEDIO
 
 # --- SUB-MODELOS DE DETALHES (Cálculos) ---
 
+# ADICIONADO: Classe unificada que o regras.py está pedindo
 
-class DetalhesPV(BaseModel):
+
+class DetalhesCalculo(BaseModel):
     inicial: int = 0
     nivel: int = 0
-    con: int = 0
-    habilidades: int = 0
-    outros: int = 0
-    total: int = 0
-
-
-class DetalhesPM(BaseModel):
-    inicial: int = 0
-    nivel: int = 0
-    atributo: int = 0
+    con: int = 0       # Usado para PV
+    atributo: int = 0  # Usado para PM
     habilidades: int = 0
     outros: int = 0
     total: int = 0
@@ -69,18 +62,15 @@ class Cabecalho(BaseModel):
     nivel_total: int = 1
     xp: XP = Field(default_factory=XP)
 
-    # VALIDADOR: Migração e Limpeza de Nulos
     @model_validator(mode='before')
     @classmethod
     def corrigir_dados(cls, data: Any) -> Any:
         if isinstance(data, dict):
-            # Migra divindade -> deus (Fichas antigas)
             if 'divindade' in data:
                 val = data.pop('divindade')
                 if not data.get('deus'):
                     data['deus'] = val if val else ""
 
-            # Garante que campos string nunca sejam None (evita erro 500)
             for campo in ['nome', 'jogador', 'raca', 'origem', 'deus']:
                 if data.get(campo) is None:
                     data[campo] = ""
@@ -103,7 +93,6 @@ class Descricao(BaseModel):
     historia: str = ""
     anotacoes: str = ""
 
-    # VALIDADOR: Proteção para campos de texto longos
     @field_validator('aparencia', 'historia', 'anotacoes', mode='before')
     @classmethod
     def empty_string_if_none(cls, v):
@@ -123,7 +112,8 @@ class StatusDetalhe(BaseModel):
     atual: int = 0
     maximo: int = 0
     temporario: int = 0
-    calculo: Optional[Union[DetalhesPV, DetalhesPM]] = None
+    # ATUALIZADO: Agora usa a classe unificada DetalhesCalculo
+    calculo: Optional[DetalhesCalculo] = None
 
 
 class DefesaDetalhe(BaseModel):
@@ -135,7 +125,7 @@ class Status(BaseModel):
     pv: StatusDetalhe = Field(default_factory=StatusDetalhe)
     pm: StatusDetalhe = Field(default_factory=StatusDetalhe)
     defesa: DefesaDetalhe = Field(default_factory=DefesaDetalhe)
-    rd: List[str] = []
+    rd: List[str] = []  # Correto: Lista de strings ("Fogo 10")
     deslocamento: float = 9.0
     detalhes_deslocamento: Optional[DetalhesDeslocamento] = None
 
@@ -148,6 +138,7 @@ class PericiaInfo(BaseModel):
     atributo_valor: int = 0
     outros: int = 0
     total: int = 0
+    atributo_override: str = ""
 
 
 class Ataque(BaseModel):
@@ -223,7 +214,6 @@ class ClasseInfo(BaseModel):
 
 
 class Personagem(BaseModel):
-    # Alias _id é importante para mapear o campo do MongoDB
     id: Optional[str] = Field(default=None, alias="_id")
     usuario_id: str = "guest"
 
@@ -250,14 +240,11 @@ class Personagem(BaseModel):
     habilidades: List[Habilidade] = []
     inventario: Inventario = Field(default_factory=Inventario)
 
-    # VALIDADOR CRUCIAL: Conversão de ObjectId -> String
-    # Isso impede o erro "Input should be a valid string" na saída da API
     @field_validator('id', mode='before')
     @classmethod
     def converter_objectid(cls, v):
         if v is None:
             return None
-        # Converte qualquer objeto (inclusive ObjectId do Mongo) para string
         return str(v)
 
     class Config:
