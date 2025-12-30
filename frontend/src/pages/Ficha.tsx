@@ -332,7 +332,11 @@ function Ficha() {
                             <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
                                 const novasClasses = [...ficha.classes];
                                 novasClasses[0] = { ...novasClasses[0], nome: e.target.value, subclasse: undefined };
-                                updateFicha({ classes: novasClasses }, true);
+
+                                // --- ALTERAÇÃO AQUI ---
+                                // Ao trocar a classe, limpamos as perícias ({}) para forçar o recálculo
+                                // e garantir que o jogador faça as novas escolhas obrigatórias.
+                                updateFicha({ classes: novasClasses, pericias: {} }, true);
                             }}>
                                 {listaClasses.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
