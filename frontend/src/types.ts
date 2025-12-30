@@ -142,8 +142,10 @@ export interface Magia {
     circulo: number;
     escola: string;
     execucao: string;
+    tipo?: string;
     alcance: string;
-    alvo?: string; // <--- ADICIONE ESTA LINHA (Opcional com '?')
+    alvo?: string;
+    alvo_area?: string;
     duracao: string;
     resistencia: string;
     custo_pm: number;

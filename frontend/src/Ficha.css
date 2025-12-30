@@ -1553,3 +1553,129 @@
     margin-top: 5px;
     font-weight: bold;
 }
+
+/* --- ESTILOS GERAIS DOS MODAIS --- */
+
+/* O Overlay é o fundo escuro que cobre a tela inteira */
+.modal-overlay {
+    position: fixed;
+    /* O segredo: Fixa na janela, não na página */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.75);
+    /* Fundo escuro */
+    display: flex;
+    align-items: center;
+    /* Centraliza Verticalmente */
+    justify-content: center;
+    /* Centraliza Horizontalmente */
+    z-index: 1000;
+    /* Garante que fique acima do conteúdo */
+    backdrop-filter: blur(3px);
+    /* Desfoque sutil no fundo */
+}
+
+/* A caixa de conteúdo do modal */
+.modal-content {
+    background-color: #121212;
+    /* Fundo bem escuro */
+    padding: 0;
+    /* O padding é controlado pelos filhos (header/body/footer) */
+    border-radius: 8px;
+    border: 1px solid #333;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+    /* Sombra forte para dar profundidade */
+
+    width: 90%;
+    max-width: 500px;
+    /* Largura padrão */
+
+    max-height: 90vh;
+    /* Nunca ultrapassa 90% da altura da tela */
+    overflow-y: auto;
+    /* Cria barra de rolagem interna se necessário */
+    overflow-x: hidden;
+
+    display: flex;
+    flex-direction: column;
+
+    animation: modalSlideIn 0.2s ease-out;
+    /* Animação suave de entrada */
+    position: relative;
+}
+
+/* Modais Largos (Ex: Grimório Completo) */
+.modal-content.large {
+    max-width: 900px;
+    height: 80vh;
+    /* Altura fixa para o grimório ficar grandão */
+}
+
+/* Cabeçalho do Modal */
+.modal-header {
+    padding: 15px 20px;
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    /* Mantém o cabeçalho fixo ao rolar o modal */
+    top: 0;
+    z-index: 10;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #f0f0f0;
+    font-size: 1.2rem;
+}
+
+/* Corpo do Modal */
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Rodapé do Modal */
+.modal-footer {
+    padding: 15px 20px;
+    background-color: #1e1e1e;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+/* Botão de Fechar (X) */
+.close-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #ff5252;
+}
+
+/* Animação de Entrada */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

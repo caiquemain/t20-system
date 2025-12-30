@@ -6,12 +6,14 @@ import { useFicha } from '../hooks/useFicha';
 // Componentes Modulares
 import { PowerSelectorModal } from '../components/PowerSelectorModal';
 import { AbilityConfigModal } from '../components/AbilityConfigModal';
-import { GrimorioModal } from '../components/GrimorioModal';
+import { GrimorioModal } from '../components/GrimorioModal';         // Modal de Adicionar (Estudar)
+import { FullGrimorioModal } from '../components/FullGrimorioModal'; // Modal de Gerenciar (Visual Detalhado)
+import { SpellDetailsModal } from '../components/SpellDetailsModal'; // Modal de Visualização Rápida (Clique Único)
+import { SpellSummary } from '../components/SpellSummary';           // Resumo Compacto na Ficha
 import { AttributeCard } from '../components/AttributeCard';
 import { SkillList } from '../components/SkillList';
 import { StatusBars } from '../components/StatusBars';
 import { RacialAttributeModal } from '../components/RacialAttributeModal';
-import { SpellList } from '../components/SpellList';
 
 // Tipos
 import type { Magia } from '../types';
@@ -74,7 +76,12 @@ function Ficha() {
 
     const [escolhasRaciais, setEscolhasRaciais] = useState<string[]>([]);
     const [showRacialModal, setShowRacialModal] = useState(false);
-    const [showGrimorio, setShowGrimorio] = useState(false);
+
+    // --- ESTADOS DO GRIMÓRIO ---
+    const [showGrimorio, setShowGrimorio] = useState(false);         // Modal de Adicionar Magias
+    const [showFullGrimorio, setShowFullGrimorio] = useState(false); // Modal de Gerenciar (Lista Completa)
+    const [viewSpell, setViewSpell] = useState<Magia | null>(null);  // Modal de Detalhes (Visualização Rápida)
+
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
 
@@ -94,12 +101,11 @@ function Ficha() {
         setSelectorModalOpen(true);
     };
 
-    // --- LOGS DE DEBUG NO RENDER ---
+    // --- LOGS DE DEBUG ---
     console.groupCollapsed("🔍 DEBUG: Ficha Render");
     console.log("Loading:", loading);
     console.log("Ficha:", ficha);
-    console.log("Dados Magias Disponíveis:", dadosMagias);
-    console.log("Habilidades em Edição (Qtd):", habilidadesEmEdicao.length);
+    console.log("Magias Disponíveis (DB):", dadosMagias ? Object.keys(dadosMagias).length : 0);
     console.groupEnd();
 
     if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
@@ -151,12 +157,33 @@ function Ficha() {
         }
     };
 
+    const handleRemoverMagia = (nome: string) => {
+        const novasMagias = ficha.combate.magias.filter((m: any) => m.nome !== nome);
+        updateFicha({ combate: { ...ficha.combate, magias: novasMagias } }, true);
+    };
+
     const origemNome = ficha.cabecalho.origem;
-    const infoOrigem = dadosOrigens ? dadosOrigens[origemNome] : null;
+    // --- LÓGICA DE BUSCA DE ORIGEM (CORRIGE BUG DE ACENTO) ---
+    const getDadosOrigem = (nome: string) => {
+        if (!dadosOrigens) return null;
+        if (dadosOrigens[nome]) return dadosOrigens[nome];
+
+        // Busca insensível a acentos (Ex: "Acólito" encontra "Acolito")
+        const nomeNormalizado = nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const chaveEncontrada = Object.keys(dadosOrigens).find(k =>
+            k.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === nomeNormalizado
+        );
+
+        return chaveEncontrada ? dadosOrigens[chaveEncontrada] : null;
+    };
+    const infoOrigem = getDadosOrigem(origemNome);
+
     const origemBloqueada = ficha.habilidades.some((h: any) => h.efeitos?.sem_origem || h.escolhas_aplicadas?.sem_origem);
 
     return (
         <div className="ficha-container">
+            {/* --- MODAIS DE CONFIGURAÇÃO --- */}
+
             <AbilityConfigModal
                 isOpen={showHabilidadesPanel}
                 onClose={() => setShowHabilidadesPanel(false)}
@@ -184,6 +211,7 @@ function Ficha() {
                 abrirSeletor={abrirSeletor}
             />
 
+            {/* MODAL 1: ADICIONAR MAGIAS (ESTUDO) */}
             <GrimorioModal
                 isOpen={showGrimorio}
                 onClose={() => setShowGrimorio(false)}
@@ -192,6 +220,29 @@ function Ficha() {
                 magiasConhecidas={ficha.combate.magias || []}
                 pmAtual={ficha.status.pm.atual}
                 pmMaximo={ficha.status.pm.maximo}
+            />
+
+            {/* MODAL 2: GERENCIAR GRIMÓRIO (DETALHADO + REMOVER) */}
+            <FullGrimorioModal
+                isOpen={showFullGrimorio}
+                onClose={() => setShowFullGrimorio(false)}
+                magias={ficha.combate.magias}
+                onRemove={handleRemoverMagia}
+                pmAtual={ficha.status.pm.atual}
+                pmMaximo={ficha.status.pm.maximo}
+            />
+
+            {/* MODAL 3: DETALHES RÁPIDOS (CLIQUE NO RESUMO) */}
+            <SpellDetailsModal
+                magia={viewSpell}
+                onClose={() => setViewSpell(null)}
+                // CONECTANDO A REMOÇÃO:
+                onRemove={() => {
+                    if (viewSpell) {
+                        handleRemoverMagia(viewSpell.nome); // Chama a função que já existe na Ficha
+                        setViewSpell(null); // Fecha o modal
+                    }
+                }}
             />
 
             <PowerSelectorModal
@@ -222,6 +273,7 @@ function Ficha() {
                 infoRacaAtual={infoRacaAtual}
             />
 
+            {/* --- HEADER --- */}
             <header className="ficha-header">
                 <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button>
                 <div className="header-inputs">
@@ -257,6 +309,7 @@ function Ficha() {
             </header>
 
             <div className="ficha-grid">
+                {/* COLUNA 1: ATRIBUTOS & STATUS */}
                 <div className="col-stats">
                     <div className="section-card">
                         <h3 className="section-title">Atributos</h3>
@@ -305,6 +358,7 @@ function Ficha() {
                     </div>
                 </div>
 
+                {/* COLUNA 2: EQUIPAMENTO & HABILIDADES */}
                 <div className="col-inventory">
                     <div className="section-card">
                         <h3 className="section-title">Equipamento</h3>
@@ -326,24 +380,28 @@ function Ficha() {
                     </div>
                 </div>
 
+                {/* COLUNA 3: PERÍCIAS */}
                 <div className="col-skills">
                     <SkillList ficha={ficha} dadosClasses={dadosClasses} updateFicha={updateFicha} listaTodasPericias={listaTodasPericias} />
                 </div>
             </div>
 
+            {/* --- SEÇÃO GRIMÓRIO (RESUMO) --- */}
             <div className="section-card">
                 <div className="section-header">
                     <h3>GRIMÓRIO</h3>
                     <div className="header-actions">
                         <span style={{ fontSize: '0.8rem', color: '#aaa', marginRight: 10 }}>PM: {ficha.status.pm.atual} / {ficha.status.pm.maximo}</span>
-                        <button className="btn-small" onClick={() => setShowGrimorio(true)}>+ Adicionar Magias</button>
+                        <button className="btn-small" onClick={() => setShowGrimorio(true)}>+ Adicionar</button>
                     </div>
                 </div>
                 <div style={{ padding: '15px' }}>
-                    <SpellList magias={ficha.combate.magias} onRemove={(nome) => {
-                        const novasMagias = ficha.combate.magias.filter(m => m.nome !== nome);
-                        updateFicha({ combate: { ...ficha.combate, magias: novasMagias } }, true);
-                    }} />
+                    {/* Exibe o Resumo Compacto na tela principal */}
+                    <SpellSummary
+                        magias={ficha.combate.magias}
+                        onOpenDetalhes={() => setShowFullGrimorio(true)}
+                        onSpellClick={(m) => setViewSpell(m)}
+                    />
                 </div>
             </div>
         </div>
