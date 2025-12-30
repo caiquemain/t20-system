@@ -221,12 +221,15 @@ DADOS_HABILIDADES_RACIAIS = {
         "fonte": "T20 JdA",
         "efeitos": {"imunidade_dano_escolha": True}
     },
-    "Proposito_Criacao_Golem": {
+"Proposito_Criacao_Golem": {
         "nome": "Propósito de Criação",
         "tipo": "Racial",
         "descricao": "Você foi construído “pronto” para um propósito específico e não teve uma infância. Você não tem direito a escolher uma origem, mas recebe um poder geral a sua escolha.",
         "fonte": "T20 JdA",
-        "efeitos": {"poder_escolha": 1}
+        "efeitos": {
+            "poder_escolha": 1,
+            "sem_origem": True  
+        }
     },
 
     # --- HYNNE ---

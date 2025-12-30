@@ -15,6 +15,10 @@
 # - bonus_pericia (dict): Ex: {"Percepção": 2}.
 # - dano_arma_base (dict): Ex: {"tipo": "arremesso", "passos": 1}
 # =========================================================
+from .dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
+from typing import Dict, Any
+
+
 
 HABILIDADES_GERAIS = {
 
@@ -944,3 +948,4 @@ HABILIDADES_GERAIS = {
         "efeitos": {}
     }
 }
+HABILIDADES_GERAIS.update(DADOS_HABILIDADES_RACIAIS)
