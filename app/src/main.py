@@ -21,7 +21,7 @@ from src.dados_habilidades_classe import DADOS_HABILIDADES_CLASSE
 from src.dados_magias import DADOS_MAGIAS
 from src.dados_deuses import DADOS_DEUSES
 from src.dados_poderes_concedidos import DADOS_PODERES_CONCEDIDOS
-
+from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
 # --- CONFIGURAÇÃO ---
 # Prioriza o nome do host 'db' (Docker), fallback para localhost
 MONGO_URL = os.getenv("MONGO_URI", "mongodb://db:27017/tormenta20")

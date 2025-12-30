@@ -101,12 +101,20 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
     raca_nome = ficha.cabecalho.raca
     dados_raca = DADOS_RACAS.get(raca_nome)
 
+    # Variável de controle para bloquear origem (ex: Golem)
+    bloquear_origem = False
+
     if dados_raca and "habilidades" in dados_raca:
         for chave_hab in dados_raca["habilidades"]:
             dados_hab = DADOS_HABILIDADES_RACIAIS.get(
                 chave_hab) or HABILIDADES_GERAIS.get(chave_hab)
 
             if dados_hab:
+                # 1. Verifica se essa habilidade bloqueia a Origem
+                efeitos_base = dados_hab.get("efeitos", {})
+                if efeitos_base.get("sem_origem"):
+                    bloquear_origem = True
+
                 nome_real = dados_hab["nome"]
 
                 if nome_real not in nomes_existentes:
@@ -139,7 +147,11 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                     # Versátil (Poder Geral)
                     poder_escolhido = efeitos.get(
                         "poder_geral") or efeitos.get("poder_escolha")
-                    if poder_escolhido and poder_escolhido not in nomes_existentes:
+
+                    # --- CORREÇÃO DE ERRO 500 (GOLEM) ---
+                    # Só processa se poder_escolhido for TEXTO (nome do poder).
+                    # Se for número (ex: 1), é apenas a quantidade de slots, então ignoramos.
+                    if poder_escolhido and isinstance(poder_escolhido, str) and poder_escolhido not in nomes_existentes:
                         dados_poder = None
                         for p in HABILIDADES_GERAIS.values():
                             if p["nome"] == poder_escolhido:
@@ -158,6 +170,23 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                             escolhas_aplicadas=efeitos_poder
                         ))
                         nomes_existentes.add(poder_escolhido)
+
+    # --- APLICA O BLOQUEIO DE ORIGEM ---
+    if bloquear_origem:
+        # Antes de limpar, remove o "Treino" das perícias que vieram da origem antiga.
+        # Isso evita que elas fiquem presas como se fossem escolhas manuais.
+        if ficha.escolhas_origem:
+            for escolha_antiga in ficha.escolhas_origem:
+                # Se a escolha antiga for uma perícia que existe na ficha...
+                if escolha_antiga in ficha.pericias:
+                    # ...reseta o treino para 0.
+                    # Nota: Se essa perícia também for fixa da Classe (ex: Luta pro Guerreiro),
+                    # a função 'inicializar_pericias' vai treiná-la novamente logo em seguida.
+                    ficha.pericias[escolha_antiga].treino = 0
+
+        # Agora sim, limpa a origem
+        ficha.cabecalho.origem = ""
+        ficha.escolhas_origem = []
 
     # B. CLASSE
     for classe in ficha.classes:
