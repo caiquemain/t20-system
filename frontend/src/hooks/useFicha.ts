@@ -38,6 +38,7 @@ export const useFicha = (id: string | undefined) => {
     const [ficha, setFicha] = useState<Personagem | null>(null);
     const [loading, setLoading] = useState(true);
     const [salvando, setSalvando] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // --- DADOS ESTÁTICOS (Listas para Dropdowns) ---
     const [listaRacas, setListaRacas] = useState<string[]>([]);
@@ -114,7 +115,7 @@ export const useFicha = (id: string | undefined) => {
                 setDadosOrigens(results[6].data);
                 setDadosRacas(results[7].data);
                 setDadosHabilidadesClasse(results[8].data);
-                setDadosMagias(results[9].data); // Agora vai ter as magias!
+                setDadosMagias(results[9].data);
                 setDadosHabilidades(results[10].data);
 
                 setListaDeuses(results[11].data);
@@ -133,6 +134,7 @@ export const useFicha = (id: string | undefined) => {
                     } catch (err) {
                         console.error("❌ Erro ao buscar ficha, iniciando vazia.", err);
                         setFicha(FICHA_VAZIA);
+                        setError("Ficha não encontrada. Criando nova.");
                     }
                 } else {
                     console.log("📝 Iniciando ficha nova.");
@@ -142,6 +144,7 @@ export const useFicha = (id: string | undefined) => {
                 console.log("✅ [useFicha] Sistema carregado.");
             } catch (error) {
                 console.error("❌ Erro fatal ao carregar useFicha:", error);
+                setError("Falha ao conectar com o servidor.");
             } finally {
                 setLoading(false);
             }
@@ -149,56 +152,64 @@ export const useFicha = (id: string | undefined) => {
         carregarDados();
     }, [id]);
 
-    // --- 2. LOGICA DE AUTOSAVE ---
-    const salvarAutomaticamente = useCallback((dados: Personagem) => {
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
-
+    // --- 2. LÓGICA DE SALVAMENTO (CENTRALIZADA) ---
+    const executarSalvamentoReal = useCallback(async (dadosParaSalvar: Personagem) => {
         setSalvando(true);
-
-        saveTimeoutRef.current = setTimeout(async () => {
-            try {
-                let response;
-                // Se tem ID real, atualiza (PUT)
-                if (dados._id && dados._id !== 'novo') {
-                    response = await updatePersonagem(dados._id, dados);
-                }
-                // Se é novo e usuário já digitou algo relevante (nome), cria (POST)
-                else if (id === 'novo' && dados.cabecalho.nome.length > 2) {
-                    response = await createPersonagem(dados);
-                }
-
-                if (response && response.data) {
-                    setFicha(prev => {
-                        if (!prev) return response.data;
-                        return { ...prev, ...response.data };
-                    });
-                    console.log("💾 Ficha salva com sucesso.");
-                }
-            } catch (e) {
-                console.error("Erro no autosave:", e);
-            } finally {
-                setSalvando(false);
+        try {
+            let response;
+            // Se tem ID real, atualiza (PUT)
+            if (dadosParaSalvar._id && dadosParaSalvar._id !== 'novo') {
+                response = await updatePersonagem(dadosParaSalvar._id, dadosParaSalvar);
             }
-        }, 1500); // Aguarda 1.5s após a última edição
+            // Se é novo e usuário já digitou algo relevante (nome), cria (POST)
+            else if (id === 'novo' && dadosParaSalvar.cabecalho.nome.length > 2) {
+                response = await createPersonagem(dadosParaSalvar);
+            }
+
+            if (response && response.data) {
+                // Atualiza o estado com a resposta (útil para pegar cálculos do backend)
+                setFicha(prev => {
+                    if (!prev) return response.data;
+                    return { ...prev, ...response.data };
+                });
+                console.log("💾 Ficha salva com sucesso.");
+            }
+        } catch (e) {
+            console.error("❌ Erro ao salvar ficha:", e);
+            setError("Erro ao salvar alterações.");
+        } finally {
+            setSalvando(false);
+        }
     }, [id]);
 
-    // --- 3. ATUALIZAÇÃO GERAL (Wrapper) ---
-    const updateFicha = useCallback(async (novosDados: Partial<Personagem>) => {
+    // --- 3. ATUALIZAÇÃO DE ESTADO (Wrapper Público) ---
+    // Agora aceita 'salvarAgora' (boolean) para forçar update imediato
+    const updateFicha = useCallback((novosDados: Partial<Personagem>, salvarAgora: boolean = false) => {
         setFicha((prev) => {
             if (!prev) return null;
             const novaFicha = { ...prev, ...novosDados };
             fichaRef.current = novaFicha;
 
-            // Dispara timer de salvamento
-            salvarAutomaticamente(novaFicha);
+            // Cancela timer anterior
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+
+            if (salvarAgora) {
+                // Salva imediatamente
+                executarSalvamentoReal(novaFicha);
+            } else {
+                // Agenda Debounce (1.5s)
+                saveTimeoutRef.current = setTimeout(() => {
+                    executarSalvamentoReal(novaFicha);
+                }, 1500);
+            }
 
             return novaFicha;
         });
-    }, [salvarAutomaticamente]);
+    }, [executarSalvamentoReal]);
 
-    // Limpeza ao sair da tela
+    // Limpeza de Timers ao desmontar
     useEffect(() => {
         return () => {
             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -248,25 +259,17 @@ export const useFicha = (id: string | undefined) => {
                     );
                 }
 
-                // Se ainda não achou, procura nos dadosRacas (algumas habilidades ficam lá)
-                if (!def) {
-                    // Percorre todas as raças para ver se a habilidade está lá
-                    for (const racaKey in dadosRacas) {
-                        const raca = dadosRacas[racaKey];
-                        // Isso é uma simplificação, idealmente dadosRacas teria detalhes das habs
-                        // Mas se não tiver, assumimos defaults baseados no nome
-                    }
-                }
-
+                // Efeitos acumulados (da definição + escolhas já feitas)
                 const efeitos = def?.efeitos || {};
 
                 // GATILHOS: Palavras-chave que indicam que essa habilidade precisa de configuração
                 const gatilhosDeEscolha = [
-                    'Versátil',    // Humanos (escolha de perícias/poderes)
+                    'Versátil',    // Humanos
                     'Herança',     // Aggelus/Sulfure
-                    'Tatuagem',    // Qareen (Tatuagem Mística - escolhe magia)
-                    'Mística',     // Variação de nome
-                    'Perícia',     // Várias raças ganham perícia extra
+                    'Tatuagem',    // Qareen (Magia)
+                    'Mística',     // Variação
+                    'Deformidade', // Lefou
+                    'Perícia',     // Várias raças
                     'Adaptável',
                     'Arma',
                     'Elemento'
@@ -369,10 +372,11 @@ export const useFicha = (id: string | undefined) => {
             }
         }
 
-        await updateFicha({
+        // Força salvamento imediato ao fechar o modal (true)
+        updateFicha({
             ...novaFicha,
             habilidades: habilidadesFinais
-        });
+        }, true);
 
         setShowHabilidadesPanel(false);
     };
@@ -383,6 +387,7 @@ export const useFicha = (id: string | undefined) => {
         setFicha,
         loading,
         salvando,
+        error,
 
         // --- LISTAS ---
         listaRacas,
@@ -415,6 +420,6 @@ export const useFicha = (id: string | undefined) => {
         handleAtributoBaseChange,
         montarHabilidadesParaPanel,
         handleSaveEscolhas,
-        autoSalvar: salvarAutomaticamente
+        // (autoSalvar removido pois updateFicha agora gerencia isso internamente)
     };
 };

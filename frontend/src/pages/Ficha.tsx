@@ -11,23 +11,14 @@ import { AttributeCard } from '../components/AttributeCard';
 import { SkillList } from '../components/SkillList';
 import { StatusBars } from '../components/StatusBars';
 import { RacialAttributeModal } from '../components/RacialAttributeModal';
+import { SpellList } from '../components/SpellList';
 
 // Tipos
 import type { Magia } from '../types';
 
-// --- REGRAS DE SISTEMA (MANTIDAS) ---
 const PONTOS_INICIAIS = 10;
-
-const MAPA_ATTR_KEY: Record<string, string> = {
-    'forca': 'for', 'destreza': 'des', 'constituicao': 'con',
-    'inteligencia': 'int', 'sabedoria': 'sab', 'carisma': 'car'
-};
-
-const TABELA_CUSTO: Record<string, number> = {
-    "-1": -1, "0": 0, "1": 1, "2": 2, "3": 4, "4": 7
-};
-
-// Metadados de Raças (Fallback para UI)
+const MAPA_ATTR_KEY: Record<string, string> = { 'forca': 'for', 'destreza': 'des', 'constituicao': 'con', 'inteligencia': 'int', 'sabedoria': 'sab', 'carisma': 'car' };
+const TABELA_CUSTO: Record<string, number> = { "-1": -1, "0": 0, "1": 1, "2": 2, "3": 4, "4": 7 };
 const RACAS_METADATA: Record<string, { attrs: Record<string, number>, escolhas: number }> = {
     "Anão": { attrs: { con: 2, sab: 1, des: -1 }, escolhas: 0 },
     "Dahllan": { attrs: { sab: 2, des: 1, int: -1 }, escolhas: 0 },
@@ -69,33 +60,21 @@ function Ficha() {
 
     const {
         ficha, loading,
-        // Dados
         dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
-
-        // Novos Dados de Devoção
         listaDeuses, dadosDeuses,
-
-        // Estados de Edição do Hook
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
         classPowersEmEdicao, setClassPowersEmEdicao,
         subclasseEmEdicao, setSubclasseEmEdicao,
         devocaoEmEdicao, setDevocaoEmEdicao,
-
-        // Ações
-        updateFicha,
-        handleAtributoBaseChange,
-        montarHabilidadesParaPanel,
-        handleSaveEscolhas
+        updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas
     } = useFicha(id);
 
-    // Estados Locais
     const [escolhasRaciais, setEscolhasRaciais] = useState<string[]>([]);
     const [showRacialModal, setShowRacialModal] = useState(false);
     const [showGrimorio, setShowGrimorio] = useState(false);
-
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
 
@@ -110,32 +89,18 @@ function Ficha() {
         setShowRacialModal(false);
     };
 
-    const abrirSeletor = (
-        tipo: string,
-        titulo: string,
-        listaRestrita: string[] = [],
-        categoriaFixa: string | undefined = undefined,
-        onConfirm?: (val: string) => void,
-        itensBloqueados: string[] = []
-    ) => {
-        let tipoModo = 'ambos';
-        if (tipo === 'pericia') tipoModo = 'pericia';
-        else if (tipo === 'poder') tipoModo = 'poder';
-        else if (tipo === 'ambos') tipoModo = 'ambos';
-
-        setSelectorConfig({
-            tipo: tipoModo,
-            titulo,
-            listaRestrita,
-            categoriaFixa,
-            itensBloqueados,
-            callback: (val: string) => {
-                if (onConfirm) onConfirm(val);
-                setSelectorModalOpen(false);
-            }
-        });
+    const abrirSeletor = (tipo: string, titulo: string, listaRestrita: string[] = [], categoriaFixa: string | undefined = undefined, onConfirm?: (val: string) => void, itensBloqueados: string[] = []) => {
+        setSelectorConfig({ tipo: tipo === 'ambos' ? 'ambos' : tipo, titulo, listaRestrita, categoriaFixa, itensBloqueados, callback: (val: string) => { if (onConfirm) onConfirm(val); setSelectorModalOpen(false); } });
         setSelectorModalOpen(true);
     };
+
+    // --- LOGS DE DEBUG NO RENDER ---
+    console.groupCollapsed("🔍 DEBUG: Ficha Render");
+    console.log("Loading:", loading);
+    console.log("Ficha:", ficha);
+    console.log("Dados Magias Disponíveis:", dadosMagias);
+    console.log("Habilidades em Edição (Qtd):", habilidadesEmEdicao.length);
+    console.groupEnd();
 
     if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
 
@@ -154,14 +119,8 @@ function Ficha() {
         const shortKey = MAPA_ATTR_KEY[attrKey];
         const valorFixo = infoRacaAtual.attrs?.[shortKey] || 0;
         if (valorFixo !== 0) return;
-
-        if (escolhasRaciais.includes(attrKey)) {
-            setEscolhasRaciais(prev => prev.filter(k => k !== attrKey));
-        } else {
-            if (escolhasRaciais.length < qtdEscolhasRacial) {
-                setEscolhasRaciais(prev => [...prev, attrKey]);
-            }
-        }
+        if (escolhasRaciais.includes(attrKey)) setEscolhasRaciais(prev => prev.filter(k => k !== attrKey));
+        else if (escolhasRaciais.length < qtdEscolhasRacial) setEscolhasRaciais(prev => [...prev, attrKey]);
     };
 
     const poderesDaClasse = ficha ? extrairPoderesDaClasse(dadosHabilidadesClasse, ficha.classes[0].nome) : [];
@@ -171,52 +130,33 @@ function Ficha() {
         if (!ficha) return [];
         const raca = ficha.cabecalho.raca;
         const classe = ficha.classes[0]?.nome;
-
         if (raca === 'Humano' || classe === 'Clérigo') return listaDeuses;
-
         return listaDeuses.filter(nomeDeus => {
             const dados = dadosDeuses[nomeDeus];
             if (!dados) return false;
-
             const permitidos = dados.devotos || [];
-            if (permitidos.includes("Todos") || permitidos.includes("Quaisquer")) return true;
-            if (permitidos.includes(raca)) return true;
-            if (permitidos.includes(classe)) return true;
-
-            const goblinoide = ["Goblin", "Hobgoblin", "Bugbear", "Orc", "Ogro"];
-            if (nomeDeus === "Thwor" && goblinoide.includes(raca)) return true;
-
+            if (permitidos.includes("Todos") || permitidos.includes("Quaisquer") || permitidos.includes(raca) || permitidos.includes(classe)) return true;
+            if (nomeDeus === "Thwor" && ["Goblin", "Hobgoblin", "Bugbear", "Orc", "Ogro"].includes(raca)) return true;
             return false;
         });
     };
     const deusesDisponiveis = getDeusesPermitidos();
 
-    const handleAprenderMagias = (novas: Magia[]) => {
+    const handleAprenderMagiaUnica = (novaMagia: Magia) => {
         if (!ficha) return;
         const listaAtual = ficha.combate.magias || [];
-        const novasFiltradas = novas.filter(n => !listaAtual.some(a => a.nome === n.nome));
-        updateFicha({ combate: { ...ficha.combate, magias: [...listaAtual, ...novasFiltradas] } });
-    };
-
-    const removerMagia = (nomeMagia: string) => {
-        if (!ficha) return;
-        const novaLista = ficha.combate.magias.filter(m => m.nome !== nomeMagia);
-        updateFicha({ combate: { ...ficha.combate, magias: novaLista } });
+        if (!listaAtual.some(m => m.nome === novaMagia.nome)) {
+            const novaLista = [...listaAtual, novaMagia];
+            updateFicha({ combate: { ...ficha.combate, magias: novaLista } }, true);
+        }
     };
 
     const origemNome = ficha.cabecalho.origem;
     const infoOrigem = dadosOrigens ? dadosOrigens[origemNome] : null;
-
-    // --- NOVA LÓGICA DE BLOQUEIO DE ORIGEM ---
-    // Verifica se alguma habilidade da ficha bloqueia a Origem (ex: Golem)
-    const origemBloqueada = ficha.habilidades.some((h: any) =>
-        h.efeitos?.sem_origem || h.escolhas_aplicadas?.sem_origem
-    );
+    const origemBloqueada = ficha.habilidades.some((h: any) => h.efeitos?.sem_origem || h.escolhas_aplicadas?.sem_origem);
 
     return (
         <div className="ficha-container">
-
-            {/* MODAL CONFIGURAÇÃO (PRINCIPAL) */}
             <AbilityConfigModal
                 isOpen={showHabilidadesPanel}
                 onClose={() => setShowHabilidadesPanel(false)}
@@ -230,6 +170,7 @@ function Ficha() {
                 dadosHabilidadesClasse={dadosHabilidadesClasse}
                 listaPoderesGerais={listaPoderes}
                 dadosDeuses={dadosDeuses}
+                dadosMagias={dadosMagias}
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}
@@ -241,19 +182,18 @@ function Ficha() {
                 devocaoEmEdicao={devocaoEmEdicao}
                 setDevocaoEmEdicao={setDevocaoEmEdicao}
                 abrirSeletor={abrirSeletor}
-                dadosMagias={dadosMagias}
             />
 
-            {/* MODAL GRIMÓRIO */}
             <GrimorioModal
                 isOpen={showGrimorio}
                 onClose={() => setShowGrimorio(false)}
-                onLearn={handleAprenderMagias}
+                onAddMagia={handleAprenderMagiaUnica}
                 dadosMagias={dadosMagias}
                 magiasConhecidas={ficha.combate.magias || []}
+                pmAtual={ficha.status.pm.atual}
+                pmMaximo={ficha.status.pm.maximo}
             />
 
-            {/* MODAL SELETOR GENÉRICO */}
             <PowerSelectorModal
                 isOpen={selectorModalOpen}
                 onClose={() => setSelectorModalOpen(false)}
@@ -270,7 +210,6 @@ function Ficha() {
                 subclasse={subclasseEmEdicao}
             />
 
-            {/* MODAL ATRIBUTOS RACIAIS */}
             <RacialAttributeModal
                 isOpen={showRacialModal}
                 onClose={() => setShowRacialModal(false)}
@@ -283,85 +222,41 @@ function Ficha() {
                 infoRacaAtual={infoRacaAtual}
             />
 
-            {/* HEADER ATUALIZADO COM SALVAMENTO IMEDIATO */}
             <header className="ficha-header">
                 <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button>
                 <div className="header-inputs">
                     <input className="input-nome" value={ficha.cabecalho.nome} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, nome: e.target.value } })} />
                     <div className="header-sub">
-
-                        <select className="select-header" value={ficha.cabecalho.raca}
-                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [] }, true)}>
+                        <select className="select-header" value={ficha.cabecalho.raca} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [] }, true)}>
                             {listaRacas.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <span>•</span>
-
-                        {/* SELETOR DE ORIGEM (COM BLOQUEIO) */}
-                        <select
-                            className="select-header"
-                            value={origemBloqueada ? "" : ficha.cabecalho.origem}
-                            disabled={origemBloqueada}
-                            style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : {}}
-                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}
-                        >
-                            {origemBloqueada ? (
-                                <option value="">🚫 Sem Origem</option>
-                            ) : (
-                                listaOrigens.map(o => <option key={o} value={o}>{o}</option>)
-                            )}
+                        <select className="select-header" value={origemBloqueada ? "" : ficha.cabecalho.origem} disabled={origemBloqueada} style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : {}} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}>
+                            {origemBloqueada ? <option value="">🚫 Sem Origem</option> : listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
-
                         <span>•</span>
-
-                        {/* SELETOR DE DEUS */}
-                        <select
-                            className="select-header"
-                            value={ficha.cabecalho.deus || ""}
-                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } }, true)}
-                            style={{ color: '#ffd700' }}
-                        >
+                        <select className="select-header" value={ficha.cabecalho.deus || ""} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } }, true)} style={{ color: '#ffd700' }}>
                             <option value="">Sem Devoção</option>
-                            {deusesDisponiveis.map(d => (
-                                <option key={d} value={d}>{d}</option>
-                            ))}
+                            {deusesDisponiveis.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                         <span>•</span>
-
-                        {/* CLASSE E SUBCLASSE */}
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
                                 const novasClasses = [...ficha.classes];
                                 novasClasses[0] = { ...novasClasses[0], nome: e.target.value, subclasse: undefined };
-
-                                // --- ALTERAÇÃO AQUI ---
-                                // Ao trocar a classe, limpamos as perícias ({}) para forçar o recálculo
-                                // e garantir que o jogador faça as novas escolhas obrigatórias.
                                 updateFicha({ classes: novasClasses, pericias: {} }, true);
                             }}>
                                 {listaClasses.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-
-                            {ficha.classes[0]?.subclasse && (
-                                <span className="subclass-badge" title="Caminho / Subclasse">
-                                    {ficha.classes[0].subclasse}
-                                </span>
-                            )}
+                            {ficha.classes[0]?.subclasse && <span className="subclass-badge" title="Caminho / Subclasse">{ficha.classes[0].subclasse}</span>}
                         </div>
-
                         <label style={{ marginLeft: 10 }}>Nível:</label>
-                        <input className="input-nivel" type="number" value={ficha.classes[0]?.nivel}
-                            onChange={e => {
-                                const nc = [...ficha.classes];
-                                nc[0].nivel = parseInt(e.target.value);
-                                updateFicha({ classes: nc }, true);
-                            }}
-                        />
+                        <input className="input-nivel" type="number" value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
                     </div>
                 </div>
             </header>
 
             <div className="ficha-grid">
-                {/* COLUNA 1 - ATRIBUTOS & STATUS */}
                 <div className="col-stats">
                     <div className="section-card">
                         <h3 className="section-title">Atributos</h3>
@@ -369,105 +264,52 @@ function Ficha() {
                             <span className="points-label">Pontos</span>
                             <span className={`points-value ${pontosRestantes < 0 ? 'error' : ''}`}>{pontosRestantes} / {PONTOS_INICIAIS}</span>
                         </div>
-
                         {qtdEscolhasRacial > 0 && (
-                            <button
-                                className={`btn-config-racial ${escolhasRaciais.length < qtdEscolhasRacial ? 'pendente' : ''}`}
-                                onClick={() => setShowRacialModal(true)}
-                            >
+                            <button className={`btn-config-racial ${escolhasRaciais.length < qtdEscolhasRacial ? 'pendente' : ''}`} onClick={() => setShowRacialModal(true)}>
                                 <span>🧬 Atributos Raciais ({racaNome})</span>
                                 <span>{escolhasRaciais.length}/{qtdEscolhasRacial}</span>
                             </button>
                         )}
-
                         <div className="atributos-grid">
                             {Object.entries(ficha.atributos).map(([key, valTotalBackend]) => {
                                 // @ts-ignore
                                 const valBase = ficha.atributos_base[key];
                                 const shortKey = MAPA_ATTR_KEY[key];
-
                                 const racialFixo = infoRacaAtual.attrs?.[shortKey] || 0;
                                 const isEscolhido = escolhasRaciais.includes(key);
                                 const racialTotal = racialFixo + (isEscolhido ? 1 : 0);
                                 const canChooseRacial = qtdEscolhasRacial > 0 && racialFixo === 0;
                                 const isRacialDisabled = escolhasRaciais.length >= qtdEscolhasRacial;
-
                                 const outrosMods = (valTotalBackend - valBase - racialTotal);
                                 const valorTotalExibicao = valBase + racialTotal + outrosMods;
 
-                                return (
-                                    <AttributeCard
-                                        key={key}
-                                        attrKey={key}
-                                        valBase={valBase}
-                                        valTotal={valorTotalExibicao}
-                                        racialFixo={racialFixo}
-                                        isRacialChosen={isEscolhido}
-                                        canChooseRacial={canChooseRacial}
-                                        isRacialDisabled={isRacialDisabled}
-                                        onBaseChange={(k, delta) => handleAtributoBaseChange(k, String(valBase + delta))}
-                                        onToggleRacial={toggleRacialChoice}
-                                    />
-                                );
+                                return <AttributeCard key={key} attrKey={key} valBase={valBase} valTotal={valorTotalExibicao} racialFixo={racialFixo} isRacialChosen={isEscolhido} canChooseRacial={canChooseRacial} isRacialDisabled={isRacialDisabled} onBaseChange={(k, delta) => handleAtributoBaseChange(k, String(valBase + delta))} onToggleRacial={toggleRacialChoice} />;
                             })}
                         </div>
                     </div>
-
                     <StatusBars ficha={ficha} />
-
-                    {/* --- NOVO: PROFICIÊNCIAS E SENTIDOS --- */}
-                    <div className="proficiencias-container" style={{
-                        background: '#1e1e1e',
-                        padding: '10px',
-                        borderRadius: '6px',
-                        marginTop: '15px',
-                        border: '1px solid #333'
-                    }}>
-                        <h4 style={{ margin: '0 0 8px 0', color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', borderBottom: '1px solid #333', paddingBottom: '4px' }}>
-                            🛠️ Proficiências & Sentidos
-                        </h4>
-
+                    <div className="proficiencias-container" style={{ background: '#1e1e1e', padding: '10px', borderRadius: '6px', marginTop: '15px', border: '1px solid #333' }}>
+                        <h4 style={{ margin: '0 0 8px 0', color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', borderBottom: '1px solid #333', paddingBottom: '4px' }}>🛠️ Proficiências & Sentidos</h4>
                         {ficha.proficiencias && ficha.proficiencias.length > 0 ? (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                 {ficha.proficiencias.map((item: string, idx: number) => {
                                     const isSentido = item.includes('Visão') || item.includes('Faro');
                                     const isImunidade = item.includes('Movimento') || item.includes('Imune');
-
-                                    let bg = '#333';
-                                    let color = '#ccc';
-                                    let border = '#444';
-
+                                    let bg = '#333'; let color = '#ccc'; let border = '#444';
                                     if (isSentido) { bg = 'rgba(63, 81, 181, 0.2)'; border = '#3949ab'; color = '#c5cae9'; }
                                     if (isImunidade) { bg = 'rgba(76, 175, 80, 0.2)'; border = '#2e7d32'; color = '#c8e6c9'; }
-
-                                    return (
-                                        <span key={idx} style={{
-                                            background: bg,
-                                            color: color,
-                                            border: `1px solid ${border}`,
-                                            padding: '2px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '0.75rem',
-                                            fontWeight: '500'
-                                        }}>
-                                            {item}
-                                        </span>
-                                    );
+                                    return <span key={idx} style={{ background: bg, color: color, border: `1px solid ${border}`, padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '500' }}>{item}</span>;
                                 })}
                             </div>
-                        ) : (
-                            <p style={{ color: '#555', fontStyle: 'italic', fontSize: '0.8rem', margin: 0 }}>Nenhuma listada.</p>
-                        )}
+                        ) : <p style={{ color: '#555', fontStyle: 'italic', fontSize: '0.8rem', margin: 0 }}>Nenhuma listada.</p>}
                     </div>
                 </div>
 
-                {/* COLUNA 2 - INVENTÁRIO & HABILIDADES */}
                 <div className="col-inventory">
                     <div className="section-card">
                         <h3 className="section-title">Equipamento</h3>
                         <p style={{ color: '#777', textAlign: 'center' }}>Carga: {ficha.inventario.carga_total} / {ficha.inventario.carga_maxima}</p>
                     </div>
-
                     <div className="section-card" style={{ marginTop: '25px' }}>
                         <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             Habilidades
@@ -484,42 +326,25 @@ function Ficha() {
                     </div>
                 </div>
 
-                {/* COLUNA 3 - PERÍCIAS */}
                 <div className="col-skills">
-                    <SkillList
-                        ficha={ficha}
-                        dadosClasses={dadosClasses}
-                        updateFicha={updateFicha}
-                        listaTodasPericias={listaTodasPericias}
-                    />
+                    <SkillList ficha={ficha} dadosClasses={dadosClasses} updateFicha={updateFicha} listaTodasPericias={listaTodasPericias} />
                 </div>
             </div>
 
-            {/* GRIMÓRIO */}
-            <div className="section-card full-width" style={{ marginTop: 20 }}>
-                <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Grimório
-                    <button className="btn-toggle-racial" style={{ width: 'auto', padding: '6px 12px', margin: 0 }} onClick={() => setShowGrimorio(true)}>+ Adicionar Magias</button>
-                </h3>
-
-                {ficha.combate.magias && ficha.combate.magias.length > 0 ? (
-                    <div className="magias-list-sheet">
-                        {ficha.combate.magias.map((magia, idx) => (
-                            <div key={idx} className="mini-spell-card">
-                                <div className="mini-spell-header">
-                                    <span className="circle-badge">{magia.circulo}º</span>
-                                    <span className="spell-name">{magia.nome}</span>
-                                    <button className="btn-remove-mini" onClick={() => removerMagia(magia.nome)} title="Remover">×</button>
-                                </div>
-                                <div className="mini-spell-info">
-                                    <span>{magia.execucao}</span> • <span>{magia.alcance}</span> • <span style={{ color: '#42a5f5' }}>{magia.custo_pm} PM</span>
-                                </div>
-                            </div>
-                        ))}
+            <div className="section-card">
+                <div className="section-header">
+                    <h3>GRIMÓRIO</h3>
+                    <div className="header-actions">
+                        <span style={{ fontSize: '0.8rem', color: '#aaa', marginRight: 10 }}>PM: {ficha.status.pm.atual} / {ficha.status.pm.maximo}</span>
+                        <button className="btn-small" onClick={() => setShowGrimorio(true)}>+ Adicionar Magias</button>
                     </div>
-                ) : (
-                    <p style={{ color: '#777', textAlign: 'center', padding: 20, fontStyle: 'italic' }}>Nenhuma magia aprendida.</p>
-                )}
+                </div>
+                <div style={{ padding: '15px' }}>
+                    <SpellList magias={ficha.combate.magias} onRemove={(nome) => {
+                        const novasMagias = ficha.combate.magias.filter(m => m.nome !== nome);
+                        updateFicha({ combate: { ...ficha.combate, magias: novasMagias } }, true);
+                    }} />
+                </div>
             </div>
         </div>
     );
