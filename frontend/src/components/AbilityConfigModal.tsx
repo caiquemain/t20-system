@@ -164,7 +164,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 {(() => {
                     // Verifica se alguma habilidade racial proíbe origem
                     const bloqueioOrigem = habilidadesEmEdicao.find(h => h.efeitos && h.efeitos.sem_origem);
-                    
+
                     if (bloqueioOrigem) {
                         // SE TIVER BLOQUEIO, MOSTRA AVISO E NÃO RENDERIZA OS SELETORES
                         return (
@@ -376,6 +376,105 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                         >
                                             Escolher
                                         </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        // --- CASO 7: LEFOU (DEFORMIDADE) ---
+                        if (hab.nome === "Deformidade") {
+                            const p1 = hab.escolhas_aplicadas?.pericia_1 || "";
+                            const p2 = hab.escolhas_aplicadas?.pericia_2 || "";
+                            const pTormenta = hab.escolhas_aplicadas?.poder_tormenta || "";
+
+                            // Define o modo do Slot 2 (Perícia ou Poder)
+                            const modoAtual = pTormenta ? 'poder' : (modosSlot2[idx] || 'pericia');
+
+                            const toggleModo = (novoModo: 'pericia' | 'poder') => {
+                                setModosSlot2(prev => ({ ...prev, [idx]: novoModo }));
+                                const novos = [...habilidadesEmEdicao];
+                                const novasEscolhas = { ...novos[idx].escolhas_aplicadas };
+
+                                if (novoModo === 'pericia') {
+                                    delete novasEscolhas.poder_tormenta;
+                                    novasEscolhas.pericia_2 = "";
+                                } else {
+                                    delete novasEscolhas.pericia_2;
+                                    novasEscolhas.poder_tormenta = "";
+                                }
+
+                                novos[idx].escolhas_aplicadas = novasEscolhas;
+                                setHabilidadesEmEdicao(novos);
+                            };
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong> (Lefou)</span>
+                                        <span style={{ color: '#d32f2f', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc', fontStyle: 'italic' }}>
+                                        Recebe +2 em 2 Perícias <strong>OU</strong> +2 em 1 Perícia e 1 Poder da Tormenta.
+                                    </p>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 15, marginTop: 10 }}>
+                                        {/* SLOT 1: Sempre Perícia (+2) */}
+                                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                            <label style={{ width: 90, fontSize: '0.85rem', color: '#81c784' }}>Perícia (+2):</label>
+                                            <input value={p1} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
+                                            <button
+                                                className="btn-action"
+                                                onClick={() => abrirSeletor('pericia', 'Deformidade: Bônus em Perícia', [], undefined, (v) => updateRacialChoice(idx, 'pericia_1', v), getBlacklistGlobal(p1))}
+                                            >
+                                                Escolher
+                                            </button>
+                                        </div>
+
+                                        {/* SLOT 2: Perícia (+2) OU Poder da Tormenta */}
+                                        <div style={{ padding: 10, border: '1px dashed #555', borderRadius: 4, background: 'rgba(255,0,0,0.05)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
+                                                <label style={{ fontSize: '0.85rem', color: '#ff5252' }}>Segundo Slot:</label>
+                                                <div style={{ display: 'flex', gap: 5 }}>
+                                                    <button onClick={() => toggleModo('pericia')}
+                                                        style={{ fontSize: '0.7rem', padding: '3px 8px', cursor: 'pointer', background: modoAtual === 'pericia' ? '#00bcd4' : '#333', color: modoAtual === 'pericia' ? '#000' : '#888', border: '1px solid #555', borderRadius: 3 }}>
+                                                        Perícia (+2)
+                                                    </button>
+                                                    <button onClick={() => toggleModo('poder')}
+                                                        style={{ fontSize: '0.7rem', padding: '3px 8px', cursor: 'pointer', background: modoAtual === 'poder' ? '#d32f2f' : '#333', color: modoAtual === 'poder' ? '#fff' : '#888', border: '1px solid #555', borderRadius: 3 }}>
+                                                        Poder da Tormenta
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {modoAtual === 'pericia' ? (
+                                                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                    <input value={p2} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
+                                                    <button
+                                                        className="btn-action"
+                                                        onClick={() => abrirSeletor('pericia', 'Deformidade: Bônus em Perícia', [], undefined, (v) => updateRacialChoice(idx, 'pericia_2', v), getBlacklistGlobal(p2))}
+                                                    >
+                                                        Escolher
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                    <input value={pTormenta} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione um Poder..." />
+                                                    <button
+                                                        className="btn-action"
+                                                        style={{ background: '#d32f2f', color: 'white' }}
+                                                        onClick={() => abrirSeletor(
+                                                            'poder',
+                                                            'Deformidade: Poder da Tormenta',
+                                                            [],
+                                                            'Tormenta', // <--- FILTRO: Só mostra poderes da Tormenta
+                                                            (v) => updateRacialChoice(idx, 'poder_tormenta', v),
+                                                            getBlacklistGlobal(pTormenta)
+                                                        )}
+                                                    >
+                                                        Escolher
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             );

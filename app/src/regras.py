@@ -145,8 +145,9 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                     efeitos = habilidade_atual.escolhas_aplicadas or {}
 
                     # Versátil (Poder Geral)
-                    poder_escolhido = efeitos.get(
-                        "poder_geral") or efeitos.get("poder_escolha")
+                    poder_escolhido = efeitos.get("poder_geral") or \
+                        efeitos.get("poder_escolha") or \
+                        efeitos.get("poder_tormenta")
 
                     # --- CORREÇÃO DE ERRO 500 (GOLEM) ---
                     # Só processa se poder_escolhido for TEXTO (nome do poder).
@@ -257,23 +258,45 @@ def inicializar_pericias(ficha: Personagem):
     for hab in ficha.habilidades:
         efeitos = hab.escolhas_aplicadas or {}
 
-        # Coleta treinos extras (Strings)
+        # --- CASO ESPECIAL: LEFOU (DEFORMIDADE) ---
+        # Lefou dá bônus numérico (+2) nas perícias escolhidas, NÃO treino.
+        if hab.nome == "Deformidade":
+            # Perícia do Slot 1
+            if efeitos.get("pericia_1"):
+                p_nome = efeitos["pericia_1"]
+                bonus_numerico_habilidades[p_nome] = bonus_numerico_habilidades.get(
+                    p_nome, 0) + 2
+
+            # Perícia do Slot 2 (se não tiver trocado por poder)
+            if efeitos.get("pericia_2"):
+                p_nome = efeitos["pericia_2"]
+                bonus_numerico_habilidades[p_nome] = bonus_numerico_habilidades.get(
+                    p_nome, 0) + 2
+
+            # IMPORTANTE: Pula o resto do loop para essa habilidade
+            # para evitar que ela caia na lógica padrão e dê "Treino" sem querer.
+            continue
+
+        # --- LÓGICA PADRÃO (HUMANO / CLASSES / ORIGENS) ---
+        # 1. Coleta treinos extras (Strings que viram Treino)
         for chave in ["pericia_1", "pericia_2", "pericia_escolha"]:
             val = efeitos.get(chave)
             if val and isinstance(val, str):
                 pericias_extras_gratis.append(val)
 
-        # Coleta bônus numéricos
+        # 2. Coleta bônus numéricos explícitos (ex: +2 em Fortitude)
         if "bonus_pericia" in efeitos:
             for pericia, valor in efeitos["bonus_pericia"].items():
                 bonus_numerico_habilidades[pericia] = bonus_numerico_habilidades.get(
                     pericia, 0) + valor
 
+    # Adiciona perícias de Origem como Treino
     if ficha.escolhas_origem:
         for escolha in ficha.escolhas_origem:
             if escolha in DADOS_PERICIAS or escolha.startswith("Ofício"):
                 pericias_extras_gratis.append(escolha)
 
+    # Adiciona perícias Fixas da Classe
     pericias_fixas_classe = []
     if ficha.classes:
         classe_inicial = ficha.classes[0].nome
@@ -283,6 +306,7 @@ def inicializar_pericias(ficha: Personagem):
                 "pericias_iniciais", [])
             pericias_fixas_classe.extend(fixas)
 
+    # Prepara cálculo final
     novas_pericias = {}
     lista_para_processar = list(DADOS_PERICIAS.keys())
 
@@ -304,6 +328,8 @@ def inicializar_pericias(ficha: Personagem):
 
         ganhou_extra = nome_pericia in pericias_extras_gratis
         ganhou_na_classe = nome_pericia in pericias_fixas_classe
+
+        # Só está treinado se tiver ponto gasto manual (treino > 0), ou ganhou por classe/habilidade(não lefou)
         esta_treinado = (info_atual.treino >
                          0) or ganhou_extra or ganhou_na_classe
 
@@ -321,7 +347,9 @@ def inicializar_pericias(ficha: Personagem):
             else:
                 bonus_treino = 2
 
+        # Soma os bônus numéricos (aqui entra o +2 do Lefou)
         bonus_habilidade = bonus_numerico_habilidades.get(nome_pericia, 0)
+
         penalidade = penalidade_armadura_valor if dados_base["penalidade_armadura"] else 0
 
         outros_total = info_atual.outros + bonus_habilidade
