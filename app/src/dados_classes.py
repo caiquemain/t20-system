@@ -33,6 +33,7 @@ DADOS_CLASSES = {
         "pm_inicial": 3, "pm_nivel": 3,
         "pm_atributo": "des",
         "pericias_iniciais": ["Reflexos"],
+        "pericias_fixas_selecao": ["Luta", "Pontaria"],
         "pericias_escolha": 5,
         "pericias_lista": ["Acrobacia", "Atletismo", "Atuação", "Enganação", "Fortitude", "Furtividade", "Iniciativa", "Intimidação", "Jogatina", "Luta", "Ofício", "Percepção", "Pilotagem", "Pontaria"],
         "proficiencias": ["Armas Marciais"]
@@ -42,6 +43,7 @@ DADOS_CLASSES = {
         "pm_inicial": 4, "pm_nivel": 4,
         "pm_atributo": "sab",
         "pericias_iniciais": ["Sobrevivência"],
+        "pericias_fixas_selecao": ["Luta", "Pontaria"],
         "pericias_escolha": 7,
         "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Cura", "Fortitude", "Furtividade", "Iniciativa", "Investigação", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos"],
         "proficiencias": ["Armas Marciais", "Escudos"]
@@ -78,6 +80,7 @@ DADOS_CLASSES = {
         "pm_inicial": 3, "pm_nivel": 3,
         "pm_atributo": "for",
         "pericias_iniciais": ["Fortitude"],
+        "pericias_fixas_selecao": ["Luta", "Pontaria"],
         "pericias_escolha": 3,
         "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Guerra", "Iniciativa", "Intimidação", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos", "Vontade"],
         "proficiencias": ["Armas Marciais", "Armaduras Pesadas", "Escudos"]
