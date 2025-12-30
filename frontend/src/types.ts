@@ -141,12 +141,13 @@ export interface Magia {
     nome: string;
     circulo: number;
     escola: string;
-    custo_pm: number;
     execucao: string;
     alcance: string;
+    alvo?: string; // <--- ADICIONE ESTA LINHA (Opcional com '?')
     duracao: string;
-    resistencia?: string;
-    descricao?: string;
+    resistencia: string;
+    custo_pm: number;
+    descricao: string;
 }
 
 export interface Combate {
