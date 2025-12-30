@@ -157,6 +157,7 @@ class Magia(BaseModel):
     execucao: str = "Padrão"
     alcance: str = "Curto"
     duracao: str = "Instantânea"
+    alvo: str = ""
     alvo_area: str = ""
     resistencia: str = ""
     escola: str = ""
