@@ -207,6 +207,12 @@ function Ficha() {
     const origemNome = ficha.cabecalho.origem;
     const infoOrigem = dadosOrigens ? dadosOrigens[origemNome] : null;
 
+    // --- NOVA LÓGICA DE BLOQUEIO DE ORIGEM ---
+    // Verifica se alguma habilidade da ficha bloqueia a Origem (ex: Golem)
+    const origemBloqueada = ficha.habilidades.some((h: any) =>
+        h.efeitos?.sem_origem || h.escolhas_aplicadas?.sem_origem
+    );
+
     return (
         <div className="ficha-container">
 
@@ -255,11 +261,7 @@ function Ficha() {
                 ficha={ficha}
                 listaPoderes={poderesMistos}
                 listaPericias={listaTodasPericias}
-
-                // --- ADICIONE ESTA LINHA: ---
                 dadosMagias={dadosMagias}
-                // ----------------------------
-
                 tipoEscolha={selectorConfig.tipo}
                 titulo={selectorConfig.titulo}
                 listaRestrita={selectorConfig.listaRestrita}
@@ -293,10 +295,22 @@ function Ficha() {
                             {listaRacas.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <span>•</span>
-                        <select className="select-header" value={ficha.cabecalho.origem}
-                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}>
-                            {listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}
+
+                        {/* SELETOR DE ORIGEM (COM BLOQUEIO) */}
+                        <select
+                            className="select-header"
+                            value={origemBloqueada ? "" : ficha.cabecalho.origem}
+                            disabled={origemBloqueada}
+                            style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : {}}
+                            onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}
+                        >
+                            {origemBloqueada ? (
+                                <option value="">🚫 Sem Origem</option>
+                            ) : (
+                                listaOrigens.map(o => <option key={o} value={o}>{o}</option>)
+                            )}
                         </select>
+
                         <span>•</span>
 
                         {/* SELETOR DE DEUS */}
