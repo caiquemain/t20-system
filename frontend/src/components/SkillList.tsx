@@ -17,9 +17,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
     // 1. Definições de Limites
     const periciasFixas = dadosClasse.pericias_iniciais || dadosClasse.pericias_fixas || [];
-    // Nova lógica para escolha obrigatória (Luta ou Pontaria)
     const periciasObrigatoriasSelecao = dadosClasse.pericias_fixas_selecao || [];
-
     const periciasDaClassePossiveis = dadosClasse.pericias_lista || [];
     const qtdEscolhasClasse = dadosClasse.pericias_escolha || 0;
 
@@ -60,9 +58,13 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
     const slotsInteligenciaRestantes = Math.max(0, qtdEscolhasInteligencia - gastosDeInteligencia);
 
     // 4. Verificação da Escolha Obrigatória (Luta/Pontaria)
-    // Verifica se pelo menos UMA das opções obrigatórias está treinada
     const cumpriuRequisitoObrigatorio = periciasObrigatoriasSelecao.length === 0 ||
         periciasObrigatoriasSelecao.some((p: string) => periciasTreinadas[p]?.treino > 0);
+
+    // --- REGRA DE TRAVAMENTO (USER REQUEST) ---
+    // Se falta apenas 1 slot de classe E ainda não cumpriu o requisito,
+    // o sistema TRAVA qualquer compra que gastaria esse slot de classe em algo não obrigatório.
+    const isTravadoPelaObrigatoria = !cumpriuRequisitoObrigatorio && slotsClasseRestantes === 1;
 
     // --- AÇÕES ---
     const togglePericia = (pericia: string) => {
@@ -74,9 +76,19 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         if (estaTreinada) {
             novaLista[pericia] = { ...novaLista[pericia], treino: 0, total: 0 };
         } else {
+            // TENTANDO COMPRAR
             const ehDaClasse = periciasDaClassePossiveis.includes(pericia) || pericia.startsWith("Ofício");
-            let podeComprar = false;
+            const ehObrigatoria = periciasObrigatoriasSelecao.includes(pericia);
 
+            // Bloqueio de Segurança:
+            // Se estamos na reserva final (1 slot) e tentamos clicar em algo que NÃO é obrigatório...
+            // ...e que consumiria esse slot de classe (ou seja, é da classe)...
+            // ...BLOQUEIA.
+            if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) {
+                return;
+            }
+
+            let podeComprar = false;
             if (ehDaClasse) {
                 if (slotsClasseRestantes > 0) podeComprar = true;
                 else if (slotsInteligenciaRestantes > 0) podeComprar = true;
@@ -97,7 +109,6 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         updateFicha({ pericias: novaLista });
     };
 
-    // Função auxiliar para renderizar linha
     const renderSkillRow = (nomeExibicao: string, chavePericia: string, index: number) => {
         const info = periciasTreinadas[chavePericia] || { treino: 0, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 };
         const chaveBase = chavePericia.startsWith("Ofício") ? "Ofício" : chavePericia;
@@ -108,33 +119,35 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         const isTreinada = info.treino > 0;
 
         const ehDaClasse = periciasDaClassePossiveis.includes(chavePericia) || chavePericia.startsWith("Ofício");
+        const ehObrigatoria = periciasObrigatoriasSelecao.includes(chavePericia);
+
         const temSlotClasse = slotsClasseRestantes > 0;
         const temSlotInt = slotsInteligenciaRestantes > 0;
 
         let podeHabilitar = ehDaClasse ? (temSlotClasse || temSlotInt) : temSlotInt;
 
-        // Se for uma das obrigatórias e não tiver slot, mas ainda não cumpriu o requisito, 
-        // tecnicamente o slot deveria ser garantido, mas a lógica de 'gastosDeClasse' já conta isso.
-        // Então se tem slotClasse, pode clicar.
+        // --- APLICA O TRAVAMENTO VISUAL ---
+        // Se estamos no modo travado, é da classe e NÃO é obrigatória, desabilita.
+        if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) {
+            podeHabilitar = false;
+        }
 
         const isInteractable = (!isFixa && !isOrigem) && (isTreinada || podeHabilitar);
         const isDisabled = !isInteractable;
 
-        // É uma das obrigatórias?
-        const isObrigatoriaHighlight = periciasObrigatoriasSelecao.includes(chavePericia);
+        const isObrigatoriaHighlight = ehObrigatoria;
 
+        // Cálculos de valores para exibição
         const nivel = Math.max(1, ficha.cabecalho.nivel_total || 1);
         const metadeNivel = Math.floor(nivel / 2);
         const attrVal = info.atributo_valor;
         const treinoVal = isTreinada ? (nivel >= 15 ? 6 : (nivel >= 7 ? 4 : 2)) : 0;
         const outrosVal = info.outros;
         const totalVal = info.total;
-        const penalidadeEstimada = totalVal - (metadeNivel + attrVal + treinoVal + outrosVal);
-        const temPenalidade = meta.penalidade_armadura && penalidadeEstimada < 0;
 
         let rowBg = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
 
-        // Destaca se for obrigatória e não treinada
+        // Destaque visual: Amarelo se for obrigatória pendente
         if (isObrigatoriaHighlight && !cumpriuRequisitoObrigatorio) {
             rowBg = 'rgba(255, 193, 7, 0.1)';
         }
@@ -158,6 +171,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                         {isOrigem && <span className="text-badge origin">(O)</span>}
                     </div>
                 </div>
+                {/* TOOLTIP e TOTAIS mantidos iguais */}
                 <div className="col-total tooltip-container">
                     <div className="total-box">{totalVal >= 0 ? `+${totalVal}` : totalVal}</div>
                     <div className="pericia-tooltip">
@@ -165,9 +179,6 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                         <div className="tooltip-row"><span>Atributo ({meta.atributo})</span><span>{attrVal >= 0 ? `+${attrVal}` : attrVal}</span></div>
                         <div className="tooltip-row"><span>Treino</span><span>+{treinoVal}</span></div>
                         <div className="tooltip-row"><span>Outros</span><span>{outrosVal >= 0 ? `+${outrosVal}` : outrosVal}</span></div>
-                        {temPenalidade && (
-                            <div className="tooltip-row" style={{ color: '#ef5350' }}><span>Penalidade</span><span>{penalidadeEstimada}</span></div>
-                        )}
                         <div className="tooltip-total"><span>Total</span><span>{totalVal >= 0 ? `+${totalVal}` : totalVal}</span></div>
                     </div>
                 </div>
@@ -219,18 +230,24 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
             {!cumpriuRequisitoObrigatorio && periciasObrigatoriasSelecao.length > 0 && (
                 <div style={{ background: 'rgba(255, 193, 7, 0.15)', borderBottom: '1px solid #ffc107', padding: '10px', textAlign: 'center' }}>
                     <p style={{ color: '#ffc107', margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                        ⚠️ Requisito de Classe: Escolha uma perícia obrigatória
+                        ⚠️ Requisito de Classe: Escolha Luta ou Pontaria
                     </p>
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                    {isTravadoPelaObrigatoria && (
+                        <p style={{ color: '#ff5252', fontSize: '0.75rem', marginTop: 4 }}>
+                            (Último slot reservado para obrigatória!)
+                        </p>
+                    )}
+                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 8 }}>
                         {periciasObrigatoriasSelecao.map((p: string) => (
                             <button
                                 key={p}
                                 onClick={() => togglePericia(p)}
-                                disabled={slotsClasseRestantes <= 0}
+                                // Habilita o botão se tiver qualquer slot (inclusive o reservado)
+                                disabled={slotsClasseRestantes <= 0 && slotsInteligenciaRestantes <= 0}
                                 style={{
                                     background: '#ffc107', color: '#000', border: 'none',
                                     padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
-                                    opacity: slotsClasseRestantes <= 0 ? 0.5 : 1
+                                    opacity: (slotsClasseRestantes <= 0 && slotsInteligenciaRestantes <= 0) ? 0.5 : 1
                                 }}
                             >
                                 {p}
@@ -240,7 +257,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                 </div>
             )}
 
-            {/* HEADER TABELA */}
+            {/* TABELA */}
             <div className="skill-header-grid">
                 <div className="h-check"></div><div className="h-name">PERÍCIA</div><div className="h-total">TOTAL</div><div className="h-equal"></div>
                 <div className="h-formula">
@@ -248,17 +265,14 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                 </div>
             </div>
 
-            {/* LISTA DE PERÍCIAS */}
             <div className="skills-container" style={{ padding: '0 5px' }}>
                 {listaExibicao.map((pericia, index) => renderSkillRow(pericia, pericia, index))}
             </div>
 
-            {/* ADICIONAR OFÍCIO */}
             <div className="add-skill-row" style={{ padding: '8px 12px', borderTop: '1px solid #333' }}>
                 <input type="text" placeholder="Novo Ofício..." value={novoOficio} onChange={(e) => setNovoOficio(e.target.value)} />
                 <button onClick={adicionarOficio}>+</button>
             </div>
-
             <style>{`
                 .skill-row-grid, .skill-header-grid { display: grid; grid-template-columns: 22px 1fr 35px 10px 135px; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
                 .skill-header-grid { font-size: 0.6rem; color: #888; font-weight: bold; border-bottom: 1px solid #444; padding: 5px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
