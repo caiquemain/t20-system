@@ -535,57 +535,78 @@ def calcular_reducoes_dano(ficha: Personagem):
 
 def sincronizar_magias_habilidades(ficha: Personagem):
     """
-    Verifica habilidades que concedem magias (ex: Qareen) e as adiciona ao grimório.
+    Sincroniza magias concedidas por habilidades de forma genérica.
+    Suporta regras de:
+    1. Adicionar magia nova.
+    2. Reduzir custo se a magia já for conhecida (flag: reducao_custo_se_conhecida).
     """
-    logger.info("--- [X] Sincronizando Magias de Habilidades ---")
-    
-    magias_existentes = {m.nome for m in ficha.combate.magias}
+    logger.info("--- [X] Sincronizando Magias de Habilidades (Genérico) ---")
+
+    # Mapa para acesso rápido e edição direta das magias existentes
+    mapa_magias_existentes = {m.nome: m for m in ficha.combate.magias}
     novas_magias = []
 
-    # --- DEBUG: Verificando estrutura ---
-    for h in ficha.habilidades:
-        if h.nome == "Tatuagem Mística":
-             logger.info(f"🔍 [DEBUG] Tatuagem Mística encontrada. Dados: {h.escolhas_aplicadas}")
-    # ------------------------------------
-
     for hab in ficha.habilidades:
+        # Mescla efeitos base da habilidade com as escolhas do usuário
         efeitos = hab.escolhas_aplicadas or {}
 
-        # 1. QAREEN (Tatuagem Mística)
-        if hab.nome == "Tatuagem Mística":
-            # CORREÇÃO AQUI: Tenta ler 'magia_escolhida' OU 'magia_escolha'
-            nome_magia = efeitos.get("magia_escolhida") or efeitos.get("magia_escolha")
-            
-            if nome_magia:
-                logger.info(f"👉 [DEBUG] Magia solicitada pelo Qareen: '{nome_magia}'")
-                
-                if nome_magia not in magias_existentes:
-                    dados_magia = DADOS_MAGIAS.get(nome_magia)
-                    
-                    if dados_magia:
-                        logger.info(f"✅ [DEBUG] Magia '{nome_magia}' encontrada e adicionada.")
-                        nova = Magia(
-                            nome=dados_magia["nome"],
-                            circulo=dados_magia["circulo"],
-                            execucao=dados_magia.get("execucao", ""),
-                            alcance=dados_magia.get("alcance", ""),
-                            alvo=dados_magia.get("alvo", ""),
-                            duracao=dados_magia.get("duracao", ""),
-                            resistencia=dados_magia.get("resistencia", ""),
-                            custo_pm=dados_magia.get("custo_pm", 1),
-                            descricao=f"[Racial: Qareen] {dados_magia.get('descricao', '')}"
-                        )
-                        novas_magias.append(nova)
-                        magias_existentes.add(nome_magia)
-                    else:
-                        logger.warning(f"❌ [DEBUG] Magia '{nome_magia}' NÃO existe no arquivo dados_magias.py!")
+        # 1. Identifica se a habilidade concede uma magia escolhida
+        # Suporta chaves novas e legadas
+        nome_magia = efeitos.get(
+            "magia_escolhida") or efeitos.get("magia_escolha")
+
+        if nome_magia:
+            dados_magia = DADOS_MAGIAS.get(nome_magia)
+
+            if dados_magia:
+                # --- LEITURA DE PARÂMETROS GENÉRICOS ---
+                reducao_valor = efeitos.get(
+                    "reducao_custo_se_conhecida", 0)  # Padrão: 0 (não reduz)
+                tag_origem = efeitos.get(
+                    "tag_adicional", f"Habilidade: {hab.nome}")
+                # ---------------------------------------
+
+                # CASO A: Magia JÁ existe na ficha (ex: da Classe)
+                if nome_magia in mapa_magias_existentes:
+                    if reducao_valor > 0:
+                        magia_existente = mapa_magias_existentes[nome_magia]
+                        tag_reducao = f"[{hab.nome}: -{reducao_valor} PM]"
+
+                        # Evita aplicar a redução duas vezes (idempotência)
+                        if tag_reducao not in magia_existente.descricao:
+                            novo_custo = max(
+                                0, magia_existente.custo_pm - reducao_valor)
+                            magia_existente.custo_pm = novo_custo
+                            magia_existente.descricao += f"\n{tag_reducao}"
+                            logger.info(
+                                f"✨ [{hab.nome}] Magia '{nome_magia}' já conhecida. Aplicando -{reducao_valor} PM.")
+
+                # CASO B: Magia NÃO existe (Adiciona como nova)
                 else:
-                    logger.info(f"ℹ️ [DEBUG] Magia '{nome_magia}' já está no grimório.")
-            else:
-                 logger.warning("⚠️ [DEBUG] Tatuagem Mística sem magia selecionada (chaves 'magia_escolhida' ou 'magia_escolha' vazias).")
+                    custo_base = dados_magia.get("custo_pm", 1)
+                    escola_base = dados_magia.get("escola", "")
+
+                    nova = Magia(
+                        nome=dados_magia["nome"],
+                        circulo=dados_magia["circulo"],
+                        escola=escola_base,
+                        execucao=dados_magia.get("execucao", ""),
+                        alcance=dados_magia.get("alcance", ""),
+                        alvo=dados_magia.get("alvo", ""),
+                        duracao=dados_magia.get("duracao", ""),
+                        resistencia=dados_magia.get("resistencia", ""),
+                        custo_pm=custo_base,
+                        descricao=f"[{tag_origem}] {dados_magia.get('descricao', '')}"
+                    )
+                    novas_magias.append(nova)
+                    # Evita duplicar se duas habs derem a mesma magia
+                    mapa_magias_existentes[nome_magia] = nova
+                    logger.info(
+                        f"✨ [{hab.nome}] Adicionando nova magia '{nome_magia}'.")
 
     if novas_magias:
         ficha.combate.magias.extend(novas_magias)
+
 
 def atualizar_ficha(ficha: Personagem) -> Personagem:
     logger.info(f"🔄 INICIANDO ATUALIZAÇÃO: {ficha.cabecalho.nome}")

@@ -191,11 +191,15 @@ DADOS_HABILIDADES_RACIAIS = {
     "Tatuagem_Mist_Qareen": {
         "nome": "Tatuagem Mística",
         "tipo": "Racial",
-        "descricao": "Você pode lançar uma magia de 1º círculo a sua escolha (atributo-chave Carisma). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
+        "descricao": "Você pode lançar uma magia de 1º círculo a sua escolha. Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
         "fonte": "T20 JdA",
         "efeitos": {
+            # Chaves padronizadas para o motor de regras:
+            # Configura o Modal
             "magia_adicional_escolha": {"circulo": 1, "atributo": "Car"},
-            "reducao_custo_magia": {"origem": "escolha_tatuagem", "valor": 1}
+            # Valor da redução de PM
+            "reducao_custo_se_conhecida": 1,
+            "tag_adicional": "Racial: Qareen"                             # Tag para descrição
         }
     },
 
@@ -221,14 +225,14 @@ DADOS_HABILIDADES_RACIAIS = {
         "fonte": "T20 JdA",
         "efeitos": {"imunidade_dano_escolha": True}
     },
-"Proposito_Criacao_Golem": {
+    "Proposito_Criacao_Golem": {
         "nome": "Propósito de Criação",
         "tipo": "Racial",
         "descricao": "Você foi construído “pronto” para um propósito específico e não teve uma infância. Você não tem direito a escolher uma origem, mas recebe um poder geral a sua escolha.",
         "fonte": "T20 JdA",
         "efeitos": {
             "poder_escolha": 1,
-            "sem_origem": True  
+            "sem_origem": True
         }
     },
 
