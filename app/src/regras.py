@@ -1,14 +1,14 @@
 import math
 import logging
 from typing import Optional, Dict
-from src.models import Personagem, TamanhoEnum, PericiaInfo, Habilidade, DetalhesCalculo
+from .models import Personagem, Habilidade, Magia, PericiaInfo, TamanhoEnum, DetalhesCalculo
 from src.dados_racas import DADOS_RACAS
 from src.dados_classes import DADOS_CLASSES
 from src.dados_pericias import DADOS_PERICIAS
 from src.dados_habilidades_classe import DADOS_HABILIDADES_CLASSE
 from src.dados_habilidades import HABILIDADES_GERAIS
 from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
-
+from .dados_magias import DADOS_MAGIAS
 # Configuração de Logs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RegrasT20")
@@ -118,9 +118,15 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                 nome_real = dados_hab["nome"]
 
                 if nome_real not in nomes_existentes:
-                    # Recupera backup das escolhas (ex: Elemento do Qareen)
+                    # Recupera backup das escolhas (ex: Elemento do Qareen, Magia Escolhida)
                     escolhas_anteriores = escolhas_preservadas.get(
                         nome_real, dados_hab.get("efeitos", {}))
+
+                    # --- LOG DE DEBUG (QAREEN) ---
+                    if nome_real == "Tatuagem Mística":
+                        logger.info(
+                            f"🔍 [DEBUG] Restaurando Tatuagem Mística. Backup encontrado: {escolhas_anteriores}")
+                    # -----------------------------
 
                     nova_hab = Habilidade(
                         nome=nome_real,
@@ -132,7 +138,7 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                     novas_habs.append(nova_hab)
                     nomes_existentes.add(nome_real)
 
-                # Verifica se essa habilidade concede Poderes Extras (Versátil/Qareen)
+                # Verifica se essa habilidade concede Poderes Extras (Versátil/Qareen/Lefou)
                 habilidade_atual = next(
                     (h for h in ficha.habilidades if h.nome == nome_real), None)
                 if not habilidade_atual and novas_habs:
@@ -144,14 +150,12 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                 if habilidade_atual:
                     efeitos = habilidade_atual.escolhas_aplicadas or {}
 
-                    # Versátil (Poder Geral)
+                    # Versátil (Poder Geral) ou Lefou (Poder da Tormenta)
                     poder_escolhido = efeitos.get("poder_geral") or \
                         efeitos.get("poder_escolha") or \
                         efeitos.get("poder_tormenta")
 
-                    # --- CORREÇÃO DE ERRO 500 (GOLEM) ---
                     # Só processa se poder_escolhido for TEXTO (nome do poder).
-                    # Se for número (ex: 1), é apenas a quantidade de slots, então ignoramos.
                     if poder_escolhido and isinstance(poder_escolhido, str) and poder_escolhido not in nomes_existentes:
                         dados_poder = None
                         for p in HABILIDADES_GERAIS.values():
@@ -175,17 +179,11 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
     # --- APLICA O BLOQUEIO DE ORIGEM ---
     if bloquear_origem:
         # Antes de limpar, remove o "Treino" das perícias que vieram da origem antiga.
-        # Isso evita que elas fiquem presas como se fossem escolhas manuais.
         if ficha.escolhas_origem:
             for escolha_antiga in ficha.escolhas_origem:
-                # Se a escolha antiga for uma perícia que existe na ficha...
                 if escolha_antiga in ficha.pericias:
-                    # ...reseta o treino para 0.
-                    # Nota: Se essa perícia também for fixa da Classe (ex: Luta pro Guerreiro),
-                    # a função 'inicializar_pericias' vai treiná-la novamente logo em seguida.
                     ficha.pericias[escolha_antiga].treino = 0
 
-        # Agora sim, limpa a origem
         ficha.cabecalho.origem = ""
         ficha.escolhas_origem = []
 
@@ -535,25 +533,103 @@ def calcular_reducoes_dano(ficha: Personagem):
     ficha.status.rd = lista_rd
 
 
+def sincronizar_magias_habilidades(ficha: Personagem):
+    """
+    Verifica habilidades que concedem magias (ex: Qareen) e as adiciona ao grimório.
+    """
+    logger.info("--- [X] Sincronizando Magias de Habilidades ---")
+    
+    magias_existentes = {m.nome for m in ficha.combate.magias}
+    novas_magias = []
+
+    # --- DEBUG: Verificando estrutura ---
+    for h in ficha.habilidades:
+        if h.nome == "Tatuagem Mística":
+             logger.info(f"🔍 [DEBUG] Tatuagem Mística encontrada. Dados: {h.escolhas_aplicadas}")
+    # ------------------------------------
+
+    for hab in ficha.habilidades:
+        efeitos = hab.escolhas_aplicadas or {}
+
+        # 1. QAREEN (Tatuagem Mística)
+        if hab.nome == "Tatuagem Mística":
+            # CORREÇÃO AQUI: Tenta ler 'magia_escolhida' OU 'magia_escolha'
+            nome_magia = efeitos.get("magia_escolhida") or efeitos.get("magia_escolha")
+            
+            if nome_magia:
+                logger.info(f"👉 [DEBUG] Magia solicitada pelo Qareen: '{nome_magia}'")
+                
+                if nome_magia not in magias_existentes:
+                    dados_magia = DADOS_MAGIAS.get(nome_magia)
+                    
+                    if dados_magia:
+                        logger.info(f"✅ [DEBUG] Magia '{nome_magia}' encontrada e adicionada.")
+                        nova = Magia(
+                            nome=dados_magia["nome"],
+                            circulo=dados_magia["circulo"],
+                            execucao=dados_magia.get("execucao", ""),
+                            alcance=dados_magia.get("alcance", ""),
+                            alvo=dados_magia.get("alvo", ""),
+                            duracao=dados_magia.get("duracao", ""),
+                            resistencia=dados_magia.get("resistencia", ""),
+                            custo_pm=dados_magia.get("custo_pm", 1),
+                            descricao=f"[Racial: Qareen] {dados_magia.get('descricao', '')}"
+                        )
+                        novas_magias.append(nova)
+                        magias_existentes.add(nome_magia)
+                    else:
+                        logger.warning(f"❌ [DEBUG] Magia '{nome_magia}' NÃO existe no arquivo dados_magias.py!")
+                else:
+                    logger.info(f"ℹ️ [DEBUG] Magia '{nome_magia}' já está no grimório.")
+            else:
+                 logger.warning("⚠️ [DEBUG] Tatuagem Mística sem magia selecionada (chaves 'magia_escolhida' ou 'magia_escolha' vazias).")
+
+    if novas_magias:
+        ficha.combate.magias.extend(novas_magias)
+
 def atualizar_ficha(ficha: Personagem) -> Personagem:
     logger.info(f"🔄 INICIANDO ATUALIZAÇÃO: {ficha.cabecalho.nome}")
 
-    # 1. Backup das escolhas para não perder ao limpar
+    # 1. Backup das escolhas para não perder ao limpar (ex: Magia do Qareen escolhida)
     escolhas_preservadas = {}
+
+    # --- DEBUG: Rastrear Backup ---
+    logger.info("📦 [DEBUG] Criando Backup de Escolhas...")
     for h in ficha.habilidades:
         if h.escolhas_aplicadas:
             escolhas_preservadas[h.nome] = h.escolhas_aplicadas
+            if h.nome == "Tatuagem Mística":
+                logger.info(
+                    f"   -> Backup Tatuagem Mística: {h.escolhas_aplicadas}")
+    # ------------------------------
 
     # 2. Limpeza
     limpar_habilidades_fixas(ficha)
 
-    # 3. Reconstrução
+    # 3. Reconstrução Básica
     ficha.cabecalho.nivel_total = calcular_nivel_personagem(ficha)
     ficha = aplicar_bonus_atributos_raciais(ficha)
 
-    # Passamos o backup!
+    # 4. Habilidades (Restaurando escolhas)
     garantir_habilidades_iniciais(ficha, escolhas_preservadas)
 
+    # --- NOVO: SINCRONIZAÇÃO DE MAGIAS RACIAIS ---
+    # A. Limpa magias raciais antigas do grimório (para evitar duplicatas ou lixo ao trocar)
+    if ficha.combate.magias:
+        len_antes = len(ficha.combate.magias)
+        ficha.combate.magias = [
+            m for m in ficha.combate.magias
+            if "[Racial:" not in m.descricao
+        ]
+        if len(ficha.combate.magias) < len_antes:
+            logger.info(
+                "🧹 [DEBUG] Magias raciais antigas removidas do grimório.")
+
+    # B. Adiciona a magia nova baseada na escolha da habilidade
+    sincronizar_magias_habilidades(ficha)
+    # ---------------------------------------------
+
+    # 5. Cálculos Finais
     inicializar_pericias(ficha)
     calcular_pv_pm(ficha)
     calcular_defesa_e_deslocamento(ficha)
