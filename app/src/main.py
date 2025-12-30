@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import List, Any, cast, Optional
 from bson import ObjectId  # Importante para IDs do Mongo
+from typing import Dict
 
 from fastapi import FastAPI, HTTPException, Body, status, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +23,7 @@ from src.dados_magias import DADOS_MAGIAS
 from src.dados_deuses import DADOS_DEUSES
 from src.dados_poderes_concedidos import DADOS_PODERES_CONCEDIDOS
 from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
+from src.models import Magia
 # --- CONFIGURAÇÃO ---
 # Prioriza o nome do host 'db' (Docker), fallback para localhost
 MONGO_URL = os.getenv("MONGO_URI", "mongodb://db:27017/tormenta20")
@@ -109,10 +111,9 @@ def listar_habilidades_classe():
     return DADOS_HABILIDADES_CLASSE
 
 
-@app.get("/dados/magias", tags=["Dados Estáticos"])
-def listar_magias():
+@app.get("/dados/magias", response_model=Dict[str, Magia]) 
+def get_magias():
     return DADOS_MAGIAS
-
 
 @app.get("/dados/itens", tags=["Dados Estáticos"])
 def listar_itens():

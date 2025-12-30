@@ -535,23 +535,19 @@ def calcular_reducoes_dano(ficha: Personagem):
 
 def sincronizar_magias_habilidades(ficha: Personagem):
     """
-    Sincroniza magias concedidas por habilidades de forma genérica.
-    Suporta regras de:
-    1. Adicionar magia nova.
-    2. Reduzir custo se a magia já for conhecida (flag: reducao_custo_se_conhecida).
+    Sincroniza magias concedidas por habilidades (Raciais, de Classe, etc).
+    Gerencia redução de custo se a magia já existir ou adiciona nova se não existir.
     """
-    logger.info("--- [X] Sincronizando Magias de Habilidades (Genérico) ---")
+    logger.info("--- [X] Sincronizando Magias de Habilidades ---")
 
-    # Mapa para acesso rápido e edição direta das magias existentes
+    # Mapeia magias que o personagem JÁ tem (aprendidas por classe ou compradas)
     mapa_magias_existentes = {m.nome: m for m in ficha.combate.magias}
     novas_magias = []
 
     for hab in ficha.habilidades:
-        # Mescla efeitos base da habilidade com as escolhas do usuário
         efeitos = hab.escolhas_aplicadas or {}
 
-        # 1. Identifica se a habilidade concede uma magia escolhida
-        # Suporta chaves novas e legadas
+        # Identifica se a habilidade concede uma magia (nomes de chaves comuns)
         nome_magia = efeitos.get(
             "magia_escolhida") or efeitos.get("magia_escolha")
 
@@ -559,20 +555,18 @@ def sincronizar_magias_habilidades(ficha: Personagem):
             dados_magia = DADOS_MAGIAS.get(nome_magia)
 
             if dados_magia:
-                # --- LEITURA DE PARÂMETROS GENÉRICOS ---
-                reducao_valor = efeitos.get(
-                    "reducao_custo_se_conhecida", 0)  # Padrão: 0 (não reduz)
+                # --- LEITURA DE PARÂMETROS DA HABILIDADE ---
+                reducao_valor = efeitos.get("reducao_custo_se_conhecida", 0)
                 tag_origem = efeitos.get(
                     "tag_adicional", f"Habilidade: {hab.nome}")
-                # ---------------------------------------
 
-                # CASO A: Magia JÁ existe na ficha (ex: da Classe)
+                # CASO A: Magia JÁ existe na ficha -> Aplica Redução de Custo
                 if nome_magia in mapa_magias_existentes:
                     if reducao_valor > 0:
                         magia_existente = mapa_magias_existentes[nome_magia]
                         tag_reducao = f"[{hab.nome}: -{reducao_valor} PM]"
 
-                        # Evita aplicar a redução duas vezes (idempotência)
+                        # Evita aplicar a redução múltiplas vezes se a tag já estiver lá
                         if tag_reducao not in magia_existente.descricao:
                             novo_custo = max(
                                 0, magia_existente.custo_pm - reducao_valor)
@@ -581,29 +575,40 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                             logger.info(
                                 f"✨ [{hab.nome}] Magia '{nome_magia}' já conhecida. Aplicando -{reducao_valor} PM.")
 
-                # CASO B: Magia NÃO existe (Adiciona como nova)
+                # CASO B: Magia NÃO existe -> Cria e Adiciona
                 else:
                     custo_base = dados_magia.get("custo_pm", 1)
                     escola_base = dados_magia.get("escola", "")
+
+                    # --- RESOLUÇÃO DE ALVO ---
+                    # Garante que pegamos o dado correto, seja 'alvo_area' (banco antigo) ou 'alvo'
+                    alvo_correto = dados_magia.get(
+                        "alvo_area") or dados_magia.get("alvo", "")
 
                     nova = Magia(
                         nome=dados_magia["nome"],
                         circulo=dados_magia["circulo"],
                         escola=escola_base,
+                        tipo=dados_magia.get("tipo", "Universal"),
                         execucao=dados_magia.get("execucao", ""),
                         alcance=dados_magia.get("alcance", ""),
-                        alvo=dados_magia.get("alvo", ""),
+
+                        # Passamos explicitamente para o campo 'alvo' do modelo
+                        alvo=alvo_correto,
+
                         duracao=dados_magia.get("duracao", ""),
                         resistencia=dados_magia.get("resistencia", ""),
                         custo_pm=custo_base,
                         descricao=f"[{tag_origem}] {dados_magia.get('descricao', '')}"
                     )
+
                     novas_magias.append(nova)
-                    # Evita duplicar se duas habs derem a mesma magia
+                    # Adiciona ao mapa local para evitar duplicatas se outra habilidade der a mesma magia
                     mapa_magias_existentes[nome_magia] = nova
                     logger.info(
                         f"✨ [{hab.nome}] Adicionando nova magia '{nome_magia}'.")
 
+    # Adiciona todas as novas magias encontradas à lista oficial do personagem
     if novas_magias:
         ficha.combate.magias.extend(novas_magias)
 

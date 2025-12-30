@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Any, Union
 from enum import Enum
-from pydantic import BaseModel, Field, model_validator, field_validator
+from pydantic import BaseModel, Field, model_validator, field_validator, root_validator
 
 # Tenta importar ObjectId do BSON (MongoDB), se falhar usa Any
 try:
@@ -152,16 +152,29 @@ class Ataque(BaseModel):
 
 class Magia(BaseModel):
     nome: str
-    circulo: int = 1
-    custo_pm: int = 1
-    execucao: str = "Padrão"
-    alcance: str = "Curto"
-    duracao: str = "Instantânea"
-    alvo: str = ""
-    alvo_area: str = ""
-    resistencia: str = ""
+    circulo: int
     escola: str = ""
+    tipo: str = "Universal"
+    execucao: str = ""
+    alcance: str = ""
+    alvo: str = ""
+    duracao: str = ""
+    resistencia: str = ""
+    custo_pm: int = 0
     descricao: str = ""
+
+    @model_validator(mode='before')
+    @classmethod
+    def mapear_alvo_area(cls, data: Any) -> Any:
+
+        if isinstance(data, dict):
+
+            if 'alvo_area' in data and not data.get('alvo'):
+                data['alvo'] = data['alvo_area']
+        return data
+
+    class Config:
+        populate_by_name = True
 
 
 class Combate(BaseModel):
