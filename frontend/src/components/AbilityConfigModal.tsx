@@ -480,6 +480,50 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                             );
                         }
 
+                        // --- CASO 8: QAREEN (TATUAGEM MÍSTICA) --- //
+                        if (hab.nome === "Tatuagem Mística") {
+                            const magiaAtual = hab.escolhas_aplicadas?.magia_escolhida || "";
+
+                            // Filtra apenas magias de 1º Círculo para o seletor
+                            const magiasDisponiveis = Object.values(dadosMagias || {})
+                                // @ts-ignore
+                                .filter((m: any) => m.circulo === 1)
+                                // @ts-ignore
+                                .map((m: any) => m.nome)
+                                .sort();
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong> (Qareen)</span>
+                                        <span style={{ color: '#d32f2f', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc', fontStyle: 'italic' }}>
+                                        Você aprende uma magia de 1º círculo (Arcana ou Divina).
+                                    </p>
+
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
+                                        <label style={{ fontSize: '0.85rem', color: '#ce93d8' }}>Magia:</label>
+                                        <input value={magiaAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione a magia..." />
+                                        <button
+                                            className="btn-action"
+                                            style={{ background: '#9c27b0', color: 'white' }}
+                                            onClick={() => abrirSeletor(
+                                                'poder', // Usamos modo 'poder' para listar itens genéricos no modal
+                                                'Tatuagem Mística: Escolha uma Magia',
+                                                magiasDisponiveis,
+                                                undefined,
+                                                (v) => updateRacialChoice(idx, 'magia_escolhida', v),
+                                                [magiaAtual]
+                                            )}
+                                        >
+                                            Escolher Magia
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
                         // --- CASO 4: GENÉRICO (OUTRAS RAÇAS) ---
                         return (
                             <div key={idx} className="habilidade-item" style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #333' }}>
