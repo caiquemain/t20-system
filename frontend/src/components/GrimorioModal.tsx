@@ -1,200 +1,226 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import type { Magia } from '../types';
 
 interface GrimorioModalProps {
     isOpen: boolean;
     onClose: () => void;
-    dadosMagias: any; // Dicionário completo das magias
-    magiasConhecidas: any[]; // Lista das magias que o personagem já tem
-    onLearn: (magias: any[]) => void; // Função para salvar
+    onAddMagia: (magia: Magia) => void;
+    dadosMagias: Record<string, Magia>;
+    magiasConhecidas: Magia[];
+    pmAtual: number;
+    pmMaximo: number;
 }
 
+// Função auxiliar de cor (Mesma usada nos outros componentes)
+const getTypeColor = (tipo?: string) => {
+    if (!tipo) return '#e0e0e0';
+    const t = tipo.toLowerCase();
+    if (t.includes('arcana')) return '#d236d2'; // Roxo
+    if (t.includes('divina')) return '#ffc107'; // Dourado
+    return '#ff5252' // Universal
+};
+
 export const GrimorioModal: React.FC<GrimorioModalProps> = ({
-    isOpen,
-    onClose,
-    dadosMagias,
-    magiasConhecidas = [],
-    onLearn
+    isOpen, onClose, onAddMagia,
+    dadosMagias, magiasConhecidas, pmAtual, pmMaximo
 }) => {
-    // --- HOOKS (Sempre no topo, incondicionalmente) ---
-    const [filtroTexto, setFiltroTexto] = useState("");
-    const [filtroCirculo, setFiltroCirculo] = useState<number>(1);
-    const [selecionadas, setSelecionadas] = useState<any[]>([]);
+    const [busca, setBusca] = useState('');
+    const [filtroCirculo, setFiltroCirculo] = useState<number | 'todos'>('todos');
+    const [magiaSelecionada, setMagiaSelecionada] = useState<Magia | null>(null);
 
-    // Converte o Dicionário em Lista e Ordena
-    const listaTodas = useMemo(() => {
-        return Object.values(dadosMagias || {}).sort((a: any, b: any) => a.nome.localeCompare(b.nome));
-    }, [dadosMagias]);
+    // Limpa estados ao abrir/fechar
+    useEffect(() => {
+        if (!isOpen) {
+            setBusca('');
+            setFiltroCirculo('todos');
+            setMagiaSelecionada(null);
+        }
+    }, [isOpen]);
 
-    // --- LÓGICA (Executa mesmo com modal fechado para manter consistência) ---
+    if (!isOpen) return null;
 
-    // Filtra conforme busca e círculo
-    const magiasFiltradas = listaTodas.filter((m: any) => {
-        const matchTexto = m.nome.toLowerCase().includes(filtroTexto.toLowerCase());
-        const matchCirculo = m.circulo === filtroCirculo;
-        return matchTexto && matchCirculo;
-    });
+    // Processa a lista de magias
+    const todasMagias = Object.values(dadosMagias);
+    const magiasFiltradas = todasMagias.filter(m => {
+        const matchNome = m.nome.toLowerCase().includes(busca.toLowerCase());
+        const matchCirculo = filtroCirculo === 'todos' || m.circulo === filtroCirculo;
+        // Exclui magias que já estão no grimório
+        const naoConhecida = !magiasConhecidas.some(k => k.nome === m.nome);
 
-    // Verifica se a magia já está na ficha
-    const isAprendida = (nomeMagia: string) => {
-        return magiasConhecidas.some((m: any) => m.nome === nomeMagia);
-    };
+        return matchNome && matchCirculo && naoConhecida;
+    }).sort((a, b) => a.circulo - b.circulo || a.nome.localeCompare(b.nome));
 
-    // Verifica se a magia está na lista de seleção atual
-    const isSelecionada = (nomeMagia: string) => {
-        return selecionadas.some((m: any) => m.nome === nomeMagia);
-    };
-
-    const toggleSelecao = (magia: any) => {
-        if (isAprendida(magia.nome)) return;
-
-        if (isSelecionada(magia.nome)) {
-            setSelecionadas(prev => prev.filter(m => m.nome !== magia.nome));
-        } else {
-            setSelecionadas(prev => [...prev, magia]);
+    const handleAprender = () => {
+        if (magiaSelecionada) {
+            onAddMagia(magiaSelecionada);
+            setMagiaSelecionada(null); // Limpa para permitir nova seleção
         }
     };
 
-    const handleConfirmar = () => {
-        onLearn(selecionadas);
-        setSelecionadas([]);
-        onClose();
-    };
-
-    // --- RENDERIZAÇÃO CONDICIONAL (Sempre por último) ---
-    if (!isOpen) return null;
+    // Cor do tema da magia selecionada
+    const selectedTypeColor = getTypeColor(magiaSelecionada?.tipo);
 
     return (
-        <div className="modal-overlay" style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-            <div className="modal-content" style={{
-                background: '#1e1e1e', width: '90%', maxWidth: '800px', height: '85vh',
-                borderRadius: '8px', display: 'flex', flexDirection: 'column',
-                boxShadow: '0 0 20px rgba(0,0,0,0.5)', border: '1px solid #333'
-            }}>
+        <div className="modal-overlay" style={{ zIndex: 3000 }}>
+            <div className="modal-content large" style={{ display: 'flex', flexDirection: 'column', height: '85vh' }}>
 
-                {/* --- HEADER --- */}
-                <div style={{ padding: '15px 20px', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#252525' }}>
-                    <h2 style={{ margin: 0, color: '#e0e0e0', fontSize: '1.2rem' }}>📖 Grimório Arcano</h2>
-                    <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                <div className="modal-header">
+                    <h3>📖 Estudo Arcano</h3>
+                    <button className="close-btn" onClick={onClose}>&times;</button>
                 </div>
 
-                {/* --- FILTROS --- */}
-                <div style={{ padding: '15px 20px', background: '#2a2a2a', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {/* BARRA DE BUSCA E FILTRO */}
+                <div style={{ display: 'flex', gap: '10px', padding: '12px 20px', background: '#181818', borderBottom: '1px solid #333' }}>
                     <input
-                        type="text"
-                        placeholder="Buscar magia..."
-                        value={filtroTexto}
-                        onChange={e => setFiltroTexto(e.target.value)}
-                        style={{
-                            padding: '8px 12px', borderRadius: '4px', border: '1px solid #444',
-                            background: '#1a1a1a', color: '#fff', flex: 1, minWidth: '200px'
-                        }}
+                        className="input-dark"
+                        placeholder="Buscar magia pelo nome..."
+                        value={busca}
+                        onChange={e => setBusca(e.target.value)}
+                        style={{ flex: 1 }}
+                        autoFocus
                     />
-
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                        {[1, 2, 3, 4, 5].map(c => (
-                            <button
-                                key={c}
-                                onClick={() => setFiltroCirculo(c)}
-                                style={{
-                                    padding: '6px 14px', borderRadius: '4px', border: '1px solid #444', cursor: 'pointer',
-                                    background: filtroCirculo === c ? '#9c27b0' : '#333',
-                                    color: filtroCirculo === c ? '#fff' : '#aaa',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                {c}º
-                            </button>
-                        ))}
-                    </div>
+                    <select
+                        className="input-dark"
+                        value={filtroCirculo}
+                        onChange={e => setFiltroCirculo(e.target.value === 'todos' ? 'todos' : Number(e.target.value))}
+                        style={{ width: '140px' }}
+                    >
+                        <option value="todos">Todos Círculos</option>
+                        <option value="1">1º Círculo</option>
+                        <option value="2">2º Círculo</option>
+                        <option value="3">3º Círculo</option>
+                        <option value="4">4º Círculo</option>
+                        <option value="5">5º Círculo</option>
+                    </select>
                 </div>
 
-                {/* --- LISTA DE MAGIAS --- */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px', alignContent: 'start' }}>
-                    {magiasFiltradas.length === 0 ? (
-                        <p style={{ color: '#666', gridColumn: '1/-1', textAlign: 'center', marginTop: 20 }}>Nenhuma magia encontrada neste círculo.</p>
-                    ) : (
-                        magiasFiltradas.map((magia: any) => {
-                            const jaTem = isAprendida(magia.nome);
-                            const selecionada = isSelecionada(magia.nome);
+                <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-                            return (
+                    {/* COLUNA ESQUERDA: LISTA */}
+                    <div style={{ flex: 1, overflowY: 'auto', borderRight: '1px solid #333', background: '#121212' }}>
+                        {magiasFiltradas.length === 0 ? (
+                            <div style={{ padding: 30, textAlign: 'center', color: '#666' }}>
+                                Nenhuma magia encontrada com estes filtros.
+                            </div>
+                        ) : (
+                            magiasFiltradas.map(m => (
                                 <div
-                                    key={magia.nome}
-                                    onClick={() => toggleSelecao(magia)}
+                                    key={m.nome}
+                                    onClick={() => setMagiaSelecionada(m)}
                                     style={{
-                                        border: jaTem ? '1px solid #444' : (selecionada ? '1px solid #9c27b0' : '1px solid #333'),
-                                        background: jaTem ? '#1a1a1a' : (selecionada ? 'rgba(156, 39, 176, 0.1)' : '#252525'),
-                                        borderRadius: '6px', padding: '12px',
-                                        opacity: jaTem ? 0.6 : 1,
-                                        cursor: jaTem ? 'default' : 'pointer',
-                                        position: 'relative', transition: 'all 0.2s'
+                                        padding: '12px 15px',
+                                        borderBottom: '1px solid #252525',
+                                        cursor: 'pointer',
+                                        background: magiaSelecionada?.nome === m.nome ? '#2e2e2e' : 'transparent',
+                                        borderLeft: magiaSelecionada?.nome === m.nome ? `4px solid ${getTypeColor(m.tipo)}` : '4px solid transparent',
+                                        transition: 'background 0.1s'
                                     }}
                                 >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '5px' }}>
-                                        <h4 style={{ margin: 0, color: jaTem ? '#888' : (selecionada ? '#e040fb' : '#e0e0e0'), fontSize: '1rem' }}>
-                                            {magia.nome}
-                                        </h4>
-                                        <span style={{ fontSize: '0.75rem', background: '#333', padding: '2px 6px', borderRadius: '4px', color: '#ccc' }}>
-                                            {magia.escola || "Universal"}
+                                    <div style={{ fontWeight: 'bold', color: magiaSelecionada?.nome === m.nome ? '#fff' : '#ccc' }}>
+                                        {m.nome}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '4px', textTransform: 'uppercase' }}>
+                                        {m.circulo}º Círculo • {m.escola}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* COLUNA DIREITA: DETALHES */}
+                    <div style={{ flex: 1.6, padding: '25px', overflowY: 'auto', background: '#1a1a1a' }}>
+                        {magiaSelecionada ? (
+                            <div>
+                                {/* CABEÇALHO DA MAGIA */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <h2 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '1.5rem' }}>
+                                        {magiaSelecionada.nome}
+                                    </h2>
+
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        {/* Badge TIPO */}
+                                        <span style={{
+                                            background: `${selectedTypeColor}15`,
+                                            color: selectedTypeColor,
+                                            border: `1px solid ${selectedTypeColor}60`,
+                                            padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase'
+                                        }}>
+                                            {magiaSelecionada.tipo || 'Universal'}
+                                        </span>
+
+                                        {/* Badge PM */}
+                                        <span style={{
+                                            background: 'rgba(156, 39, 176, 0.15)', color: '#ce93d8',
+                                            border: '1px solid rgba(156, 39, 176, 0.4)',
+                                            padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold'
+                                        }}>
+                                            {magiaSelecionada.custo_pm} PM
+                                        </span>
+
+                                        {/* Badge Escola */}
+                                        <span style={{ background: '#333', color: '#aaa', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>
+                                            {magiaSelecionada.escola}
                                         </span>
                                     </div>
-
-                                    <div style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '8px', display: 'flex', gap: '10px' }}>
-                                        <span>⚡ {magia.custo_pm} PM</span>
-                                        <span>⏱ {magia.execucao}</span>
-                                        <span>🎯 {magia.alcance}</span>
-                                    </div>
-
-                                    <p style={{ fontSize: '0.8rem', color: '#777', margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                        {magia.descricao}
-                                    </p>
-
-                                    {/* STATUS BADGE */}
-                                    {jaTem && (
-                                        <div style={{ position: 'absolute', top: 10, right: 10, background: '#4caf50', color: 'black', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px' }}>
-                                            APRENDIDA
-                                        </div>
-                                    )}
-                                    {selecionada && (
-                                        <div style={{ position: 'absolute', bottom: 10, right: 10, background: '#9c27b0', color: 'white', fontSize: '1.2rem', lineHeight: '10px', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            ✓
-                                        </div>
-                                    )}
                                 </div>
-                            );
-                        })
-                    )}
-                </div>
 
-                {/* --- FOOTER --- */}
-                <div style={{ padding: '15px 20px', borderTop: '1px solid #333', background: '#252525', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ color: '#aaa', fontSize: '0.9rem' }}>
-                        {selecionadas.length} magias selecionadas
+                                {/* GRID DE INFO */}
+                                <div style={{
+                                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px',
+                                    background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #333'
+                                }}>
+                                    <DetailRow label="Execução" value={magiaSelecionada.execucao} />
+                                    <DetailRow label="Alcance" value={magiaSelecionada.alcance} />
+                                    <DetailRow label="Duração" value={magiaSelecionada.duracao} />
+                                    <DetailRow label="Alvo/Área" value={magiaSelecionada.alvo || '-'} />
+                                    <DetailRow label="Resistência" value={magiaSelecionada.resistencia || '-'} />
+                                </div>
+
+                                {/* DESCRIÇÃO */}
+                                <div style={{
+                                    color: '#ddd', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontSize: '0.95rem',
+                                    borderLeft: `2px solid ${selectedTypeColor}80`, paddingLeft: '15px'
+                                }}>
+                                    {magiaSelecionada.descricao}
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#555', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '4rem', marginBottom: '15px', opacity: 0.5 }}>🔮</span>
+                                <p style={{ fontSize: '1.1rem' }}>Selecione uma magia ao lado para ver os detalhes.</p>
+                            </div>
+                        )}
                     </div>
-                    <button
-                        onClick={onClose}
-                        style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #555', color: '#ccc', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleConfirmar}
-                        disabled={selecionadas.length === 0}
-                        style={{
-                            padding: '10px 25px', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold',
-                            background: selecionadas.length > 0 ? '#9c27b0' : '#444',
-                            color: selecionadas.length > 0 ? '#fff' : '#888'
-                        }}
-                    >
-                        Aprender Magias
-                    </button>
                 </div>
 
+                <div className="modal-footer" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.9rem', color: '#888' }}>
+                        Seus PM: <strong style={{ color: '#ce93d8' }}>{pmAtual}</strong> / {pmMaximo}
+                    </span>
+                    <div>
+                        <button className="btn-cancel" onClick={onClose} style={{ marginRight: '10px' }}>Cancelar</button>
+                        <button
+                            className="btn-save"
+                            disabled={!magiaSelecionada}
+                            onClick={handleAprender}
+                            style={{
+                                opacity: !magiaSelecionada ? 0.5 : 1,
+                                background: !magiaSelecionada ? '#333' : '#4caf50',
+                                color: !magiaSelecionada ? '#888' : 'white'
+                            }}
+                        >
+                            + Adicionar ao Grimório
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
+
+const DetailRow = ({ label, value }: { label: string, value: string }) => (
+    <div>
+        <span style={{ color: '#888', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '3px' }}>{label}</span>
+        <div style={{ color: '#eee', fontWeight: '500', fontSize: '0.9rem' }}>{value}</div>
+    </div>
+);

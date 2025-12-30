@@ -1,0 +1,129 @@
+/* frontend/src/components/SpellSummary.css */
+
+.spell-summary-container {
+    width: 100%;
+}
+
+.spell-summary-empty {
+    padding: 30px;
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    border: 2px dashed #444;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.summary-grid {
+    display: grid;
+    /* Aumentei a largura mínima para 250px para caber mais texto confortavelmente */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.circle-summary-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.circle-summary-card:hover {
+    border-color: #555;
+    transform: translateY(-2px);
+}
+
+.circle-header {
+    background: #252525;
+    padding: 10px 15px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.circle-badge {
+    background: #9c27b0;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.pm-cost {
+    color: #ce93d8;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: rgba(156, 39, 176, 0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.spell-names-list {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.spell-name-item {
+    font-size: 0.95rem;
+    /* Aumentei a fonte */
+    color: #ddd;
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.spell-name-item:hover {
+    background: rgba(156, 39, 176, 0.2);
+    border-color: #9c27b0;
+    color: #fff;
+    padding-left: 15px;
+    /* Efeito de deslize sutil */
+}
+
+/* Botão de Ver Tudo */
+.summary-footer {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.btn-view-all {
+    background: transparent;
+    border: 1px solid #9c27b0;
+    color: #ce93d8;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 400px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.btn-view-all:hover {
+    background: #9c27b0;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(156, 39, 176, 0.4);
+}
