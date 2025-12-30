@@ -37,7 +37,7 @@ const Home = () => {
     const handleNovoPersonagem = async () => {
         // Objeto mínimo para criar ficha (o backend preenche o resto)
         const novaFicha = {
-            cabecalho: { nome: "Novo Aventureiro", raca: "Humano", origem: "Camponês", nivel_total: 1 },
+            cabecalho: { nome: "Novo Aventureiro", raca: "Humano", origem: "Acólito", nivel_total: 1 },
             classes: [{ nome: "Guerreiro", nivel: 1 }],
             atributos_base: { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 }
         };
