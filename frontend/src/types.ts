@@ -136,6 +136,10 @@ export interface Ataque {
     tipo: string;
     alcance: string;
 }
+export interface Aprimoramento {
+    custo: string;
+    descricao: string;
+}
 
 export interface Magia {
     nome: string;
@@ -150,6 +154,7 @@ export interface Magia {
     resistencia: string;
     custo_pm: number;
     descricao: string;
+    aprimoramentos?: Aprimoramento[];
 }
 
 export interface Combate {
