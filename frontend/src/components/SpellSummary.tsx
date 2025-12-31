@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import type { Magia } from '../types';
-import './SpellSummary.css'; // Importando o CSS separado
+import { getCircleColor } from '../utils/magicUtils'; // Importando cor do Círculo
+import './SpellSummary.css';
 
 interface SpellSummaryProps {
     magias: Magia[];
     onOpenDetalhes: () => void;
-    onSpellClick: (magia: Magia) => void; // Nova prop para clique
+    onSpellClick: (magia: Magia) => void;
 }
 
 const CUSTO_PADRAO: Record<number, number> = {
@@ -38,12 +39,26 @@ export const SpellSummary: React.FC<SpellSummaryProps> = ({ magias, onOpenDetalh
                 <div className="summary-grid">
                     {circulosAtivos.map(([circuloStr, lista]) => {
                         const circulo = Number(circuloStr);
+                        const circleColor = getCircleColor(circulo); // Cor dinâmica baseada no nível
+
                         return (
                             <div key={circulo} className="circle-summary-card">
                                 <div className="circle-header">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <div className="circle-badge">{circulo}º</div>
-                                        <span style={{ fontWeight: 'bold', color: '#ddd', textTransform: 'uppercase', fontSize: '0.9rem' }}>Círculo</span>
+                                        {/* APLICANDO A COR DO CÍRCULO AQUI */}
+                                        <div
+                                            className="circle-badge"
+                                            style={{
+                                                background: circleColor,
+                                                color: '#111', // Texto escuro para contraste com cores claras
+                                                boxShadow: `0 0 10px ${circleColor}40`
+                                            }}
+                                        >
+                                            {circulo}º
+                                        </div>
+                                        <span style={{ fontWeight: 'bold', color: '#ddd', textTransform: 'uppercase', fontSize: '0.9rem' }}>
+                                            Círculo
+                                        </span>
                                     </div>
                                     <span className="pm-cost">
                                         {CUSTO_PADRAO[circulo] || '?'} PM
@@ -55,7 +70,7 @@ export const SpellSummary: React.FC<SpellSummaryProps> = ({ magias, onOpenDetalh
                                         <div
                                             key={m.nome}
                                             className="spell-name-item"
-                                            onClick={() => onSpellClick(m)} // Clique abre detalhes
+                                            onClick={() => onSpellClick(m)}
                                             title="Clique para ver detalhes"
                                         >
                                             {m.nome}

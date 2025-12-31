@@ -1,32 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import type { Magia } from '../types';
+import { getSchoolColor, getTypeColor } from '../utils/magicUtils'; // Importando utilitários de cor
 
 interface SpellListProps {
     magias: Magia[];
     onRemove: (nome: string) => void;
 }
-
-// Cores por Escola (Identidade Visual T20)
-const SCHOOL_COLORS: Record<string, string> = {
-    'Abjuração': '#2196f3',   // Azul Protetor
-    'Adivinhação': '#00bcd4', // Ciano Etéreo
-    'Convocação': '#ff9800',  // Laranja Invocação
-    'Encantamento': '#e91e63',// Rosa Mental
-    'Evocação': '#f44336',    // Vermelho Destrutivo
-    'Ilusão': '#9c27b0',      // Roxo Misterioso
-    'Necromancia': '#4caf50', // Verde Tóxico
-    'Transmutação': '#ffeb3b',// Amarelo Mudança
-    'default': '#9e9e9e'      // Cinza Padrão
-};
-
-// Função auxiliar para definir a cor baseada no Tipo
-const getTypeColor = (tipo?: string) => {
-    if (!tipo) return '#e0e0e0';
-    const t = tipo.toLowerCase();
-    if (t.includes('arcana')) return '#d236d2'; // Roxo/Magenta
-    if (t.includes('divina')) return '#ffc107'; // Dourado
-    return '#ff5252'; // Universal
-};
 
 export const SpellList: React.FC<SpellListProps> = ({ magias, onRemove }) => {
     const [expanded, setExpanded] = useState<string | null>(null);
@@ -48,15 +27,10 @@ export const SpellList: React.FC<SpellListProps> = ({ magias, onRemove }) => {
         setExpanded(prev => prev === nome ? null : nome);
     };
 
-    const getSchoolColor = (escola: string) => {
-        const key = Object.keys(SCHOOL_COLORS).find(k => escola && escola.includes(k)) || 'default';
-        return SCHOOL_COLORS[key];
-    };
-
     const renderMagiaCard = (magia: Magia) => {
         const isExpanded = expanded === magia.nome;
-        const schoolColor = getSchoolColor(magia.escola);
-        const typeColor = getTypeColor(magia.tipo);
+        const schoolColor = getSchoolColor(magia.escola); // Cor da Escola
+        const typeColor = getTypeColor(magia.tipo);       // Cor do Tipo (Arcana/Divina)
 
         return (
             <div
@@ -66,7 +40,7 @@ export const SpellList: React.FC<SpellListProps> = ({ magias, onRemove }) => {
                 style={{
                     position: 'relative',
                     background: isExpanded ? '#252525' : '#1e1e1e',
-                    borderLeft: `4px solid ${schoolColor}`, // Identidade da Escola
+                    borderLeft: `4px solid ${schoolColor}`, // Identidade da Escola na borda
                     borderBottom: '1px solid #333',
                     marginBottom: '2px',
                     cursor: 'pointer',
@@ -94,7 +68,7 @@ export const SpellList: React.FC<SpellListProps> = ({ magias, onRemove }) => {
                             </span>
                         </div>
 
-                        <span style={{ fontSize: '0.75rem', color: schoolColor, opacity: 0.9, marginTop: '2px' }}>
+                        <span style={{ fontSize: '0.75rem', color: schoolColor, opacity: 0.9, marginTop: '2px', textTransform: 'uppercase' }}>
                             {magia.escola} • {magia.execucao}
                         </span>
                     </div>
@@ -109,7 +83,7 @@ export const SpellList: React.FC<SpellListProps> = ({ magias, onRemove }) => {
                             {magia.custo_pm} PM
                         </span>
 
-                        {/* Botão de Remover (Aparece sempre ou só no hover/expandido) */}
+                        {/* Botão de Remover (Aparece se expandido) */}
                         {isExpanded && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onRemove(magia.nome); }}
@@ -139,7 +113,7 @@ export const SpellList: React.FC<SpellListProps> = ({ magias, onRemove }) => {
                             gap: '10px', marginBottom: '15px'
                         }}>
                             <MiniDetail label="Alcance" value={magia.alcance} />
-                            <MiniDetail label="Alvo/Área" value={magia.alvo || magia.alvo_area || '-'} />
+                            <MiniDetail label="Alvo/Área" value={magia.alvo || magia.alvo_area || "-"} />
                             <MiniDetail label="Duração" value={magia.duracao} />
                             <MiniDetail label="Resistência" value={magia.resistencia || "-"} />
                         </div>
@@ -147,13 +121,30 @@ export const SpellList: React.FC<SpellListProps> = ({ magias, onRemove }) => {
                         {/* Descrição */}
                         <div style={{
                             background: '#111', padding: '12px', borderRadius: '6px',
-                            borderLeft: `2px solid ${schoolColor}50`, // Borda sutil interna
+                            borderLeft: `2px solid ${schoolColor}50`, // Borda sutil interna com a cor da escola
                             border: '1px solid #333'
                         }}>
                             <p style={{ margin: 0, fontSize: '0.9rem', color: '#ccc', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
                                 {magia.descricao}
                             </p>
                         </div>
+
+                        {/* Aprimoramentos (Se houver) */}
+                        {magia.aprimoramentos && magia.aprimoramentos.length > 0 && (
+                            <div style={{ marginTop: '15px' }}>
+                                <h5 style={{ color: '#888', fontSize: '0.8rem', textTransform: 'uppercase', borderBottom: '1px solid #333', paddingBottom: '5px', margin: '0 0 10px 0' }}>
+                                    Aprimoramentos
+                                </h5>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    {magia.aprimoramentos.map((ap, idx) => (
+                                        <div key={idx} style={{ display: 'flex', gap: '10px', fontSize: '0.85rem' }}>
+                                            <strong style={{ color: '#ce93d8', minWidth: '55px' }}>{ap.custo}</strong>
+                                            <span style={{ color: '#bbb' }}>{ap.descricao}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
