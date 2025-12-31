@@ -150,6 +150,14 @@ class Ataque(BaseModel):
     alcance: str = "Curto"
 
 
+class Aprimoramento(BaseModel):
+    custo: str
+    descricao: str
+    efeitos: Dict[str, Any] = {}
+
+# Atualize a class Magia para incluir a lista
+
+
 class Magia(BaseModel):
     nome: str
     circulo: int
@@ -163,12 +171,12 @@ class Magia(BaseModel):
     custo_pm: int = 0
     descricao: str = ""
 
+    aprimoramentos: List[Aprimoramento] = []
+
     @model_validator(mode='before')
     @classmethod
     def mapear_alvo_area(cls, data: Any) -> Any:
-
         if isinstance(data, dict):
-
             if 'alvo_area' in data and not data.get('alvo'):
                 data['alvo'] = data['alvo_area']
         return data

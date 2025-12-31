@@ -599,7 +599,8 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                         duracao=dados_magia.get("duracao", ""),
                         resistencia=dados_magia.get("resistencia", ""),
                         custo_pm=custo_base,
-                        descricao=f"[{tag_origem}] {dados_magia.get('descricao', '')}"
+                        descricao=f"[{tag_origem}] {dados_magia.get('descricao', '')}",
+                        aprimoramentos=dados_magia.get("aprimoramentos", [])
                     )
 
                     novas_magias.append(nova)
