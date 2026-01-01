@@ -1,21 +1,22 @@
 import math
 import logging
 from typing import Optional, Dict
-from .models import Personagem, Habilidade, Magia, PericiaInfo, TamanhoEnum, DetalhesCalculo
+from .models import Personagem, Habilidade, Magia, PericiaInfo, TamanhoEnum, DetalhesCalculo, Ataque
 from src.dados_racas import DADOS_RACAS
 from src.dados_classes import DADOS_CLASSES
 from src.dados_pericias import DADOS_PERICIAS
 from src.dados_habilidades_classe import DADOS_HABILIDADES_CLASSE
 from src.dados_habilidades import HABILIDADES_GERAIS
 from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
+from src.dados_poderes_tormenta import DADOS_PODERES_TORMENTA
 from .dados_magias import DADOS_MAGIAS
+
 # Configuração de Logs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RegrasT20")
 
 
 def calcular_modificador(valor_atributo: int) -> int:
-    # Em T20 JdA, o valor do atributo JÁ É o modificador
     return valor_atributo
 
 
@@ -32,13 +33,13 @@ def limpar_habilidades_fixas(ficha: Personagem):
     """
     habilidades_mantidas = []
     for hab in ficha.habilidades:
+        # Mantém apenas poderes gerais comprados manualmente ou itens
         if hab.tipo in ["Racial", "Classe", "Origem", "Raça"]:
             continue
         habilidades_mantidas.append(hab)
     ficha.habilidades = habilidades_mantidas
 
     # GARANTIA EXTRA: Limpa as listas que dependem dessas habilidades
-    # Elas serão repovoadas pelas funções calcular_... logo em seguida
     ficha.proficiencias = []
     ficha.status.rd = []
 
@@ -118,67 +119,22 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                 nome_real = dados_hab["nome"]
 
                 if nome_real not in nomes_existentes:
-                    # Recupera backup das escolhas (ex: Elemento do Qareen, Magia Escolhida)
                     escolhas_anteriores = escolhas_preservadas.get(
                         nome_real, dados_hab.get("efeitos", {}))
-
-                    # --- LOG DE DEBUG (QAREEN) ---
-                    if nome_real == "Tatuagem Mística":
-                        logger.info(
-                            f"🔍 [DEBUG] Restaurando Tatuagem Mística. Backup encontrado: {escolhas_anteriores}")
-                    # -----------------------------
 
                     nova_hab = Habilidade(
                         nome=nome_real,
                         tipo="Racial",
                         descricao=dados_hab.get("descricao", ""),
                         fonte=raca_nome,
-                        escolhas_aplicadas=escolhas_anteriores
+                        escolhas_aplicadas=escolhas_anteriores,
+                        efeitos=dados_hab.get("efeitos", {})
                     )
                     novas_habs.append(nova_hab)
                     nomes_existentes.add(nome_real)
 
-                # Verifica se essa habilidade concede Poderes Extras (Versátil/Qareen/Lefou)
-                habilidade_atual = next(
-                    (h for h in ficha.habilidades if h.nome == nome_real), None)
-                if not habilidade_atual and novas_habs:
-                    for h in reversed(novas_habs):
-                        if h.nome == nome_real:
-                            habilidade_atual = h
-                            break
-
-                if habilidade_atual:
-                    efeitos = habilidade_atual.escolhas_aplicadas or {}
-
-                    # Versátil (Poder Geral) ou Lefou (Poder da Tormenta)
-                    poder_escolhido = efeitos.get("poder_geral") or \
-                        efeitos.get("poder_escolha") or \
-                        efeitos.get("poder_tormenta")
-
-                    # Só processa se poder_escolhido for TEXTO (nome do poder).
-                    if poder_escolhido and isinstance(poder_escolhido, str) and poder_escolhido not in nomes_existentes:
-                        dados_poder = None
-                        for p in HABILIDADES_GERAIS.values():
-                            if p["nome"] == poder_escolhido:
-                                dados_poder = p
-                                break
-
-                        descricao_poder = dados_poder["descricao"] if dados_poder else "Poder extra."
-                        efeitos_poder = dados_poder.get(
-                            "efeitos", {}) if dados_poder else {}
-
-                        novas_habs.append(Habilidade(
-                            nome=poder_escolhido,
-                            tipo="Poder Geral",
-                            descricao=descricao_poder,
-                            fonte=f"Habilidade: {nome_real}",
-                            escolhas_aplicadas=efeitos_poder
-                        ))
-                        nomes_existentes.add(poder_escolhido)
-
     # --- APLICA O BLOQUEIO DE ORIGEM ---
     if bloquear_origem:
-        # Antes de limpar, remove o "Treino" das perícias que vieram da origem antiga.
         if ficha.escolhas_origem:
             for escolha_antiga in ficha.escolhas_origem:
                 if escolha_antiga in ficha.pericias:
@@ -200,7 +156,8 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
                             tipo="Classe",
                             descricao=dados_hab.get("descricao", ""),
                             fonte=f"{classe.nome} ({nivel_req})",
-                            escolhas_aplicadas=dados_hab.get("efeitos", {})
+                            escolhas_aplicadas=dados_hab.get("efeitos", {}),
+                            efeitos=dados_hab.get("efeitos", {})
                         ))
                         nomes_existentes.add(nome_hab)
 
@@ -220,14 +177,16 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
 
                 descricao = dados_poder.get(
                     "descricao", "Benefício de Origem") if dados_poder else "Benefício único."
-                efeitos = dados_poder.get("efeitos", {}) if dados_poder else {}
+                efeitos_origem = dados_poder.get(
+                    "efeitos", {}) if dados_poder else {}
 
                 novas_habs.append(Habilidade(
                     nome=escolha,
                     tipo="Origem",
                     descricao=descricao,
                     fonte=f"Origem: {origem_nome}",
-                    escolhas_aplicadas=efeitos
+                    escolhas_aplicadas=efeitos_origem,
+                    efeitos=efeitos_origem
                 ))
                 nomes_existentes.add(escolha)
 
@@ -235,8 +194,110 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
         ficha.habilidades.extend(novas_habs)
 
 
+def sincronizar_poderes_habilidades(ficha: Personagem):
+    logger.info("--- [X] Sincronizando Poderes de Habilidades ---")
+
+    poderes_permitidos = {}
+
+    for hab in ficha.habilidades:
+        escolhas = hab.escolhas_aplicadas or {}
+        chaves_especificas = ["poder_geral", "poder_tormenta",
+                              "poder_escolha", "habilidade_racial_escolha"]
+
+        for chave in chaves_especificas:
+            if chave in escolhas:
+                val = escolhas[chave]
+                if isinstance(val, str) and val:
+                    poderes_permitidos[val] = hab.nome
+
+        for chave, valor in escolhas.items():
+            if (chave.startswith("poder_") or "_poder" in chave or "habilidade_" in chave) and chave not in chaves_especificas:
+                if isinstance(valor, str) and valor:
+                    poderes_permitidos[valor] = hab.nome
+
+    ficha.habilidades = [
+        h for h in ficha.habilidades
+        if not (h.fonte and h.fonte.startswith("Habilidade:")) or h.nome in poderes_permitidos
+    ]
+
+    nomes_atuais = {h.nome for h in ficha.habilidades}
+    novos_poderes = []
+
+    for nome_poder, nome_origem in poderes_permitidos.items():
+        if nome_poder not in nomes_atuais:
+            dados = None
+            tipo_encontrado = "Poder Extra"
+
+            for v in DADOS_PODERES_TORMENTA.values():
+                if v["nome"] == nome_poder:
+                    dados = v
+                    tipo_encontrado = "Poder da Tormenta"
+                    break
+
+            if not dados:
+                for k, v in HABILIDADES_GERAIS.items():
+                    if v["nome"] == nome_poder:
+                        dados = v
+                        tipo_encontrado = v.get("tipo", "Poder Geral")
+                        break
+
+            if not dados:
+                for k, v in DADOS_HABILIDADES_RACIAIS.items():
+                    if v["nome"] == nome_poder:
+                        dados = v
+                        tipo_encontrado = "Habilidade Racial (Memória Póstuma)"
+                        break
+
+            if dados:
+                novo = Habilidade(
+                    nome=dados["nome"],
+                    tipo=tipo_encontrado,
+                    descricao=dados["descricao"],
+                    efeitos=dados.get("efeitos", {}),
+                    fonte=f"Habilidade: {nome_origem}"
+                )
+                novos_poderes.append(novo)
+                nomes_atuais.add(nome_poder)
+                logger.info(
+                    f"💪 Poder/Habilidade adicionado: {nome_poder} (via {nome_origem})")
+            else:
+                logger.warning(
+                    f"⚠️ Item escolhido não encontrado no banco: {nome_poder}")
+
+    if novos_poderes:
+        ficha.habilidades.extend(novos_poderes)
+
+
+def calcular_atributos_finais(ficha: Personagem):
+    logger.info("--- [2.5] Calculando Atributos Finais ---")
+    mapa_attr = {'for': 'forca', 'des': 'destreza', 'con': 'constituicao',
+                 'int': 'inteligencia', 'sab': 'sabedoria', 'car': 'carisma'}
+
+    for hab in ficha.habilidades:
+        # CORREÇÃO: Mescla efeitos passivos com escolhas
+        efeitos = (hab.efeitos or {}).copy()
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+
+        mods = efeitos.get("atributo_bonus")
+
+        if mods:
+            for attr_short, valor in mods.items():
+                attr_full = str(mapa_attr.get(attr_short, attr_short))
+
+                if (hab.fonte == "Habilidade: Deformidade"
+                    and attr_short == "car"
+                        and valor < 0):
+                    continue
+
+                if hasattr(ficha.atributos, attr_full):
+                    valor_atual = getattr(ficha.atributos, attr_full)
+                    setattr(ficha.atributos, attr_full, valor_atual + valor)
+
+
 def inicializar_pericias(ficha: Personagem):
     logger.info("--- [3] Inicializando Perícias ---")
+
     modificadores = {
         'for': calcular_modificador(ficha.atributos.forca),
         'des': calcular_modificador(ficha.atributos.destreza),
@@ -248,53 +309,60 @@ def inicializar_pericias(ficha: Personagem):
 
     nivel = max(1, ficha.cabecalho.nivel_total)
     bonus_metade_nivel = math.floor(nivel / 2)
+
+    # Cálculo de Penalidade de Armadura
     penalidade_armadura_valor = 0
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        if "penalidade_armadura" in efeitos:
+            penalidade_armadura_valor += efeitos["penalidade_armadura"]
 
     pericias_extras_gratis = []
     bonus_numerico_habilidades = {}
+    bonus_por_atributo = {}
+
+    qtd_poderes_tormenta = 0
+    for hab in ficha.habilidades:
+        if "Tormenta" in hab.tipo:
+            qtd_poderes_tormenta += 1
 
     for hab in ficha.habilidades:
-        efeitos = hab.escolhas_aplicadas or {}
+        efeitos = (hab.efeitos or {}).copy()
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
 
-        # --- CASO ESPECIAL: LEFOU (DEFORMIDADE) ---
-        # Lefou dá bônus numérico (+2) nas perícias escolhidas, NÃO treino.
         if hab.nome == "Deformidade":
-            # Perícia do Slot 1
-            if efeitos.get("pericia_1"):
-                p_nome = efeitos["pericia_1"]
-                bonus_numerico_habilidades[p_nome] = bonus_numerico_habilidades.get(
-                    p_nome, 0) + 2
-
-            # Perícia do Slot 2 (se não tiver trocado por poder)
-            if efeitos.get("pericia_2"):
-                p_nome = efeitos["pericia_2"]
-                bonus_numerico_habilidades[p_nome] = bonus_numerico_habilidades.get(
-                    p_nome, 0) + 2
-
-            # IMPORTANTE: Pula o resto do loop para essa habilidade
-            # para evitar que ela caia na lógica padrão e dê "Treino" sem querer.
+            bonus_lefou = 2 + (2 * qtd_poderes_tormenta)
+            p1 = efeitos.get("pericia_1")
+            p2 = efeitos.get("pericia_2")
+            if p1:
+                bonus_numerico_habilidades[p1] = bonus_numerico_habilidades.get(
+                    p1, 0) + bonus_lefou
+            if p2:
+                bonus_numerico_habilidades[p2] = bonus_numerico_habilidades.get(
+                    p2, 0) + bonus_lefou
             continue
 
-        # --- LÓGICA PADRÃO (HUMANO / CLASSES / ORIGENS) ---
-        # 1. Coleta treinos extras (Strings que viram Treino)
         for chave in ["pericia_1", "pericia_2", "pericia_escolha"]:
             val = efeitos.get(chave)
             if val and isinstance(val, str):
                 pericias_extras_gratis.append(val)
 
-        # 2. Coleta bônus numéricos explícitos (ex: +2 em Fortitude)
         if "bonus_pericia" in efeitos:
             for pericia, valor in efeitos["bonus_pericia"].items():
                 bonus_numerico_habilidades[pericia] = bonus_numerico_habilidades.get(
                     pericia, 0) + valor
 
-    # Adiciona perícias de Origem como Treino
+        if "bonus_pericia_atributo" in efeitos:
+            for attr, valor in efeitos["bonus_pericia_atributo"].items():
+                bonus_por_atributo[attr] = bonus_por_atributo.get(
+                    attr, 0) + valor
+
     if ficha.escolhas_origem:
         for escolha in ficha.escolhas_origem:
             if escolha in DADOS_PERICIAS or escolha.startswith("Ofício"):
                 pericias_extras_gratis.append(escolha)
 
-    # Adiciona perícias Fixas da Classe
     pericias_fixas_classe = []
     if ficha.classes:
         classe_inicial = ficha.classes[0].nome
@@ -304,7 +372,6 @@ def inicializar_pericias(ficha: Personagem):
                 "pericias_iniciais", [])
             pericias_fixas_classe.extend(fixas)
 
-    # Prepara cálculo final
     novas_pericias = {}
     lista_para_processar = list(DADOS_PERICIAS.keys())
 
@@ -326,8 +393,6 @@ def inicializar_pericias(ficha: Personagem):
 
         ganhou_extra = nome_pericia in pericias_extras_gratis
         ganhou_na_classe = nome_pericia in pericias_fixas_classe
-
-        # Só está treinado se tiver ponto gasto manual (treino > 0), ou ganhou por classe/habilidade(não lefou)
         esta_treinado = (info_atual.treino >
                          0) or ganhou_extra or ganhou_na_classe
 
@@ -345,22 +410,27 @@ def inicializar_pericias(ficha: Personagem):
             else:
                 bonus_treino = 2
 
-        # Soma os bônus numéricos (aqui entra o +2 do Lefou)
-        bonus_habilidade = bonus_numerico_habilidades.get(nome_pericia, 0)
+        # Somas dos Bônus
+        bonus_fixo = bonus_numerico_habilidades.get(nome_pericia, 0)
+        bonus_dinamico = bonus_por_atributo.get(attr_chave, 0)
 
-        penalidade = penalidade_armadura_valor if dados_base["penalidade_armadura"] else 0
+        # Total vindo de habilidades (Automático)
+        total_automatico = bonus_fixo + bonus_dinamico
 
-        outros_total = info_atual.outros + bonus_habilidade
-        total = bonus_metade_nivel + mod_attr + bonus_treino + outros_total - penalidade
+        penalidade_aplicada = penalidade_armadura_valor if dados_base["penalidade_armadura"] else 0
 
+        total = bonus_metade_nivel + mod_attr + \
+            bonus_treino + info_atual.outros + total_automatico + penalidade_aplicada
+
+        # Agora passamos direto no construtor, pois atualizamos o models.py
         novas_pericias[nome_pericia] = PericiaInfo(
             treino=nivel_treino,
             bonus_nivel=bonus_metade_nivel,
             atributo_valor=mod_attr,
-            outros=outros_total,
-            total=total
+            outros=info_atual.outros,
+            total=total,
+            bonus_automatico=total_automatico  # <--- Campo oficial agora
         )
-
     ficha.pericias = novas_pericias
 
 
@@ -381,13 +451,17 @@ def calcular_pv_pm(ficha: Personagem):
 
     try:
         mod_con = calcular_modificador(ficha.atributos.constituicao)
-
         bonus_pv_ini = 0
         bonus_pv_nivel = 0
         bonus_pm_nivel = 0
 
+        # [NOVO] Variável para PM em níveis ímpares (Sangue Élfico)
+        bonus_pm_nivel_impar = 0
+
         for hab in ficha.habilidades:
-            efeitos = hab.escolhas_aplicadas or {}
+            efeitos = (hab.efeitos or {}).copy()
+            if hab.escolhas_aplicadas:
+                efeitos.update(hab.escolhas_aplicadas)
 
             if "pv_max_ini" in efeitos:
                 bonus_pv_ini += efeitos["pv_max_ini"]
@@ -396,8 +470,11 @@ def calcular_pv_pm(ficha: Personagem):
             if "pm_max_nivel" in efeitos:
                 bonus_pm_nivel += efeitos["pm_max_nivel"]
 
-        pv_inicial = pv_ini_base + mod_con + bonus_pv_ini
+            # [NOVO] Lógica do Sangue Élfico
+            if "pm_por_nivel_impar" in efeitos:
+                bonus_pm_nivel_impar += efeitos["pm_por_nivel_impar"]
 
+        pv_inicial = pv_ini_base + mod_con + bonus_pv_ini
         pv_nivel_total = 0
         niveis_primaria_para_somar = max(0, classe_primaria.nivel - 1)
         pv_nivel_total += niveis_primaria_para_somar * \
@@ -408,7 +485,6 @@ def calcular_pv_pm(ficha: Personagem):
             val_niv = d_classe.get("pv_nivel", 0)
             pv_nivel_total += c.nivel * (val_niv + mod_con + bonus_pv_nivel)
 
-        # Atualizado para usar DetalhesCalculo
         detalhes_pv = DetalhesCalculo(
             inicial=pv_inicial,
             nivel=pv_nivel_total,
@@ -435,20 +511,35 @@ def calcular_pv_pm(ficha: Personagem):
             val_pm = d_classe.get("pm_nivel", 0)
             pm_nivel_total += c.nivel * (val_pm + bonus_pm_nivel)
 
-        # Atualizado para usar DetalhesCalculo
+        # [NOVO] Cálculo Matemático dos Ímpares (Nível 1=1, 2=1, 3=2, 4=2...)
+        qtd_niveis_impares = math.ceil(ficha.cabecalho.nivel_total / 2)
+        total_pm_impar = qtd_niveis_impares * bonus_pm_nivel_impar
+
         detalhes_pm = DetalhesCalculo(
             inicial=pm_inicial,
             nivel=pm_nivel_total,
             atributo=mod_attr_chave,
-            habilidades=bonus_pm_nivel * ficha.cabecalho.nivel_total,
+            # [NOVO] Somamos o total ímpar aqui
+            habilidades=(bonus_pm_nivel *
+                         ficha.cabecalho.nivel_total) + total_pm_impar,
             outros=0,
-            total=pm_inicial + pm_nivel_total
+            total=pm_inicial + pm_nivel_total +
+            (bonus_pm_nivel * ficha.cabecalho.nivel_total) + total_pm_impar
         )
 
         ficha.status.pv.maximo = detalhes_pv.total
         ficha.status.pv.calculo = detalhes_pv
         ficha.status.pm.maximo = detalhes_pm.total
         ficha.status.pm.calculo = detalhes_pm
+
+        if ficha.status.pv.atual == 0:
+            ficha.status.pv.atual = detalhes_pv.total
+        if ficha.status.pm.atual == 0:
+            ficha.status.pm.atual = detalhes_pm.total
+        if ficha.status.pv.atual > detalhes_pv.total:
+            ficha.status.pv.atual = detalhes_pv.total
+        if ficha.status.pm.atual > detalhes_pm.total:
+            ficha.status.pm.atual = detalhes_pm.total
 
     except Exception as e:
         logger.error(f"Erro ao calcular PV/PM: {e}")
@@ -461,14 +552,31 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
     bonus_defesa = 0
     deslocamento_final = ficha.status.deslocamento
 
+    # 1. Passivos
     for hab in ficha.habilidades:
-        efeitos = hab.escolhas_aplicadas or {}
+        efeitos = (hab.efeitos or {}).copy()
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+
         if "defesa_bonus" in efeitos:
             bonus_defesa += efeitos["defesa_bonus"]
         if "deslocamento" in efeitos:
             deslocamento_final = efeitos["deslocamento"]
         if hab.nome == "Esquiva":
             bonus_defesa += 2
+
+    # 2. Buffs Ativos
+    if hasattr(ficha.status, 'buffs') and ficha.status.buffs:
+        for buff in ficha.status.buffs:
+            atributo_alvo = buff.atributo.lower()
+            if atributo_alvo == "defesa":
+                bonus_defesa += buff.valor
+                logger.info(
+                    f"🛡️ Buff Aplicado na Defesa: {buff.origem} (+{buff.valor})")
+            elif atributo_alvo == "deslocamento":
+                deslocamento_final += buff.valor
+                logger.info(
+                    f"🦶 Buff Aplicado no Deslocamento: {buff.origem} (+{buff.valor})")
 
     ficha.status.defesa.detalhes = {
         "base": 10,
@@ -492,7 +600,10 @@ def calcular_proficiencias_e_sentidos(ficha: Personagem):
             lista_final.add(p)
 
     for hab in ficha.habilidades:
-        efeitos = hab.escolhas_aplicadas or {}
+        efeitos = (hab.efeitos or {}).copy()
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+
         if efeitos.get("visao_escuro"):
             lista_final.add("Visão no Escuro")
         if efeitos.get("visao_penumbra"):
@@ -519,13 +630,14 @@ def calcular_reducoes_dano(ficha: Personagem):
     lista_rd = []
 
     for hab in ficha.habilidades:
-        efeitos = hab.escolhas_aplicadas or {}
-        # RD Fixa
+        efeitos = (hab.efeitos or {}).copy()
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+
         if "resistencia_rd" in efeitos:
             for tipo, valor in efeitos["resistencia_rd"].items():
                 lista_rd.append(f"{tipo} {valor}")
 
-        # RD Escolhida (Qareen)
         escolha_rd = efeitos.get("resistencia_rd_escolha")
         if escolha_rd and isinstance(escolha_rd, str):
             lista_rd.append(f"{escolha_rd} 10")
@@ -533,135 +645,185 @@ def calcular_reducoes_dano(ficha: Personagem):
     ficha.status.rd = lista_rd
 
 
-def sincronizar_magias_habilidades(ficha: Personagem):
-    """
-    Sincroniza magias concedidas por habilidades (Raciais, de Classe, etc).
-    Gerencia redução de custo se a magia já existir ou adiciona nova se não existir.
-    """
-    logger.info("--- [X] Sincronizando Magias de Habilidades ---")
+# --- NOVA FUNÇÃO DE ATAQUES (PARA MINOTAURO E TROG) ---
+def sincronizar_ataques(ficha: Personagem):
+    logger.info("--- [5.3] Sincronizando Ataques (Armas Naturais) ---")
 
-    # Mapeia magias que o personagem JÁ tem (aprendidas por classe ou compradas)
-    mapa_magias_existentes = {m.nome: m for m in ficha.combate.magias}
-    novas_magias = []
+    # 1. Filtra ataques manuais do usuário (que não sejam de "Fonte: Racial")
+    # Isso evita que a gente duplique o ataque "Chifres" toda vez que salvar
+    ataques_mantidos = [
+        a for a in ficha.combate.ataques if "Racial" not in a.tipo]
 
     for hab in ficha.habilidades:
-        efeitos = hab.escolhas_aplicadas or {}
+        efeitos = hab.efeitos or {}
 
-        # Identifica se a habilidade concede uma magia (nomes de chaves comuns)
-        nome_magia = efeitos.get(
-            "magia_escolhida") or efeitos.get("magia_escolha")
+        # Procura pela chave "arma_natural" no JSON da habilidade
+        # Ex: "arma_natural": "Chifres 1d6"
+        if "arma_natural" in efeitos:
+            texto_arma = efeitos["arma_natural"]
+            partes = texto_arma.split(" ", 1)  # Separa "Chifres" de "1d6"
 
-        if nome_magia:
+            nome_arma = partes[0]
+            dano_arma = partes[1] if len(partes) > 1 else "1d4"
+
+            novo_ataque = Ataque(
+                nome=nome_arma,
+                bonus_ataque="+0",  # Será calculado no frontend com Força/BBA
+                dano=dano_arma,
+                critico="x2",
+                tipo="Racial",  # Tag importante para filtro
+                alcance="Curto"
+            )
+            ataques_mantidos.append(novo_ataque)
+            logger.info(f"⚔️ Arma Natural Adicionada: {nome_arma}")
+
+    ficha.combate.ataques = ataques_mantidos
+
+
+def sincronizar_magias_habilidades(ficha: Personagem):
+    logger.info("--- [X] Sincronizando Magias de Habilidades ---")
+    magias_permitidas = {}
+
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        escolhas = hab.escolhas_aplicadas or {}
+
+        config_magia = efeitos.get("magia_adicional_escolha")
+
+        if config_magia:
+            nomes_escolhidos = []
+            if "magia_escolhida" in escolhas and isinstance(escolhas["magia_escolhida"], str):
+                nomes_escolhidos.append(escolhas["magia_escolhida"])
+
+            for chave, valor in escolhas.items():
+                if (chave.startswith("magia_")
+                    and chave != "magia_escolhida"
+                    and chave != "magia_adicional_escolha"
+                    and isinstance(valor, str)
+                        and valor):
+                    nomes_escolhidos.append(valor)
+
+            attr_chave = config_magia.get("atributo", "")
+            reducao = efeitos.get("reducao_custo_se_conhecida", 0)
+
+            for nome_magia in nomes_escolhidos:
+                if nome_magia and isinstance(nome_magia, str):
+                    magias_permitidas[nome_magia] = {
+                        "hab_nome": hab.nome,
+                        "attr": attr_chave,
+                        "reducao": reducao
+                    }
+
+        # Suporte para magias fixas (Ex: Amiga das Plantas - Controlar Plantas)
+        magia_fixa = efeitos.get("magia_adicional")
+        if magia_fixa:
+            nome_magia = magia_fixa.get("nome")
+            attr_chave = magia_fixa.get("atributo", "")
+            if nome_magia:
+                magias_permitidas[nome_magia] = {
+                    "hab_nome": hab.nome,
+                    "attr": attr_chave,
+                    "reducao": efeitos.get("reducao_custo_magia", {}).get("valor", 0)
+                }
+
+    ficha.combate.magias = [
+        m for m in ficha.combate.magias
+        if not m.fonte.startswith("Habilidade:") or m.nome in magias_permitidas
+    ]
+
+    nomes_conhecidos = {m.nome for m in ficha.combate.magias}
+    novas_magias = []
+
+    for nome_magia, info in magias_permitidas.items():
+        if nome_magia not in nomes_conhecidos:
             dados_magia = DADOS_MAGIAS.get(nome_magia)
 
             if dados_magia:
-                # --- LEITURA DE PARÂMETROS DA HABILIDADE ---
-                reducao_valor = efeitos.get("reducao_custo_se_conhecida", 0)
-                tag_origem = efeitos.get(
-                    "tag_adicional", f"Habilidade: {hab.nome}")
+                nova = Magia(
+                    nome=dados_magia["nome"],
+                    circulo=dados_magia["circulo"],
+                    escola=dados_magia.get("escola", ""),
+                    execucao=dados_magia.get("execucao", ""),
+                    alcance=dados_magia.get("alcance", ""),
+                    alvo=dados_magia.get("alvo", ""),
+                    duracao=dados_magia.get("duracao", ""),
+                    resistencia=dados_magia.get("resistencia", ""),
+                    descricao=dados_magia.get(
+                        "descricao", "") or dados_magia.get("efeito", ""),
+                    aprimoramentos=dados_magia.get("aprimoramentos", []),
+                    efeito=dados_magia.get("efeito", ""),
+                    custo_pm=max(1, dados_magia.get(
+                        "custo", 1) - info["reducao"]),
+                    atributo_chave=info["attr"],
+                    fonte=f"Habilidade: {info['hab_nome']}"
+                )
+                novas_magias.append(nova)
+                nomes_conhecidos.add(nome_magia)
 
-                # CASO A: Magia JÁ existe na ficha -> Aplica Redução de Custo
-                if nome_magia in mapa_magias_existentes:
-                    if reducao_valor > 0:
-                        magia_existente = mapa_magias_existentes[nome_magia]
-                        tag_reducao = f"[{hab.nome}: -{reducao_valor} PM]"
-
-                        # Evita aplicar a redução múltiplas vezes se a tag já estiver lá
-                        if tag_reducao not in magia_existente.descricao:
-                            novo_custo = max(
-                                0, magia_existente.custo_pm - reducao_valor)
-                            magia_existente.custo_pm = novo_custo
-                            magia_existente.descricao += f"\n{tag_reducao}"
-                            logger.info(
-                                f"✨ [{hab.nome}] Magia '{nome_magia}' já conhecida. Aplicando -{reducao_valor} PM.")
-
-                # CASO B: Magia NÃO existe -> Cria e Adiciona
-                else:
-                    custo_base = dados_magia.get("custo_pm", 1)
-                    escola_base = dados_magia.get("escola", "")
-
-                    # --- RESOLUÇÃO DE ALVO ---
-                    # Garante que pegamos o dado correto, seja 'alvo_area' (banco antigo) ou 'alvo'
-                    alvo_correto = dados_magia.get(
-                        "alvo_area") or dados_magia.get("alvo", "")
-
-                    nova = Magia(
-                        nome=dados_magia["nome"],
-                        circulo=dados_magia["circulo"],
-                        escola=escola_base,
-                        tipo=dados_magia.get("tipo", "Universal"),
-                        execucao=dados_magia.get("execucao", ""),
-                        alcance=dados_magia.get("alcance", ""),
-
-                        # Passamos explicitamente para o campo 'alvo' do modelo
-                        alvo=alvo_correto,
-
-                        duracao=dados_magia.get("duracao", ""),
-                        resistencia=dados_magia.get("resistencia", ""),
-                        custo_pm=custo_base,
-                        descricao=f"[{tag_origem}] {dados_magia.get('descricao', '')}",
-                        aprimoramentos=dados_magia.get("aprimoramentos", [])
-                    )
-
-                    novas_magias.append(nova)
-                    # Adiciona ao mapa local para evitar duplicatas se outra habilidade der a mesma magia
-                    mapa_magias_existentes[nome_magia] = nova
-                    logger.info(
-                        f"✨ [{hab.nome}] Adicionando nova magia '{nome_magia}'.")
-
-    # Adiciona todas as novas magias encontradas à lista oficial do personagem
     if novas_magias:
         ficha.combate.magias.extend(novas_magias)
+
+
+def processar_acumulo_habilidades(ficha: Personagem):
+    contagem_nomes = {}
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        ativavel = efeitos.get("habilidade_ativavel")
+        if ativavel and "nome_acumulo" in ativavel:
+            nome_chave = ativavel["nome_acumulo"]
+            contagem_nomes[nome_chave] = contagem_nomes.get(nome_chave, 0) + 1
+
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        ativavel = efeitos.get("habilidade_ativavel")
+        if ativavel and "nome_acumulo" in ativavel:
+            nome_chave = ativavel["nome_acumulo"]
+            if contagem_nomes.get(nome_chave, 0) >= 2:
+                reducao = ativavel.get("reducao_se_acumular", 0)
+                if reducao > 0:
+                    custo_original = ativavel["custo"]
+                    novo_custo = max(0, custo_original - reducao)
+                    ativavel["custo"] = novo_custo
+                    tag_reducao = f" [Custo reduzido por duplicata: {novo_custo} PM]"
+                    if tag_reducao not in hab.descricao:
+                        hab.descricao += tag_reducao
 
 
 def atualizar_ficha(ficha: Personagem) -> Personagem:
     logger.info(f"🔄 INICIANDO ATUALIZAÇÃO: {ficha.cabecalho.nome}")
 
-    # 1. Backup das escolhas para não perder ao limpar (ex: Magia do Qareen escolhida)
     escolhas_preservadas = {}
-
-    # --- DEBUG: Rastrear Backup ---
-    logger.info("📦 [DEBUG] Criando Backup de Escolhas...")
     for h in ficha.habilidades:
         if h.escolhas_aplicadas:
             escolhas_preservadas[h.nome] = h.escolhas_aplicadas
-            if h.nome == "Tatuagem Mística":
-                logger.info(
-                    f"   -> Backup Tatuagem Mística: {h.escolhas_aplicadas}")
-    # ------------------------------
 
-    # 2. Limpeza
+    # 1. Limpeza
     limpar_habilidades_fixas(ficha)
 
-    # 3. Reconstrução Básica
+    # 2. Reconstrução Básica
     ficha.cabecalho.nivel_total = calcular_nivel_personagem(ficha)
     ficha = aplicar_bonus_atributos_raciais(ficha)
 
-    # 4. Habilidades (Restaurando escolhas)
+    # 3. Habilidades (Traz escolhas de volta)
     garantir_habilidades_iniciais(ficha, escolhas_preservadas)
 
-    # --- NOVO: SINCRONIZAÇÃO DE MAGIAS RACIAIS ---
-    # A. Limpa magias raciais antigas do grimório (para evitar duplicatas ou lixo ao trocar)
-    if ficha.combate.magias:
-        len_antes = len(ficha.combate.magias)
-        ficha.combate.magias = [
-            m for m in ficha.combate.magias
-            if "[Racial:" not in m.descricao
-        ]
-        if len(ficha.combate.magias) < len_antes:
-            logger.info(
-                "🧹 [DEBUG] Magias raciais antigas removidas do grimório.")
-
-    # B. Adiciona a magia nova baseada na escolha da habilidade
+    # 4. Sincronizações (Poderes e Magias)
+    sincronizar_poderes_habilidades(ficha)
     sincronizar_magias_habilidades(ficha)
-    # ---------------------------------------------
+    processar_acumulo_habilidades(ficha)
 
-    # 5. Cálculos Finais
+    # 5. Cálculos com Atributos Finais
+    calcular_atributos_finais(ficha)
+
+    # 6. Derivados
     inicializar_pericias(ficha)
     calcular_pv_pm(ficha)
     calcular_defesa_e_deslocamento(ficha)
     calcular_proficiencias_e_sentidos(ficha)
     calcular_reducoes_dano(ficha)
+
+    # 7. NOVOS DERIVADOS: Ataques
+    sincronizar_ataques(ficha)  # <--- ADICIONADO AQUI
 
     logger.info("✅ Ficha atualizada com sucesso.")
     return ficha

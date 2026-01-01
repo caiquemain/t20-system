@@ -23,7 +23,9 @@ from src.dados_magias import DADOS_MAGIAS
 from src.dados_deuses import DADOS_DEUSES
 from src.dados_poderes_concedidos import DADOS_PODERES_CONCEDIDOS
 from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
+from src.dados_poderes_tormenta import DADOS_PODERES_TORMENTA
 from src.models import Magia
+
 # --- CONFIGURAÇÃO ---
 # Prioriza o nome do host 'db' (Docker), fallback para localhost
 MONGO_URL = os.getenv("MONGO_URI", "mongodb://db:27017/tormenta20")
@@ -111,9 +113,10 @@ def listar_habilidades_classe():
     return DADOS_HABILIDADES_CLASSE
 
 
-@app.get("/dados/magias", response_model=Dict[str, Magia]) 
+@app.get("/dados/magias", response_model=Dict[str, Magia])
 def get_magias():
     return DADOS_MAGIAS
+
 
 @app.get("/dados/itens", tags=["Dados Estáticos"])
 def listar_itens():
@@ -140,16 +143,17 @@ def listar_poderes_concedidos():
 @app.get("/poderes", tags=["Dados"])
 def listar_poderes_categorizados():
     """
-    Retorna uma lista unificada de Poderes Gerais e Poderes Concedidos
-    para ser usada nos seletores do Frontend.
+    Retorna uma lista unificada de Poderes Gerais, Poderes Concedidos,
+    Poderes da Tormenta e Habilidades Raciais (para Osteon).
     """
     lista_poderes = []
+    nomes_adicionados = set()  # Para evitar duplicatas
 
     # 1. Processar Habilidades Gerais
     for chave, dados in HABILIDADES_GERAIS.items():
         tipo = dados.get("tipo", "")
-        # Filtra apenas o que é considerado "Poder" de compra ou Origem
-        if "Poder" in tipo or "Origem" in tipo:
+        # Filtra apenas poderes compráveis (exclui Origens e Raciais genéricos daqui)
+        if "Poder" in tipo:
             categoria = "Geral"
             if "Combate" in tipo:
                 categoria = "Combate"
@@ -159,8 +163,6 @@ def listar_poderes_categorizados():
                 categoria = "Magia"
             elif "Tormenta" in tipo:
                 categoria = "Tormenta"
-            elif "Origem" in tipo:
-                categoria = "Origem"
 
             lista_poderes.append({
                 "nome": dados["nome"],
@@ -168,18 +170,71 @@ def listar_poderes_categorizados():
                 "descricao": dados.get("descricao", ""),
                 "requisitos": dados.get("requisitos", [])
             })
+            nomes_adicionados.add(dados["nome"])
 
     # 2. Processar Poderes Concedidos
     for nome, dados in DADOS_PODERES_CONCEDIDOS.items():
-        lista_poderes.append({
-            "nome": dados["nome"],
-            "categoria": "Poder Concedido",
-            "descricao": dados.get("descricao", ""),
-            "requisitos": []
-        })
+        if dados["nome"] not in nomes_adicionados:
+            lista_poderes.append({
+                "nome": dados["nome"],
+                "categoria": "Poder Concedido",
+                "descricao": dados.get("descricao", ""),
+                "requisitos": []
+            })
+            nomes_adicionados.add(dados["nome"])
+
+    # 3. Processar Poderes da Tormenta
+    for nome, dados in DADOS_PODERES_TORMENTA.items():
+        if dados["nome"] not in nomes_adicionados:
+            lista_poderes.append({
+                "nome": dados["nome"],
+                "categoria": "Tormenta",
+                "descricao": dados.get("descricao", ""),
+                "requisitos": dados.get("requisitos", [])
+            })
+            nomes_adicionados.add(dados["nome"])
+
+    # 4. Processar Habilidades Raciais (NOVO - Para Osteon)
+    # Itera sobre cada raça para pegar suas habilidades específicas
+    for raca_nome, raca_dados in DADOS_RACAS.items():
+        if raca_nome == "Osteon":
+            continue  # Osteon não copia dele mesmo
+
+        habilidades_keys = raca_dados.get("habilidades", [])
+        for hab_key in habilidades_keys:
+            # Tenta achar nos dados raciais ou gerais
+            dados = DADOS_HABILIDADES_RACIAIS.get(
+                hab_key) or HABILIDADES_GERAIS.get(hab_key)
+
+            if dados:
+                nome_hab = dados["nome"]
+                # Adiciona prefixo na categoria para aparecer bonito no seletor
+                # Ex: Categoria "Raça: Anão" agrupa todas do anão juntas
+                lista_poderes.append({
+                    "nome": nome_hab,
+                    "categoria": f"Raça: {raca_nome}",
+                    "descricao": dados.get("descricao", ""),
+                    "requisitos": []
+                })
 
     return sorted(lista_poderes, key=lambda x: x["nome"])
 
+
+@app.get("/dados/habilidades-raciais", tags=["Dados Estáticos"])
+def listar_todas_habilidades_raciais():
+    """
+    Retorna lista de habilidades raciais para seleção do Osteon (Memória Póstuma).
+    """
+    lista = []
+    for chave, dados in DADOS_HABILIDADES_RACIAIS.items():
+        # Filtros opcionais: Osteon não pode pegar habilidades que mudam tamanho ou dão atributos.
+        # Mas vamos mandar tudo e deixar o mestre/jogador filtrar visualmente se quiser.
+        lista.append({
+            "nome": dados["nome"],
+            "descricao": dados.get("descricao", ""),
+            "fonte": "Racial"
+        })
+    return sorted(lista, key=lambda x: x["nome"])
 # --- ROTAS DE PERSONAGEM (CRUD) ---
 
 
