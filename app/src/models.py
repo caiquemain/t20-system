@@ -108,6 +108,13 @@ class Descricao(BaseModel):
 # --- STATUS ---
 
 
+class Buff(BaseModel):
+    origem: str = ""      # Ex: "Armadura de Allihanna"
+    atributo: str = ""    # Ex: "defesa"
+    valor: int = 0        # Ex: 2
+    duracao: str = "Cena"  # Ex: "Cena", "Sustentada"
+
+
 class StatusDetalhe(BaseModel):
     atual: int = 0
     maximo: int = 0
@@ -125,10 +132,10 @@ class Status(BaseModel):
     pv: StatusDetalhe = Field(default_factory=StatusDetalhe)
     pm: StatusDetalhe = Field(default_factory=StatusDetalhe)
     defesa: DefesaDetalhe = Field(default_factory=DefesaDetalhe)
-    rd: List[str] = []  # Correto: Lista de strings ("Fogo 10")
+    rd: List[str] = []
     deslocamento: float = 9.0
     detalhes_deslocamento: Optional[DetalhesDeslocamento] = None
-
+    buffs: List[Buff] = []
 # --- PERÍCIAS E COMBATE ---
 
 
@@ -139,6 +146,7 @@ class PericiaInfo(BaseModel):
     outros: int = 0
     total: int = 0
     atributo_override: str = ""
+    bonus_automatico: Optional[int] = 0
 
 
 class Ataque(BaseModel):
@@ -171,6 +179,12 @@ class Magia(BaseModel):
     custo_pm: int = 0
     descricao: str = ""
 
+    # --- CAMPOS ADICIONADOS PARA COMPATIBILIDADE ---
+    atributo_chave: str = ""   # Ex: "Car" para Bardo/Sereia
+    fonte: str = ""            # Ex: "Racial: Sereia"
+    efeito: str = ""           # Texto mecânico curto (comum nos JSONs)
+    # -----------------------------------------------
+
     aprimoramentos: List[Aprimoramento] = []
 
     @model_validator(mode='before')
@@ -202,6 +216,7 @@ class Habilidade(BaseModel):
     fonte: str = ""
     custo_pm: int = 0
     escolhas_aplicadas: Dict[str, Any] = {}
+    efeitos: Dict[str, Any] = {}
 
 
 class Dinheiro(BaseModel):
