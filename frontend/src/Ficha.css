@@ -1738,3 +1738,38 @@
     color: #bdbdbd;
     font-style: italic;
 }
+
+/* Divisor vertical simples */
+.header-divider {
+    color: #444;
+    margin: 0 10px;
+    font-size: 1.2rem;
+    font-weight: lighter;
+}
+
+/* Tags de Info (Tamanho e Deslocamento) */
+.header-info-tag {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #333;
+    min-width: 40px;
+}
+
+.header-info-tag .tag-label {
+    font-size: 0.6rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.header-info-tag .tag-value {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+}

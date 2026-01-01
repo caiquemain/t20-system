@@ -345,21 +345,39 @@ function Ficha() {
             <header className="ficha-header">
                 <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button>
                 <div className="header-inputs">
-                    <input className="input-nome" value={ficha.cabecalho.nome} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, nome: e.target.value } })} />
+                    {/* Linha 1: Nome */}
+                    <input
+                        className="input-nome"
+                        placeholder="Nome do Personagem"
+                        value={ficha.cabecalho.nome}
+                        onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, nome: e.target.value } })}
+                    />
+
+                    {/* Linha 2: Dados Principais */}
                     <div className="header-sub">
+                        {/* Raça */}
                         <select className="select-header" value={ficha.cabecalho.raca} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [] }, true)}>
                             {listaRacas.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
+
                         <span>•</span>
+
+                        {/* Origem */}
                         <select className="select-header" value={origemBloqueada ? "" : ficha.cabecalho.origem} disabled={origemBloqueada} style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : {}} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}>
                             {origemBloqueada ? <option value="">🚫 Sem Origem</option> : listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
+
                         <span>•</span>
+
+                        {/* Deus */}
                         <select className="select-header" value={ficha.cabecalho.deus || ""} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } }, true)} style={{ color: '#ffd700' }}>
                             <option value="">Sem Devoção</option>
                             {deusesDisponiveis.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
+
                         <span>•</span>
+
+                        {/* Classe */}
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
                                 const novasClasses = [...ficha.classes];
@@ -370,8 +388,27 @@ function Ficha() {
                             </select>
                             {ficha.classes[0]?.subclasse && <span className="subclass-badge" title="Caminho / Subclasse">{ficha.classes[0].subclasse}</span>}
                         </div>
-                        <label style={{ marginLeft: 10 }}>Nível:</label>
-                        <input className="input-nivel" type="number" value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
+
+                        {/* Nível */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 10 }}>
+                            <label style={{ fontSize: '0.8rem', color: '#888' }}>NV</label>
+                            <input className="input-nivel" type="number" min={1} max={20} value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
+                        </div>
+
+                        {/* --- NOVO: TAMANHO E DESLOCAMENTO --- */}
+                        <div className="header-divider">|</div>
+
+                        <div className="header-info-tag" title="Tamanho">
+                            <span className="tag-label">TAM</span>
+                            <span className="tag-value" style={{ color: ficha.descricao.tamanho === 'Médio' ? '#fff' : '#ffeb3b' }}>
+                                {ficha.descricao.tamanho || "Médio"}
+                            </span>
+                        </div>
+
+                        <div className="header-info-tag" title="Deslocamento">
+                            <span className="tag-label">DESL</span>
+                            <span className="tag-value">{ficha.status.deslocamento}m</span>
+                        </div>
                     </div>
                 </div>
             </header>
