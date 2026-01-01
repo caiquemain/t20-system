@@ -124,7 +124,11 @@ export interface PericiaInfo {
     atributo_valor: number;
     outros: number;
     total: number;
+    bonus_automatico?: number;
+    atributo_selecionado?: string;
+    atributos_possiveis?: string[];
     atributo_override?: string;
+    fontes_bonus?: string[];
 }
 
 export interface Ataque {

@@ -11,11 +11,9 @@ interface SkillListProps {
 
 export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updateFicha, listaTodasPericias }) => {
 
-    // --- LÓGICA DE DADOS ---
     const classePrincipal = ficha.classes[0]?.nome;
     const dadosClasse = dadosClasses[classePrincipal] || {};
 
-    // 1. Definições de Limites
     const periciasFixas = dadosClasse.pericias_iniciais || dadosClasse.pericias_fixas || [];
     const periciasObrigatoriasSelecao = dadosClasse.pericias_fixas_selecao || [];
     const periciasDaClassePossiveis = dadosClasse.pericias_lista || [];
@@ -24,20 +22,16 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
     const intAttr = ficha.atributos.inteligencia || 0;
     const qtdEscolhasInteligencia = Math.max(0, intAttr);
 
-    // 2. Estado Atual
     const periciasOrigem = ficha.escolhas_origem || [];
     const periciasTreinadas = ficha.pericias || {};
 
-    // Filtra apenas as perícias compradas
     const periciasCompradas = Object.keys(periciasTreinadas).filter(p =>
         periciasTreinadas[p].treino > 0 &&
         !periciasFixas.includes(p) &&
         !periciasOrigem.includes(p)
     );
 
-    // 3. Contagem Inteligente de Gastos
     let gastosDeClasse = 0;
-    let gastosDeInteligencia = 0;
     const compradasParaProcessar = [...periciasCompradas];
 
     for (let i = compradasParaProcessar.length - 1; i >= 0; i--) {
@@ -50,17 +44,36 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         }
     }
 
-    gastosDeInteligencia = compradasParaProcessar.length;
+    const gastosDeInteligencia = compradasParaProcessar.length;
     const slotsClasseRestantes = Math.max(0, qtdEscolhasClasse - gastosDeClasse);
     const slotsInteligenciaRestantes = Math.max(0, qtdEscolhasInteligencia - gastosDeInteligencia);
 
-    // 4. Verificação da Escolha Obrigatória
     const cumpriuRequisitoObrigatorio = periciasObrigatoriasSelecao.length === 0 ||
         periciasObrigatoriasSelecao.some((p: string) => periciasTreinadas[p]?.treino > 0);
 
     const isTravadoPelaObrigatoria = !cumpriuRequisitoObrigatorio && slotsClasseRestantes === 1;
 
     // --- AÇÕES ---
+    const alternarAtributo = (pericia: string, info: any) => {
+        const possiveis = (info as any).atributos_possiveis || [];
+        if (possiveis.length <= 1) return;
+
+        const atual = (info as any).atributo_selecionado || possiveis[0];
+        const idxAtual = possiveis.indexOf(atual);
+        const proximoIdx = (idxAtual + 1) % possiveis.length;
+        const novoAttr = possiveis[proximoIdx];
+
+        updateFicha({
+            pericias: {
+                ...periciasTreinadas,
+                [pericia]: {
+                    ...periciasTreinadas[pericia],
+                    atributo_selecionado: novoAttr
+                }
+            }
+        });
+    };
+
     const togglePericia = (pericia: string) => {
         if (periciasFixas.includes(pericia) || periciasOrigem.includes(pericia)) return;
 
@@ -73,9 +86,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
             const ehDaClasse = periciasDaClassePossiveis.includes(pericia) || pericia.startsWith("Ofício");
             const ehObrigatoria = periciasObrigatoriasSelecao.includes(pericia);
 
-            if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) {
-                return;
-            }
+            if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) return;
 
             let podeComprar = false;
             if (ehDaClasse) {
@@ -100,9 +111,12 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
     const renderSkillRow = (nomeExibicao: string, chavePericia: string, index: number) => {
         const info = periciasTreinadas[chavePericia] || { treino: 0, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 };
-
-        // [NOVO] Recupera o bônus automático enviado pelo Backend
         const bonusAuto = (info as any).bonus_automatico || 0;
+        const fontesBonus = (info as any).fontes_bonus || [];
+
+        const atributosPossiveis = (info as any).atributos_possiveis || [];
+        const atributoAtual = (info as any).atributo_selecionado || DADOS_PERICIAS_FRONTEND[chavePericia.startsWith("Ofício") ? "Ofício" : chavePericia]?.atributo || "???";
+        const podeTrocarAtributo = atributosPossiveis.length > 1;
 
         const chaveBase = chavePericia.startsWith("Ofício") ? "Ofício" : chavePericia;
         const meta = DADOS_PERICIAS_FRONTEND[chaveBase] || { atributo: "???", treino_apenas: false, penalidade_armadura: false };
@@ -118,10 +132,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         const temSlotInt = slotsInteligenciaRestantes > 0;
 
         let podeHabilitar = ehDaClasse ? (temSlotClasse || temSlotInt) : temSlotInt;
-
-        if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) {
-            podeHabilitar = false;
-        }
+        if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) podeHabilitar = false;
 
         const isInteractable = (!isFixa && !isOrigem) && (isTreinada || podeHabilitar);
         const isDisabled = !isInteractable;
@@ -132,9 +143,8 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         const attrVal = info.atributo_valor;
         const treinoVal = isTreinada ? (nivel >= 15 ? 6 : (nivel >= 7 ? 4 : 2)) : 0;
 
-        // [NOVO] Soma Visual para a coluna "Outros"
+        // SOMA VISUAL DO CAMPO "OUTROS"
         const outrosExibicao = info.outros + bonusAuto;
-
         const totalVal = info.total;
 
         let rowBg = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
@@ -162,25 +172,34 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                     </div>
                 </div>
 
-                {/* COLUNA TOTAL */}
                 <div className="col-total tooltip-container">
                     <div className="total-box">{totalVal >= 0 ? `+${totalVal}` : totalVal}</div>
 
-                    {/* TOOLTIP DETALHADO */}
+                    {/* TOOLTIP MELHORADO */}
                     <div className="pericia-tooltip">
                         <div className="tooltip-row"><span>1/2 do Nível</span><span>+{metadeNivel}</span></div>
-                        <div className="tooltip-row"><span>Atributo ({meta.atributo})</span><span>{attrVal >= 0 ? `+${attrVal}` : attrVal}</span></div>
+                        <div className="tooltip-row">
+                            <span>Atributo ({atributoAtual.toUpperCase()})</span>
+                            <span>{attrVal >= 0 ? `+${attrVal}` : attrVal}</span>
+                        </div>
                         <div className="tooltip-row"><span>Treino</span><span>+{treinoVal}</span></div>
 
-                        {/* Mostra separado se tiver bônus auto */}
-                        {bonusAuto !== 0 ? (
-                            <>
-                                <div className="tooltip-row"><span>Outros (Fixos)</span><span>{info.outros >= 0 ? `+${info.outros}` : info.outros}</span></div>
-                                <div className="tooltip-row" style={{ color: '#4fc3f7' }}><span>Habilidades/Itens</span><span>{bonusAuto >= 0 ? `+${bonusAuto}` : bonusAuto}</span></div>
-                            </>
-                        ) : (
-                            <div className="tooltip-row"><span>Outros</span><span>{info.outros >= 0 ? `+${info.outros}` : info.outros}</span></div>
-                        )}
+                        {/* SEÇÃO DE OUTROS DETALHADA */}
+                        <div style={{ marginTop: 5, borderTop: '1px dashed #444', paddingTop: 3 }}>
+                            <div className="tooltip-row" style={{ color: outrosExibicao !== 0 ? '#4fc3f7' : '#ccc', fontWeight: 'bold' }}>
+                                <span>Outros (Total)</span>
+                                <span>{outrosExibicao >= 0 ? `+${outrosExibicao}` : outrosExibicao}</span>
+                            </div>
+                            {/* Detalhes */}
+                            {info.outros !== 0 && (
+                                <div className="tooltip-row source-row"><span>↳ Base (Manual)</span><span>{info.outros >= 0 ? `+${info.outros}` : info.outros}</span></div>
+                            )}
+                            {fontesBonus.map((fonte: string, idx: number) => (
+                                <div key={idx} className="tooltip-row source-row">
+                                    <span>↳ {fonte}</span>
+                                </div>
+                            ))}
+                        </div>
 
                         <div className="tooltip-total"><span>Total</span><span>{totalVal >= 0 ? `+${totalVal}` : totalVal}</span></div>
                     </div>
@@ -188,13 +207,31 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
                 <div className="col-equal">=</div>
 
-                {/* FÓRMULA (ÚLTIMA COLUNA) */}
                 <div className="col-formula">
                     <span className="val-item">+{metadeNivel}</span><span className="plus">+</span>
-                    <div className="val-item attr-item"><span>{attrVal >= 0 ? `+${attrVal}` : attrVal}</span></div><span className="plus">+</span>
+
+                    {/* BOTÃO LIMPO (SÓ A SIGLA) */}
+                    <div className="val-item attr-item"
+                        onClick={(e) => {
+                            if (podeTrocarAtributo) {
+                                e.stopPropagation();
+                                alternarAtributo(chavePericia, info);
+                            }
+                        }}
+                        style={{
+                            cursor: podeTrocarAtributo ? 'pointer' : 'default',
+                            color: podeTrocarAtributo ? '#64b5f6' : '#999',
+                            borderBottom: podeTrocarAtributo ? '1px dotted #64b5f6' : 'none',
+                            fontWeight: podeTrocarAtributo ? 'bold' : 'normal'
+                        }}
+                        title={podeTrocarAtributo ? `Clique para alternar (Opções: ${atributosPossiveis.join(', ').toUpperCase()})` : ''}
+                    >
+                        <span>{atributoAtual.toUpperCase()}</span>
+                    </div>
+
+                    <span className="plus">+</span>
                     <span className="val-item">+{treinoVal}</span><span className="plus">+</span>
 
-                    {/* Exibe o TOTAL de Outros (Manual + Auto) com cor diferente se tiver bônus */}
                     <span className="val-item" style={{ color: bonusAuto !== 0 ? '#4fc3f7' : '#999', fontWeight: bonusAuto !== 0 ? 'bold' : 'normal' }}>
                         {outrosExibicao >= 0 ? `+${outrosExibicao}` : outrosExibicao}
                     </span>
@@ -246,10 +283,21 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                 </div>
             )}
 
+            {/* CABEÇALHO ALINHADO */}
             <div className="skill-header-grid">
-                <div className="h-check"></div><div className="h-name">PERÍCIA</div><div className="h-total">TOTAL</div><div className="h-equal"></div>
-                <div className="h-formula">
-                    <span style={{ width: 25 }}>1/2</span><span style={{ width: 10 }}></span><span style={{ width: 25 }}>ATR</span><span style={{ width: 10 }}></span><span style={{ width: 25 }}>TR</span><span style={{ width: 10 }}></span><span style={{ width: 25 }}>OUT</span>
+                <div className="h-check"></div>
+                <div className="h-name">PERÍCIA</div>
+                <div className="h-total">TOTAL</div>
+                <div className="h-equal"></div>
+                {/* Mesma estrutura de flexbox e larguras da linha (col-formula) */}
+                <div className="h-formula" style={{ display: 'flex', justifyContent: 'space-around', width: '100%' }}>
+                    <span style={{ width: 25, textAlign: 'center' }}>1/2</span>
+                    <span style={{ width: 8 }}></span>
+                    <span style={{ width: 25, textAlign: 'center' }}>ATR</span>
+                    <span style={{ width: 8 }}></span>
+                    <span style={{ width: 25, textAlign: 'center' }}>TR</span>
+                    <span style={{ width: 8 }}></span>
+                    <span style={{ width: 25, textAlign: 'center' }}>OUT</span>
                 </div>
             </div>
 
@@ -264,6 +312,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
             <style>{`
                 .skill-row-grid, .skill-header-grid { display: grid; grid-template-columns: 22px 1fr 35px 10px 135px; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
                 .skill-header-grid { font-size: 0.6rem; color: #888; font-weight: bold; border-bottom: 1px solid #444; padding: 5px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+                
                 .col-check { display: flex; justify-content: center; cursor: pointer; }
                 .checkbox-box { width: 12px; height: 12px; border: 1px solid #555; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #000; background: #222; }
                 .checkbox-box.checked { background: #ffd700; border-color: #ffd700; }
@@ -284,17 +333,17 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                 .col-total { display: flex; justify-content: center; position: relative; cursor: help; }
                 .total-box { width: 30px; height: 22px; border: 1px solid #444; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; color: #fff; border-radius: 3px; }
 
-                .pericia-tooltip { visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(0px); width: 180px; background-color: #1a1a1a; border: 1px solid #ffd700; border-radius: 6px; padding: 10px; z-index: 9999; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.9); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+                .pericia-tooltip { visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(0px); width: 220px; background-color: #1a1a1a; border: 1px solid #ffd700; border-radius: 6px; padding: 10px; z-index: 9999; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.9); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
                 .col-total:hover .pericia-tooltip { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-10px); }
                 .tooltip-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: #ccc; margin-bottom: 3px; border-bottom: 1px dashed #333; }
+                .tooltip-row.source-row { font-size: 0.7rem; color: #888; border-bottom: none; margin-bottom: 1px; padding-left: 5px; }
                 .tooltip-total { border-top: 1px solid #fca311; margin-top: 5px; padding-top: 2px; font-weight: bold; color: #fca311; display: flex; justify-content: space-between; }
 
                 .col-equal { text-align: center; color: #555; font-weight: bold; font-size: 0.8rem; }
                 .col-formula { display: flex; justify-content: space-around; color: #666; font-family: monospace; font-size: 0.75rem; }
                 .val-item { width: 25px; text-align: center; color: #999; display: inline-block; }
                 .plus { width: 8px; text-align: center; color: #444; display: inline-block; }
-                .val-item.attr-item { display: flex; flex-direction: column; align-items: center; line-height: 0.8; }
-                .attr-item span { color: #eee; }
+                .val-item.attr-item { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
                 .add-skill-row { display: flex; gap: 5px; }
                 .add-skill-row input { flex: 1; padding: 4px 8px; background: #111; border: 1px solid #444; color: #fff; border-radius: 3px; font-size: 0.8rem; }
