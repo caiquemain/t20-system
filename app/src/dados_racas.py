@@ -117,10 +117,15 @@ DADOS_RACAS = {
         "habilidades": ["Mau_Cheiro_Trog", "Mordida_Trog", "Reptiliano_Trog", "Sangue_Frio_Trog"]
     },
 
-    # --- ATLAS E AMEAÇAS (Mantidos como Placeholder/Exemplo) ---
+    # -- Heróis de Arton) ---
     "Eiradaan": {"attrs": {"sab": 2, "car": 1, "for": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
-    "Galokk": {"attrs": {"for": 1, "con": 1, "car": -1}, "escolhas": 1, "tamanho": TamanhoEnum.GRANDE, "deslocamento": 9},
-    #-- Heróis de Arton
+    "Galokk": {
+        "attrs": {"for": 1, "con": 1, "car": -1},
+        "escolhas": 1,
+        "tamanho": TamanhoEnum.GRANDE,
+        "deslocamento": 9,
+        "habilidades": ["Forca_Titas_Galokk", "Meio_Gigante_Galokk", "Infancia_Pequenos_Galokk"]
+    },
     "Meio-Elfo": {
         # Int +1, +1 em dois outros (exceto Con)
         "attrs": {"int": 1},
@@ -128,8 +133,8 @@ DADOS_RACAS = {
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": [
-            "Ambicao_Herdada_MeioElfo", 
-            "Entre_Dois_Mundos_MeioElfo", 
+            "Ambicao_Herdada_MeioElfo",
+            "Entre_Dois_Mundos_MeioElfo",
             "Sangue_Elfico_MeioElfo"
         ]
     },

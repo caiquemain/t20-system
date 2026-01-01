@@ -558,7 +558,6 @@ DADOS_HABILIDADES_RACIAIS = {
         "fonte": "T20 JdA",
         "efeitos": {"vulnerabilidade_dado": {"tipo": "frio", "valor": 1}}
     },
-    # app/src/dados_habilidades_raciais.py
 
     # --- MEIO-ELFO (Versão Herós de Arton) ---
     "Ambicao_Herdada_MeioElfo": {
@@ -592,5 +591,38 @@ DADOS_HABILIDADES_RACIAIS = {
             "pm_por_nivel_impar": 1,
             "tags_raciais": ["Elfo", "Humano"]
         }
+    },
+    # --- GALOKK ---
+    "Forca_Titas_Galokk": {
+        "nome": "Força dos Titãs",
+        "tipo": "Racial",
+        "descricao": "Quando acerta um ataque corpo a corpo ou de arremesso, você pode gastar 1 PM. Se fizer isso, sempre que rolar o resultado máximo em um dado de dano da arma, role um dado extra, até um limite de dados extras igual à sua Força.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "dano_explosao": {
+                "custo_pm": 1,
+                "limite_atributo": "for",
+                "tipo_ataque": ["corpo_a_corpo", "arremesso"],
+                "gatilho": "maximo_dado"
+            }
+        }
+    },
+    "Meio_Gigante_Galokk": {
+        "nome": "Meio-Gigante",
+        "tipo": "Racial",
+        "descricao": "Você é uma criatura do tipo humanoide (gigante). Seu tamanho é Grande e você pode usar Força como atributo-chave de Intimidação.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "tamanho": "Grande",
+            "pericia_atributo_opcao": {"Intimidação": "for"},
+            "tags_raciais": ["Humanoide", "Gigante"]
+        }
+    },
+    "Infancia_Pequenos_Galokk": {
+        "nome": "Infância entre os Pequenos",
+        "tipo": "Racial",
+        "descricao": "Você se torna treinado em uma perícia a sua escolha.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {"pericia_escolha": 1}
     }
 }
