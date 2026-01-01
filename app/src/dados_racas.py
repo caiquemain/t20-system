@@ -120,7 +120,19 @@ DADOS_RACAS = {
     # --- ATLAS E AMEAÇAS (Mantidos como Placeholder/Exemplo) ---
     "Eiradaan": {"attrs": {"sab": 2, "car": 1, "for": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
     "Galokk": {"attrs": {"for": 1, "con": 1, "car": -1}, "escolhas": 1, "tamanho": TamanhoEnum.GRANDE, "deslocamento": 9},
-    "Meio-Elfo": {"attrs": {"int": 1}, "escolhas": 2, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
+    #-- Heróis de Arton
+    "Meio-Elfo": {
+        # Int +1, +1 em dois outros (exceto Con)
+        "attrs": {"int": 1},
+        "escolhas": 2,
+        "tamanho": TamanhoEnum.MEDIO,
+        "deslocamento": 9,
+        "habilidades": [
+            "Ambicao_Herdada_MeioElfo", 
+            "Entre_Dois_Mundos_MeioElfo", 
+            "Sangue_Elfico_MeioElfo"
+        ]
+    },
     "Sátiro": {"attrs": {"car": 2, "des": 1, "sab": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
     "Meio-Orc": {"attrs": {"for": 2}, "escolhas": 1, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
     "Orc": {"attrs": {"for": 2, "con": 1, "int": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},

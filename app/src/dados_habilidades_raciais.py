@@ -1,6 +1,6 @@
 # src/dados_habilidades_raciais.py
 # Habilidades de Raça - Tormenta 20 (Jogo do Ano)
-# IDs devem corresponder aos listados em src/dados_racas.py
+# Estrutura atualizada com 'modificadores' matemáticos para Buffs
 
 DADOS_HABILIDADES_RACIAIS = {
     # --- HUMANO ---
@@ -61,7 +61,22 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você pode gastar uma ação de movimento e 1 PM para transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da cena.",
         "fonte": "T20 JdA",
-        "efeitos": {"habilidade_ativavel": {"custo": 1, "acao": "Movimento", "efeito": "Defesa +2"}}
+        "efeitos": {
+            "habilidade_ativavel": {
+                "custo": 1,
+                "acao": "Movimento",
+                "alcance": "Pessoal",
+                "duracao": "Cena",
+                "efeito": "Defesa +2",
+                "modificadores": [
+                    {
+                        "atributo": "defesa",
+                        "valor": 2,
+                        "tipo_bonus": "melhoria"
+                    }
+                ]
+            }
+        }
     },
     "Empatia_Selvagem_Dahllan": {
         "nome": "Empatia Selvagem",
@@ -163,7 +178,10 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você tem olfato apurado. Contra inimigos em alcance curto que não possa perceber, você não fica desprevenido e camuflagem total lhe causa apenas 20% de chance de falha.",
         "fonte": "T20 JdA",
-        "efeitos": {"visao_faro_desprevenido": True}
+        "efeitos": {
+            "visao_faro_desprevenido": True,
+            "info_extra": {"alcance": "Curto", "detalhe": "Ignora camuflagem/desprevenido"}
+        }
     },
     "Medo_Altura_Minotauro": {
         "nome": "Medo de Altura",
@@ -194,12 +212,9 @@ DADOS_HABILIDADES_RACIAIS = {
         "descricao": "Você pode lançar uma magia de 1º círculo a sua escolha. Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
         "fonte": "T20 JdA",
         "efeitos": {
-            # Chaves padronizadas para o motor de regras:
-            # Configura o Modal
             "magia_adicional_escolha": {"circulo": 1, "atributo": "Car"},
-            # Valor da redução de PM
             "reducao_custo_se_conhecida": 1,
-            "tag_adicional": "Racial: Qareen"                             # Tag para descrição
+            "tag_adicional": "Racial: Qareen"
         }
     },
 
@@ -256,7 +271,14 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Quando faz um teste de resistência, você pode gastar 1 PM para rolar este teste novamente.",
         "fonte": "T20 JdA",
-        "efeitos": {"reroll_resistencia": True}
+        "efeitos": {
+            "habilidade_ativavel": {
+                "custo": 1,
+                "acao": "Reação",
+                "efeito": "Rerolar teste de resistência",
+                "duracao": "Instantâneo"
+            }
+        }
     },
 
     # --- KLIREN ---
@@ -272,7 +294,26 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Quando faz um teste de perícia, você pode gastar 2 PM para somar sua Inteligência no teste. Você não pode usar esta habilidade em testes de ataque. Caso receba esta habilidade novamente, seu custo é reduzido em –1 PM.",
         "fonte": "T20 JdA",
-        "efeitos": {}
+        "efeitos": {
+            "habilidade_ativavel": {
+                "custo": 2,
+                "acao": "Livre",
+                "gatilho": "Teste de Perícia",
+                "efeito": "Soma Inteligência no teste atual.",
+                "duracao": "Instantâneo",
+                "nome_acumulo": "Engenhosidade",
+                "reducao_se_acumular": 1,
+                # Nota: Modificadores de perícia 'ao vivo' ainda não são somados automaticamente pelo regras.py
+                # mas deixamos estruturado para futuro
+                "modificadores": [
+                    {
+                        "atributo": "teste_pericia",
+                        "valor_dinamico": "inteligencia",
+                        "tipo_bonus": "engenhosidade"
+                    }
+                ]
+            }
+        }
     },
     "Ossos_Frageis_Kliren": {
         "nome": "Ossos Frágeis",
@@ -302,14 +343,39 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você recebe resistência a veneno +5 e pode gastar uma ação de movimento e 1 PM para envenenar uma arma que esteja usando. A arma causa perda de 1d12 pontos de vida.",
         "fonte": "T20 JdA",
-        "efeitos": {"resistencia_veneno": 5, "envenenar_arma": True}
+        "efeitos": {
+            "resistencia_veneno": 5,
+            "habilidade_ativavel": {
+                "custo": 1,
+                "acao": "Movimento",
+                "alcance": "Pessoal (Arma)",
+                "efeito": "Arma causa perda de 1d12 PV ao acertar.",
+                "duracao": "Cena",
+                "modificadores": [
+                    {
+                        "atributo": "dano_arma_extra",
+                        "valor_dado": "1d12",
+                        "tipo": "veneno"
+                    }
+                ]
+            }
+        }
     },
     "Olhar_Atordoante_Medusa": {
         "nome": "Olhar Atordoante",
         "tipo": "Racial",
         "descricao": "Você pode gastar uma ação de movimento e 1 PM para forçar uma criatura em alcance curto a fazer um teste de Fortitude (CD Car). Se a criatura falhar, fica atordoada por uma rodada (apenas uma vez por cena).",
         "fonte": "T20 JdA",
-        "efeitos": {}
+        "efeitos": {
+            "habilidade_ativavel": {
+                "custo": 1,
+                "acao": "Movimento",
+                "alcance": "Curto",
+                "resistencia": "Fortitude (CD Car)",
+                "efeito": "Deixa o alvo Atordoado por 1 rodada.",
+                "limite": "1 vez por cena"
+            }
+        }
     },
 
     # --- OSTEON ---
@@ -360,18 +426,53 @@ DADOS_HABILIDADES_RACIAIS = {
     "Transf_Anfibia_Sereia": {
         "nome": "Transformação Anfíbia",
         "tipo": "Racial",
-        "descricao": "Você pode respirar debaixo d’água e possui uma cauda que fornece deslocamento de natação 12m. Quando fora d’água, sua cauda desaparece e dá lugar a pernas (deslocamento 9m). Se permanecer mais de um dia sem contato com água, você não recupera PM com descanso até voltar para a água.",
+        "descricao": "Você pode respirar debaixo d’água e possui uma cauda que fornece deslocamento de natação 12m. Quando fora d’água, sua cauda desaparece e dá lugar a pernas (deslocamento 9m).",
         "fonte": "T20 JdA",
-        "efeitos": {"respirar_agua": True, "deslocamento": 9, "deslocamento_natacao": 12}
-    },
+        "efeitos": {
+            # Passivos
+            "respirar_agua": True,
+            "deslocamento": 9,
+            "deslocamento_natacao": 12,
 
+            # Ativável
+            "habilidade_ativavel": {
+                "custo": 0,
+                "acao": "Livre",
+                "efeito": "Alterna entre Pernas (9m) e Cauda (12m Natação).",
+                "info_extra": "Altera seu tipo de deslocamento principal."
+            }
+        }
+    },
     # --- SÍLFIDE ---
     "Asas_Borboleta_Silfide": {
         "nome": "Asas de Borboleta",
         "tipo": "Racial",
         "descricao": "Seu tamanho é Minúsculo. Você pode pairar a 1,5m do chão com deslocamento 9m. Isso permite que você ignore terreno difícil e o torna imune a dano por queda. Você pode gastar 1 PM por rodada para voar com deslocamento de 12m.",
         "fonte": "T20 JdA",
-        "efeitos": {"deslocamento": 9, "deslocamento_voo_base": 1.5, "imune_queda": True}
+        "efeitos": {
+            # --- PARTE PASSIVA ---
+            "tamanho": "Minúsculo",
+            "deslocamento": 9,
+            "deslocamento_voo_base": 1.5,
+            "imune_queda": True,
+            "ignora_terreno_dificil": True,
+
+            # --- PARTE ATIVÁVEL (BUFF) ---
+            # Voo aumenta o deslocamento para 12m. Se o base é 9m, o buff é +3m.
+            "habilidade_ativavel": {
+                "custo": 1,
+                "acao": "Livre",
+                "duracao": "1 Rodada (Sustentada)",
+                "efeito": "Voo com deslocamento 12m.",
+                "modificadores": [
+                    {
+                        "atributo": "deslocamento",
+                        "valor": 3,
+                        "tipo_bonus": "voo"
+                    }
+                ]
+            }
+        }
     },
     "Esp_Natureza_Silfide": {
         "nome": "Espírito da Natureza",
@@ -425,7 +526,16 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você pode gastar uma ação padrão e 2 PM para expelir um gás fétido. Todas as criaturas (exceto trogs) em alcance curto devem passar em um teste de Fortitude contra veneno (CD Con) ou ficarão enjoadas durante 1d6 rodadas. Uma criatura que passe no teste de resistência fica imune a esta habilidade por um dia.",
         "fonte": "T20 JdA",
-        "efeitos": {}
+        "efeitos": {
+            "habilidade_ativavel": {
+                "custo": 2,
+                "acao": "Padrão",
+                "alcance": "Curto",
+                "resistencia": "Fortitude (CD Con)",
+                "efeito": "Deixa criaturas em alcance curto Enjoadas (1d6 rodadas).",
+                "imunidade_pos_teste": True
+            }
+        }
     },
     "Mordida_Trog": {
         "nome": "Mordida",
@@ -447,5 +557,40 @@ DADOS_HABILIDADES_RACIAIS = {
         "descricao": "Você sofre 1 ponto de dano adicional por dado de dano de frio.",
         "fonte": "T20 JdA",
         "efeitos": {"vulnerabilidade_dado": {"tipo": "frio", "valor": 1}}
+    },
+    # app/src/dados_habilidades_raciais.py
+
+    # --- MEIO-ELFO (Versão Herós de Arton) ---
+    "Ambicao_Herdada_MeioElfo": {
+        "nome": "Ambição Herdada",
+        "tipo": "Racial",
+        "descricao": "Você recebe um poder geral ou poder único de origem a sua escolha.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            # Abre o seletor de Poderes Gerais (o frontend já trata isso)
+            "poder_geral_ou_origem": 1
+        }
+    },
+    "Entre_Dois_Mundos_MeioElfo": {
+        "nome": "Entre Dois Mundos",
+        "tipo": "Racial",
+        "descricao": "Você recebe +1 em perícias baseadas em Carisma.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            # Nova mecânica: Aplica em qualquer perícia cujo atributo chave seja 'car'
+            "bonus_pericia_atributo": {"car": 1}
+        }
+    },
+    "Sangue_Elfico_MeioElfo": {
+        "nome": "Sangue Élfico",
+        "tipo": "Racial",
+        "descricao": "Você recebe visão na penumbra e +1 ponto de mana a cada nível ímpar (incluindo o 1º). Além disso, é considerado um elfo para efeitos relacionados a raça.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "visao_penumbra": True,
+            # Nova chave mecânica que vamos ensinar o regras.py a ler
+            "pm_por_nivel_impar": 1,
+            "tags_raciais": ["Elfo", "Humano"]
+        }
     }
 }
