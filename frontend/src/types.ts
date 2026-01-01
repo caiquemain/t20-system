@@ -113,8 +113,7 @@ export interface Status {
     rd: string[]; // Lista de strings ("Fogo 10")
     deslocamento: number;
     detalhes_deslocamento?: DetalhesDeslocamento;
-
-    // --- 2. CAMPO BUFFS NO STATUS ---
+    efeitos_ativos?: string[];
     buffs?: Buff[];
 }
 
