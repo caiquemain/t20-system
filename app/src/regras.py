@@ -712,37 +712,80 @@ def calcular_reducoes_dano(ficha: Personagem):
 
 # --- NOVA FUNÇÃO DE ATAQUES (PARA MINOTAURO E TROG) ---
 def sincronizar_ataques(ficha: Personagem):
-    logger.info("--- [5.3] Sincronizando Ataques (Armas Naturais) ---")
+    """
+    Sincroniza ataques baseados em equipamentos e armas naturais (habilidades).
+    Agora suporta definições de arma natural em formato de Dicionário ou String.
+    """
+    logger.info(
+        "--- [5.3] Sincronizando Ataques (Armas Naturais & Equipamentos) ---")
 
-    # 1. Filtra ataques manuais do usuário (que não sejam de "Fonte: Racial")
-    # Isso evita que a gente duplique o ataque "Chifres" toda vez que salvar
-    ataques_mantidos = [
-        a for a in ficha.combate.ataques if "Racial" not in a.tipo]
+    novos_ataques = []
 
+    # 1. Armas Naturais (Vindas de Habilidades)
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
 
-        # Procura pela chave "arma_natural" no JSON da habilidade
-        # Ex: "arma_natural": "Chifres 1d6"
         if "arma_natural" in efeitos:
-            texto_arma = efeitos["arma_natural"]
-            partes = texto_arma.split(" ", 1)  # Separa "Chifres" de "1d6"
+            raw_arma = efeitos["arma_natural"]
 
-            nome_arma = partes[0]
-            dano_arma = partes[1] if len(partes) > 1 else "1d4"
+            # --- SUPORTE HÍBRIDO ---
+            if isinstance(raw_arma, dict):
+                # FORMATO NOVO (Sátiro, Galokk, etc)
+                # Ex: {"nome": "Marrada", "dano": "1d6", "critico": "x2", "tipo": "Impacto"}
+                nome_arma = raw_arma.get("nome", "Arma Natural")
+                dano_arma = raw_arma.get("dano", "1d4")
+                critico = raw_arma.get("critico", "x2")
+                tipo = raw_arma.get("tipo", "Impacto")
+                alcance = raw_arma.get("alcance", "Curto")
 
-            novo_ataque = Ataque(
+            elif isinstance(raw_arma, str):
+                # FORMATO LEGADO (Minotauro antigo, Trog antigo)
+                # Ex: "Chifres 1d6"
+                partes = raw_arma.split(" ", 1)
+                nome_arma = partes[0]
+                dano_arma = partes[1] if len(partes) > 1 else "1d4"
+                critico = "x2"
+                tipo = "Impacto"  # Chute seguro
+                alcance = "Curto"
+            else:
+                continue  # Formato desconhecido, ignora
+
+            # Cria o ataque na ficha
+            ataque = Ataque(
                 nome=nome_arma,
-                bonus_ataque="+0",  # Será calculado no frontend com Força/BBA
+                teste="Luta",  # Armas naturais geralmente são Luta
                 dano=dano_arma,
-                critico="x2",
-                tipo="Racial",  # Tag importante para filtro
-                alcance="Curto"
+                critico=critico,
+                tipo=tipo,
+                alcance=alcance,
+                especial=""
             )
-            ataques_mantidos.append(novo_ataque)
-            logger.info(f"⚔️ Arma Natural Adicionada: {nome_arma}")
+            novos_ataques.append(ataque)
 
-    ficha.combate.ataques = ataques_mantidos
+    # 2. Mantém os ataques de equipamentos (que já estavam na lista ou lógica separada)
+    # (Se sua ficha já tiver ataques de itens, você pode querer preservá-los aqui.
+    #  Por enquanto, vamos assumir que 'combate.ataques' é reconstruído ou mantido)
+
+    # Se você quiser PRESERVAR ataques manuais/itens, descomente abaixo:
+    # for atq_existente in ficha.combate.ataques:
+    #     if atq_existente.nome not in [a.nome for a in novos_ataques]:
+    #         novos_ataques.append(atq_existente)
+
+    # Atualiza a lista
+    # Nota: Isso substitui a lista. Se você tem armas de inventário,
+    # precisaria de uma lógica para ler o inventário e adicionar aqui também.
+    # Por segurança, vamos ADICIONAR aos existentes se não existirem duplicatas:
+
+    lista_final = list(ficha.combate.ataques)
+    nomes_existentes = [a.nome for a in lista_final]
+
+    for novo in novos_ataques:
+        if novo.nome not in nomes_existentes:
+            lista_final.append(novo)
+
+    ficha.combate.ataques = lista_final
 
 
 def sincronizar_magias_habilidades(ficha: Personagem):
@@ -753,8 +796,8 @@ def sincronizar_magias_habilidades(ficha: Personagem):
         efeitos = hab.efeitos or {}
         escolhas = hab.escolhas_aplicadas or {}
 
+        # --- [BLOCO 1: Lógica Existente] Magia por Escolha (ex: Arcanista) ---
         config_magia = efeitos.get("magia_adicional_escolha")
-
         if config_magia:
             nomes_escolhidos = []
             if "magia_escolhida" in escolhas and isinstance(escolhas["magia_escolhida"], str):
@@ -776,10 +819,11 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                     magias_permitidas[nome_magia] = {
                         "hab_nome": hab.nome,
                         "attr": attr_chave,
-                        "reducao": reducao
+                        "reducao": reducao,
+                        "requisito": None  # Default
                     }
 
-        # Suporte para magias fixas (Ex: Amiga das Plantas - Controlar Plantas)
+        # --- [BLOCO 2: Lógica Existente] Magia Fixa (Objeto) ---
         magia_fixa = efeitos.get("magia_adicional")
         if magia_fixa:
             nome_magia = magia_fixa.get("nome")
@@ -788,9 +832,31 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                 magias_permitidas[nome_magia] = {
                     "hab_nome": hab.nome,
                     "attr": attr_chave,
-                    "reducao": efeitos.get("reducao_custo_magia", {}).get("valor", 0)
+                    "reducao": efeitos.get("reducao_custo_magia", {}).get("valor", 0),
+                    "requisito": None  # Default
                 }
 
+        # --- [BLOCO 3: NOVA LÓGICA] Lista de Magias Conhecidas (Ex: Sátiro, Qareen) ---
+        if "magias_conhecidas" in efeitos:
+            # ["Sono", "Enfeitiçar"...]
+            lista_magias = efeitos["magias_conhecidas"]
+
+            # Lê regras específicas da habilidade
+            # Ex: "Instrumento Musical"
+            req_extra = efeitos.get("requisito_magia")
+            attr_fixo = efeitos.get("atributo_magia_fixo", "")  # Ex: "car"
+            # Redução no Sátiro é para reaprendizado, mas podemos implementar lógica futura aqui
+
+            for nome_magia in lista_magias:
+                if isinstance(nome_magia, str):
+                    magias_permitidas[nome_magia] = {
+                        "hab_nome": hab.nome,
+                        "attr": attr_fixo,
+                        "reducao": 0,
+                        "requisito": req_extra
+                    }
+
+    # Limpa magias de habilidade que não são mais permitidas (ex: trocou de poder)
     ficha.combate.magias = [
         m for m in ficha.combate.magias
         if not m.fonte.startswith("Habilidade:") or m.nome in magias_permitidas
@@ -804,15 +870,25 @@ def sincronizar_magias_habilidades(ficha: Personagem):
             dados_magia = DADOS_MAGIAS.get(nome_magia)
 
             if dados_magia:
+                # [NOVO] Modifica o texto de execução se houver requisito (ex: Sátiro)
+                execucao_texto = dados_magia.get("execucao", "")
+                if info.get("requisito"):
+                    execucao_texto += f" (Req: {info['requisito']})"
+
+                # [NOVO] Adiciona dica de atributo na Resistência se for fixo
+                resistencia_texto = dados_magia.get("resistencia", "")
+                if info.get("attr"):
+                    resistencia_texto += f" (CD {info['attr'].upper()})"
+
                 nova = Magia(
                     nome=dados_magia["nome"],
                     circulo=dados_magia["circulo"],
                     escola=dados_magia.get("escola", ""),
-                    execucao=dados_magia.get("execucao", ""),
+                    execucao=execucao_texto,  # Usamos o texto modificado
                     alcance=dados_magia.get("alcance", ""),
                     alvo=dados_magia.get("alvo", ""),
                     duracao=dados_magia.get("duracao", ""),
-                    resistencia=dados_magia.get("resistencia", ""),
+                    resistencia=resistencia_texto,  # Usamos o texto modificado
                     descricao=dados_magia.get(
                         "descricao", "") or dados_magia.get("efeito", ""),
                     aprimoramentos=dados_magia.get("aprimoramentos", []),
@@ -821,6 +897,19 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                         "custo", 1) - info["reducao"]),
                     atributo_chave=info["attr"],
                     fonte=f"Habilidade: {info['hab_nome']}"
+                )
+                novas_magias.append(nova)
+                nomes_conhecidos.add(nome_magia)
+            else:
+                # Fallback caso a magia não exista no banco de dados (evita crash)
+                nova = Magia(
+                    circulo=1,
+                    nome=nome_magia,
+                    descricao="Magia concedida por habilidade (dados não encontrados).",
+                    custo_pm=1,
+                    fonte=f"Habilidade: {info['hab_nome']}",
+                    execucao=f"(Req: {info['requisito']})" if info.get(
+                        "requisito") else ""
                 )
                 novas_magias.append(nova)
                 nomes_conhecidos.add(nome_magia)

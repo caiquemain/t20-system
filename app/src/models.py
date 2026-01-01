@@ -158,7 +158,8 @@ class Ataque(BaseModel):
     critico: str = "x2"
     tipo: str = "Corte"
     alcance: str = "Curto"
-
+    teste: str = "Luta"
+    especial: Optional[str] = "" 
 
 class Aprimoramento(BaseModel):
     custo: str
