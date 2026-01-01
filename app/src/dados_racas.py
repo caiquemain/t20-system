@@ -118,7 +118,18 @@ DADOS_RACAS = {
     },
 
     # -- Heróis de Arton) ---
-    "Eiradaan": {"attrs": {"sab": 2, "car": 1, "for": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
+    "Eiradaan": {
+        "attrs": {"sab": 2, "car": 1, "for": -1},
+        "escolhas": 0,
+        "tamanho": TamanhoEnum.MEDIO,
+        "deslocamento": 9,
+        "habilidades": [
+            "Essencia_Feerica_Eiradaan",
+            "Magia_Instintiva_Eiradaan",
+            "Sentidos_Misticos_Eiradaan",
+            "Cancao_Melancolia_Eiradaan"
+        ]
+    },
     "Galokk": {
         "attrs": {"for": 1, "con": 1, "car": -1},
         "escolhas": 1,
@@ -127,7 +138,6 @@ DADOS_RACAS = {
         "habilidades": ["Forca_Titas_Galokk", "Meio_Gigante_Galokk", "Infancia_Pequenos_Galokk"]
     },
     "Meio-Elfo": {
-        # Int +1, +1 em dois outros (exceto Con)
         "attrs": {"int": 1},
         "escolhas": 2,
         "tamanho": TamanhoEnum.MEDIO,

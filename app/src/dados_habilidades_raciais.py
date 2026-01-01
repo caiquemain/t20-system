@@ -624,5 +624,49 @@ DADOS_HABILIDADES_RACIAIS = {
         "descricao": "Você se torna treinado em uma perícia a sua escolha.",
         "fonte": "Heróis de Arton",
         "efeitos": {"pericia_escolha": 1}
+    },
+    # --- EIRADAAN ---
+    "Essencia_Feerica_Eiradaan": {
+        "nome": "Essência Feérica",
+        "tipo": "Racial",
+        "descricao": "Você é uma criatura do tipo espírito, recebe visão na penumbra e pode falar com animais livremente.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "tipo_criatura": "Espírito",
+            "visao_penumbra": True,
+            "falar_com_animais": True
+        }
+    },
+    "Magia_Instintiva_Eiradaan": {
+        "nome": "Magia Instintiva",
+        "tipo": "Racial",
+        "descricao": "Você pode usar Sabedoria no lugar de seu atributo-chave de magias arcanas e Misticismo. Além disso, quando lança uma magia, você recebe +1 PM para gastar em seus aprimoramentos (não cumulativo com bolsa de pó).",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            # O sistema do Galokk já lê isso e vai permitir trocar INT/CAR por SAB no Misticismo
+            "pericia_atributo_opcao": {"Misticismo": "sab"},
+
+            # Marcadores para o futuro sistema de Magias
+            "atributo_magia_arcana_opcao": "sab",
+            "pm_aprimoramento_bonus": 1
+        }
+    },
+    "Sentidos_Misticos_Eiradaan": {
+        "nome": "Sentidos Místicos",
+        "tipo": "Racial",
+        "descricao": "Você está sempre sob o efeito básico da magia Visão Mística.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {            
+            "magias_duradouras": ["Visão Mística"] 
+        }
+    },
+    "Cancao_Melancolia_Eiradaan": {
+        "nome": "Canção da Melancolia",
+        "tipo": "Racial",
+        "descricao": "Quando faz um teste de Vontade contra efeitos mentais, você rola dois dados e usa o pior resultado.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "desvantagem_testes": {"resistencia": "Vontade", "tipo": "mental"}
+        }
     }
 }
