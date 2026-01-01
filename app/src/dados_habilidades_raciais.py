@@ -656,8 +656,8 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você está sempre sob o efeito básico da magia Visão Mística.",
         "fonte": "Heróis de Arton",
-        "efeitos": {            
-            "magias_duradouras": ["Visão Mística"] 
+        "efeitos": {
+            "magias_duradouras": ["Visão Mística"]
         }
     },
     "Cancao_Melancolia_Eiradaan": {
@@ -667,6 +667,57 @@ DADOS_HABILIDADES_RACIAIS = {
         "fonte": "Heróis de Arton",
         "efeitos": {
             "desvantagem_testes": {"resistencia": "Vontade", "tipo": "mental"}
+        }
+    },
+    # --- SÁTIRO ---
+    "Festeiro_Feerico_Satiro": {
+        "nome": "Festeiro Feérico",
+        "tipo": "Racial",
+        "descricao": "Você é uma criatura do tipo espírito, recebe visão na penumbra e +2 em Atuação e Fortitude.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "tipo_criatura": "Espírito",
+            "visao_penumbra": True,
+            "bonus_pericia": {"Atuação": 2, "Fortitude": 2}
+        }
+    },
+    "Instrumentista_Magico_Satiro": {
+        "nome": "Instrumentista Mágico",
+        "tipo": "Racial",
+        "descricao": "Se estiver empunhando um instrumento musical, você pode lançar as magias Amedrontar, Enfeitiçar, Hipnotismo e Sono (atributo-chave Carisma). Caso aprenda novamente uma dessas magias, seu custo diminui em –1 PM.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "magias_conhecidas": ["Amedrontar", "Enfeitiçar", "Hipnotismo", "Sono"],
+            "requisito_magia": "Instrumento Musical",
+            "atributo_magia_fixo": "car",  # Sempre usa Carisma para essas
+            "reducao_custo_reaprendizado": 1
+        }
+    },
+    "Marrada_Satiro": {
+        "nome": "Marrada",
+        "tipo": "Racial",
+        "descricao": "Você possui uma arma natural de marrada (dano 1d6, crítico x2, impacto). Uma vez por rodada, quando usa a ação agredir com outra arma, pode gastar 1 PM para fazer um ataque extra com a marrada.",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "arma_natural": {
+                "nome": "Marrada",
+                "dano": "1d6",
+                "critico": "x2",
+                "tipo": "Impacto",
+                "alcance": "Curto"
+            },
+            "ataque_extra": {"custo_pm": 1, "gatilho": "agredir_outra_arma"}
+        }
+    },
+    "Pernas_Caprinas_Satiro": {
+        "nome": "Pernas Caprinas",
+        "tipo": "Racial",
+        "descricao": "Seu deslocamento é 12m e você pode usar Destreza como atributo-chave de Atletismo (em vez de Força).",
+        "fonte": "Heróis de Arton",
+        "efeitos": {
+            "deslocamento": 12,
+            # Usa o sistema flexível que criamos para o Galokk
+            "pericia_atributo_opcao": {"Atletismo": "des"}
         }
     }
 }

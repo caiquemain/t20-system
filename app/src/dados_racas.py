@@ -148,7 +148,18 @@ DADOS_RACAS = {
             "Sangue_Elfico_MeioElfo"
         ]
     },
-    "Sátiro": {"attrs": {"car": 2, "des": 1, "sab": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
+    "Sátiro": {
+        "attrs": {"car": 2, "des": 1, "sab": -1},
+        "escolhas": 0,
+        "tamanho": TamanhoEnum.MEDIO,
+        "deslocamento": 12, 
+        "habilidades": [
+            "Festeiro_Feerico_Satiro",
+            "Instrumentista_Magico_Satiro",
+            "Marrada_Satiro",
+            "Pernas_Caprinas_Satiro"
+        ]
+    },
     "Meio-Orc": {"attrs": {"for": 2}, "escolhas": 1, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
     "Orc": {"attrs": {"for": 2, "con": 1, "int": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
     "Tabrachi": {"attrs": {"con": 2, "for": 1, "car": -1}, "tamanho": TamanhoEnum.MEDIO, "deslocamento": 9},
