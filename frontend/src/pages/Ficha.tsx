@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../Ficha.css';
 import { useFicha } from '../hooks/useFicha';
+// Nota: Se 'Buff' ainda der erro de importação, certifique-se de ter salvo o arquivo types/index.ts
 
 // Componentes Modulares
 import { PowerSelectorModal } from '../components/PowerSelectorModal';
@@ -14,6 +15,7 @@ import { AttributeCard } from '../components/AttributeCard';
 import { SkillList } from '../components/SkillList';
 import { StatusBars } from '../components/StatusBars';
 import { RacialAttributeModal } from '../components/RacialAttributeModal';
+import { AbilityCard } from '../components/AbilityCard';
 
 // Tipos
 import type { Magia } from '../types';
@@ -64,7 +66,7 @@ function Ficha() {
         ficha, loading,
         dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
-        listaDeuses, dadosDeuses,
+        listaDeuses, dadosDeuses, dadosHabilidades,
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
@@ -78,9 +80,13 @@ function Ficha() {
     const [showRacialModal, setShowRacialModal] = useState(false);
 
     // --- ESTADOS DO GRIMÓRIO ---
-    const [showGrimorio, setShowGrimorio] = useState(false);         // Modal de Adicionar Magias
-    const [showFullGrimorio, setShowFullGrimorio] = useState(false); // Modal de Gerenciar (Lista Completa)
-    const [viewSpell, setViewSpell] = useState<Magia | null>(null);  // Modal de Detalhes (Visualização Rápida)
+    const [showGrimorio, setShowGrimorio] = useState(false);
+    const [showFullGrimorio, setShowFullGrimorio] = useState(false);
+    const [viewSpell, setViewSpell] = useState<Magia | null>(null);
+
+    // --- ESTADOS DE DESLOCAMENTO ESPECIAL ---
+    const [isFlying, setIsFlying] = useState(false);
+    const [isAquatic, setIsAquatic] = useState(false);
 
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
@@ -101,11 +107,82 @@ function Ficha() {
         setSelectorModalOpen(true);
     };
 
+    // --- FUNÇÃO DE ATIVAÇÃO DE HABILIDADE (CORRIGIDA) ---
+    const handleAtivarHabilidade = (custo: number, nome: string) => {
+        if (!ficha) return;
+
+        // 1. Busca a habilidade completa
+        const habilidade = ficha.habilidades.find(h => h.nome === nome);
+
+        // CORREÇÃO: Usar 'as any' para evitar erro TS2339 em propriedades dinâmicas do JSON
+        const efeitosRaw = (habilidade?.efeitos as any) || {};
+        const efeitosAtivaveis = efeitosRaw.habilidade_ativavel || {};
+        const modificadores = efeitosAtivaveis.modificadores || [];
+
+        // 2. Acessa buffs. Usar 'as any' no status para evitar erro se a Interface não estiver atualizada
+        const statusAny = ficha.status as any;
+        const buffsAtuais: any[] = statusAny.buffs || [];
+
+        // CORREÇÃO: Tipar o parâmetro 'b' como 'any' para evitar erro TS7006
+        const jaEstaAtivo = buffsAtuais.some((b: any) => b.origem === nome);
+
+        let novosBuffs = [...buffsAtuais];
+        let pmAtual = ficha.status.pm.atual;
+
+        if (jaEstaAtivo) {
+            // DESATIVAR: Remove da lista
+            novosBuffs = novosBuffs.filter((b: any) => b.origem !== nome);
+
+            // Se for voo ou natação (lógica visual), desativa também
+            if (nome === "Asas de Borboleta") setIsFlying(false);
+            if (nome === "Transformação Anfíbia") setIsAquatic(false);
+
+            console.log(`❌ ${nome} desativado.`);
+        } else {
+            // ATIVAR: Cobra PM e adiciona na lista
+            if (pmAtual < custo) {
+                alert("Pontos de Mana insuficientes!");
+                return;
+            }
+            pmAtual -= custo;
+
+            // Se tem modificadores matemáticos (Nova Lógica)
+            if (modificadores.length > 0) {
+                modificadores.forEach((mod: any) => {
+                    novosBuffs.push({
+                        origem: nome,
+                        atributo: mod.atributo,
+                        valor: mod.valor,
+                        duracao: efeitosAtivaveis.duracao || "Cena"
+                    });
+                });
+            }
+            // Lógica Visual Legada (Hardcoded)
+            else if (nome === "Asas de Borboleta") {
+                setIsFlying(true);
+            }
+            else if (nome === "Transformação Anfíbia") {
+                setIsAquatic(true);
+            }
+
+            console.log(`⚡ ${nome} ativado!`);
+        }
+
+        // Salva tudo no backend
+        updateFicha({
+            status: {
+                ...ficha.status,
+                pm: { ...ficha.status.pm, atual: pmAtual },
+                // @ts-ignore: Ignora erro TS2353 caso o tipo Status não tenha 'buffs' definido
+                buffs: novosBuffs
+            }
+        }, true); // true = salvar agora
+    };
+
     // --- LOGS DE DEBUG ---
     console.groupCollapsed("🔍 DEBUG: Ficha Render");
     console.log("Loading:", loading);
     console.log("Ficha:", ficha);
-    console.log("Magias Disponíveis (DB):", dadosMagias ? Object.keys(dadosMagias).length : 0);
     console.groupEnd();
 
     if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
@@ -163,27 +240,20 @@ function Ficha() {
     };
 
     const origemNome = ficha.cabecalho.origem;
-    // --- LÓGICA DE BUSCA DE ORIGEM (CORRIGE BUG DE ACENTO) ---
     const getDadosOrigem = (nome: string) => {
         if (!dadosOrigens) return null;
         if (dadosOrigens[nome]) return dadosOrigens[nome];
-
-        // Busca insensível a acentos (Ex: "Acólito" encontra "Acolito")
         const nomeNormalizado = nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const chaveEncontrada = Object.keys(dadosOrigens).find(k =>
             k.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === nomeNormalizado
         );
-
         return chaveEncontrada ? dadosOrigens[chaveEncontrada] : null;
     };
     const infoOrigem = getDadosOrigem(origemNome);
-
     const origemBloqueada = ficha.habilidades.some((h: any) => h.efeitos?.sem_origem || h.escolhas_aplicadas?.sem_origem);
 
     return (
         <div className="ficha-container">
-            {/* --- MODAIS DE CONFIGURAÇÃO --- */}
-
             <AbilityConfigModal
                 isOpen={showHabilidadesPanel}
                 onClose={() => setShowHabilidadesPanel(false)}
@@ -196,6 +266,7 @@ function Ficha() {
                 nivelAtual={ficha.classes[0]?.nivel || 1}
                 dadosHabilidadesClasse={dadosHabilidadesClasse}
                 listaPoderesGerais={listaPoderes}
+                dadosOrigens={dadosOrigens}
                 dadosDeuses={dadosDeuses}
                 dadosMagias={dadosMagias}
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
@@ -211,7 +282,6 @@ function Ficha() {
                 abrirSeletor={abrirSeletor}
             />
 
-            {/* MODAL 1: ADICIONAR MAGIAS (ESTUDO) */}
             <GrimorioModal
                 isOpen={showGrimorio}
                 onClose={() => setShowGrimorio(false)}
@@ -222,7 +292,6 @@ function Ficha() {
                 pmMaximo={ficha.status.pm.maximo}
             />
 
-            {/* MODAL 2: GERENCIAR GRIMÓRIO (DETALHADO + REMOVER) */}
             <FullGrimorioModal
                 isOpen={showFullGrimorio}
                 onClose={() => setShowFullGrimorio(false)}
@@ -232,15 +301,13 @@ function Ficha() {
                 pmMaximo={ficha.status.pm.maximo}
             />
 
-            {/* MODAL 3: DETALHES RÁPIDOS (CLIQUE NO RESUMO) */}
             <SpellDetailsModal
                 magia={viewSpell}
                 onClose={() => setViewSpell(null)}
-                // CONECTANDO A REMOÇÃO:
                 onRemove={() => {
                     if (viewSpell) {
-                        handleRemoverMagia(viewSpell.nome); // Chama a função que já existe na Ficha
-                        setViewSpell(null); // Fecha o modal
+                        handleRemoverMagia(viewSpell.nome);
+                        setViewSpell(null);
                     }
                 }}
             />
@@ -253,6 +320,7 @@ function Ficha() {
                 listaPoderes={poderesMistos}
                 listaPericias={listaTodasPericias}
                 dadosMagias={dadosMagias}
+                dadosHabilidades={dadosHabilidades}
                 tipoEscolha={selectorConfig.tipo}
                 titulo={selectorConfig.titulo}
                 listaRestrita={selectorConfig.listaRestrita}
@@ -340,7 +408,16 @@ function Ficha() {
                             })}
                         </div>
                     </div>
-                    <StatusBars ficha={ficha} />
+
+                    {/* --- STATUS BARS COM MODO DE VOO E NATAÇÃO --- */}
+                    <StatusBars
+                        ficha={ficha}
+                        onUpdate={(data) => updateFicha(data, true)}
+                        isFlying={isFlying}
+                        isAquatic={isAquatic}
+                        overrideDeslocamento={isFlying ? 12 : (isAquatic ? 12 : undefined)}
+                    />
+
                     <div className="proficiencias-container" style={{ background: '#1e1e1e', padding: '10px', borderRadius: '6px', marginTop: '15px', border: '1px solid #333' }}>
                         <h4 style={{ margin: '0 0 8px 0', color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', borderBottom: '1px solid #333', paddingBottom: '4px' }}>🛠️ Proficiências & Sentidos</h4>
                         {ficha.proficiencias && ficha.proficiencias.length > 0 ? (
@@ -370,11 +447,14 @@ function Ficha() {
                             <button className="btn-toggle-racial" style={{ width: 'auto', padding: '4px 10px', fontSize: '0.8rem', margin: 0 }} onClick={montarHabilidadesParaPanel}>⚙️ Configurar</button>
                         </h3>
                         <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
+                            {/* --- LISTA COM OS NOVOS CARDS --- */}
                             {ficha.habilidades.map((hab, i) => (
-                                <div key={i} className="habilidade-row">
-                                    <strong>{hab.nome}</strong> <span style={{ fontSize: '0.75em', color: '#888', float: 'right' }}>({hab.tipo})</span>
-                                    <p style={{ fontSize: '0.85em', color: '#ccc', margin: '4px 0' }}>{hab.descricao}</p>
-                                </div>
+                                <AbilityCard
+                                    key={`${hab.nome}-${i}`}
+                                    habilidade={hab}
+                                    pmAtual={ficha.status.pm.atual}
+                                    onAtivar={handleAtivarHabilidade}
+                                />
                             ))}
                         </div>
                     </div>
@@ -396,7 +476,6 @@ function Ficha() {
                     </div>
                 </div>
                 <div style={{ padding: '15px' }}>
-                    {/* Exibe o Resumo Compacto na tela principal */}
                     <SpellSummary
                         magias={ficha.combate.magias}
                         onOpenDetalhes={() => setShowFullGrimorio(true)}

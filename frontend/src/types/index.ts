@@ -34,7 +34,6 @@ export interface Descricao {
     anotacoes?: string;
 }
 
-// Index signature para permitir acesso dinâmico (ex: atributos['forca'])
 export interface Atributos {
     [key: string]: number;
     forca: number;
@@ -45,7 +44,6 @@ export interface Atributos {
     carisma: number;
 }
 
-// --- NOVAS INTERFACES DE DETALHES (ADICIONADAS) ---
 export interface DetalhesPV {
     inicial: number;
     nivel: number;
@@ -65,13 +63,11 @@ export interface DetalhesDeslocamento {
     armadura: number;
     outros: number;
 }
-// ----------------------------------------------------
 
 export interface StatusBarra {
     atual: number;
     maximo: number;
     temporario: number;
-    // Campos opcionais para detalhes (ADICIONADOS)
     detalhes_pv?: DetalhesPV;
     detalhes_pm?: DetalhesPM;
 }
@@ -95,23 +91,32 @@ export interface Defesa {
     detalhes: ModificadorDetalhes;
 }
 
+// --- 1. NOVA INTERFACE BUFF (ADICIONADA) ---
+export interface Buff {
+    origem: string;
+    atributo: string;
+    valor: number;
+    duracao?: string;
+}
+
 export interface Status {
     pv: StatusBarra;
     pm: StatusBarra;
     defesa: Defesa;
     rd: RD[];
     deslocamento: number;
-    // Campo opcional para detalhe (ADICIONADO)
     detalhes_deslocamento?: DetalhesDeslocamento;
+
+    // --- 2. CAMPO BUFFS (ADICIONADO) ---
+    buffs?: Buff[];
 }
 
 export interface PericiaInfo {
-    treino: number;      // 0 = destreinado, 1 = treinado, 2 = expert
-    bonus_nivel: number; // <--- ADICIONE ESTA LINHA
-    atributo_valor: number; // <--- ADICIONE ESTA TAMBÉM (usada no backend)
+    treino: number;
+    bonus_nivel: number;
+    atributo_valor: number;
     outros: number;
     total: number;
-    // Opcional: atributo_override?: string; (para o futuro)
 }
 
 export interface Ataque {
@@ -137,6 +142,7 @@ export interface Magia {
     resistencia: string;
     custo_pm: number;
     descricao: string;
+    fonte: string; // Adicionado para compatibilidade com lógica nova
     aprimoramentos?: Aprimoramento[];
 }
 
@@ -174,19 +180,16 @@ export interface Habilidade {
     tipo: string;
     descricao?: string;
     fonte?: string;
-
-    // ADICIONE ESTAS DUAS LINHAS PARA CORRIGIR O ERRO:
     classe?: string;
     nivel?: number;
-
     escolhas_aplicadas?: Record<string, any>;
-
-    // Propriedades opcionais de UI
     precisaEscolha?: boolean;
+
+    // --- 3. Tipagem para efeitos dinâmicos ---
     efeitos?: any;
+    modificadores?: { atributo: string; valor: number; }[];
 }
 
-// --- INTERFACE PRINCIPAL ---
 export interface Personagem {
     _id?: string;
     usuario_id: string;

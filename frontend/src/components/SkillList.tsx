@@ -28,7 +28,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
     const periciasOrigem = ficha.escolhas_origem || [];
     const periciasTreinadas = ficha.pericias || {};
 
-    // Filtra apenas as perícias compradas (exclui fixas de classe e origem)
+    // Filtra apenas as perícias compradas
     const periciasCompradas = Object.keys(periciasTreinadas).filter(p =>
         periciasTreinadas[p].treino > 0 &&
         !periciasFixas.includes(p) &&
@@ -40,7 +40,6 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
     let gastosDeInteligencia = 0;
     const compradasParaProcessar = [...periciasCompradas];
 
-    // Passo A: Paga perícias que SÃO da classe usando créditos de classe
     for (let i = compradasParaProcessar.length - 1; i >= 0; i--) {
         const p = compradasParaProcessar[i];
         const ehDaClasse = periciasDaClassePossiveis.includes(p) || p.startsWith("Ofício");
@@ -51,19 +50,14 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         }
     }
 
-    // Passo B: O resto vai para Inteligência
     gastosDeInteligencia = compradasParaProcessar.length;
-
     const slotsClasseRestantes = Math.max(0, qtdEscolhasClasse - gastosDeClasse);
     const slotsInteligenciaRestantes = Math.max(0, qtdEscolhasInteligencia - gastosDeInteligencia);
 
-    // 4. Verificação da Escolha Obrigatória (Luta/Pontaria)
+    // 4. Verificação da Escolha Obrigatória
     const cumpriuRequisitoObrigatorio = periciasObrigatoriasSelecao.length === 0 ||
         periciasObrigatoriasSelecao.some((p: string) => periciasTreinadas[p]?.treino > 0);
 
-    // --- REGRA DE TRAVAMENTO (USER REQUEST) ---
-    // Se falta apenas 1 slot de classe E ainda não cumpriu o requisito,
-    // o sistema TRAVA qualquer compra que gastaria esse slot de classe em algo não obrigatório.
     const isTravadoPelaObrigatoria = !cumpriuRequisitoObrigatorio && slotsClasseRestantes === 1;
 
     // --- AÇÕES ---
@@ -76,14 +70,9 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         if (estaTreinada) {
             novaLista[pericia] = { ...novaLista[pericia], treino: 0, total: 0 };
         } else {
-            // TENTANDO COMPRAR
             const ehDaClasse = periciasDaClassePossiveis.includes(pericia) || pericia.startsWith("Ofício");
             const ehObrigatoria = periciasObrigatoriasSelecao.includes(pericia);
 
-            // Bloqueio de Segurança:
-            // Se estamos na reserva final (1 slot) e tentamos clicar em algo que NÃO é obrigatório...
-            // ...e que consumiria esse slot de classe (ou seja, é da classe)...
-            // ...BLOQUEIA.
             if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) {
                 return;
             }
@@ -111,6 +100,10 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
     const renderSkillRow = (nomeExibicao: string, chavePericia: string, index: number) => {
         const info = periciasTreinadas[chavePericia] || { treino: 0, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 };
+
+        // [NOVO] Recupera o bônus automático enviado pelo Backend
+        const bonusAuto = (info as any).bonus_automatico || 0;
+
         const chaveBase = chavePericia.startsWith("Ofício") ? "Ofício" : chavePericia;
         const meta = DADOS_PERICIAS_FRONTEND[chaveBase] || { atributo: "???", treino_apenas: false, penalidade_armadura: false };
 
@@ -126,28 +119,25 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
         let podeHabilitar = ehDaClasse ? (temSlotClasse || temSlotInt) : temSlotInt;
 
-        // --- APLICA O TRAVAMENTO VISUAL ---
-        // Se estamos no modo travado, é da classe e NÃO é obrigatória, desabilita.
         if (isTravadoPelaObrigatoria && ehDaClasse && !ehObrigatoria) {
             podeHabilitar = false;
         }
 
         const isInteractable = (!isFixa && !isOrigem) && (isTreinada || podeHabilitar);
         const isDisabled = !isInteractable;
-
         const isObrigatoriaHighlight = ehObrigatoria;
 
-        // Cálculos de valores para exibição
         const nivel = Math.max(1, ficha.cabecalho.nivel_total || 1);
         const metadeNivel = Math.floor(nivel / 2);
         const attrVal = info.atributo_valor;
         const treinoVal = isTreinada ? (nivel >= 15 ? 6 : (nivel >= 7 ? 4 : 2)) : 0;
-        const outrosVal = info.outros;
+
+        // [NOVO] Soma Visual para a coluna "Outros"
+        const outrosExibicao = info.outros + bonusAuto;
+
         const totalVal = info.total;
 
         let rowBg = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
-
-        // Destaque visual: Amarelo se for obrigatória pendente
         if (isObrigatoriaHighlight && !cumpriuRequisitoObrigatorio) {
             rowBg = 'rgba(255, 193, 7, 0.1)';
         }
@@ -171,23 +161,43 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                         {isOrigem && <span className="text-badge origin">(O)</span>}
                     </div>
                 </div>
-                {/* TOOLTIP e TOTAIS mantidos iguais */}
+
+                {/* COLUNA TOTAL */}
                 <div className="col-total tooltip-container">
                     <div className="total-box">{totalVal >= 0 ? `+${totalVal}` : totalVal}</div>
+
+                    {/* TOOLTIP DETALHADO */}
                     <div className="pericia-tooltip">
                         <div className="tooltip-row"><span>1/2 do Nível</span><span>+{metadeNivel}</span></div>
                         <div className="tooltip-row"><span>Atributo ({meta.atributo})</span><span>{attrVal >= 0 ? `+${attrVal}` : attrVal}</span></div>
                         <div className="tooltip-row"><span>Treino</span><span>+{treinoVal}</span></div>
-                        <div className="tooltip-row"><span>Outros</span><span>{outrosVal >= 0 ? `+${outrosVal}` : outrosVal}</span></div>
+
+                        {/* Mostra separado se tiver bônus auto */}
+                        {bonusAuto !== 0 ? (
+                            <>
+                                <div className="tooltip-row"><span>Outros (Fixos)</span><span>{info.outros >= 0 ? `+${info.outros}` : info.outros}</span></div>
+                                <div className="tooltip-row" style={{ color: '#4fc3f7' }}><span>Habilidades/Itens</span><span>{bonusAuto >= 0 ? `+${bonusAuto}` : bonusAuto}</span></div>
+                            </>
+                        ) : (
+                            <div className="tooltip-row"><span>Outros</span><span>{info.outros >= 0 ? `+${info.outros}` : info.outros}</span></div>
+                        )}
+
                         <div className="tooltip-total"><span>Total</span><span>{totalVal >= 0 ? `+${totalVal}` : totalVal}</span></div>
                     </div>
                 </div>
+
                 <div className="col-equal">=</div>
+
+                {/* FÓRMULA (ÚLTIMA COLUNA) */}
                 <div className="col-formula">
                     <span className="val-item">+{metadeNivel}</span><span className="plus">+</span>
                     <div className="val-item attr-item"><span>{attrVal >= 0 ? `+${attrVal}` : attrVal}</span></div><span className="plus">+</span>
                     <span className="val-item">+{treinoVal}</span><span className="plus">+</span>
-                    <span className="val-item">+{outrosVal}</span>
+
+                    {/* Exibe o TOTAL de Outros (Manual + Auto) com cor diferente se tiver bônus */}
+                    <span className="val-item" style={{ color: bonusAuto !== 0 ? '#4fc3f7' : '#999', fontWeight: bonusAuto !== 0 ? 'bold' : 'normal' }}>
+                        {outrosExibicao >= 0 ? `+${outrosExibicao}` : outrosExibicao}
+                    </span>
                 </div>
             </div>
         );
@@ -213,43 +223,22 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
     return (
         <div className="section-card" style={{ padding: 0 }}>
-            {/* CABEÇALHO COM CONTADORES */}
             <div className="section-header" style={{ padding: '8px 12px', background: '#222', borderBottom: '1px solid #444', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff' }}>PERÍCIAS</h3>
                 <div style={{ fontSize: '0.8rem', color: '#aaa', display: 'flex', gap: '15px' }}>
-                    <span>
-                        Classe: <strong style={{ color: slotsClasseRestantes > 0 ? '#4caf50' : '#888' }}>{slotsClasseRestantes}</strong> / {qtdEscolhasClasse}
-                    </span>
-                    <span>
-                        Inteligência: <strong style={{ color: slotsInteligenciaRestantes > 0 ? '#00bcd4' : '#888' }}>{slotsInteligenciaRestantes}</strong> / {qtdEscolhasInteligencia}
-                    </span>
+                    <span>Classe: <strong style={{ color: slotsClasseRestantes > 0 ? '#4caf50' : '#888' }}>{slotsClasseRestantes}</strong> / {qtdEscolhasClasse}</span>
+                    <span>Inteligência: <strong style={{ color: slotsInteligenciaRestantes > 0 ? '#00bcd4' : '#888' }}>{slotsInteligenciaRestantes}</strong> / {qtdEscolhasInteligencia}</span>
                 </div>
             </div>
 
-            {/* AVISO DE ESCOLHA OBRIGATÓRIA */}
             {!cumpriuRequisitoObrigatorio && periciasObrigatoriasSelecao.length > 0 && (
                 <div style={{ background: 'rgba(255, 193, 7, 0.15)', borderBottom: '1px solid #ffc107', padding: '10px', textAlign: 'center' }}>
-                    <p style={{ color: '#ffc107', margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                        ⚠️ Requisito de Classe: Escolha Luta ou Pontaria
-                    </p>
-                    {isTravadoPelaObrigatoria && (
-                        <p style={{ color: '#ff5252', fontSize: '0.75rem', marginTop: 4 }}>
-                            (Último slot reservado para obrigatória!)
-                        </p>
-                    )}
+                    <p style={{ color: '#ffc107', margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ Requisito de Classe: Escolha Luta ou Pontaria</p>
+                    {isTravadoPelaObrigatoria && <p style={{ color: '#ff5252', fontSize: '0.75rem', marginTop: 4 }}>(Último slot reservado para obrigatória!)</p>}
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 8 }}>
                         {periciasObrigatoriasSelecao.map((p: string) => (
-                            <button
-                                key={p}
-                                onClick={() => togglePericia(p)}
-                                // Habilita o botão se tiver qualquer slot (inclusive o reservado)
-                                disabled={slotsClasseRestantes <= 0 && slotsInteligenciaRestantes <= 0}
-                                style={{
-                                    background: '#ffc107', color: '#000', border: 'none',
-                                    padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem',
-                                    opacity: (slotsClasseRestantes <= 0 && slotsInteligenciaRestantes <= 0) ? 0.5 : 1
-                                }}
-                            >
+                            <button key={p} onClick={() => togglePericia(p)} disabled={slotsClasseRestantes <= 0 && slotsInteligenciaRestantes <= 0}
+                                style={{ background: '#ffc107', color: '#000', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', opacity: (slotsClasseRestantes <= 0 && slotsInteligenciaRestantes <= 0) ? 0.5 : 1 }}>
                                 {p}
                             </button>
                         ))}
@@ -257,7 +246,6 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                 </div>
             )}
 
-            {/* TABELA */}
             <div className="skill-header-grid">
                 <div className="h-check"></div><div className="h-name">PERÍCIA</div><div className="h-total">TOTAL</div><div className="h-equal"></div>
                 <div className="h-formula">

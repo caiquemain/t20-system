@@ -14,20 +14,15 @@ export const verificarRequisito = (
     const reqLower = req.toLowerCase().trim();
 
     // 1. Validação de Caminho/Subclasse (Arcanista, etc)
-    // Ex: "Caminho: Bruxo", "Caminho: Bruxo ou Mago"
     if (reqLower.includes('caminho') || reqLower.includes('subclasse')) {
         const partes = reqLower.split(/[:=]/); // Divide por : ou =
         const conteudo = partes[1] ? partes[1].trim() : "";
-
-        // CORREÇÃO: Divide por " ou " para suportar múltiplas opções
         const opcoes = conteudo.split(' ou ').map(op => op.trim());
 
-        // Verifica na ficha salva (se alguma das opções bater)
+        // Verifica na ficha salva OU na edição atual
         const temNaFicha = ficha.classes.some(c =>
             c.subclasse && opcoes.includes(c.subclasse.toLowerCase())
         );
-
-        // Verifica na edição atual (se a escolha atual estiver nas opções)
         const temNaEdicao = opcoes.includes(subclasseEmEdicao.toLowerCase());
 
         return {
@@ -71,8 +66,6 @@ export const verificarRequisito = (
     const matchNivel = reqLower.match(/(?:nível|nivel)\s?(\d+)/);
     if (matchNivel) {
         const nivelReq = parseInt(matchNivel[1]);
-        // Aqui simplificamos usando nível total, mas se precisar de nível de classe específico,
-        // a lógica seria expandida aqui.
         const nivelChar = ficha.cabecalho.nivel_total;
         return {
             ok: nivelChar >= nivelReq,
@@ -80,7 +73,20 @@ export const verificarRequisito = (
         };
     }
 
-    // 5. Outros Poderes (Ex: "Foco Vital")
+    // --- [NOVO] 5. Proficiências (Ex: "Proficiência com escudos", "Armaduras Pesadas") ---
+    // Verifica se o texto do requisito contém alguma das proficiências que o personagem JÁ TEM.
+    // Ex: Se char tem "Escudos" e requisito é "Proficiência com escudos", reqLower.includes("escudos") dá true.
+    if (ficha.proficiencias && ficha.proficiencias.length > 0) {
+        const temProficiencia = ficha.proficiencias.some(prof => reqLower.includes(prof.toLowerCase()));
+
+        // Só valida como "ok" se o requisito realmente parecer ser sobre proficiência/equipamento
+        const keywordsProf = ['proficiência', 'proficiencia', 'escudos', 'armas', 'armaduras'];
+        if (temProficiencia && keywordsProf.some(k => reqLower.includes(k))) {
+            return { ok: true, msg: 'Ok' };
+        }
+    }
+
+    // 6. Outros Poderes (Ex: "Foco Vital")
     // Verifica na ficha ou na lista de pré-seleção
     const temNaFicha = ficha.habilidades.some(h => h.nome.toLowerCase() === reqLower);
     const temNaSelecao = poderesEscolhidos.map(p => p.toLowerCase()).includes(reqLower);

@@ -34,7 +34,6 @@ export interface Descricao {
     anotacoes?: string;
 }
 
-// Index signature para permitir acesso dinâmico (ex: atributos['forca'])
 export interface Atributos {
     [key: string]: number;
     forca: number;
@@ -46,14 +45,13 @@ export interface Atributos {
 }
 
 // --- INTERFACES DE DETALHES ---
-// Interface unificada para o campo 'calculo' que vem do backend
 export interface DetalhesCalculo {
     inicial: number;
     nivel: number;
     outros: number;
-    // Opcionais pois dependem se é PV ou PM
     con?: number;
     atributo?: number;
+    habilidades?: number;
 }
 
 export interface DetalhesPV {
@@ -61,6 +59,7 @@ export interface DetalhesPV {
     nivel: number;
     con: number;
     outros: number;
+    habilidades?: number;
 }
 
 export interface DetalhesPM {
@@ -68,6 +67,7 @@ export interface DetalhesPM {
     nivel: number;
     atributo: number;
     outros: number;
+    habilidades?: number;
 }
 
 export interface DetalhesDeslocamento {
@@ -75,17 +75,12 @@ export interface DetalhesDeslocamento {
     armadura: number;
     outros: number;
 }
-// ----------------------------------------------------
 
 export interface StatusBarra {
     atual: number;
     maximo: number;
     temporario: number;
-
-    // Novo padrão do backend
     calculo?: DetalhesCalculo;
-
-    // Campos antigos para retrocompatibilidade
     detalhes_pv?: DetalhesPV;
     detalhes_pm?: DetalhesPM;
 }
@@ -98,29 +93,33 @@ export interface ModificadorDetalhes {
     outros: number;
 }
 
-// RD agora é string simples no novo sistema (ex: "Fogo 10")
-// Mantemos a interface antiga comentada caso precise reverter
-// export interface RD { tipo: string; valor: number; fonte?: string; }
-
 export interface Defesa {
     total: number;
     detalhes: ModificadorDetalhes;
+}
+
+// --- 1. NOVA INTERFACE BUFF ---
+export interface Buff {
+    origem: string;
+    atributo: string;
+    valor: number;
+    duracao?: string;
 }
 
 export interface Status {
     pv: StatusBarra;
     pm: StatusBarra;
     defesa: Defesa;
-
-    // CORREÇÃO: RD agora é uma lista de strings
-    rd: string[];
-
+    rd: string[]; // Lista de strings ("Fogo 10")
     deslocamento: number;
     detalhes_deslocamento?: DetalhesDeslocamento;
+
+    // --- 2. CAMPO BUFFS NO STATUS ---
+    buffs?: Buff[];
 }
 
 export interface PericiaInfo {
-    treino: number;      // 0 = destreinado, 1 = treinado, 2 = expert
+    treino: number;
     bonus_nivel: number;
     atributo_valor: number;
     outros: number;
@@ -136,6 +135,7 @@ export interface Ataque {
     tipo: string;
     alcance: string;
 }
+
 export interface Aprimoramento {
     custo: string;
     descricao: string;
@@ -154,6 +154,7 @@ export interface Magia {
     resistencia: string;
     custo_pm: number;
     descricao: string;
+    fonte?: string; // Adicionado para compatibilidade
     aprimoramentos?: Aprimoramento[];
 }
 
@@ -186,19 +187,41 @@ export interface Inventario {
     carga_maxima: number;
 }
 
+export interface HabilidadeAtivavel {
+    custo: number;
+    acao?: string;
+    alcance?: string;
+    duracao?: string;
+    resistencia?: string;
+    efeito?: string;
+    gatilho?: string;
+    restricao?: string;
+    nome_acumulo?: string;
+    reducao_se_acumular?: number;
+    // Tipagem para os modificadores matemáticos no JSON
+    modificadores?: { atributo: string; valor: number; }[];
+}
+
 export interface Habilidade {
     nome: string;
     tipo: string;
-    descricao?: string;
+    descricao: string;
     fonte?: string;
+    nivel?: number;
+    requisitos?: string[];
     escolhas_aplicadas?: Record<string, any>;
-
-    // Propriedades opcionais de UI
     precisaEscolha?: boolean;
-    efeitos?: any;
+
+    // Campos de efeitos
+    efeitos?: {
+        habilidade_ativavel?: HabilidadeAtivavel;
+        [key: string]: any;
+    };
+
+    // --- 3. Atalho para modificadores (opcional, mas ajuda o TS) ---
+    modificadores?: { atributo: string; valor: number; }[];
 }
 
-// --- INTERFACE PRINCIPAL ---
 export interface Personagem {
     _id?: string;
     usuario_id: string;

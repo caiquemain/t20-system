@@ -1679,3 +1679,62 @@
         transform: translateY(0) scale(1);
     }
 }
+
+/* --- TAGS DE CATEGORIA (PowerSelectorModal) --- */
+.tag-power {
+    background-color: #2196f3;
+    /* Azul (Padrão) */
+    color: white;
+}
+
+.tag-origin {
+    background-color: #ff9800;
+    /* Laranja (Origem) */
+    color: black;
+    font-weight: bold;
+}
+
+.tag-tormenta {
+    background-color: #d32f2f;
+    /* Vermelho Sangue (Tormenta) */
+    color: white;
+    border: 1px solid #ff5252;
+}
+
+.tag-skill {
+    background-color: #4caf50;
+    /* Verde (Perícia) */
+    color: white;
+}
+
+.tag-class {
+    background-color: #9c27b0;
+    /* Roxo (Classe) */
+    color: white;
+}
+
+.tag-arcane {
+    background-color: #673ab7;
+    /* Roxo Escuro (Arcana) */
+    color: #e1bee7;
+}
+
+.tag-divine {
+    background-color: #ffd700;
+    /* Dourado (Divina) */
+    color: black;
+    font-weight: bold;
+}
+
+.tag-universal {
+    background-color: #607d8b;
+    /* Cinza Azulado (Universal) */
+    color: white;
+}
+
+.tag-other {
+    background-color: #424242;
+    /* Cinza Escuro (Outros) */
+    color: #bdbdbd;
+    font-style: italic;
+}

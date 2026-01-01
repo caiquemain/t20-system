@@ -19,6 +19,7 @@ interface AbilityConfigModalProps {
     listaPoderesGerais: any[];
     dadosDeuses: any;
     dadosMagias: any;
+    dadosOrigens?: any; // Novo: Recebe dados das origens para listar os poderes
 
     // Estados de Edição
     origemBeneficiosEmEdicao: string[];
@@ -50,7 +51,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     isOpen, onClose, onSave,
     ficha, origemNome, qtdEscolhasOrigem, listaBeneficiosOrigem = [],
     classeAtual, nivelAtual, dadosHabilidadesClasse,
-    listaPoderesGerais = [], dadosDeuses = {}, dadosMagias = {},
+    listaPoderesGerais = [], dadosDeuses = {}, dadosMagias = {}, dadosOrigens = {},
     origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
     habilidadesEmEdicao, setHabilidadesEmEdicao,
     classPowersEmEdicao = [], setClassPowersEmEdicao,
@@ -59,46 +60,33 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     abrirSeletor
 }) => {
 
+    // --- 1. HOOKS (Sempre no topo) ---
     const [modosSlot2, setModosSlot2] = useState<Record<number, 'pericia' | 'poder'>>({});
 
-    // --- LOGS DE DEBUG NO CONSOLE (MANTIDOS) ---
+    // Logs de Debug
     useEffect(() => {
         if (isOpen) {
             console.group("🔍 DEBUG: AbilityConfigModal ABERTO");
             console.log("1. Habilidades Recebidas:", habilidadesEmEdicao);
-            const magiasQtd = dadosMagias ? Object.keys(dadosMagias).length : 0;
-            console.log(`2. Total de Magias no Banco: ${magiasQtd}`);
+            console.log("2. Origens Disponíveis:", Object.keys(dadosOrigens).length);
             console.groupEnd();
         }
-    }, [isOpen, habilidadesEmEdicao, dadosMagias]);
+    }, [isOpen, habilidadesEmEdicao, dadosMagias, dadosOrigens]);
 
     if (!isOpen) return null;
-
-    // --- PREPARAÇÃO DE DADOS ---
-    // Filtra magias de 1º círculo para o Qareen
-    const magiasCirculo1 = Object.values(dadosMagias || {})
-        // @ts-ignore
-        .filter((m: any) => m.circulo === 1 || m.circulo === '1')
-        // @ts-ignore
-        .map((m: any) => m.nome)
-        .sort();
 
     // --- FUNÇÃO CENTRAL DE BLOQUEIO (Evita duplicatas) ---
     const getBlacklistGlobal = (ignorarValor: string = "") => {
         const blocked = new Set<string>();
-        // Bloqueia perícias já treinadas
         if (ficha && ficha.pericias) {
             Object.entries(ficha.pericias).forEach(([nome, info]: any) => {
                 if (info.treino > 0) blocked.add(nome);
             });
         }
-        // Bloqueia devoção atual
         if (devocaoEmEdicao && devocaoEmEdicao !== ignorarValor) blocked.add(devocaoEmEdicao);
-        // Bloqueia origens já escolhidas
         origemBeneficiosEmEdicao.forEach(val => {
             if (val && val !== ignorarValor) blocked.add(val);
         });
-        // Bloqueia escolhas raciais
         habilidadesEmEdicao.forEach(hab => {
             if (hab.escolhas_aplicadas) {
                 Object.values(hab.escolhas_aplicadas).forEach((val: any) => {
@@ -106,14 +94,13 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 });
             }
         });
-        // Bloqueia poderes de classe
         classPowersEmEdicao.forEach(val => {
             if (val && val !== ignorarValor) blocked.add(val);
         });
         return Array.from(blocked);
     };
 
-    // --- DADOS ---
+    // --- DADOS E FILTROS ---
     const listaCompletaHabilidadesClasse = Object.values(dadosHabilidadesClasse || {});
     const habilidadesAutomaticas = listaCompletaHabilidadesClasse
         .filter((h: any) => h.classe === classeAtual && h.tipo === "Habilidade de Classe" && h.nivel <= nivelAtual);
@@ -122,15 +109,30 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
 
     const deusAtual = ficha.cabecalho.deus;
     const poderesDoMeuDeus = (deusAtual && dadosDeuses[deusAtual]) ? dadosDeuses[deusAtual].poderes : [];
+
+    // --- FILTRO PRINCIPAL DE PODERES GERAIS ---
+    // Remove Poderes Concedidos (que não sejam do meu deus), Origens e Raciais
     const poderesGeraisFiltrados = listaPoderesGerais.filter((p: any) => {
-        if (p.categoria === 'Poder Concedido') return poderesDoMeuDeus.includes(p.nome);
-        if (p.categoria === 'Origem') return false;
+        const t = (p.tipo || p.categoria || "").toString();
+
+        // Se for Poder Concedido, só mostra se for do meu Deus
+        if (t.includes('Concedido')) return poderesDoMeuDeus.includes(p.nome);
+
+        // Remove Origens da lista de compra de nível (pois geralmente se compra Poder Geral)
+        if (t.includes('Origem')) return false;
+
+        // Remove Habilidades Raciais
+        if (t.includes('Raça') || t.includes('Racial')) return false;
+
         return true;
     });
+
+    // Lista unificada para os slots de nível (combina classe + gerais filtrados)
     const nomesPoderesDisponiveis = Array.from(new Set([
         ...poderesDaClasse.map((p: any) => p.nome),
         ...poderesGeraisFiltrados.map((p: any) => p.nome)
     ])).sort();
+
     const slotsPoderes = Math.max(0, nivelAtual - 1);
 
     const habilidadeComSubclasse: any = habilidadesAutomaticas.find((h: any) => h.efeitos && h.efeitos.escolha_subclasse);
@@ -138,7 +140,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     const infoDeus = dadosDeuses[deusAtual];
 
     const updateRacialChoice = (index: number, key: string, value: string) => {
-        console.log(`📝 Update Racial [${index}]: ${key} = ${value}`);
         const novos = [...habilidadesEmEdicao];
         if (!novos[index].escolhas_aplicadas) novos[index].escolhas_aplicadas = {};
         novos[index].escolhas_aplicadas = { ...novos[index].escolhas_aplicadas, [key]: value };
@@ -181,11 +182,9 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                     </div>
                 )}
 
-                {/* --- SEÇÃO: ORIGEM (Restaurada) --- */}
+                {/* --- SEÇÃO: ORIGEM --- */}
                 {(() => {
-                    // Verifica se alguma habilidade racial proíbe origem (ex: Golem)
                     const bloqueioOrigem = habilidadesEmEdicao.find(h => h.efeitos && h.efeitos.sem_origem);
-
                     if (bloqueioOrigem) {
                         return (
                             <>
@@ -194,15 +193,11 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                     <p style={{ color: '#ff8a80', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
                                         🚫 <strong>Origem Bloqueada:</strong> {bloqueioOrigem.nome}
                                     </p>
-                                    <p style={{ fontSize: '0.8rem', color: '#ccc', marginTop: 5 }}>
-                                        Esta raça não recebe benefícios de origem.
-                                    </p>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc', marginTop: 5 }}>Esta raça não recebe benefícios de origem.</p>
                                 </div>
                             </>
                         );
                     }
-
-                    // Se não tiver bloqueio, mostra os seletores
                     return (
                         <>
                             <h3 className="section-subtitle">Benefícios de Origem ({origemNome})</h3>
@@ -211,10 +206,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                 {[...Array(qtdEscolhasOrigem)].map((_, i) => {
                                     const valorAtual = origemBeneficiosEmEdicao[i] || '';
                                     const blocked = getBlacklistGlobal(valorAtual);
-
-                                    // Filtra a lista de benefícios permitidos pela Origem
                                     const opcoes = listaBeneficiosOrigem.filter(opt => !blocked.includes(opt) || opt === valorAtual);
-
                                     return (
                                         <div key={i} style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
                                             <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
@@ -282,7 +274,20 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                             ) : (
                                                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                                                     <input value={pg} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione um poder..." />
-                                                    <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', 'Versátil: Poder Geral', [], undefined, (v) => updateRacialChoice(idx, 'poder_geral', v), getBlacklistGlobal(pg))}>Escolher</button>
+                                                    <button
+                                                        className="btn-action"
+                                                        style={{ background: '#9c27b0' }}
+                                                        onClick={() => abrirSeletor(
+                                                            'poder',
+                                                            'Versátil: Poder Geral',
+                                                            poderesGeraisFiltrados.map((p: any) => p.nome),
+                                                            undefined,
+                                                            (v) => updateRacialChoice(idx, 'poder_geral', v),
+                                                            getBlacklistGlobal(pg)
+                                                        )}
+                                                    >
+                                                        Escolher
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -291,45 +296,135 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                             );
                         }
 
-                        // --- CASO 2: QAREEN (TATUAGEM MÍSTICA) ---
-                        if (hab.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes("Tatuagem")) {
-                            const escolhaObj = hab.escolhas_aplicadas || {};
-                            const magiaAtual = escolhaObj.magia_escolhida || escolhaObj.magia_escolha || "";
+                        // --- CASO 2: AMBIÇÃO HERDADA (MEIO-ELFO) [CORRIGIDO] ---
+                        const efeitosAmbicao = hab.efeitos || {};
+                        const escolhasAmbicao = hab.escolhas_aplicadas || {};
+
+                        if (efeitosAmbicao.poder_geral_ou_origem) {
+                            const qtd = efeitosAmbicao.poder_geral_ou_origem;
+                            const slots = Array.from({ length: qtd });
+
+                            // LÓGICA ROBUSTA: Junta Poderes Gerais + TODOS Poderes de Origem disponíveis nos dados
+                            const nomesGerais = listaPoderesGerais.filter(p => {
+                                const t = (p.tipo || p.categoria || "").toString();
+                                const allow = ["Geral", "Combate", "Destino", "Magia", "Tormenta"];
+                                const deny = ["Racial", "Concedido", "Classe", "Deus", "Origem"]; // Exclui origem aqui para evitar duplicatas, adicionamos explicitamente abaixo
+                                return allow.some(k => t.includes(k)) && !deny.some(k => t.includes(k));
+                            }).map(p => p.nome);
+
+                            // Extrai TODOS os benefícios de origem conhecidos pelo sistema
+                            const nomesOrigem = dadosOrigens
+                                ? Object.values(dadosOrigens).flatMap((o: any) => o.beneficios_lista || [])
+                                // @ts-ignore
+                                : [];
+
+                            // Unifica e remove duplicatas
+                            const listaCombinada = Array.from(new Set([...nomesGerais, ...nomesOrigem])).sort();
 
                             return (
                                 <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
                                     <div className="hab-header" style={{ marginBottom: 10 }}>
-                                        <span><strong>{hab.nome}</strong> (Qareen)</span>
+                                        <span><strong>{hab.nome}</strong> (Meio-Elfo)</span>
+                                        <span style={{ color: '#ffeb3b', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: 10 }}>
+                                        Escolha {qtd} Poder(es) Geral(is) ou de Origem.
+                                    </p>
+
+                                    {slots.map((_, i) => {
+                                        const chaveSalva = `poder_ambicao_${i}`;
+                                        const valorAtual = escolhasAmbicao[chaveSalva] || "";
+
+                                        return (
+                                            <div key={i} style={{ marginBottom: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
+                                                <button
+                                                    className="btn-action"
+                                                    onClick={() => abrirSeletor(
+                                                        'poder',
+                                                        `Ambição Herdada #${i + 1}`,
+                                                        listaCombinada, // <--- Lista Completa
+                                                        undefined,
+                                                        (val) => {
+                                                            const novos = [...habilidadesEmEdicao];
+                                                            if (!novos[idx].escolhas_aplicadas) novos[idx].escolhas_aplicadas = {};
+                                                            novos[idx].escolhas_aplicadas[chaveSalva] = val;
+                                                            setHabilidadesEmEdicao(novos);
+                                                        },
+                                                        getBlacklistGlobal(valorAtual)
+                                                    )}
+                                                >
+                                                    Escolher
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        }
+
+                        // --- CASO 3: MAGIAS ADICIONAIS ---
+                        const configMagia = hab.efeitos?.magia_adicional_escolha;
+                        if (configMagia) {
+                            const quantidade = configMagia.quantidade || 1;
+                            const listaFixa = configMagia.lista || [];
+                            const circulo = configMagia.circulo || 1;
+
+                            let opcoesMagias = listaFixa;
+                            if (opcoesMagias.length === 0 && dadosMagias) {
+                                opcoesMagias = Object.values(dadosMagias)
+                                    // @ts-ignore
+                                    .filter((m: any) => String(m.circulo) === String(circulo))
+                                    // @ts-ignore
+                                    .map((m: any) => m.nome)
+                                    .sort();
+                            }
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong></span>
                                         <span style={{ color: '#e040fb', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
                                     </div>
                                     <p style={{ fontSize: '0.8rem', color: '#ccc', fontStyle: 'italic' }}>
-                                        Você aprende uma magia de 1º círculo (Arcana ou Divina).
+                                        {listaFixa.length > 0
+                                            ? `Escolha ${quantidade} magia(s) da lista permitida.`
+                                            : `Escolha ${quantidade} magia(s) de ${circulo}º círculo.`}
                                     </p>
 
-                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
-                                        <label style={{ fontSize: '0.85rem', color: '#ce93d8' }}>Magia:</label>
-                                        <input value={magiaAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione a magia..." />
-                                        <button
-                                            className="btn-action"
-                                            style={{ background: '#9c27b0', color: 'white' }}
-                                            onClick={() => abrirSeletor(
-                                                'poder', // Modo 'poder' para listar lista simples
-                                                'Tatuagem Mística: Escolha uma Magia',
-                                                magiasCirculo1,
-                                                undefined,
-                                                (v) => updateRacialChoice(idx, 'magia_escolhida', v),
-                                                [magiaAtual]
-                                            )}
-                                        >
-                                            Escolher Magia
-                                        </button>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+                                        {[...Array(quantidade)].map((_, i) => {
+                                            const keyStore = quantidade > 1 ? `magia_${i}` : `magia_escolhida`;
+                                            const magiaAtual = hab.escolhas_aplicadas?.[keyStore] || "";
+
+                                            return (
+                                                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                    <label style={{ fontSize: '0.85rem', color: '#ce93d8', minWidth: 60 }}>Magia {quantidade > 1 ? i + 1 : ''}:</label>
+                                                    <input value={magiaAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione a magia..." />
+                                                    <button
+                                                        className="btn-action"
+                                                        style={{ background: '#9c27b0', color: 'white' }}
+                                                        onClick={() => abrirSeletor(
+                                                            'poder',
+                                                            `Escolha a Magia ${quantidade > 1 ? i + 1 : ''}`,
+                                                            opcoesMagias,
+                                                            undefined,
+                                                            (v) => updateRacialChoice(idx, keyStore, v),
+                                                            [magiaAtual]
+                                                        )}
+                                                    >
+                                                        Escolher
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             );
                         }
 
-                        // --- CASO 3: QAREEN (RESISTÊNCIA) ---
-                        const keyRd = Object.keys(hab.efeitos).find(k => k === 'resistencia_rd_escolha');
+                        // --- CASO 4: QAREEN (RESISTÊNCIA) ---
+                        const keyRd = hab.efeitos && Object.keys(hab.efeitos).find(k => k === 'resistencia_rd_escolha');
                         if (keyRd) {
                             const valorAtual = hab.escolhas_aplicadas?.[keyRd] || "";
                             const listaElementos = ["Ácido", "Eletricidade", "Fogo", "Frio", "Luz", "Trevas"];
@@ -344,6 +439,124 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                         <label style={{ width: 90, fontSize: '0.85rem', color: '#ff5722' }}>Elemento:</label>
                                         <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
                                         <button className="btn-action" style={{ background: '#ff5722' }} onClick={() => abrirSeletor('ambos', 'Ascendência Qareen', listaElementos, undefined, (val) => updateRacialChoice(idx, keyRd, val))}>Escolher</button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // --- CASO GOLEM (ESPÍRITO/FONTE ELEMENTAL) ---
+                        if (hab.nome === "Fonte Elemental" || hab.nome === "Espírito Elemental") {
+                            const keyElem = "elemento_escolha";
+                            const valorAtual = hab.escolhas_aplicadas?.[keyElem] || "";
+                            const opcoesElementos = [
+                                { nome: "Ácido", cor: "#8bc34a", icon: "🧪", border: "#33691e" },
+                                { nome: "Eletricidade", cor: "#ffeb3b", icon: "⚡", border: "#f57f17", text: "#000" },
+                                { nome: "Fogo", cor: "#ff5252", icon: "🔥", border: "#b71c1c" },
+                                { nome: "Frio", cor: "#4fc3f7", icon: "❄️", border: "#01579b" }
+                            ];
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong> (Golem)</span>
+                                        <span style={{ color: '#ffeb3b', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: 10 }}>
+                                        Escolha sua fonte elemental. Você absorve dano deste tipo (cura PV em vez de sofrer dano).
+                                    </p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                        {opcoesElementos.map((elem) => {
+                                            const isSelected = valorAtual === elem.nome;
+                                            return (
+                                                <button
+                                                    key={elem.nome}
+                                                    onClick={() => updateRacialChoice(idx, keyElem, elem.nome)}
+                                                    style={{
+                                                        background: isSelected ? elem.cor : 'transparent',
+                                                        color: isSelected ? (elem.text || '#fff') : '#ccc',
+                                                        border: `1px solid ${isSelected ? elem.border : '#555'}`,
+                                                        borderRadius: '6px',
+                                                        padding: '10px',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '8px',
+                                                        fontWeight: isSelected ? 'bold' : 'normal',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    <span style={{ fontSize: '1.2rem' }}>{elem.icon}</span>
+                                                    <span>{elem.nome}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // --- CASO OSTEON (MEMÓRIA PÓSTUMA) ---
+                        if (hab.nome === "Memória Póstuma") {
+                            const keyEscolha = "habilidade_racial_escolha";
+                            const valorAtual = hab.escolhas_aplicadas?.[keyEscolha] || hab.escolhas_aplicadas?.["poder_escolha"] || "";
+
+                            const raciaisDisponiveis = listaPoderesGerais
+                                .filter((p: any) => {
+                                    const t = (p.tipo || p.categoria || "").toString();
+                                    return t.includes("Raça") || t.includes("Racial");
+                                })
+                                .map((p: any) => p.nome);
+
+                            return (
+                                <div key={idx} className="habilidade-item" style={{ marginBottom: 15, paddingBottom: 15, borderBottom: '1px solid #333' }}>
+                                    <div className="hab-header" style={{ marginBottom: 10 }}>
+                                        <span><strong>{hab.nome}</strong> (Osteon)</span>
+                                        <span style={{ color: '#ffeb3b', fontSize: '0.8rem', marginLeft: 10 }}>CONFIGURAR</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: 10 }}>
+                                        Você pode escolher 1 Poder Geral OU 1 Habilidade de outra Raça.
+                                    </p>
+
+                                    <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
+                                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                            <span style={{ color: '#fff' }}>Atual: <strong>{valorAtual || "Nenhum"}</strong></span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: 10 }}>
+                                            <button
+                                                className="btn-action"
+                                                onClick={() => abrirSeletor(
+                                                    'geral',
+                                                    'Memória Póstuma (Poder)',
+                                                    poderesGeraisFiltrados.map((p: any) => p.nome),
+                                                    undefined,
+                                                    (val) => {
+                                                        updateRacialChoice(idx, "habilidade_racial_escolha", "");
+                                                        updateRacialChoice(idx, "poder_escolha", val);
+                                                    }
+                                                )}
+                                            >
+                                                Escolher Poder Geral
+                                            </button>
+
+                                            <button
+                                                className="btn-action"
+                                                style={{ background: '#7b1fa2' }}
+                                                onClick={() => abrirSeletor(
+                                                    'poder',
+                                                    'Memória Póstuma (Racial)',
+                                                    raciaisDisponiveis,
+                                                    undefined,
+                                                    (val) => {
+                                                        updateRacialChoice(idx, "poder_escolha", "");
+                                                        updateRacialChoice(idx, "habilidade_racial_escolha", val);
+                                                    }
+                                                )}
+                                            >
+                                                Escolher Habilidade Racial
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -378,7 +591,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                             <input value={p1} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
                                             <button className="btn-action" onClick={() => abrirSeletor('pericia', 'Deformidade: Bônus em Perícia', [], undefined, (v) => updateRacialChoice(idx, 'pericia_1', v), getBlacklistGlobal(p1))}>Escolher</button>
                                         </div>
-                                        {/* Slot 2 */}
                                         <div style={{ padding: 10, border: '1px dashed #555', borderRadius: 4, background: 'rgba(255,0,0,0.05)' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
                                                 <label style={{ fontSize: '0.85rem', color: '#ff5252' }}>Segundo Slot:</label>
@@ -404,7 +616,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                             );
                         }
 
-                        // --- CASO 5: GENÉRICO (SEREIA, GOLEM, SÍLFIDE...) ---
+                        // --- CASO 5: GENÉRICO PADRÃO ---
                         return (
                             <div key={idx} className="habilidade-item" style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #333' }}>
                                 <div className="hab-header">
