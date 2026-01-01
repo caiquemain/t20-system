@@ -296,7 +296,8 @@ def calcular_atributos_finais(ficha: Personagem):
 
 
 def inicializar_pericias(ficha: Personagem):
-    logger.info("--- [3] Inicializando Perícias ---")
+    logger.info(
+        "--- [3] Inicializando Perícias (Com Rastreamento de Fonte) ---")
 
     modificadores = {
         'for': calcular_modificador(ficha.atributos.forca),
@@ -310,53 +311,81 @@ def inicializar_pericias(ficha: Personagem):
     nivel = max(1, ficha.cabecalho.nivel_total)
     bonus_metade_nivel = math.floor(nivel / 2)
 
-    # Cálculo de Penalidade de Armadura
+    # Dicionários de Controle
+    opcoes_atributos_extras = {}
+
+    # Novo: Guardar não só o valor, mas quem deu o valor
+    # Estrutura: { "Luta": [ {"fonte": "Ataque Poderoso", "valor": 2}, ... ] }
+    detalhamento_bonus = {}
+    bonus_por_atributo = {}  # { "car": 1 }
+
+    # 1. Processar Habilidades
+    qtd_poderes_tormenta = sum(
+        1 for h in ficha.habilidades if "Tormenta" in h.tipo)
+
+    # Tamanho e Penalidades
+    tamanho_personagem = getattr(ficha.descricao, "tamanho", TamanhoEnum.MEDIO)
+    penalidade_tamanho_furtividade = - \
+        2 if tamanho_personagem == TamanhoEnum.GRANDE else (
+            -5 if tamanho_personagem == TamanhoEnum.ENORME else 0)
+
     penalidade_armadura_valor = 0
-    for hab in ficha.habilidades:
-        efeitos = hab.efeitos or {}
-        if "penalidade_armadura" in efeitos:
-            penalidade_armadura_valor += efeitos["penalidade_armadura"]
-
-    pericias_extras_gratis = []
-    bonus_numerico_habilidades = {}
-    bonus_por_atributo = {}
-
-    qtd_poderes_tormenta = 0
-    for hab in ficha.habilidades:
-        if "Tormenta" in hab.tipo:
-            qtd_poderes_tormenta += 1
 
     for hab in ficha.habilidades:
         efeitos = (hab.efeitos or {}).copy()
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
 
+        # Penalidade de Armadura
+        if "penalidade_armadura" in efeitos:
+            penalidade_armadura_valor += efeitos["penalidade_armadura"]
+
+        # Opções de Atributo
+        if "pericia_atributo_opcao" in efeitos:
+            for pericia_alvo, novo_attr in efeitos["pericia_atributo_opcao"].items():
+                if pericia_alvo not in opcoes_atributos_extras:
+                    opcoes_atributos_extras[pericia_alvo] = []
+                if novo_attr not in opcoes_atributos_extras[pericia_alvo]:
+                    opcoes_atributos_extras[pericia_alvo].append(novo_attr)
+
+        # Lefou (Deformidade)
         if hab.nome == "Deformidade":
             bonus_lefou = 2 + (2 * qtd_poderes_tormenta)
             p1 = efeitos.get("pericia_1")
             p2 = efeitos.get("pericia_2")
-            if p1:
-                bonus_numerico_habilidades[p1] = bonus_numerico_habilidades.get(
-                    p1, 0) + bonus_lefou
-            if p2:
-                bonus_numerico_habilidades[p2] = bonus_numerico_habilidades.get(
-                    p2, 0) + bonus_lefou
+            for p in [p1, p2]:
+                if p:
+                    if p not in detalhamento_bonus:
+                        detalhamento_bonus[p] = []
+                    detalhamento_bonus[p].append(
+                        {"fonte": "Deformidade", "valor": bonus_lefou})
             continue
 
-        for chave in ["pericia_1", "pericia_2", "pericia_escolha"]:
-            val = efeitos.get(chave)
-            if val and isinstance(val, str):
-                pericias_extras_gratis.append(val)
-
+        # Bônus Diretos (Ex: Foco em Arma)
         if "bonus_pericia" in efeitos:
             for pericia, valor in efeitos["bonus_pericia"].items():
-                bonus_numerico_habilidades[pericia] = bonus_numerico_habilidades.get(
-                    pericia, 0) + valor
+                if pericia not in detalhamento_bonus:
+                    detalhamento_bonus[pericia] = []
+                detalhamento_bonus[pericia].append(
+                    {"fonte": hab.nome, "valor": valor})
 
+        # Bônus Genéricos por Atributo (Ex: Entre Dois Mundos)
         if "bonus_pericia_atributo" in efeitos:
             for attr, valor in efeitos["bonus_pericia_atributo"].items():
                 bonus_por_atributo[attr] = bonus_por_atributo.get(
                     attr, 0) + valor
+
+    # ... (Lógica de Perícias Extras e Classes continua igual, omitindo para brevidade, mas deve ser mantida) ...
+    # REPLAY DA LÓGICA PADRÃO DE LISTAS:
+    pericias_extras_gratis = []
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+        for chave in ["pericia_1", "pericia_2", "pericia_escolha"]:
+            val = efeitos.get(chave)
+            if val and isinstance(val, str):
+                pericias_extras_gratis.append(val)
 
     if ficha.escolhas_origem:
         for escolha in ficha.escolhas_origem:
@@ -374,21 +403,19 @@ def inicializar_pericias(ficha: Personagem):
 
     novas_pericias = {}
     lista_para_processar = list(DADOS_PERICIAS.keys())
-
     todos_oficios = [k for k in ficha.pericias.keys() if k.startswith("Ofício")] + \
                     [k for k in pericias_extras_gratis if k.startswith(
                         "Ofício")]
-
     for of in set(todos_oficios):
         if of not in lista_para_processar:
             lista_para_processar.append(of)
 
+    # 2. Loop Final de Cálculo
     for nome_pericia in lista_para_processar:
         chave_dados = "Ofício" if nome_pericia.startswith(
             "Ofício") else nome_pericia
         dados_base = DADOS_PERICIAS.get(chave_dados, {
                                         "atributo": "int", "treino_apenas": False, "penalidade_armadura": False})
-
         info_atual = ficha.pericias.get(nome_pericia, PericiaInfo())
 
         ganhou_extra = nome_pericia in pericias_extras_gratis
@@ -396,10 +423,19 @@ def inicializar_pericias(ficha: Personagem):
         esta_treinado = (info_atual.treino >
                          0) or ganhou_extra or ganhou_na_classe
 
-        attr_chave = getattr(info_atual, "atributo_override",
-                             None) or dados_base["atributo"]
-        mod_attr = modificadores.get(attr_chave, 0)
+        # Atributo
+        attr_padrao = dados_base["atributo"]
+        possiveis = [attr_padrao]
+        if nome_pericia in opcoes_atributos_extras:
+            for opt in opcoes_atributos_extras[nome_pericia]:
+                if opt not in possiveis:
+                    possiveis.append(opt)
 
+        attr_final = attr_padrao
+        if info_atual.atributo_selecionado and info_atual.atributo_selecionado in possiveis:
+            attr_final = info_atual.atributo_selecionado
+
+        mod_attr = modificadores.get(attr_final, 0)
         nivel_treino = 1 if esta_treinado else 0
         bonus_treino = 0
         if esta_treinado:
@@ -410,27 +446,56 @@ def inicializar_pericias(ficha: Personagem):
             else:
                 bonus_treino = 2
 
-        # Somas dos Bônus
-        bonus_fixo = bonus_numerico_habilidades.get(nome_pericia, 0)
-        bonus_dinamico = bonus_por_atributo.get(attr_chave, 0)
+        # --- CÁLCULO DOS BÔNUS AUTOMÁTICOS COM FONTES ---
+        total_automatico = 0
+        lista_fontes = []
 
-        # Total vindo de habilidades (Automático)
-        total_automatico = bonus_fixo + bonus_dinamico
+        # A. Bônus Específicos
+        if nome_pericia in detalhamento_bonus:
+            for item in detalhamento_bonus[nome_pericia]:
+                total_automatico += item["valor"]
+                sinal = "+" if item["valor"] >= 0 else ""
+                lista_fontes.append(
+                    f"{item['fonte']} ({sinal}{item['valor']})")
 
-        penalidade_aplicada = penalidade_armadura_valor if dados_base["penalidade_armadura"] else 0
+        # B. Bônus por Atributo (Ex: Meio-Elfo)
+        bonus_attr = bonus_por_atributo.get(attr_final, 0)
+        if bonus_attr != 0:
+            total_automatico += bonus_attr
+            sinal = "+" if bonus_attr >= 0 else ""
+            # Nome genérico pois pode vir de várias fontes, mas geralmente é racial
+            lista_fontes.append(
+                f"Habilidade Racial/Geral ({sinal}{bonus_attr})")
+
+        # C. Penalidade de Tamanho
+        penalidade_aplicada = 0
+        if dados_base["penalidade_armadura"]:
+            penalidade_aplicada += penalidade_armadura_valor
+
+        if nome_pericia == "Furtividade" and penalidade_tamanho_furtividade != 0:
+            penalidade_aplicada += penalidade_tamanho_furtividade
+            lista_fontes.append(f"Tamanho ({penalidade_tamanho_furtividade})")
+
+        if penalidade_aplicada != 0 and nome_pericia != "Furtividade":
+            # Se for armadura, não precisa listar na 'fonte' pois tem ícone de escudo,
+            # mas podemos adicionar se quiser detalhe.
+            pass
 
         total = bonus_metade_nivel + mod_attr + \
             bonus_treino + info_atual.outros + total_automatico + penalidade_aplicada
 
-        # Agora passamos direto no construtor, pois atualizamos o models.py
         novas_pericias[nome_pericia] = PericiaInfo(
             treino=nivel_treino,
             bonus_nivel=bonus_metade_nivel,
             atributo_valor=mod_attr,
             outros=info_atual.outros,
             total=total,
-            bonus_automatico=total_automatico  # <--- Campo oficial agora
+            bonus_automatico=total_automatico,
+            atributo_selecionado=attr_final,
+            atributos_possiveis=possiveis,
+            fontes_bonus=lista_fontes
         )
+
     ficha.pericias = novas_pericias
 
 

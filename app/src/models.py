@@ -145,9 +145,10 @@ class PericiaInfo(BaseModel):
     atributo_valor: int = 0
     outros: int = 0
     total: int = 0
-    atributo_override: str = ""
     bonus_automatico: Optional[int] = 0
-
+    atributo_selecionado: Optional[str] = None 
+    atributos_possiveis: List[str] = []   
+    fontes_bonus: List[str] = []     
 
 class Ataque(BaseModel):
     nome: str = ""
