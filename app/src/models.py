@@ -136,6 +136,7 @@ class Status(BaseModel):
     deslocamento: float = 9.0
     detalhes_deslocamento: Optional[DetalhesDeslocamento] = None
     buffs: List[Buff] = []
+    efeitos_ativos: List[str] = []
 # --- PERÍCIAS E COMBATE ---
 
 

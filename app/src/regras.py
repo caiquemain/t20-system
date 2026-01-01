@@ -854,6 +854,56 @@ def processar_acumulo_habilidades(ficha: Personagem):
                         hab.descricao += tag_reducao
 
 
+def atualizar_efeitos_ativos(ficha: Personagem):
+    """
+    Varre habilidades e lista efeitos duradouros com suas descrições.
+    """
+    lista_efeitos = []
+
+    for hab in ficha.habilidades:
+        efeitos = (hab.efeitos or {}).copy()
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+
+        # 1. Magias Duradouras (Agora busca a descrição!)
+        if "magias_duradouras" in efeitos:
+            for nome_magia in efeitos["magias_duradouras"]:
+                # Tenta achar a magia no dicionário pelo Nome
+                dados_magia = None
+
+                # Se DADOS_MAGIAS for dicionário { "Chave": {dados} }
+                for m in DADOS_MAGIAS.values():
+                    if m.get("nome") == nome_magia:
+                        dados_magia = m
+                        break
+
+                # Se achou, pega a descrição. Se não, usa um texto genérico.
+                if dados_magia:
+                    desc_curta = dados_magia.get("descricao", "")
+                    # Remove ponto final para ficar bonito na lista
+                    if desc_curta.endswith('.'):
+                        desc_curta = desc_curta[:-1]
+
+                    texto_final = f"✨ {nome_magia}: {desc_curta}"
+                else:
+                    # Fallback caso não ache a magia ou o arquivo não esteja carregado
+                    texto_final = f"✨ {nome_magia}"
+
+                lista_efeitos.append(texto_final)
+
+        # 2. Imunidades
+        if "imunidade" in efeitos:
+            for imune in efeitos["imunidade"]:
+                lista_efeitos.append(f"🛡️ Imune a {imune.capitalize()}")
+
+        # 3. Sentidos
+        if "sentidos" in efeitos:
+            for sentido in efeitos["sentidos"]:
+                lista_efeitos.append(f"👁️ {sentido}")
+
+    ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
+
+
 def atualizar_ficha(ficha: Personagem) -> Personagem:
     logger.info(f"🔄 INICIANDO ATUALIZAÇÃO: {ficha.cabecalho.nome}")
 
@@ -889,6 +939,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
 
     # 7. NOVOS DERIVADOS: Ataques
     sincronizar_ataques(ficha)  # <--- ADICIONADO AQUI
+    atualizar_efeitos_ativos(ficha)
 
     logger.info("✅ Ficha atualizada com sucesso.")
     return ficha
