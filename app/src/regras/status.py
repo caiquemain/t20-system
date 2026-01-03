@@ -116,28 +116,55 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
 
 
 def calcular_reducoes_dano(ficha: Personagem):
-    lista = []
+    logger.info("--- [7] Calculando RD e Resistências ---")
+    lista_rd = []
+
+    # 1. Conta Poderes da Tormenta (para escalas)
+    qtd_tormenta = sum(
+        1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
+
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
+
+        # A. RD Simples e Fixa (ex: "Corte": 5)
         if "resistencia_rd" in efeitos:
             for t, v in efeitos["resistencia_rd"].items():
-                lista.append(f"{t} {v}")
+                lista_rd.append(f"{t} {v}")
+
+        # B. RD de Escolha (ex: Bárbaro escolhe um elemento)
         if efeitos.get("resistencia_rd_escolha"):
-            lista.append(f"{efeitos['resistencia_rd_escolha']} 10")
-    ficha.status.rd = lista
+            lista_rd.append(f"{efeitos['resistencia_rd_escolha']} 10")
+
+        # C. NOVA LÓGICA: RD Escalável da Tormenta (Pele Corrompida)
+        # Espera: { "elementos": ["Fogo", "Frio"], "base": 2, "por_poder": 2 }
+        if "rd_escalavel_tormenta" in efeitos:
+            dados = efeitos["rd_escalavel_tormenta"]
+            elementos = dados.get("elementos", [])
+            base = dados.get("base", 0)
+            bonus_por_poder = dados.get("por_poder", 0)
+
+            # "Aumenta com OUTROS poderes", então subtrai 1 da contagem total
+            # Se só tiver ele mesmo, o bônus extra é 0.
+            qtd_outros = max(0, qtd_tormenta - 1)
+            total = base + (qtd_outros * bonus_por_poder)
+
+            for elem in elementos:
+                lista_rd.append(f"{elem} {total}")
+
+    ficha.status.rd = lista_rd
 
 
-# --- NOVA FUNÇÃO: CALCULA PROFICIÊNCIAS E EXTRAS ---
+# --- FUNÇÃO ATUALIZADA COM SUPORTE A ELFO (Visão na Penumbra) ---
 def calcular_proficiencias_e_extras(ficha: Personagem):
-    logger.info("--- [6] Proficiências e Extras (Anão/Guerreiro) ---")
+    logger.info("--- [6] Proficiências e Extras (Versão Elfo/Anão) ---")
 
     proficiencias = set()
     imunidades = set()
     sentidos = set()
 
-    # 1. Proficiências Básicas da Classe (Guerreiro)
+    # 1. Proficiências Básicas da Classe
     if ficha.classes:
         for c in ficha.classes:
             dc = DADOS_CLASSES.get(c.nome or "", {})
@@ -147,7 +174,7 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
             for p in lista_prof:
                 proficiencias.add(p)
 
-    # 2. Varre Habilidades (Anão: Heredrimm, Rochas, etc)
+    # 2. Varre Habilidades
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
@@ -167,12 +194,10 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
             if k in efeitos:
                 val = efeitos[k]
                 if isinstance(val, list):
-                    # Ex: ["Machado de Batalha", "Marreta"]
                     proficiencias.update([str(v) for v in val])
                 elif isinstance(val, str):
                     proficiencias.add(val)
                 elif val is True:
-                    # Ex: proficiencia_escudo: true -> "Escudo"
                     nome_legivel = k.replace("proficiencia_", "").capitalize()
                     if nome_legivel == "Simples":
                         nome_legivel = "Armas Simples"
@@ -188,11 +213,10 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
             else:
                 imunidades.add(str(val))
 
-        # Devagar e Sempre (Anão): "imunidade_penalidade_mov"
         if "imunidade_penalidade_mov" in efeitos:
             imunidades.add("Deslocamento (Armadura/Carga)")
 
-        # --- C. SENTIDOS ---
+        # --- C. SENTIDOS (ATUALIZADO AQUI) ---
         if "sentido" in efeitos:
             val = efeitos["sentido"]
             if isinstance(val, list):
@@ -200,14 +224,18 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
             else:
                 sentidos.add(str(val))
 
-        # Conhecimento das Rochas: "visao_escuro": true
+        # Anão / Trog / Golem
         if efeitos.get("visao_escuro"):
             sentidos.add("Visão no Escuro")
+
+        # Elfo (Sentidos Élficos) <--- NOVO
+        if efeitos.get("visao_penumbra"):
+            sentidos.add("Visão na Penumbra")
 
         if efeitos.get("faro"):
             sentidos.add("Faro")
 
-    # Salva no objeto status (para o Frontend ler)
+    # Salva no objeto status
     ficha.status.proficiencias = sorted(list(proficiencias))
     ficha.status.imunidades = sorted(list(imunidades))
     ficha.status.sentidos = sorted(list(sentidos))
