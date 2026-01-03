@@ -78,11 +78,15 @@ DADOS_PODERES_TORMENTA = {
     "Pele_Corrompida": {
         "nome": "Pele Corrompida",
         "tipo": "Poder da Tormenta",
-        "descricao": "RD 2 a ácido, eletricidade, fogo, frio, luz, trevas. Aumenta com outros poderes. (Perde 1 Carisma)",
+        "descricao": "RD 2 a ácido, eletricidade, fogo, frio, luz, trevas. Aumenta +2 para cada outro poder da Tormenta. (Perde 1 Carisma)",
         "fonte": "T20 JdA",
         "requisitos": [],
         "efeitos": {
-            "resistencia_elemental_tormenta": 2,
+            "rd_escalavel_tormenta": {
+                "elementos": ["Ácido", "Eletricidade", "Fogo", "Frio", "Luz", "Trevas"],
+                "base": 2,
+                "por_poder": 2
+            },
             "atributo_bonus": {"car": -1}
         }
     },
