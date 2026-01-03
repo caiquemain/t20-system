@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Any, Union
 from enum import Enum
-from pydantic import BaseModel, Field, model_validator, field_validator, root_validator
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 # Tenta importar ObjectId do BSON (MongoDB), se falhar usa Any
 try:
@@ -24,8 +24,6 @@ class TamanhoEnum(str, Enum):
         return cls.MEDIO
 
 # --- SUB-MODELOS DE DETALHES (Cálculos) ---
-
-# ADICIONADO: Classe unificada que o regras.py está pedindo
 
 
 class DetalhesCalculo(BaseModel):
@@ -119,7 +117,6 @@ class StatusDetalhe(BaseModel):
     atual: int = 0
     maximo: int = 0
     temporario: int = 0
-    # ATUALIZADO: Agora usa a classe unificada DetalhesCalculo
     calculo: Optional[DetalhesCalculo] = None
 
 
@@ -137,6 +134,12 @@ class Status(BaseModel):
     detalhes_deslocamento: Optional[DetalhesDeslocamento] = None
     buffs: List[Buff] = []
     efeitos_ativos: List[str] = []
+
+    # --- NOVOS CAMPOS ADICIONADOS ---
+    proficiencias: List[str] = []
+    imunidades: List[str] = []
+    sentidos: List[str] = []
+
 # --- PERÍCIAS E COMBATE ---
 
 
@@ -147,9 +150,10 @@ class PericiaInfo(BaseModel):
     outros: int = 0
     total: int = 0
     bonus_automatico: Optional[int] = 0
-    atributo_selecionado: Optional[str] = None 
-    atributos_possiveis: List[str] = []   
-    fontes_bonus: List[str] = []     
+    atributo_selecionado: Optional[str] = None
+    atributos_possiveis: List[str] = []
+    fontes_bonus: List[str] = []
+
 
 class Ataque(BaseModel):
     nome: str = ""
@@ -159,36 +163,25 @@ class Ataque(BaseModel):
     tipo: str = "Corte"
     alcance: str = "Curto"
     teste: str = "Luta"
-    especial: Optional[str] = "" 
-
-class Aprimoramento(BaseModel):
-    custo: str
-    descricao: str
-    efeitos: Dict[str, Any] = {}
-
-# Atualize a class Magia para incluir a lista
+    especial: Optional[str] = ""
 
 
 class Magia(BaseModel):
     nome: str
-    circulo: int
-    escola: str = ""
+    circulo: Union[int, str]
+    escola: Optional[str] = ""
     tipo: str = "Universal"
-    execucao: str = ""
-    alcance: str = ""
-    alvo: str = ""
-    duracao: str = ""
-    resistencia: str = ""
-    custo_pm: int = 0
+    execucao: Optional[str] = ""
+    alcance: Optional[str] = ""
+    alvo: Optional[str] = ""
+    duracao: Optional[str] = ""
+    resistencia: Optional[str] = ""
+    custo_pm: Union[int, str] = 0
     descricao: str = ""
-
-    # --- CAMPOS ADICIONADOS PARA COMPATIBILIDADE ---
-    atributo_chave: str = ""   # Ex: "Car" para Bardo/Sereia
-    fonte: str = ""            # Ex: "Racial: Sereia"
-    efeito: str = ""           # Texto mecânico curto (comum nos JSONs)
-    # -----------------------------------------------
-
-    aprimoramentos: List[Aprimoramento] = []
+    atributo_chave: Optional[str] = ""
+    fonte: Optional[str] = ""
+    efeito: Optional[str] = ""
+    aprimoramentos: Optional[List[Dict[str, Any]]] = []
 
     @model_validator(mode='before')
     @classmethod
@@ -274,6 +267,7 @@ class Personagem(BaseModel):
     status: Status = Field(default_factory=Status)
 
     pericias: Dict[str, PericiaInfo] = {}
+
     proficiencias: List[str] = []
 
     combate: Combate = Field(default_factory=Combate)

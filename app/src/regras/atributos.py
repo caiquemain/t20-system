@@ -46,6 +46,9 @@ def aplicar_bonus_atributos_raciais(ficha: Personagem):
         tamanho = dados_raca.get("tamanho", TamanhoEnum.MEDIO)
         ficha.descricao.tamanho = tamanho
 
+        if "deslocamento" in dados_raca:
+            ficha.status.deslocamento = dados_raca["deslocamento"]
+
     return ficha
 
 
@@ -62,13 +65,33 @@ def calcular_atributos_finais(ficha: Personagem):
         mods = efeitos.get("atributo_bonus")
 
         if mods:
-            for attr_short, valor in mods.items():
-                attr_full = str(mapa_attr.get(attr_short, attr_short))
+            # --- CORREÇÃO DO ERRO 500 ---
+            # Se vier lista ['for', 'int'], converte para {'for': 1, 'int': 1}
+            if isinstance(mods, list):
+                temp_mods = {}
+                for item in mods:
+                    if isinstance(item, str) and item:
+                        temp_mods[item] = temp_mods.get(item, 0) + 1
+                mods = temp_mods
+            # ---------------------------
 
-                # Exceção Hardcoded: Deformidade não reduz Carisma
-                if (hab.fonte == "Habilidade: Deformidade" and attr_short == "car" and valor < 0):
-                    continue
+            if isinstance(mods, dict):
+                for attr_short, valor in mods.items():
+                    attr_full = str(mapa_attr.get(attr_short, attr_short))
 
-                if hasattr(ficha.atributos, attr_full):
-                    valor_atual = getattr(ficha.atributos, attr_full)
-                    setattr(ficha.atributos, attr_full, valor_atual + valor)
+                    if (hab.fonte == "Habilidade: Deformidade" and attr_short == "car" and int(valor) < 0):
+                        continue
+
+                    if hasattr(ficha.atributos, attr_full):
+                        valor_atual = getattr(ficha.atributos, attr_full)
+                        try:
+                            setattr(ficha.atributos, attr_full,
+                                    valor_atual + int(valor))
+                        except ValueError:
+                            pass
+
+        if "tamanho" in efeitos:
+            try:
+                ficha.descricao.tamanho = TamanhoEnum(efeitos["tamanho"])
+            except ValueError:
+                pass

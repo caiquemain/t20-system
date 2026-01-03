@@ -1,7 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 from typing import List, Any, cast, Optional
-from bson import ObjectId  # Importante para IDs do Mongo
+from bson import ObjectId
 from typing import Dict
 
 from fastapi import FastAPI, HTTPException, Body, status, Request
@@ -27,7 +27,6 @@ from src.dados_poderes_tormenta import DADOS_PODERES_TORMENTA
 from src.models import Magia
 
 # --- CONFIGURAÇÃO ---
-# Prioriza o nome do host 'db' (Docker), fallback para localhost
 MONGO_URL = os.getenv("MONGO_URI", "mongodb://db:27017/tormenta20")
 
 # --- CICLO DE VIDA ---
@@ -38,11 +37,9 @@ async def lifespan(app: FastAPI):
     print(f"🔄 Conectando ao MongoDB em: {MONGO_URL} ...")
     try:
         client = AsyncIOMotorClient(MONGO_URL)
-        # Testa a conexão
         await client.server_info()
         app.state.mongo_client = client
-        app.state.db = client.get_database(
-            "tormenta20")  # Força o nome do banco
+        app.state.db = client.get_database("tormenta20")
         print(f"✅ Conectado com sucesso!")
         yield
         client.close()
@@ -143,16 +140,14 @@ def listar_poderes_concedidos():
 @app.get("/poderes", tags=["Dados"])
 def listar_poderes_categorizados():
     """
-    Retorna uma lista unificada de Poderes Gerais, Poderes Concedidos,
-    Poderes da Tormenta e Habilidades Raciais (para Osteon).
+    Retorna uma lista unificada com flag 'is_general' para facilitar filtros.
     """
     lista_poderes = []
-    nomes_adicionados = set()  # Para evitar duplicatas
+    nomes_adicionados = set()
 
-    # 1. Processar Habilidades Gerais
+    # 1. Poderes Gerais (Combate, Destino, Magia)
     for chave, dados in HABILIDADES_GERAIS.items():
         tipo = dados.get("tipo", "")
-        # Filtra apenas poderes compráveis (exclui Origens e Raciais genéricos daqui)
         if "Poder" in tipo:
             categoria = "Geral"
             if "Combate" in tipo:
@@ -168,94 +163,76 @@ def listar_poderes_categorizados():
                 "nome": dados["nome"],
                 "categoria": categoria,
                 "descricao": dados.get("descricao", ""),
-                "requisitos": dados.get("requisitos", [])
+                "requisitos": dados.get("requisitos", []),
+                "is_general": True  # <--- A BANDEIRA SALVADORA
             })
             nomes_adicionados.add(dados["nome"])
 
-    # 2. Processar Poderes Concedidos
+    # 2. Poderes Concedidos
     for nome, dados in DADOS_PODERES_CONCEDIDOS.items():
         if dados["nome"] not in nomes_adicionados:
             lista_poderes.append({
                 "nome": dados["nome"],
                 "categoria": "Poder Concedido",
                 "descricao": dados.get("descricao", ""),
-                "requisitos": []
+                "requisitos": [],
+                "is_general": False  # Concedidos não são gerais
             })
             nomes_adicionados.add(dados["nome"])
 
-    # 3. Processar Poderes da Tormenta
+    # 3. Poderes da Tormenta
     for nome, dados in DADOS_PODERES_TORMENTA.items():
         if dados["nome"] not in nomes_adicionados:
             lista_poderes.append({
                 "nome": dados["nome"],
                 "categoria": "Tormenta",
                 "descricao": dados.get("descricao", ""),
-                "requisitos": dados.get("requisitos", [])
+                "requisitos": dados.get("requisitos", []),
+                "is_general": True  # Tormenta conta como Poder Geral
             })
             nomes_adicionados.add(dados["nome"])
 
-    # 4. Processar Habilidades Raciais (NOVO - Para Osteon)
-    # Itera sobre cada raça para pegar suas habilidades específicas
+    # 4. Habilidades Raciais (Osteon/Duende)
     for raca_nome, raca_dados in DADOS_RACAS.items():
         if raca_nome == "Osteon":
-            continue  # Osteon não copia dele mesmo
+            continue
 
         habilidades_keys = raca_dados.get("habilidades", [])
         for hab_key in habilidades_keys:
-            # Tenta achar nos dados raciais ou gerais
             dados = DADOS_HABILIDADES_RACIAIS.get(
                 hab_key) or HABILIDADES_GERAIS.get(hab_key)
-
             if dados:
                 nome_hab = dados["nome"]
-                # Adiciona prefixo na categoria para aparecer bonito no seletor
-                # Ex: Categoria "Raça: Anão" agrupa todas do anão juntas
                 lista_poderes.append({
                     "nome": nome_hab,
                     "categoria": f"Raça: {raca_nome}",
                     "descricao": dados.get("descricao", ""),
-                    "requisitos": []
+                    "requisitos": [],
+                    "is_general": False  # Raciais definitivamente não são gerais
                 })
 
     return sorted(lista_poderes, key=lambda x: x["nome"])
 
 
 @app.get("/dados/habilidades-raciais", tags=["Dados Estáticos"])
-def listar_todas_habilidades_raciais():
-    """
-    Retorna lista de habilidades raciais para seleção do Osteon (Memória Póstuma).
-    """
-    lista = []
+def get_dados_habilidades_raciais():
+    resposta = {}
     for chave, dados in DADOS_HABILIDADES_RACIAIS.items():
-        # Filtros opcionais: Osteon não pode pegar habilidades que mudam tamanho ou dão atributos.
-        # Mas vamos mandar tudo e deixar o mestre/jogador filtrar visualmente se quiser.
-        lista.append({
-            "nome": dados["nome"],
-            "descricao": dados.get("descricao", ""),
-            "fonte": "Racial"
-        })
-    return sorted(lista, key=lambda x: x["nome"])
+        item = dados.copy()
+        item["id"] = chave
+        resposta[chave] = item
+    return resposta
+
 # --- ROTAS DE PERSONAGEM (CRUD) ---
 
 
 @app.post("/personagens/", response_model=Personagem, status_code=status.HTTP_201_CREATED, tags=["Personagens"])
 async def criar_personagem(personagem: Personagem, request: Request):
     db = get_db(request)
-
-    # 1. Recalcula Regras (PV, PM, Habilidades Iniciais)
     personagem_calculado = atualizar_ficha(personagem)
-
-    # 2. Prepara JSON (EXCLUI O ID para o Mongo gerar um novo)
     personagem_dict = personagem_calculado.model_dump(
-        by_alias=True,
-        mode='json',
-        exclude={"id"}  # Importante!
-    )
-
-    # 3. Insere
+        by_alias=True, mode='json', exclude={"id"})
     novo_personagem = await db["personagens"].insert_one(personagem_dict)
-
-    # 4. Retorna o objeto criado
     criado = await db["personagens"].find_one({"_id": novo_personagem.inserted_id})
     return criado
 
@@ -263,27 +240,20 @@ async def criar_personagem(personagem: Personagem, request: Request):
 @app.get("/personagens/", response_model=List[Personagem], tags=["Personagens"])
 async def listar_personagens(request: Request):
     db = get_db(request)
-    # Retorna lista (limitada a 100 para segurança)
     return await db["personagens"].find().to_list(100)
 
 
 @app.get("/personagens/{personagem_id}", response_model=Personagem, tags=["Personagens"])
 async def obter_personagem(personagem_id: str, request: Request):
     db = get_db(request)
-
-    # Tenta converter string para ObjectId
     try:
         query_id = ObjectId(personagem_id)
     except:
-        query_id = personagem_id  # Tenta buscar como string se falhar (legado)
-
+        query_id = personagem_id
     personagem = await db["personagens"].find_one({"_id": query_id})
-
     if personagem is None:
         raise HTTPException(
             status_code=404, detail="Personagem não encontrado")
-
-    # Converte e Atualiza (Garante que regras novas se apliquem a fichas salvas)
     personagem_obj = Personagem.model_validate(personagem)
     return atualizar_ficha(personagem_obj)
 
@@ -291,57 +261,36 @@ async def obter_personagem(personagem_id: str, request: Request):
 @app.put("/personagens/{personagem_id}", response_model=Personagem, tags=["Personagens"])
 async def atualizar_personagem(personagem_id: str, personagem: Personagem, request: Request):
     db = get_db(request)
-
-    # Recalcula regras antes de salvar
     personagem_calculado = atualizar_ficha(personagem)
-
-    # Prepara dados, excluindo ID para não sobrescrever a chave primária
     personagem_dict = personagem_calculado.model_dump(
-        by_alias=True,
-        mode='json',
-        exclude={"id"}
-    )
-
+        by_alias=True, mode='json', exclude={"id"})
     try:
         query_id = ObjectId(personagem_id)
     except:
         query_id = personagem_id
-
-    # Find One and Update retorna o documento ATUALIZADO
-    result = await db["personagens"].find_one_and_update(
-        {"_id": query_id},
-        {"$set": personagem_dict},
-        return_document=ReturnDocument.AFTER
-    )
-
+    result = await db["personagens"].find_one_and_update({"_id": query_id}, {"$set": personagem_dict}, return_document=ReturnDocument.AFTER)
     if result is None:
         raise HTTPException(
             status_code=404, detail="Personagem não encontrado")
-
     return result
 
 
 @app.delete("/personagens/{personagem_id}", status_code=204, tags=["Personagens"])
 async def deletar_personagem(personagem_id: str, request: Request):
     db = get_db(request)
-
     try:
         query_id = ObjectId(personagem_id)
     except:
         query_id = personagem_id
-
     resultado = await db["personagens"].delete_one({"_id": query_id})
-
     if resultado.deleted_count == 0:
         raise HTTPException(
             status_code=404, detail="Personagem não encontrado")
-
     return None
 
 
 @app.delete("/admin/limpar-tudo", tags=["Admin"])
 async def limpar_banco(request: Request):
-    """Apaga TODOS os personagens. Use com cuidado!"""
     db = get_db(request)
     await db["personagens"].delete_many({})
     return {"message": "Banco de dados limpo com sucesso!"}

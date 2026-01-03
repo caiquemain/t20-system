@@ -118,6 +118,19 @@ DADOS_RACAS = {
     },
 
     # -- Heróis de Arton) ---
+    "Duende": {
+        "attrs": {},
+        "escolhas": 0,
+        "tamanho": TamanhoEnum.PEQUENO, 
+        "deslocamento": 9,
+        "habilidades": [
+            "Natureza_Duende",
+            "Tamanho_Duende",       
+            "Dons_Duende",          
+            "Presentes_Duende",     
+            "Limitacoes_Duende"     
+        ]
+    },
     "Eiradaan": {
         "attrs": {"sab": 2, "car": 1, "for": -1},
         "escolhas": 0,

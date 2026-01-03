@@ -22,9 +22,11 @@ import type { Magia } from '../types';
 const PONTOS_INICIAIS = 10;
 const MAPA_ATTR_KEY: Record<string, string> = { 'forca': 'for', 'destreza': 'des', 'constituicao': 'con', 'inteligencia': 'int', 'sabedoria': 'sab', 'carisma': 'car' };
 const TABELA_CUSTO: Record<string, number> = { "-1": -1, "0": 0, "1": 1, "2": 2, "3": 4, "4": 7 };
+
 const RACAS_METADATA: Record<string, { attrs: Record<string, number>, escolhas: number }> = {
     "Anão": { attrs: { con: 2, sab: 1, des: -1 }, escolhas: 0 },
     "Dahllan": { attrs: { sab: 2, des: 1, int: -1 }, escolhas: 0 },
+    "Duende": { attrs: {}, escolhas: 2 },
     "Eiradaan": { attrs: { sab: 2, car: 1, for: -1 }, escolhas: 0 },
     "Elfo": { attrs: { int: 2, des: 1, con: -1 }, escolhas: 0 },
     "Galokk": { attrs: { for: 1, con: 1, car: -1 }, escolhas: 1 },
@@ -40,6 +42,8 @@ const RACAS_METADATA: Record<string, { attrs: Record<string, number>, escolhas: 
     "Meio-Elfo": { attrs: { int: 1 }, escolhas: 2 },
     "Osteon": { attrs: { con: -1 }, escolhas: 3 },
     "Sereia/Tritão": { attrs: {}, escolhas: 3 },
+    // ADICIONADO: Sátiro estava faltando!
+    "Sátiro": { attrs: { car: 2, des: 1, sab: -1 }, escolhas: 0 },
     "Sílfide": { attrs: { car: 2, des: 1, for: -2 }, escolhas: 0 },
     "Suraggel (Aggelus)": { attrs: { sab: 2, car: 1 }, escolhas: 0 },
     "Suraggel (Sulfure)": { attrs: { des: 2, int: 1 }, escolhas: 0 },
@@ -68,6 +72,9 @@ function Ficha() {
         dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
         listaDeuses, dadosDeuses, dadosHabilidades,
+        // [NOVO] Desestruturando o dado novo
+        dadosHabilidadesRaciais,
+
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
@@ -247,6 +254,9 @@ function Ficha() {
                 dadosOrigens={dadosOrigens}
                 dadosDeuses={dadosDeuses}
                 dadosMagias={dadosMagias}
+                // [NOVO] Passando os dados de sub-habilidades para o Modal
+                dadosHabilidadesRaciais={dadosHabilidadesRaciais}
+
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}

@@ -115,6 +115,9 @@ export interface Status {
     detalhes_deslocamento?: DetalhesDeslocamento;
     efeitos_ativos?: string[];
     buffs?: Buff[];
+    proficiencias: string[];
+    imunidades: string[];
+    sentidos: string[];
 }
 
 export interface PericiaInfo {

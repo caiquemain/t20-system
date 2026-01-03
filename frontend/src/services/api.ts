@@ -34,5 +34,5 @@ export const fetchPersonagem = (id: string) => api.get(`/personagens/${id}`);
 export const createPersonagem = (data: Personagem) => api.post('/personagens/', data);
 export const updatePersonagem = (id: string, data: Partial<Personagem>) => api.put(`/personagens/${id}`, data);
 export const deletePersonagem = (id: string) => api.delete(`/personagens/${id}`);
-
+export const fetchDadosHabilidadesRaciais = () => api.get('/dados/habilidades-raciais');
 export default api;

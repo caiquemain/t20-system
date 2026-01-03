@@ -5,6 +5,8 @@ import {
     // Dados Completos (Regras)
     fetchDadosClasses, fetchDadosOrigens, fetchDadosRacas, fetchDadosHabilidadesClasse,
     fetchDadosMagias, fetchDadosHabilidades, fetchDadosDeuses, fetchDadosPoderesConcedidos,
+    // [NOVO] Dados de Habilidades Raciais (Sub-escolhas)
+    fetchDadosHabilidadesRaciais,
     // Ações de Personagem
     fetchPersonagem, updatePersonagem, createPersonagem
 } from '../services/api';
@@ -57,6 +59,8 @@ export const useFicha = (id: string | undefined) => {
     const [dadosHabilidades, setDadosHabilidades] = useState<any>({});
     const [dadosDeuses, setDadosDeuses] = useState<any>({});
     const [dadosPoderesConcedidos, setDadosPoderesConcedidos] = useState<any>({});
+    // [NOVO] Estado para Habilidades Raciais (Duende, Osteon, etc)
+    const [dadosHabilidadesRaciais, setDadosHabilidadesRaciais] = useState<any>({});
 
     // --- ESTADOS DE EDIÇÃO (MODAL) ---
     const [showHabilidadesPanel, setShowHabilidadesPanel] = useState(false);
@@ -79,13 +83,13 @@ export const useFicha = (id: string | undefined) => {
 
                 // Carrega tudo em paralelo
                 const results = await Promise.all([
-                    // Listas simples
+                    // Listas simples (Indices 0-4)
                     fetchRacas(),
                     fetchClasses(),
                     fetchOrigens(),
                     fetchPericias(),
                     fetchPoderes(),
-                    // Dados detalhados
+                    // Dados detalhados (Indices 5-10)
                     fetchDadosClasses(),
                     fetchDadosOrigens(),
                     fetchDadosRacas(),
@@ -98,9 +102,15 @@ export const useFicha = (id: string | undefined) => {
                         console.warn("Aviso: Falha ao carregar Habilidades Gerais", err);
                         return { data: {} };
                     }),
+                    // Dados extras (Indices 11-13)
                     fetchDeuses().catch(() => ({ data: [] })),
                     fetchDadosDeuses().catch(() => ({ data: {} })),
-                    fetchDadosPoderesConcedidos().catch(() => ({ data: {} }))
+                    fetchDadosPoderesConcedidos().catch(() => ({ data: {} })),
+                    // [NOVO] (Indice 14)
+                    fetchDadosHabilidadesRaciais().catch((err) => {
+                        console.warn("Aviso: Falha ao carregar Habilidades Raciais", err);
+                        return { data: {} };
+                    })
                 ]);
 
                 // Define as Listas
@@ -121,6 +131,8 @@ export const useFicha = (id: string | undefined) => {
                 setListaDeuses(results[11].data);
                 setDadosDeuses(results[12].data);
                 setDadosPoderesConcedidos(results[13].data);
+                // [NOVO]
+                setDadosHabilidadesRaciais(results[14].data);
 
                 // Carrega ou Cria Ficha
                 const idValido = id && id !== 'novo' && id !== 'null' && id !== 'undefined';
@@ -167,7 +179,6 @@ export const useFicha = (id: string | undefined) => {
             }
 
             if (response && response.data) {
-                // Atualiza o estado com a resposta (útil para pegar cálculos do backend)
                 setFicha(prev => {
                     if (!prev) return response.data;
                     return { ...prev, ...response.data };
@@ -183,23 +194,19 @@ export const useFicha = (id: string | undefined) => {
     }, [id]);
 
     // --- 3. ATUALIZAÇÃO DE ESTADO (Wrapper Público) ---
-    // Agora aceita 'salvarAgora' (boolean) para forçar update imediato
     const updateFicha = useCallback((novosDados: Partial<Personagem>, salvarAgora: boolean = false) => {
         setFicha((prev) => {
             if (!prev) return null;
             const novaFicha = { ...prev, ...novosDados };
             fichaRef.current = novaFicha;
 
-            // Cancela timer anterior
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
             }
 
             if (salvarAgora) {
-                // Salva imediatamente
                 executarSalvamentoReal(novaFicha);
             } else {
-                // Agenda Debounce (1.5s)
                 saveTimeoutRef.current = setTimeout(() => {
                     executarSalvamentoReal(novaFicha);
                 }, 1500);
@@ -222,8 +229,6 @@ export const useFicha = (id: string | undefined) => {
     const handleAtributoBaseChange = (key: string, valorStr: string) => {
         if (!ficha) return;
         const novoValorBase = parseInt(valorStr) || 0;
-
-        // Calcula a diferença para atualizar o total corretamente
         const valorAntigoBase = ficha.atributos_base[key as keyof typeof ficha.atributos_base] || 0;
         const delta = novoValorBase - valorAntigoBase;
 
@@ -237,71 +242,87 @@ export const useFicha = (id: string | undefined) => {
         });
     };
 
-    // B. Prepara dados para o MODAL (Com a lógica para Qareen e Magias)
+    // B. Prepara dados para o MODAL (Com a lógica para Qareen, Magias e DUENDE)
     const montarHabilidadesParaPanel = () => {
         if (!ficha) return;
 
-        // --- FILTRO DE RACIAIS ---
-        const habsRaciais = ficha.habilidades
-            // Filtra por tipo 'Raça', 'Poder Racial' ou se o nome é uma habilidade racial conhecida
-            .filter(h => {
-                const tipo = h.tipo ? h.tipo.toLowerCase() : '';
-                return tipo.includes('raça') || tipo.includes('racial');
-            })
+        const habsParaConfigurar = ficha.habilidades
             .map(h => {
-                // Tenta achar a definição nos dados carregados
+                // 1. Busca dados completos
                 let def = dadosHabilidades[h.nome];
 
-                // Se não achar direto, tenta busca case-insensitive nos valores
+                if (!def && dadosHabilidadesRaciais) {
+                    def = Object.values(dadosHabilidadesRaciais).find((d: any) =>
+                        d.nome === h.nome || h.nome === d.nome
+                    );
+                    if (!def && dadosHabilidadesRaciais[h.nome]) {
+                        def = dadosHabilidadesRaciais[h.nome];
+                    }
+                }
+
                 if (!def) {
                     def = Object.values(dadosHabilidades).find((d: any) =>
                         d.nome && d.nome.toLowerCase() === h.nome.toLowerCase()
                     );
                 }
 
-                // Efeitos acumulados (da definição + escolhas já feitas)
-                const efeitos = def?.efeitos || {};
+                const efeitos = def?.efeitos || h.efeitos || {};
+                const escolhasFeitas = h.escolhas_aplicadas || {};
 
-                // GATILHOS: Palavras-chave que indicam que essa habilidade precisa de configuração
+                // 2. Verifica se TEM algo para configurar
+                const temGatilhoDeEscolha = Object.keys(efeitos).some(k => k.endsWith('_escolha'));
+
+                // Gatilhos de nome (Pais)
                 const gatilhosDeEscolha = [
-                    'Versátil',    // Humanos
-                    'Herança',     // Aggelus/Sulfure
-                    'Tatuagem',    // Qareen (Magia)
-                    'Mística',     // Variação
-                    'Deformidade', // Lefou
-                    'Perícia',     // Várias raças
-                    'Adaptável',
-                    'Arma',
-                    'Elemento'
+                    'Versátil', 'Herança', 'Tatuagem', 'Mística', 'Deformidade', 'Perícia',
+                    'Adaptável', 'Arma', 'Elemento',
+                    'Natureza', 'Tamanho', 'Presentes', 'Limitações', 'Dons', 'Memória'
                 ];
 
-                // Verifica se precisa de escolha pelo JSON de efeitos OU pelo nome
-                const precisa =
-                    Object.keys(efeitos).some(k => k.endsWith('_escolha')) ||
-                    gatilhosDeEscolha.some(n => h.nome.includes(n));
+                // 3. LISTA NEGRA: Remove tudo que sabemos que é passivo ou resultado
+                // Adicionei aqui todas as que apareceram no seu print
+                const ignorar = [
+                    // Passivas gerais
+                    "Mineral", "Vegetal", "Minúsculo", "Pequeno", "Médio", "Grande",
+                    "Afinidade Elemental",
+                    // Passivas do Duende (Presentes/Tabus)
+                    "Voo", "Invisibilidade (Poder)", "Enfeitiçar (Poder)",
+                    "Encantar Objetos", "Língua da Natureza", "Maldição",
+                    "Mais Lá do que Aqui", "Metamorfose Animal", "Sonhos Proféticos",
+                    "Velocidade do Pensamento", "Visão Feérica", "Tabu"
+                ];
+
+                // Se estiver na lista negra, só passa se TIVER uma escolha explícita (ex: Natureza Animal tem escolha de atributo)
+                if (ignorar.some(nome => h.nome.includes(nome)) && !temGatilhoDeEscolha) {
+                    return null;
+                }
+
+                // Verifica gatilhos de nome (com cuidado extra para não pegar falsos positivos como 'Língua da Natureza')
+                const matchNome = gatilhosDeEscolha.some(n => h.nome.includes(n));
 
                 return {
                     ...h,
-                    precisaEscolha: precisa,
-                    efeitos: { ...efeitos, ...h.escolhas_aplicadas }
+                    efeitos: { ...efeitos, ...escolhasFeitas },
+                    precisaEscolha: temGatilhoDeEscolha || matchNome
                 };
-            });
+            })
+            // 4. O FILTRO FINAL
+            // Removemos '|| h.tipo === "Racial"' para não deixar passar lixo.
+            // Agora só passa se realmente tiver flag de escolha.
+            .filter(h => h && h.precisaEscolha);
 
-        setHabilidadesEmEdicao(habsRaciais);
+        setHabilidadesEmEdicao(habsParaConfigurar);
 
-        // --- ORIGEM ---
+        // ... Resto da função (Origem, etc) ...
         setOrigemBeneficiosEmEdicao(ficha.escolhas_origem || []);
 
-        // --- CLASSE (Poderes) ---
         const poderesAtuais = ficha.habilidades
             .filter(h => h.tipo.includes('Poder de'))
             .map(h => h.nome);
         setClassPowersEmEdicao(poderesAtuais);
 
-        // --- SUBCLASSE ---
         setSubclasseEmEdicao(ficha.classes[0]?.subclasse || "");
 
-        // --- DEVOÇÃO ---
         const deus = ficha.cabecalho.deus;
         const infoDeus = dadosDeuses[deus];
         if (deus && infoDeus) {
@@ -319,34 +340,24 @@ export const useFicha = (id: string | undefined) => {
         if (!ficha) return;
 
         const novaFicha = { ...ficha };
-
-        // 1. Aplica Origem
         novaFicha.escolhas_origem = origemBeneficiosEmEdicao;
 
-        // 2. Aplica Subclasse
         if (novaFicha.classes.length > 0) {
             novaFicha.classes[0] = { ...novaFicha.classes[0], subclasse: subclasseEmEdicao };
         }
 
-        // 3. Reconstrói Habilidades
-        // Remove poderes antigos e habilidades de classe para readicionar limpo
-        // (Isso evita duplicação de poderes se o usuário trocar e destrocar)
         let habilidadesFinais = novaFicha.habilidades.filter(h =>
             !h.tipo.includes('Poder de') &&
             !h.tipo.includes('Poder Concedido') &&
             h.tipo !== 'Classe'
         );
 
-        // Atualiza as escolhas nas habilidades que sobraram (Raciais/Gerais)
         habilidadesFinais = habilidadesFinais.map(h => {
             const editada = habilidadesEmEdicao.find(he => he.nome === h.nome);
-            // Se foi editada no modal, preserva as escolhas aplicadas
             return editada ? { ...h, escolhas_aplicadas: editada.escolhas_aplicadas } : h;
         });
 
-        // Adiciona novos Poderes de Classe selecionados
         const novosPoderesClasse: Habilidade[] = classPowersEmEdicao.map(nome => {
-            // Tenta achar nos dados de classe, senão nos gerais
             let d = Object.values(dadosHabilidadesClasse).find((x: any) => x.nome === nome) as any;
             if (!d) d = Object.values(dadosHabilidades).find((x: any) => x.nome === nome);
 
@@ -359,7 +370,6 @@ export const useFicha = (id: string | undefined) => {
         });
         habilidadesFinais.push(...novosPoderesClasse);
 
-        // Adiciona Poder Concedido (Devoção)
         if (novaFicha.cabecalho.deus && devocaoEmEdicao) {
             const dPoder = dadosPoderesConcedidos[devocaoEmEdicao];
             if (dPoder) {
@@ -372,7 +382,6 @@ export const useFicha = (id: string | undefined) => {
             }
         }
 
-        // Força salvamento imediato ao fechar o modal (true)
         updateFicha({
             ...novaFicha,
             habilidades: habilidadesFinais
@@ -383,29 +392,16 @@ export const useFicha = (id: string | undefined) => {
 
     return {
         // --- ESTADOS ---
-        ficha,
-        setFicha,
-        loading,
-        salvando,
-        error,
+        ficha, setFicha, loading, salvando, error,
 
         // --- LISTAS ---
-        listaRacas,
-        listaClasses,
-        listaOrigens,
-        listaTodasPericias,
-        listaPoderes,
-        listaDeuses,
+        listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes, listaDeuses,
 
         // --- DADOS DE REGRAS ---
-        dadosClasses,
-        dadosOrigens,
-        dadosRacas,
-        dadosHabilidadesClasse,
-        dadosMagias,
-        dadosHabilidades,
-        dadosDeuses,
-        dadosPoderesConcedidos,
+        dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
+        dadosHabilidades, dadosDeuses, dadosPoderesConcedidos,
+        // [NOVO] Retorna para ser usado no AbilityConfigModal
+        dadosHabilidadesRaciais,
 
         // --- CONTROLES DE UI ---
         showHabilidadesPanel, setShowHabilidadesPanel,
@@ -420,6 +416,5 @@ export const useFicha = (id: string | undefined) => {
         handleAtributoBaseChange,
         montarHabilidadesParaPanel,
         handleSaveEscolhas,
-        // (autoSalvar removido pois updateFicha agora gerencia isso internamente)
     };
 };

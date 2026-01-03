@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Any
 from ..models import Personagem, Habilidade
 from ..dados_racas import DADOS_RACAS
 from ..dados_habilidades_classe import DADOS_HABILIDADES_CLASSE
@@ -11,23 +11,61 @@ from ..dados_magias import DADOS_MAGIAS
 
 logger = logging.getLogger("RegrasT20")
 
+# Lista de IDs ou partes de nomes que identificam sub-habilidades do Duende/Sátiro
+PALAVRAS_CHAVE_SUB_RACIAIS = [
+    "Natureza", "Tamanho", "Afinidade", "Encantar", "Enfeitiçar",
+    "Invisibilidade", "Língua", "Maldição", "Mais Lá", "Metamorfose",
+    "Sonhos", "Velocidade", "Visão", "Voo", "Tabu", "Chifres", "Marrada"
+]
 
-def limpar_habilidades_fixas(ficha: Personagem):
-    """Remove habilidades de Raça, Classe e Origem antigas para recalcular."""
+
+def limpar_habilidades_fixas(ficha: Personagem) -> Dict[str, Dict]:
+    """
+    Remove habilidades derivadas para recalcular.
+    Retorna um dicionário com as 'escolhas internas' preservadas.
+    """
     habilidades_mantidas = []
+    memoria_escolhas = {}
+
     for hab in ficha.habilidades:
-        if hab.tipo in ["Racial", "Classe", "Origem", "Raça"]:
-            continue
-        habilidades_mantidas.append(hab)
+        deletar = False
+
+        # 1. Identifica se é sub-habilidade racial
+        is_sub_racial = False
+        if "_" in hab.nome or any(k in hab.nome for k in PALAVRAS_CHAVE_SUB_RACIAIS):
+            for id_db, dados_db in DADOS_HABILIDADES_RACIAIS.items():
+                if hab.nome == dados_db["nome"] or hab.nome == id_db:
+                    is_sub_racial = True
+                    break
+
+        # 2. Critérios de Remoção
+        if hab.tipo in ["Racial", "Classe", "Origem", "Raça", "Poder Racial"]:
+            deletar = True
+        elif is_sub_racial:
+            deletar = True
+        elif hab.fonte and "Habilidade:" in hab.fonte:
+            deletar = True
+
+        if deletar:
+            if hab.escolhas_aplicadas:
+                memoria_escolhas[hab.nome] = hab.escolhas_aplicadas
+                for k, v in DADOS_HABILIDADES_RACIAIS.items():
+                    if v["nome"] == hab.nome:
+                        memoria_escolhas[k] = hab.escolhas_aplicadas
+        else:
+            habilidades_mantidas.append(hab)
+
     ficha.habilidades = habilidades_mantidas
     ficha.proficiencias = []
     ficha.status.rd = []
 
+    return memoria_escolhas
 
-def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optional[Dict] = None):
+
+def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Dict] = None):
     logger.info("--- [2] Garantindo Habilidades Iniciais ---")
-    if escolhas_preservadas is None:
-        escolhas_preservadas = {}
+    if memoria_global is None:
+        memoria_global = {}
 
     nomes_existentes = {h.nome for h in ficha.habilidades}
     novas_habs = []
@@ -47,12 +85,20 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
 
                 nome_real = dados_hab["nome"]
                 if nome_real not in nomes_existentes:
-                    escolhas_anteriores = escolhas_preservadas.get(
-                        nome_real, dados_hab.get("efeitos", {}))
+                    # CORREÇÃO PYLANCE: Garante que é dict com "or {}"
+                    escolhas_anteriores = memoria_global.get(
+                        nome_real, memoria_global.get(chave_hab, {})) or {}
+
+                    escolhas_finais = {
+                        **dados_hab.get("efeitos", {}), **escolhas_anteriores}
+
                     novas_habs.append(Habilidade(
-                        nome=nome_real, tipo="Racial", descricao=dados_hab.get("descricao", ""),
-                        fonte=raca_nome, escolhas_aplicadas=escolhas_anteriores, efeitos=dados_hab.get(
-                            "efeitos", {})
+                        nome=nome_real,
+                        tipo="Racial",
+                        descricao=dados_hab.get("descricao", ""),
+                        fonte=raca_nome,
+                        escolhas_aplicadas=escolhas_finais,
+                        efeitos=dados_hab.get("efeitos", {})
                     ))
                     nomes_existentes.add(nome_real)
 
@@ -88,13 +134,15 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
             if escolha not in nomes_existentes:
                 dados_poder = next(
                     (v for k, v in HABILIDADES_GERAIS.items() if v["nome"] == escolha), None)
-                descricao = dados_poder.get(
-                    "descricao", "Benefício de Origem") if dados_poder else "Benefício único."
                 efeitos_origem = dados_poder.get(
                     "efeitos", {}) if dados_poder else {}
                 novas_habs.append(Habilidade(
-                    nome=escolha, tipo="Origem", descricao=descricao, fonte=f"Origem: {origem_nome}",
-                    escolhas_aplicadas=efeitos_origem, efeitos=efeitos_origem
+                    nome=escolha, tipo="Origem",
+                    descricao=dados_poder.get(
+                        "descricao", "Benefício de Origem") if dados_poder else "Benefício único.",
+                    fonte=f"Origem: {origem_nome}",
+                    escolhas_aplicadas=efeitos_origem,
+                    efeitos=efeitos_origem
                 ))
                 nomes_existentes.add(escolha)
 
@@ -102,49 +150,101 @@ def garantir_habilidades_iniciais(ficha: Personagem, escolhas_preservadas: Optio
         ficha.habilidades.extend(novas_habs)
 
 
-def sincronizar_poderes_habilidades(ficha: Personagem):
-    logger.info("--- [X] Sincronizando Poderes de Habilidades ---")
+def sincronizar_poderes_habilidades(ficha: Personagem, memoria_global: Optional[Dict] = None):
+    logger.info("--- [X] Sincronizando Sub-Poderes (Filhos) ---")
+    if memoria_global is None:
+        memoria_global = {}
     poderes_permitidos = {}
+
+    # 1. Varre as habilidades PAI
     for hab in ficha.habilidades:
         escolhas = hab.escolhas_aplicadas or {}
-        chaves_especificas = ["poder_geral", "poder_tormenta",
-                              "poder_escolha", "habilidade_racial_escolha"]
+        chaves_de_busca = ["poder_geral", "poder_tormenta",
+                           "poder_escolha", "habilidade_racial_escolha"]
 
-        for chave in chaves_especificas:
-            if chave in escolhas and escolhas[chave]:
-                poderes_permitidos[escolhas[chave]] = hab.nome
+        for chave in chaves_de_busca:
+            if chave in escolhas:
+                val = escolhas[chave]
+                if isinstance(val, list):
+                    for v in val:
+                        if isinstance(v, str) and v:
+                            poderes_permitidos[v] = hab.nome
+                elif isinstance(val, str) and val:
+                    poderes_permitidos[val] = hab.nome
 
         for chave, valor in escolhas.items():
-            if (chave.startswith("poder_") or "_poder" in chave or "habilidade_" in chave) and chave not in chaves_especificas:
+            if (chave.startswith("poder_") or "_poder" in chave or "habilidade_" in chave) and chave not in chaves_de_busca:
                 if isinstance(valor, str) and valor:
                     poderes_permitidos[valor] = hab.nome
+                elif isinstance(valor, list):
+                    for v in valor:
+                        if isinstance(v, str) and v:
+                            poderes_permitidos[v] = hab.nome
 
-    ficha.habilidades = [h for h in ficha.habilidades if not (
-        h.fonte and h.fonte.startswith("Habilidade:")) or h.nome in poderes_permitidos]
+    # 2. Reconstrução
     nomes_atuais = {h.nome for h in ficha.habilidades}
     novos_poderes = []
 
-    for nome_poder, nome_origem in poderes_permitidos.items():
-        if nome_poder not in nomes_atuais:
-            dados = next((v for v in DADOS_PODERES_TORMENTA.values()
-                         if v["nome"] == nome_poder), None)
-            tipo_encontrado = "Poder da Tormenta"
-            if not dados:
-                dados = next((v for k, v in HABILIDADES_GERAIS.items()
-                             if v["nome"] == nome_poder), None)
-                tipo_encontrado = dados.get(
-                    "tipo", "Poder Geral") if dados else "Poder Extra"
-            if not dados:
-                dados = next((v for k, v in DADOS_HABILIDADES_RACIAIS.items(
-                ) if v["nome"] == nome_poder), None)
-                tipo_encontrado = "Habilidade Racial (Memória Póstuma)"
+    for id_escolha, nome_origem in poderes_permitidos.items():
+        dados = None
+        tipo_encontrado = "Poder Geral"
 
-            if dados:
+        # A. Prioridade Absoluta: Habilidades Raciais (Pelo ID)
+        if id_escolha in DADOS_HABILIDADES_RACIAIS:
+            dados = DADOS_HABILIDADES_RACIAIS[id_escolha]
+            tipo_encontrado = "Racial"
+
+        # B. Busca em Tormenta
+        if not dados:
+            for v in DADOS_PODERES_TORMENTA.values():
+                if v["nome"] == id_escolha:
+                    dados = v
+                    tipo_encontrado = "Poder da Tormenta"
+                    break
+
+        # C. Busca em Gerais
+        if not dados:
+            for k, v in HABILIDADES_GERAIS.items():
+                if v["nome"] == id_escolha:
+                    dados = v
+                    tipo_encontrado = v.get("tipo", "Poder Geral")
+                    break
+
+        # D. Fallback: Busca reversa por Nome
+        if not dados:
+            for k, v in DADOS_HABILIDADES_RACIAIS.items():
+                if v["nome"] == id_escolha:
+                    dados = v
+                    tipo_encontrado = "Racial"
+                    break
+
+        # Criação da Habilidade
+        if dados:
+            nome_real = dados["nome"]
+            if nome_real not in nomes_atuais:
+                # CORREÇÃO PYLANCE: Garante dict com "or {}"
+                escolhas_recuperadas = memoria_global.get(
+                    nome_real, memoria_global.get(id_escolha, {})) or {}
+
                 novos_poderes.append(Habilidade(
-                    nome=dados["nome"], tipo=tipo_encontrado, descricao=dados["descricao"],
-                    efeitos=dados.get("efeitos", {}), fonte=f"Habilidade: {nome_origem}"
+                    nome=nome_real,
+                    tipo=tipo_encontrado,
+                    descricao=dados.get("descricao", ""),
+                    efeitos=dados.get("efeitos", {}),
+                    fonte=f"Habilidade: {nome_origem}",
+                    escolhas_aplicadas=escolhas_recuperadas
                 ))
-                nomes_atuais.add(nome_poder)
+                nomes_atuais.add(nome_real)
+        else:
+            if id_escolha not in nomes_atuais:
+                nome_formatado = id_escolha.replace(
+                    "_", " ").title() if "_" in id_escolha else id_escolha
+                novos_poderes.append(Habilidade(
+                    nome=nome_formatado,
+                    tipo="Poder Extra",
+                    descricao="Habilidade selecionada.",
+                    fonte=f"Habilidade: {nome_origem}"
+                ))
 
     if novos_poderes:
         ficha.habilidades.extend(novos_poderes)
@@ -180,6 +280,7 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             efeitos.update(hab.escolhas_aplicadas)
 
         if "magias_duradouras" in efeitos:
+            from ..dados_magias import DADOS_MAGIAS
             for nome_magia in efeitos["magias_duradouras"]:
                 dados_magia = next(
                     (m for m in DADOS_MAGIAS.values() if m.get("nome") == nome_magia), None)

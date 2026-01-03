@@ -53,8 +53,11 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                 }
 
     # Limpeza: Remove magias de habilidade que não deveriam estar mais lá e preserva as manuais
-    ficha.combate.magias = [m for m in ficha.combate.magias if not m.fonte.startswith(
-        "Habilidade:") or m.nome in magias_permitidas]
+    # CORREÇÃO PYLANCE: (m.fonte or "") garante que não chamaremos startswith em None
+    ficha.combate.magias = [
+        m for m in ficha.combate.magias
+        if not str(m.fonte or "").startswith("Habilidade:") or m.nome in magias_permitidas
+    ]
 
     nomes_conhecidos = {m.nome for m in ficha.combate.magias}
     novas_magias = []
@@ -82,7 +85,6 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                     custo_pm=max(1, dados.get("custo", 1) - info["reducao"]),
                     atributo_chave=info["attr"],
                     fonte=f"Habilidade: {info['hab_nome']}",
-                    # --- CORREÇÃO AQUI: Adicionando os aprimoramentos ---
                     aprimoramentos=dados.get("aprimoramentos", [])
                 )
                 novas_magias.append(nova)

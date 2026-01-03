@@ -577,42 +577,6 @@ HABILIDADES_GERAIS = {
         "fonte": "T20 JdA",
         "requisitos": ["Magias", "Treinado em Ofício (alquimista)"],
         "efeitos": {}
-    },
-
-    # ------------------------------------------------------------------
-    # --- PODERES CONCEDIDOS ---
-    # ------------------------------------------------------------------
-    "Coragem_Total": {
-        "nome": "Coragem Total",
-        "tipo": "Poder Concedido",
-        "descricao": "Imune a medo.",
-        "fonte": "T20 JdA",
-        "requisitos": ["Devoto de Arsenal, Khalmyr, Lin-Wu ou Valkaria"],
-        "efeitos": {"imunidade": ["medo"]}
-    },
-    "Escamas_Draconicas": {
-        "nome": "Escamas Dracônicas",
-        "tipo": "Poder Concedido",
-        "descricao": "+2 Defesa e Fortitude.",
-        "fonte": "T20 JdA",
-        "requisitos": ["Devoto de Kallyadranoch"],
-        "efeitos": {"defesa_bonus": 2, "bonus_pericia": {"Fortitude": 2}}
-    },
-    "Sangue_Ferro": {
-        "nome": "Sangue de Ferro",
-        "tipo": "Poder Concedido",
-        "descricao": "3 PM para receber +2 dano e RD 5.",
-        "fonte": "T20 JdA",
-        "requisitos": ["Devoto de Arsenal"],
-        "efeitos": {}
-    },
-    "Zumbificar": {
-        "nome": "Zumbificar",
-        "tipo": "Poder Concedido",
-        "descricao": "3 PM para reanimar cadáver como parceiro.",
-        "fonte": "T20 JdA",
-        "requisitos": ["Devoto de Tenebra"],
-        "efeitos": {}
     }
 }
 HABILIDADES_GERAIS.update(DADOS_HABILIDADES_RACIAIS)

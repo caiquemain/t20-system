@@ -18,7 +18,7 @@ def _garantir_chave_str(valor: Any) -> str:
 
 
 def inicializar_pericias(ficha: Personagem):
-    logger.info("--- [3] Inicializando Perícias (Refatorado & Blindado) ---")
+    logger.info("--- [3] Inicializando Perícias (Refatorado & Genérico) ---")
 
     # 1. Modificadores de Atributo
     modificadores: Dict[str, int] = {}
@@ -44,6 +44,8 @@ def inicializar_pericias(ficha: Personagem):
         2 if tamanho == TamanhoEnum.GRANDE else (
             -5 if tamanho == TamanhoEnum.ENORME else 0)
     penalidade_armadura = 0
+
+    # Conta quantos poderes da Tormenta o personagem tem
     qtd_tormenta = sum(
         1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
 
@@ -64,19 +66,12 @@ def inicializar_pericias(ficha: Personagem):
                         opcoes_atributos_extras[p_alvo] = []
                     opcoes_atributos_extras[p_alvo].append(novo_attr)
 
-        # Caso Especial: Deformidade (Lefou)
-        if hab.nome == "Deformidade":
-            bonus_lefou = 2 + (2 * qtd_tormenta)
-            for p_chave in ["pericia_1", "pericia_2"]:
-                p_nome = efeitos.get(p_chave)
-                if p_nome and isinstance(p_nome, str):
-                    if p_nome not in detalhamento_bonus:
-                        detalhamento_bonus[p_nome] = []
-                    detalhamento_bonus[p_nome].append(
-                        {"fonte": "Deformidade", "valor": bonus_lefou})
-            continue
+        # ---------------------------------------------------------------------
+        # REMOVIDO MOCK "if hab.nome == 'Deformidade'"
+        # Agora usamos as lógicas genéricas abaixo:
+        # ---------------------------------------------------------------------
 
-        # Bônus Específicos Diretos
+        # 1. Bônus Específicos Diretos (Fixo) - Ex: Foco em Arma
         if "bonus_pericia" in efeitos and isinstance(efeitos["bonus_pericia"], dict):
             for p_nome, v_bonus in efeitos["bonus_pericia"].items():
                 if isinstance(p_nome, str) and isinstance(v_bonus, (int, float)):
@@ -85,47 +80,95 @@ def inicializar_pericias(ficha: Personagem):
                     detalhamento_bonus[p_nome].append(
                         {"fonte": hab.nome, "valor": v_bonus})
 
-        # Bônus Genéricos por Atributo
+        # 2. Bônus Genéricos por Atributo
         if "bonus_pericia_atributo" in efeitos and isinstance(efeitos["bonus_pericia_atributo"], dict):
             for attr_chave, v_bonus in efeitos["bonus_pericia_atributo"].items():
                 if isinstance(attr_chave, str) and isinstance(v_bonus, (int, float)):
                     bonus_por_atributo[attr_chave] = bonus_por_atributo.get(
                         attr_chave, 0) + int(v_bonus)
 
+        # 3. Bônus de Tormenta Escalável (Ex: Antenas)
+        # Aplica +1 por poder da Tormenta nas perícias listadas
+        if "bonus_pericia_tormenta" in efeitos:
+            lista_alvos = efeitos["bonus_pericia_tormenta"]
+            if isinstance(lista_alvos, list):
+                bonus_val = qtd_tormenta
+                for p_nome in lista_alvos:
+                    if isinstance(p_nome, str):
+                        if p_nome not in detalhamento_bonus:
+                            detalhamento_bonus[p_nome] = []
+                        detalhamento_bonus[p_nome].append(
+                            {"fonte": f"{hab.nome} (Tormenta)", "valor": bonus_val})
+
+        # 4. Bônus em Perícias à Escolha (Genérico) - Ex: Deformidade
+        if "pericia_bonus_escolha" in efeitos:
+            try:
+                qtd_slots = int(efeitos["pericia_bonus_escolha"])
+                # Padrão +2 se não especificado
+                valor_do_bonus = int(efeitos.get("valor_bonus_escolha", 2))
+
+                pericias_alvo = set()
+
+                # Busca nas chaves padrão novas (pericia_bonus_0, pericia_bonus_1...)
+                for i in range(qtd_slots):
+                    escolha = efeitos.get(f"pericia_bonus_{i}")
+                    if escolha and isinstance(escolha, str):
+                        pericias_alvo.add(escolha)
+
+                # Fallback legado para Deformidade antiga (opcional, para não quebrar fichas velhas)
+                if hab.nome == "Deformidade":
+                    legacy_1 = efeitos.get("pericia_1")
+                    legacy_2 = efeitos.get("pericia_2")
+                    if legacy_1:
+                        pericias_alvo.add(legacy_1)
+                    if legacy_2:
+                        pericias_alvo.add(legacy_2)
+
+                for p_nome in pericias_alvo:
+                    if p_nome not in detalhamento_bonus:
+                        detalhamento_bonus[p_nome] = []
+                    detalhamento_bonus[p_nome].append(
+                        {"fonte": hab.nome, "valor": valor_do_bonus}
+                    )
+            except Exception as e:
+                logger.error(
+                    f"Erro ao processar bônus de escolha em {hab.nome}: {e}")
+
     # 3. Lista de Perícias Treinadas/Extras
     pericias_extras: List[str] = []
 
-    # De Habilidades
+    # De Habilidades (Versátil, Raciais, Poderes)
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
 
-        for k_escolha in ["pericia_1", "pericia_2", "pericia_escolha"]:
+        # Varre todas as chaves possíveis onde uma perícia pode estar escondida
+        chaves_busca = ["pericia_1", "pericia_2", "pericia_escolha",
+                        "memoria_postuma", "poder_ambicao_0", "poder_ambicao_1"]
+        for k_escolha in chaves_busca:
             val = efeitos.get(k_escolha)
             if val and isinstance(val, str):
-                pericias_extras.append(val)
+                chave_teste = _garantir_chave_str(val)
+                chave_base = "Ofício" if chave_teste.startswith(
+                    "Ofício") else chave_teste
+                if chave_base in DADOS_PERICIAS:
+                    pericias_extras.append(val)
 
     # De Origem
     if ficha.escolhas_origem:
         for e in ficha.escolhas_origem:
             if isinstance(e, str):
-                # Assume que se está em DADOS_PERICIAS ou começa com Ofício, é perícia
                 chave_teste = _garantir_chave_str(e)
                 chave_base = "Ofício" if chave_teste.startswith(
                     "Ofício") else chave_teste
-
                 if chave_base in DADOS_PERICIAS:
                     pericias_extras.append(e)
 
     # De Classe
     fixas_classe: List[str] = []
     if ficha.classes:
-        # PONTO CRÍTICO DO ERRO ANTERIOR:
-        # Usamos a função auxiliar para garantir string pura
         nome_classe_safe = _garantir_chave_str(ficha.classes[0].nome)
-
-        # Agora o .get() recebe uma string garantida
         dados_classe = DADOS_CLASSES.get(nome_classe_safe, {})
 
         fixas = dados_classe.get("pericias_fixas", []) or dados_classe.get(
@@ -138,7 +181,6 @@ def inicializar_pericias(ficha: Personagem):
     # 4. Construção da Lista Final de Perícias
     novas_pericias: Dict[str, PericiaInfo] = {}
 
-    # Une todas as chaves possíveis
     set_chaves = set(DADOS_PERICIAS.keys())
     for k in ficha.pericias.keys():
         if k.startswith("Ofício"):
@@ -150,19 +192,16 @@ def inicializar_pericias(ficha: Personagem):
     lista_ordenada = sorted(list(set_chaves))
 
     for nome_pericia in lista_ordenada:
-        # Define a chave base para buscar metadados (ex: "Ofício (Alquimia)" -> "Ofício")
         chave_base = "Ofício" if nome_pericia.startswith(
             "Ofício") else nome_pericia
-
-        # PONTO CRÍTICO: Garantir chave string para DADOS_PERICIAS
         chave_base_safe = _garantir_chave_str(chave_base)
         dados_base = DADOS_PERICIAS.get(
             chave_base_safe, {"atributo": "int", "penalidade_armadura": False})
 
         info_antiga = ficha.pericias.get(nome_pericia, PericiaInfo())
 
-        esta_treinado = (info_antiga.treino > 0) or (
-            nome_pericia in pericias_extras) or (nome_pericia in fixas_classe)
+        esta_treinado = (nome_pericia in pericias_extras) or (
+            nome_pericia in fixas_classe)
 
         # Definição do Atributo
         attr_padrao = str(dados_base.get("atributo", "int"))
@@ -189,10 +228,11 @@ def inicializar_pericias(ficha: Personagem):
             else:
                 bonus_treino = 2
 
-        # Somatório de Bônus Automáticos (Fontes)
+        # Somatório de Bônus Automáticos
         total_automatico = 0
         fontes_bonus: List[str] = []
 
+        # Aplica os bônus calculados na etapa 2
         if nome_pericia in detalhamento_bonus:
             for item in detalhamento_bonus[nome_pericia]:
                 val = int(item["valor"])
@@ -214,6 +254,7 @@ def inicializar_pericias(ficha: Personagem):
             penalidade_aplicada += penalidade_tamanho_furt
             fontes_bonus.append(f"Tamanho ({penalidade_tamanho_furt})")
 
+        # Soma tudo
         total_final = bonus_metade_nivel + mod_attr + bonus_treino + \
             info_antiga.outros + total_automatico + penalidade_aplicada
 
