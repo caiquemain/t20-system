@@ -67,6 +67,21 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
             }
         }
     };
+    // Helper para escolher ícones bonitos baseados no nome da resistência
+    const getIconeResistencia = (texto: string) => {
+        const t = texto.toLowerCase();
+        if (t.includes('fogo')) return '🔥';
+        if (t.includes('frio') || t.includes('gelo')) return '❄️';
+        if (t.includes('eletricidade') || t.includes('elétrico')) return '⚡';
+        if (t.includes('ácido')) return '🧪';
+        if (t.includes('veneno')) return '☠️';
+        if (t.includes('luz')) return '🔆';
+        if (t.includes('trevas') || t.includes('sombra')) return '🌑';
+        if (t.includes('mental') || t.includes('psíquico')) return '🧠';
+        if (t.includes('corte') || t.includes('perfura') || t.includes('impacto')) return '⚔️';
+        if (t.includes('magia')) return '✨';
+        return '🛡️'; // Padrão
+    };
 
     const renderTooltipDinamico = (detalhes: any, total: number) => {
         if (!detalhes) return null;
@@ -174,8 +189,8 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
                 </div>
             )}
 
-            {/* --- NOVA SEÇÃO: IMUNIDADES E SENTIDOS E RD --- */}
-            {(rd?.length > 0 || elementoGolem || imunidades?.length > 0 || sentidos?.length > 0) && (
+            {/* --- REDUÇÃO DE DANO (RD) & IMUNIDADES --- */}
+            {((rd && rd.length > 0) || elementoGolem || (imunidades && imunidades.length > 0) || (sentidos && sentidos.length > 0)) && (
                 <div className="rd-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #333' }}>
                     <span className="status-section-label">Resistências & Sentidos</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
@@ -187,9 +202,13 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
                             </span>
                         )}
 
-                        {/* RDs */}
+                        {/* RDs (AGORA COM ÍCONES DINÂMICOS) */}
                         {rd?.map((item: string, idx: number) => (
-                            <span key={`rd-${idx}`} className="rd-tag">🛡️ {item}</span>
+                            <span key={`rd-${idx}`} className="rd-tag">
+                                {/* Chama a função para pegar o emoji certo */}
+                                <span style={{ fontSize: '1.1em', marginRight: '4px' }}>{getIconeResistencia(item)}</span>
+                                {item}
+                            </span>
                         ))}
 
                         {/* Imunidades */}
