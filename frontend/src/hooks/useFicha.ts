@@ -28,7 +28,11 @@ const FICHA_VAZIA: Personagem = {
         pv: { atual: 0, maximo: 0, temporario: 0 },
         pm: { atual: 0, maximo: 0, temporario: 0 },
         defesa: { total: 10, detalhes: { base: 10, des_mod: 0, armadura: 0, escudo: 0, outros: 0 } },
-        rd: [], deslocamento: 9
+        rd: [], 
+        deslocamento: 9,
+        proficiencias: [],
+        imunidades: [],
+        sentidos: []
     },
     pericias: {}, proficiencias: [], combate: { ataques: [], magias: [], cd_magias: 0, bba: 0, iniciativa: 0 },
     habilidades: [],
