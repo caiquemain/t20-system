@@ -3,17 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { fetchPersonagens, createPersonagem, deletePersonagem } from '../services/api';
 import '../Ficha.css'; // Reutilizando estilos ou crie um Home.css
 
-// Definição simplificada para a lista
-interface PersonagemResumo {
-    _id: string;
-    cabecalho: {
-        nome: string;
-        raca: string;
-        classe: string; // ou classes[0].nome se for complexo
-        nivel_total: number;
-    };
-}
-
 const Home = () => {
     const navigate = useNavigate();
     const [personagens, setPersonagens] = useState<any[]>([]);
