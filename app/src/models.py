@@ -153,6 +153,7 @@ class Status(BaseModel):
     pv_calc: Optional[StatCalculado] = Field(default=None)
     pm_calc: Optional[StatCalculado] = Field(default=None)
     defesa_calc: Optional[StatCalculado] = Field(default=None)
+    deslocamento_calc: Optional[StatCalculado] = Field(default=None)
 
     # --- NOVOS CAMPOS ADICIONADOS ---
     proficiencias: List[str] = []
@@ -170,6 +171,8 @@ class PericiaInfo(BaseModel):
     atributo_selecionado: Optional[str] = None
     atributos_possiveis: List[str] = []
     fontes_bonus: List[str] = []
+    # 🚀 NOVO: transparência detalhada (mantém fontes_bonus antigo p/ compatibilidade)
+    calculo: Optional[StatCalculado] = None
 
 class Ataque(BaseModel):
     nome: str = ""
