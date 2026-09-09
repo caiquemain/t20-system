@@ -1,22 +1,21 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 
-// Importações das Páginas (Default Exports)
 import Home from './pages/Home';
 import Ficha from './pages/Ficha';
+import Wizard from './pages/Wizard';
 
 function App() {
-  return (
-    <Router>
-      <Routes>
-        {/* Rota Principal: Lista de Personagens */}
-        <Route path="/" element={<Home />} />
-        
-        {/* Rota da Ficha: Edição */}
-        <Route path="/ficha/:id" element={<Ficha />} />
-      </Routes>
-    </Router>
-  );
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/ficha/:id" element={<Ficha />} />
+                <Route path="/wizard" element={<Wizard />} />
+                <Route path="/wizard/:id" element={<Wizard />} />
+            </Routes>
+        </Router>
+    );
 }
 
 export default App;
