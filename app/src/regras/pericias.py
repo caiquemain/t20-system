@@ -2,7 +2,7 @@ import math
 import logging
 from typing import Dict, List, Any, Optional, Union
 
-from ..models import Personagem, PericiaInfo, TamanhoEnum
+from ..models import Personagem, PericiaInfo, TamanhoEnum, StatCalculado, FonteBonus
 from ..dados_classes import DADOS_CLASSES
 from ..dados_pericias import DADOS_PERICIAS
 from .utils import calcular_modificador
@@ -258,16 +258,37 @@ def inicializar_pericias(ficha: Personagem):
         total_final = bonus_metade_nivel + mod_attr + bonus_treino + \
             info_antiga.outros + total_automatico + penalidade_aplicada
 
+        # ═══════════════════════════════════════════
+        # 🎯 PILHA DE MODIFICADORES DA PERÍCIA
+        # ═══════════════════════════════════════════
+        calc = StatCalculado(base=mod_attr, total=0)
+        calc.fontes.append(FonteBonus(
+            fonte=f"Atributo: {attr_final.upper()}", categoria="Atributo", valor=mod_attr
+        ))
+        calc.total = mod_attr
+
+        if bonus_metade_nivel != 0:
+            calc.adicionar_bonus(f"Nível (½ de {nivel})", "Nível", bonus_metade_nivel)
+        if bonus_treino != 0:
+            calc.adicionar_bonus("Treinamento", "Treino", bonus_treino)
+        if info_antiga.outros != 0:
+            calc.adicionar_bonus("Outros (manual)", "Outros", info_antiga.outros)
+        for item in detalhamento_bonus.get(nome_pericia, []):
+            calc.adicionar_bonus(item["fonte"], "Poder", int(item["valor"]))
+        if bonus_attr_geral != 0:
+            calc.adicionar_bonus("Bônus Geral", "Racial", bonus_attr_geral)
+        if penalidade_aplicada != 0:
+            calc.adicionar_bonus("Penalidade (Armadura/Tamanho)", "Penalidade", penalidade_aplicada)
+
         novas_pericias[nome_pericia] = PericiaInfo(
             treino=1 if esta_treinado else 0,
             bonus_nivel=bonus_metade_nivel,
             atributo_valor=mod_attr,
             outros=info_antiga.outros,
-            total=total_final,
+            total=total_final,  # Mantém o cálculo original (já validado)
             bonus_automatico=total_automatico,
             atributo_selecionado=attr_final,
             atributos_possiveis=possiveis,
-            fontes_bonus=fontes_bonus
+            fontes_bonus=fontes_bonus,  # Mantém compatibilidade
+            calculo=calc                # 🚀 Nova transparência
         )
-
-    ficha.pericias = novas_pericias

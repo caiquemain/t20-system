@@ -1,6 +1,6 @@
 import math
 import logging
-from ..models import Personagem, StatCalculado
+from ..models import Personagem, StatCalculado, FonteBonus
 from ..dados_classes import DADOS_CLASSES
 from .utils import calcular_modificador
 
@@ -202,22 +202,53 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 )
 
     # ═══════════════════════════════════════════
-    # 🏃 DESLOCAMENTO
+    # 🏃 DESLOCAMENTO - PILHA DE MODIFICADORES
     # ═══════════════════════════════════════════
-    desl = ficha.status.deslocamento
+    desl_base = ficha.status.deslocamento  # Valor racial (setado em aplicar_bonus_atributos_raciais)
+    deslocamento_calc = StatCalculado(base=desl_base, total=desl_base)
+    deslocamento_calc.fontes.append(FonteBonus(
+        fonte="Deslocamento Racial", categoria="Racial", valor=desl_base
+    ))
 
+    desl = desl_base
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
         if "deslocamento" in efeitos:
-            desl = efeitos["deslocamento"]
+            novo_val = int(efeitos["deslocamento"])
+            desl = novo_val  # Sobrescrita
+            deslocamento_calc.fontes.append(FonteBonus(
+                fonte=f"Poder: {hab.nome}", categoria="Poder",
+                valor=novo_val, descricao="Define o deslocamento"
+            ))
+            deslocamento_calc.total = novo_val
 
     if hasattr(ficha.status, 'buffs'):
         for b in ficha.status.buffs:
             if b.atributo.lower() == "deslocamento":
                 desl += b.valor
+                deslocamento_calc.adicionar_bonus(
+                    fonte=f"Buff: {b.origem}", categoria="Magia", valor=b.valor
+                )
 
+    # 💾 SALVAR
+    ficha.status.deslocamento_calc = deslocamento_calc
+    ficha.status.defesa_calc = defesa_calc
+    ficha.status.defesa.total = defesa_calc.total
+    ficha.status.deslocamento = desl
+
+    # Mantém o dicionário de detalhes antigo (compatibilidade)
+    detalhes_defesa = {"Base": 10}
+    if mod_des != 0:
+        detalhes_defesa["Destreza"] = mod_des
+    for fonte in defesa_calc.fontes:
+        if fonte.fonte != "Destreza":
+            detalhes_defesa[fonte.fonte] = fonte.valor
+    try:
+        setattr(ficha.status.defesa, "detalhes", detalhes_defesa)
+    except AttributeError:
+        pass
     # ═══════════════════════════════════════════
     # 💾 SALVAR NA FICHA
     # ═══════════════════════════════════════════
