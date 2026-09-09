@@ -12,8 +12,6 @@ DADOS_CLASSES = {
     "Bárbaro": {
         "pv_inicial": 24, "pv_nivel": 6,
         "pm_inicial": 3, "pm_nivel": 3,
-        # Nota: Bárbaro no JdA usa Força para muita coisa, mas PM padrão é Int/Sab ou fixo. Mantendo sua escolha.
-        "pm_atributo": "for",
         "pericias_iniciais": ["Fortitude", "Luta"],
         "pericias_escolha": 4,
         "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Iniciativa", "Intimidação", "Ofício", "Percepção", "Pontaria", "Sobrevivência", "Vontade"],
@@ -31,7 +29,6 @@ DADOS_CLASSES = {
     "Bucaneiro": {
         "pv_inicial": 16, "pv_nivel": 4,
         "pm_inicial": 3, "pm_nivel": 3,
-        "pm_atributo": "des",
         "pericias_iniciais": ["Reflexos"],
         "pericias_fixas_selecao": ["Luta", "Pontaria"],
         "pericias_escolha": 5,
@@ -41,7 +38,6 @@ DADOS_CLASSES = {
     "Caçador": {
         "pv_inicial": 16, "pv_nivel": 4,
         "pm_inicial": 4, "pm_nivel": 4,
-        "pm_atributo": "sab",
         "pericias_iniciais": ["Sobrevivência"],
         "pericias_fixas_selecao": ["Luta", "Pontaria"],
         "pericias_escolha": 7,
@@ -51,7 +47,6 @@ DADOS_CLASSES = {
     "Cavaleiro": {
         "pv_inicial": 20, "pv_nivel": 5,
         "pm_inicial": 3, "pm_nivel": 3,
-        "pm_atributo": "for",
         "pericias_iniciais": ["Fortitude", "Luta"],
         "pericias_escolha": 2,
         "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Diplomacia", "Guerra", "Iniciativa", "Intimidação", "Nobreza", "Percepção", "Vontade"],
@@ -78,7 +73,6 @@ DADOS_CLASSES = {
     "Guerreiro": {
         "pv_inicial": 20, "pv_nivel": 5,
         "pm_inicial": 3, "pm_nivel": 3,
-        "pm_atributo": "for",
         "pericias_iniciais": ["Fortitude"],
         "pericias_fixas_selecao": ["Luta", "Pontaria"],
         "pericias_escolha": 3,
@@ -88,7 +82,6 @@ DADOS_CLASSES = {
     "Inventor": {
         "pv_inicial": 12, "pv_nivel": 3,
         "pm_inicial": 4, "pm_nivel": 4,
-        "pm_atributo": "int",
         "pericias_iniciais": ["Ofício", "Vontade"],
         "pericias_escolha": 4,
         "pericias_lista": ["Conhecimento", "Cura", "Diplomacia", "Fortitude", "Iniciativa", "Investigação", "Luta", "Misticismo", "Percepção", "Pilotagem", "Pontaria"],
@@ -97,7 +90,6 @@ DADOS_CLASSES = {
     "Ladino": {
         "pv_inicial": 12, "pv_nivel": 3,
         "pm_inicial": 4, "pm_nivel": 4,
-        "pm_atributo": "des",
         "pericias_iniciais": ["Ladinagem", "Reflexos"],
         "pericias_escolha": 8,
         "pericias_lista": ["Acrobacia", "Atletismo", "Atuação", "Cavalgar", "Conhecimento", "Diplomacia", "Enganação", "Furtividade", "Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Luta", "Ofício", "Percepção", "Pilotagem", "Pontaria"],
@@ -106,7 +98,6 @@ DADOS_CLASSES = {
     "Lutador": {
         "pv_inicial": 20, "pv_nivel": 5,
         "pm_inicial": 3, "pm_nivel": 3,
-        "pm_atributo": "for",
         "pericias_iniciais": ["Fortitude", "Luta"],
         "pericias_escolha": 4,
         "pericias_lista": ["Acrobacia", "Adestramento", "Atletismo", "Enganação", "Furtividade", "Iniciativa", "Intimidação", "Ofício", "Percepção", "Pontaria", "Reflexos"],
@@ -114,8 +105,7 @@ DADOS_CLASSES = {
     },
     "Nobre": {
         "pv_inicial": 16, "pv_nivel": 4,
-        "pm_inicial": 4, "pm_nivel": 4,
-        "pm_atributo": "car",
+        "pm_inicial": 4, "pm_nivel": 4, 
         "pericias_iniciais": ["Vontade"],
         "pericias_escolha": 5,
         "pericias_lista": ["Adestramento", "Atuação", "Cavalgar", "Conhecimento", "Diplomacia", "Enganação", "Fortitude", "Guerra", "Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Luta", "Nobreza", "Ofício", "Percepção", "Pontaria"],
@@ -144,7 +134,6 @@ DADOS_CLASSES = {
     "Treinador": {
         "pv_inicial": 12, "pv_nivel": 3,
         "pm_inicial": 4, "pm_nivel": 4,
-        "pm_atributo": "car",
         "pericias_iniciais": ["Adestramento", "Vontade"],
         "pericias_escolha": 4,
         "pericias_lista": ["Atletismo", "Cavalgar", "Diplomacia", "Guerra", "Iniciativa", "Intimidação", "Intuição", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos", "Religião", "Sobrevivência"],

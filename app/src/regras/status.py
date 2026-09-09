@@ -16,110 +16,80 @@ def calcular_pv_pm(ficha: Personagem):
     dc = DADOS_CLASSES.get(c_prim.nome or "", {})
 
     mod_con = calcular_modificador(ficha.atributos.constituicao)
-    attr_pm = dc.get("pm_atributo", "int")
     mapa_attr = {
         'for': 'forca', 'des': 'destreza', 'con': 'constituicao',
         'int': 'inteligencia', 'sab': 'sabedoria', 'car': 'carisma'
     }
-    mod_pm = calcular_modificador(getattr(ficha.atributos, mapa_attr.get(attr_pm, 'inteligencia')))
 
-    # ═══════════════════════════════════════════
-    # 🛡️ PV - PILHA DE MODIFICADORES
-    # ═══════════════════════════════════════════
-    pv_calc = StatCalculado()
-    
-    # Base da classe
-    pv_inicial_classe = dc.get("pv_inicial", 20)
-    pv_calc.adicionar_bonus(
-        fonte=f"Classe: {c_prim.nome} (Inicial)",
-        categoria="Classe",
-        valor=pv_inicial_classe
-    )
-    
-    # Constituição
-    if mod_con != 0:
-        pv_calc.adicionar_bonus(
-            fonte="Constituição",
-            categoria="Atributo",
-            valor=mod_con
-        )
-
-    # Bônus de habilidades (PV inicial extra)
-    b_pv_ini = 0
+    # Bônus de habilidades (coletados uma única vez)
+    b_pv_ini = b_pv_nivel = b_pm_niv = b_pm_impar = 0
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
         b_pv_ini += efeitos.get("pv_max_ini", 0)
-    if b_pv_ini != 0:
-        pv_calc.adicionar_bonus(
-            fonte="Habilidades (Inicial)",
-            categoria="Poder",
-            valor=b_pv_ini
-        )
-
-    # PV por nível (níveis além do 1º)
-    b_pv_nivel = 0
-    for hab in ficha.habilidades:
-        efeitos = hab.efeitos or {}
-        if hab.escolhas_aplicadas:
-            efeitos.update(hab.escolhas_aplicadas)
         b_pv_nivel += efeitos.get("pv_max_nivel", 0)
+        b_pm_niv += efeitos.get("pm_max_nivel", 0)
+        b_pm_impar += efeitos.get("pm_por_nivel_impar", 0)
+
+    # ═══════════════════════════════════════════
+    # 🛡️ PV - PILHA DE MODIFICADORES
+    # ═══════════════════════════════════════════
+    pv_calc = StatCalculado()
+    pv_calc.adicionar_bonus(
+        fonte=f"Classe: {c_prim.nome} (Inicial)",
+        categoria="Classe",
+        valor=dc.get("pv_inicial", 20)
+    )
+    if mod_con != 0:
+        pv_calc.adicionar_bonus(fonte="Constituição", categoria="Atributo", valor=mod_con)
+    if b_pv_ini != 0:
+        pv_calc.adicionar_bonus(fonte="Habilidades (PV inicial)", categoria="Poder", valor=b_pv_ini)
 
     for c in ficha.classes:
         n = c.nivel - 1 if c == c_prim else c.nivel
         if n > 0:
             d = DADOS_CLASSES.get(c.nome or "", {})
-            pv_por_nivel = d.get("pv_nivel", 5) + mod_con + b_pv_nivel
             pv_calc.adicionar_bonus(
                 fonte=f"Classe: {c.nome} ({n} nível{'is' if n > 1 else ''})",
                 categoria="Classe",
-                valor=n * pv_por_nivel
+                valor=n * (d.get("pv_nivel", 5) + mod_con + b_pv_nivel)
             )
 
     # ═══════════════════════════════════════════
     # ✨ PM - PILHA DE MODIFICADORES
     # ═══════════════════════════════════════════
     pm_calc = StatCalculado()
-    
-    # Base da classe
-    pm_inicial_classe = dc.get("pm_inicial", 5)
     pm_calc.adicionar_bonus(
         fonte=f"Classe: {c_prim.nome} (Inicial)",
         categoria="Classe",
-        valor=pm_inicial_classe
+        valor=dc.get("pm_inicial", 5)
     )
-    
-    # Atributo de PM
-    if mod_pm != 0:
-        pm_calc.adicionar_bonus(
-            fonte=f"Atributo: {attr_pm.upper()}",
-            categoria="Atributo",
-            valor=mod_pm
-        )
 
-    # PM por nível
-    b_pm_niv = 0
-    b_pm_impar = 0
-    for hab in ficha.habilidades:
-        efeitos = hab.efeitos or {}
-        if hab.escolhas_aplicadas:
-            efeitos.update(hab.escolhas_aplicadas)
-        b_pm_niv += efeitos.get("pm_max_nivel", 0)
-        b_pm_impar += efeitos.get("pm_por_nivel_impar", 0)
+    # CORREÇÃO: atributo só entra no PM se a classe declarar "pm_atributo"
+    # explicitamente em DADOS_CLASSES. Sem default: classe sem a chave não soma nada.
+    attr_pm = dc.get("pm_atributo")
+    if attr_pm:
+        mod_pm = calcular_modificador(
+            getattr(ficha.atributos, mapa_attr.get(str(attr_pm), 'inteligencia'))
+        )
+        if mod_pm != 0:
+            pm_calc.adicionar_bonus(
+                fonte=f"Atributo-chave: {str(attr_pm).upper()}",
+                categoria="Atributo",
+                valor=mod_pm
+            )
 
     for c in ficha.classes:
         n = c.nivel - 1 if c == c_prim else c.nivel
         if n > 0:
             d = DADOS_CLASSES.get(c.nome or "", {})
-            pm_por_nivel = d.get("pm_nivel", 5) + b_pm_niv
             pm_calc.adicionar_bonus(
                 fonte=f"Classe: {c.nome} ({n} nível{'is' if n > 1 else ''})",
                 categoria="Classe",
-                valor=n * pm_por_nivel
+                valor=n * (d.get("pm_nivel", 5) + b_pm_niv)
             )
 
-    # PM por níveis ímpares (habilidades)
     if b_pm_impar > 0:
         impares = math.ceil(ficha.cabecalho.nivel_total / 2) * b_pm_impar
         if impares > 0:
@@ -134,8 +104,6 @@ def calcular_pv_pm(ficha: Personagem):
     # ═══════════════════════════════════════════
     ficha.status.pv_calc = pv_calc
     ficha.status.pm_calc = pm_calc
-    
-    # Sincroniza com campos antigos (compatibilidade frontend)
     ficha.status.pv.maximo = pv_calc.total
     ficha.status.pm.maximo = pm_calc.total
 
