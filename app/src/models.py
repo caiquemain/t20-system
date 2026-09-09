@@ -218,6 +218,7 @@ class Combate(BaseModel):
     cd_magias: int = 10
     bba: int = 0
     iniciativa: int = 0
+    circulo_maximo: int = 0  # 🆕 calculado pelo backend (trava de círculos T20)
 
 # --- HABILIDADES E EQUIPAMENTO ---
 
