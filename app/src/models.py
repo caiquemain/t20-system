@@ -149,11 +149,15 @@ class Status(BaseModel):
     buffs: List[Buff] = []
     efeitos_ativos: List[str] = []
 
+    # 🚀 NOVA PILHA DE MODIFICADORES (FASE 2)
+    pv_calc: Optional[StatCalculado] = Field(default=None)
+    pm_calc: Optional[StatCalculado] = Field(default=None)
+    defesa_calc: Optional[StatCalculado] = Field(default=None)
+
     # --- NOVOS CAMPOS ADICIONADOS ---
     proficiencias: List[str] = []
     imunidades: List[str] = []
     sentidos: List[str] = []
-
 # --- PERÍCIAS E COMBATE ---
 
 class PericiaInfo(BaseModel):
