@@ -10,7 +10,6 @@ except ImportError:
 
 # --- ENUMS ---
 
-
 class TamanhoEnum(str, Enum):
     MINUSCULO = "Minúsculo"
     PEQUENO = "Pequeno"
@@ -23,8 +22,32 @@ class TamanhoEnum(str, Enum):
     def _missing_(cls, value):
         return cls.MEDIO
 
-# --- SUB-MODELOS DE DETALHES (Cálculos) ---
+# --- NOVOS MODELOS DA PILHA DE MODIFICADORES (WIZARD) ---
 
+class FonteBonus(BaseModel):
+    fonte: str        # Ex: "Raça: Humano", "Poder: Ataque Poderoso"
+    categoria: str    # Ex: "Racial", "Poder", "Equipamento", "Magia"
+    valor: int        # Ex: +2, -1
+    descricao: str = "" 
+
+class StatCalculado(BaseModel):
+    base: int = 0
+    total: int = 0
+    fontes: List[FonteBonus] = Field(default_factory=list)
+
+    def resetar(self, base: int):
+        """Limpa a pilha e define o valor base."""
+        self.base = base
+        self.total = base
+        self.fontes = []
+
+    def adicionar_bonus(self, fonte: str, categoria: str, valor: int, descricao: str = ""):
+        """Adiciona um bônus à pilha e atualiza o total."""
+        if valor != 0:
+            self.fontes.append(FonteBonus(fonte=fonte, categoria=categoria, valor=valor, descricao=descricao))
+            self.total += valor
+
+# --- SUB-MODELOS DE DETALHES (Cálculos) ---
 
 class DetalhesCalculo(BaseModel):
     inicial: int = 0
@@ -35,7 +58,6 @@ class DetalhesCalculo(BaseModel):
     outros: int = 0
     total: int = 0
 
-
 class DetalhesDeslocamento(BaseModel):
     base: float = 9.0
     armadura: float = 0.0
@@ -45,11 +67,9 @@ class DetalhesDeslocamento(BaseModel):
 
 # --- SUB-MODELOS DE DADOS BÁSICOS ---
 
-
 class XP(BaseModel):
     atual: int = 0
     proximo_nivel: int = 1000
-
 
 class Cabecalho(BaseModel):
     nome: str = "Sem Nome"
@@ -74,7 +94,6 @@ class Cabecalho(BaseModel):
                     data[campo] = ""
         return data
 
-
 class Atributos(BaseModel):
     forca: int = 0
     destreza: int = 0
@@ -82,7 +101,6 @@ class Atributos(BaseModel):
     inteligencia: int = 0
     sabedoria: int = 0
     carisma: int = 0
-
 
 class Descricao(BaseModel):
     tamanho: TamanhoEnum = TamanhoEnum.MEDIO
@@ -105,13 +123,11 @@ class Descricao(BaseModel):
 
 # --- STATUS ---
 
-
 class Buff(BaseModel):
     origem: str = ""      # Ex: "Armadura de Allihanna"
     atributo: str = ""    # Ex: "defesa"
     valor: int = 0        # Ex: 2
     duracao: str = "Cena"  # Ex: "Cena", "Sustentada"
-
 
 class StatusDetalhe(BaseModel):
     atual: int = 0
@@ -119,11 +135,9 @@ class StatusDetalhe(BaseModel):
     temporario: int = 0
     calculo: Optional[DetalhesCalculo] = None
 
-
 class DefesaDetalhe(BaseModel):
     total: int = 10
     detalhes: Dict[str, int] = {}
-
 
 class Status(BaseModel):
     pv: StatusDetalhe = Field(default_factory=StatusDetalhe)
@@ -142,7 +156,6 @@ class Status(BaseModel):
 
 # --- PERÍCIAS E COMBATE ---
 
-
 class PericiaInfo(BaseModel):
     treino: int = 0
     bonus_nivel: int = 0
@@ -154,7 +167,6 @@ class PericiaInfo(BaseModel):
     atributos_possiveis: List[str] = []
     fontes_bonus: List[str] = []
 
-
 class Ataque(BaseModel):
     nome: str = ""
     bonus_ataque: str = "+0"
@@ -164,7 +176,6 @@ class Ataque(BaseModel):
     alcance: str = "Curto"
     teste: str = "Luta"
     especial: Optional[str] = ""
-
 
 class Magia(BaseModel):
     nome: str
@@ -191,9 +202,8 @@ class Magia(BaseModel):
                 data['alvo'] = data['alvo_area']
         return data
 
-    class Config:
-        model_config = ConfigDict(populate_by_name=True)
-
+    # Pydantic V2 Config
+    model_config = ConfigDict(populate_by_name=True)
 
 class Combate(BaseModel):
     ataques: List[Ataque] = []
@@ -204,7 +214,6 @@ class Combate(BaseModel):
 
 # --- HABILIDADES E EQUIPAMENTO ---
 
-
 class Habilidade(BaseModel):
     nome: str
     tipo: str
@@ -214,12 +223,10 @@ class Habilidade(BaseModel):
     escolhas_aplicadas: Dict[str, Any] = {}
     efeitos: Dict[str, Any] = {}
 
-
 class Dinheiro(BaseModel):
     tl: int = 0
     tp: int = 0
     to: int = 0
-
 
 class Item(BaseModel):
     nome: str
@@ -229,13 +236,11 @@ class Item(BaseModel):
     tipo: str = "Geral"
     equipado: bool = False
 
-
 class Inventario(BaseModel):
     dinheiro: Dinheiro = Field(default_factory=Dinheiro)
     equipamentos: List[Item] = []
     carga_total: int = 0
     carga_maxima: int = 0
-
 
 class ClasseInfo(BaseModel):
     nome: str
@@ -244,7 +249,6 @@ class ClasseInfo(BaseModel):
     subclasse: str = ""
 
 # --- MODELO PRINCIPAL ---
-
 
 class Personagem(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
@@ -255,6 +259,9 @@ class Personagem(BaseModel):
 
     atributos_base: Atributos = Field(default_factory=Atributos)
     atributos: Atributos = Field(default_factory=Atributos)
+    
+    # 🚀 NOVA PILHA DE MODIFICADORES (WIZARD)
+    atributos_calc: Dict[str, StatCalculado] = Field(default_factory=dict)
 
     modificadores_raciais: Dict[str, int] = {}
     modificadores_envelhecimento: Dict[str, int] = {}
@@ -281,5 +288,5 @@ class Personagem(BaseModel):
             return None
         return str(v)
 
-    class Config:
-        model_config = ConfigDict(populate_by_name=True)
+    # Pydantic V2 Config
+    model_config = ConfigDict(populate_by_name=True)
