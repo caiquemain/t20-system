@@ -145,3 +145,9 @@ def get_dados_habilidades_raciais():
         item["id"] = chave
         resposta[chave] = item
     return resposta
+
+@router.get("/dados/progressao-circulos", tags=["Dados Estáticos"])
+def get_progressao_circulos():
+    """Tabela oficial de círculos de magia por classe/nível (T20)."""
+    from src.dados_progressao_magias import PROGRESSAO_CIRCULOS_POR_CLASSE
+    return PROGRESSAO_CIRCULOS_POR_CLASSE

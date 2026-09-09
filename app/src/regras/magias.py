@@ -104,3 +104,106 @@ def sincronizar_magias_habilidades(ficha: Personagem):
 
     if novas_magias:
         ficha.combate.magias.extend(novas_magias)
+# ═══════════════════════════════════════════
+# 🔒 REGRA T20: CÍRCULO MÁXIMO POR NÍVEL
+# Ajuste aqui se o seu livro usar outra tabela.
+# ═══════════════════════════════════════════
+CIRCULO_MINIMO_POR_NIVEL = {
+    1: 1,    # 1º círculo desde o nível 1
+    2: 5,    # 2º círculo a partir do nível 5
+    3: 9,    # 3º círculo a partir do nível 9
+    4: 13,   # 4º círculo a partir do nível 13
+}
+
+
+def calcular_circulo_maximo(nivel: int) -> int:
+    nivel = max(1, int(nivel or 1))
+    circulo = 1
+    for c, niv_min in CIRCULO_MINIMO_POR_NIVEL.items():
+        if nivel >= niv_min:
+            circulo = max(circulo, c)
+    return circulo
+
+
+def _circulo_da_magia(magia: Magia) -> int:
+    try:
+        return int(magia.circulo)
+    except (TypeError, ValueError):
+        return 1
+
+
+def validar_circulos_magias(ficha: Personagem) -> Personagem:
+    """Trava T20: remove magias APRENDIDAS acima do círculo máximo do nível.
+    Magias concedidas por habilidades (fonte 'Habilidade:') são preservadas."""
+    circulo_max = calcular_circulo_maximo(ficha.cabecalho.nivel_total or 1)
+    ficha.combate.circulo_maximo = circulo_max
+
+    mantidas, removidas = [], []
+    for m in ficha.combate.magias:
+        eh_de_habilidade = str(m.fonte or "").startswith("Habilidade:")
+        if eh_de_habilidade or _circulo_da_magia(m) <= circulo_max:
+            mantidas.append(m)
+        else:
+            removidas.append(f"{m.nome} ({_circulo_da_magia(m)}º)")
+
+    if removidas:
+        logger.warning(f"🔒 Magias acima do círculo máximo ({circulo_max}º) removidas: {removidas}")
+        ficha.combate.magias = mantidas
+    return ficha
+
+# ═══════════════════════════════════════════
+# 🔒 CÍRCULOS DE MAGIA POR CLASSE (T20 oficial)
+# Estas definições SUBSTITUEM a tabela genérica anterior
+# (em Python, a última definição com mesmo nome vence).
+# ═══════════════════════════════════════════
+from ..dados_progressao_magias import PROGRESSAO_CIRCULOS_POR_CLASSE
+
+
+def calcular_circulo_maximo(classe: str, nivel: int) -> int:
+    """Maior círculo que uma classe específica acessa no nível informado."""
+    progressao = PROGRESSAO_CIRCULOS_POR_CLASSE.get(classe or "", {})
+    nivel = int(nivel or 1)
+    circulo = 0
+    for niv_min, circ in progressao.items():
+        if nivel >= niv_min:
+            circulo = max(circulo, circ)
+    return circulo
+
+
+def calcular_circulo_maximo_ficha(ficha: Personagem) -> int:
+    """Maior círculo entre todas as classes do personagem (multiclasse)."""
+    return max(
+        [calcular_circulo_maximo(c.nome, c.nivel) for c in ficha.classes] or [0]
+    )
+
+
+def _circulo_da_magia(magia: Magia) -> int:
+    try:
+        return int(magia.circulo)
+    except (TypeError, ValueError):
+        return 1
+
+
+def validar_circulos_magias(ficha: Personagem) -> Personagem:
+    """Trava T20: remove magias MANUAIS acima do círculo máximo da classe.
+
+    Magias concedidas por habilidades/poderes (fonte 'Habilidade:') são
+    preservadas, pois seguem a regra do poder que as concedeu.
+    """
+    circulo_max = calcular_circulo_maximo_ficha(ficha)
+    ficha.combate.circulo_maximo = circulo_max
+
+    mantidas, removidas = [], []
+    for m in ficha.combate.magias:
+        eh_de_habilidade = str(m.fonte or "").startswith("Habilidade:")
+        if eh_de_habilidade or _circulo_da_magia(m) <= circulo_max:
+            mantidas.append(m)
+        else:
+            removidas.append(f"{m.nome} ({_circulo_da_magia(m)}º)")
+
+    if removidas:
+        logger.warning(
+            f"🔒 Magias acima do círculo máximo ({circulo_max}º) removidas: {removidas}"
+        )
+        ficha.combate.magias = mantidas
+    return ficha
