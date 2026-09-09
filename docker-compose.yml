@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   db:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: t20_db
     ports:
       - "27017:27017"
@@ -28,6 +26,6 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
-      # REMOVIDA A LINHA QUE BLOQUEAVA O NODE_MODULES
+      - /app/node_modules  # <--- ESSA LINHA SALVA O SEU VITE!
     environment:
       - VITE_API_URL=http://localhost:8000

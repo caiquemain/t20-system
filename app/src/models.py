@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Any, Union
 from enum import Enum
-from pydantic import BaseModel, Field, model_validator, field_validator
+from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 
 # Tenta importar ObjectId do BSON (MongoDB), se falhar usa Any
 try:
@@ -192,7 +192,7 @@ class Magia(BaseModel):
         return data
 
     class Config:
-        populate_by_name = True
+        model_config = ConfigDict(populate_by_name=True)
 
 
 class Combate(BaseModel):
@@ -282,4 +282,4 @@ class Personagem(BaseModel):
         return str(v)
 
     class Config:
-        populate_by_name = True
+        model_config = ConfigDict(populate_by_name=True)
