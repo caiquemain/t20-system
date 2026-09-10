@@ -162,3 +162,21 @@ def test_classe_sem_regra_nao_tem_limite(personagem_base):
     limite, calc = calcular_limite_magias_conhecidas(personagem_base)
     assert limite is None
     assert calc is None
+
+
+def test_limite_bardo_niveis_pares(personagem_base):
+    personagem_base.classes = [ClasseInfo(nome="Bardo", nivel=5, primaria=True)]
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 4  # 2 iniciais + níveis 2 e 4
+
+
+def test_limite_druida_niveis_pares(personagem_base):
+    personagem_base.classes = [ClasseInfo(nome="Druida", nivel=6, primaria=True)]
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 5  # 2 iniciais + níveis 2, 4 e 6
+
+
+def test_limite_clerigo_por_nivel(personagem_base):
+    personagem_base.classes = [ClasseInfo(nome="Clérigo", nivel=5, primaria=True)]
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 7  # 3 iniciais + 4 níveis
