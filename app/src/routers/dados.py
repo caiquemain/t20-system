@@ -151,3 +151,10 @@ def get_progressao_circulos():
     """Tabela oficial de círculos de magia por classe/nível (T20)."""
     from src.dados_progressao_magias import PROGRESSAO_CIRCULOS_POR_CLASSE
     return PROGRESSAO_CIRCULOS_POR_CLASSE
+
+
+@router.get("/dados/escolhas", tags=["Dados Estáticos"])
+def get_dados_escolhas():
+    """Catálogo único de opções de escolha (fonte de verdade p/ frontend)."""
+    from src.dados_escolhas import montar_catalogo_escolhas
+    return montar_catalogo_escolhas()

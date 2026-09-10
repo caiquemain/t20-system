@@ -215,6 +215,13 @@ def calcular_limite_magias_conhecidas(ficha: Personagem):
                 fonte=f"Aprendidas em níveis ímpares ({aprendidas})",
                 categoria="Classe", valor=aprendidas,
             )
+    elif regra.get("aprende_apenas_niveis_pares"):
+        aprendidas = nivel // 2
+        if aprendidas:
+            calc.adicionar_bonus(
+                fonte=f"Aprendidas em níveis pares ({aprendidas})",
+                categoria="Classe", valor=aprendidas,
+            )
     else:
         por_nivel = regra.get("por_nivel", 1)
         ganhos = (nivel - 1) * por_nivel

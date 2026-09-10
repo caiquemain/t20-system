@@ -18,3 +18,12 @@ REGRAS_MAGIAS_POR_SUBCLASSE = {
 PODERES_QUE_DAO_MAGIAS = {
     "Conhecimento Mágico": 2,
 }
+
+
+# ── Outras classes conjuradoras (T20 livro base) ──
+# Bardo: 2 magias iniciais; +1 a cada nível PAR (2º, 4º...)
+REGRAS_MAGIAS_CONHECIDAS["Bardo"] = {"inicial": 2, "por_nivel": 0, "aprende_apenas_niveis_pares": True}
+# Druida: idem ao Bardo
+REGRAS_MAGIAS_CONHECIDAS["Druida"] = {"inicial": 2, "por_nivel": 0, "aprende_apenas_niveis_pares": True}
+# Clérigo: 3 iniciais; +1 por nível (igual Arcanista)
+REGRAS_MAGIAS_CONHECIDAS["Clérigo"] = {"inicial": 3, "por_nivel": 1}
