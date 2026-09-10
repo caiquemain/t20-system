@@ -278,6 +278,7 @@ function Ficha() {
                 pmAtual={ficha.status.pm.atual}
                 pmMaximo={ficha.status.pm.maximo}
                 circuloMaximo={ficha.combate?.circulo_maximo ?? 0}
+                limiteMagias={ficha.combate?.limite_magias ?? null}
             />
 
             <FullGrimorioModal
@@ -528,6 +529,9 @@ function Ficha() {
                         <span style={{ fontSize: '0.8rem', color: '#ce93d8', marginRight: 10 }}>
                             🔮 Círculo máx: {ficha.combate?.circulo_maximo ?? 0}º
                         </span>
+                        <span style={{ fontSize: '0.8rem', color: '#8bc34a', marginRight: 10 }}>
+                        📖 Magias: {(ficha.combate.magias || []).filter((m: any) => !String(m.fonte || '').startsWith('Habilidade:')).length} / {ficha.combate?.limite_magias ?? '∞'}
+                    </span>
                         <button className="btn-small" onClick={() => setShowGrimorio(true)}>+ Adicionar</button>
                     </div>
                 </div>

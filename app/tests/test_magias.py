@@ -4,6 +4,7 @@ from src.regras.magias import (
     calcular_circulo_maximo_ficha,
     validar_circulos_magias,
     aplicar_poderes_arcanista,
+    calcular_limite_magias_conhecidas,
 )
 from src.regras.status import calcular_pv_pm
 
@@ -114,3 +115,50 @@ def test_poder_magico_adiciona_pm_por_nivel(personagem_base):
         f.fonte == "Poder Mágico" and f.valor == 5
         for f in personagem_base.status.pm_calc.fontes
     )
+
+
+def test_limite_magias_arcanista_nivel_1(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].nivel = 1
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 3
+
+
+def test_limite_magias_arcanista_nivel_5(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].nivel = 5
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 7  # 3 iniciais + 4 (níveis 2 a 5)
+
+
+def test_limite_magias_mago_nivel_5(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].subclasse = "Mago"
+    personagem_base.classes[0].nivel = 5
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 9  # 4 iniciais + 4 por nível + 1 pelo 2º círculo
+
+
+def test_limite_magias_feiticeiro_nivel_5(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].subclasse = "Feiticeiro"
+    personagem_base.classes[0].nivel = 5
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 5  # 3 iniciais + níveis ímpares 3 e 5
+
+
+def test_limite_magias_com_conhecimento_magico(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].nivel = 1
+    personagem_base.habilidades = [
+        Habilidade(nome="Conhecimento Mágico", tipo="Poder de Arcanista", descricao=""),
+    ]
+    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite == 5  # 3 + 2 do poder
+
+
+def test_classe_sem_regra_nao_tem_limite(personagem_base):
+    personagem_base.classes[0].nome = "Guerreiro"
+    limite, calc = calcular_limite_magias_conhecidas(personagem_base)
+    assert limite is None
+    assert calc is None
