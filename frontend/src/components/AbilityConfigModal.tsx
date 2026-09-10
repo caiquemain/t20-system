@@ -30,6 +30,10 @@ interface AbilityConfigModalProps {
     devocaoEmEdicao: string;
     setDevocaoEmEdicao: (val: string) => void;
     poderesEscolhasEmEdicao: Record<string, Record<string, any>>;
+    linhagemEmEdicao: string;
+    setLinhagemEmEdicao: (v: string) => void;
+    tipoDanoEmEdicao: string;
+    setTipoDanoEmEdicao: (v: string) => void;
     setPoderesEscolhasEmEdicao: React.Dispatch<React.SetStateAction<Record<string, Record<string, any>>>>;
     abrirSeletor: (tipo: string, titulo: string, listaRestrita?: string[], categoriaFixa?: string, onConfirm?: (val: string) => void, itensBloqueados?: string[]) => void;
 }
@@ -41,7 +45,8 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao, habilidadesEmEdicao, setHabilidadesEmEdicao,
     classPowersEmEdicao = [], setClassPowersEmEdicao, subclasseEmEdicao, setSubclasseEmEdicao,
     devocaoEmEdicao, setDevocaoEmEdicao, abrirSeletor,
-    poderesEscolhasEmEdicao = {}, setPoderesEscolhasEmEdicao
+    poderesEscolhasEmEdicao = {}, setPoderesEscolhasEmEdicao,
+    linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao
 }) => {
     useEffect(() => {
         if (isOpen && habilidadesEmEdicao.length === 0 && ficha && ficha.habilidades) {
@@ -154,7 +159,27 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         </div>
                     </div>
                 )}
-                {/* 2. DEVOÇÃO */}
+                {/* 1b. LINHAGEM (FEITICEIRO) */}
+             {subclasseEmEdicao === "Feiticeiro" && (
+                 <div style={{ marginBottom: 20, padding: 15, background: '#3b2530', borderRadius: 6, border: '1px solid #ce93d8' }}>
+                     <h3 className="section-subtitle" style={{ marginTop: 0, color: '#ce93d8' }}>Linhagem Sobrenatural</h3>
+                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                         {["Dracônica", "Feérica", "Rubra"].map(l => (
+                             <button key={l} onClick={() => setLinhagemEmEdicao(l)} className={`btn-action ${linhagemEmEdicao === l ? 'selected' : ''}`} style={{ flex: 1, background: linhagemEmEdicao === l ? '#4caf50' : '#333', border: linhagemEmEdicao === l ? '1px solid #fff' : '1px solid #555', color: 'white' }}>{l}</button>
+                         ))}
+                     </div>
+                     {linhagemEmEdicao === "Dracônica" && (
+                         <div style={{ marginTop: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
+                             <label style={{ fontSize: '0.8rem', color: '#aaa' }}>Tipo de dano:</label>
+                             <select className="input-dark" value={tipoDanoEmEdicao} onChange={e => setTipoDanoEmEdicao(e.target.value)} style={{ flex: 1 }}>
+                                 <option value="">Selecionar...</option>
+                                 {["ácido", "eletricidade", "fogo", "frio"].map(t => <option key={t} value={t}>{t}</option>)}
+                             </select>
+                         </div>
+                     )}
+                 </div>
+             )}
+             {/* 2. DEVOÇÃO */}
                 {ficha.cabecalho.deus && infoDeus && (
                     <div className="origem-box" style={{ borderColor: '#ffd700', background: '#2a2a20', marginBottom: 20 }}>
                         <h3 className="section-subtitle" style={{ marginTop: 0, color: '#ffd700' }}>Devoção: {ficha.cabecalho.deus}</h3>

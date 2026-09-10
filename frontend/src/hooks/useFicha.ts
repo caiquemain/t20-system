@@ -65,6 +65,8 @@ export const useFicha = (id: string | undefined) => {
     const [devocaoEmEdicao, setDevocaoEmEdicao] = useState<string>("");
     // [LOTE 1-UI] Escolhas secundárias de poderes (escola, atributo, familiar...)
     const [poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao] = useState<Record<string, Record<string, any>>>({});
+    const [linhagemEmEdicao, setLinhagemEmEdicao] = useState<string>("");
+    const [tipoDanoEmEdicao, setTipoDanoEmEdicao] = useState<string>("");
 
     const fichaRef = useRef<Personagem | null>(null);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -216,6 +218,9 @@ export const useFicha = (id: string | undefined) => {
             .forEach(h => { escolhasPoderes[h.nome] = { ...h.escolhas_aplicadas }; });
         setPoderesEscolhasEmEdicao(escolhasPoderes);
         setSubclasseEmEdicao(ficha.classes[0]?.subclasse || "");
+        const linhagemHab = ficha.habilidades.find(h => (h.nome || "").startsWith("Linhagem"));
+        setLinhagemEmEdicao(linhagemHab ? linhagemHab.nome.replace("Linhagem ", "") : "");
+        setTipoDanoEmEdicao(linhagemHab?.escolhas_aplicadas?.tipo_dano || "");
         const deus = ficha.cabecalho.deus;
         const infoDeus = dadosDeuses[deus];
         if (deus && infoDeus) {
@@ -268,6 +273,17 @@ export const useFicha = (id: string | undefined) => {
                 escolhas_aplicadas: poderesEscolhasEmEdicao[nome] || {}
             };
         });
+        // [FEITICEIRO] Upsert da linhagem escolhida
+        habilidadesFinais = habilidadesFinais.filter(h => !(h.nome || "").startsWith("Linhagem"));
+        if (subclasseEmEdicao === "Feiticeiro" && linhagemEmEdicao) {
+            habilidadesFinais.push({
+                nome: `Linhagem ${linhagemEmEdicao}`,
+                tipo: "Habilidade de Classe",
+                descricao: `Linhagem sobrenatural do feiticeiro (${linhagemEmEdicao}).`,
+                fonte: "Feiticeiro",
+                escolhas_aplicadas: linhagemEmEdicao === "Dracônica" && tipoDanoEmEdicao ? { tipo_dano: tipoDanoEmEdicao } : {}
+            } as Habilidade);
+        }
         habilidadesFinais.push(...novosPoderesClasse);
         if (novaFicha.cabecalho.deus && devocaoEmEdicao) {
             const dPoder = dadosPoderesConcedidos[devocaoEmEdicao];
@@ -292,6 +308,10 @@ export const useFicha = (id: string | undefined) => {
         devocaoEmEdicao, setDevocaoEmEdicao,
         poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
      dadosEscolhas,
-        updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas,
+        linhagemEmEdicao,
+    setLinhagemEmEdicao,
+    tipoDanoEmEdicao,
+    setTipoDanoEmEdicao,
+    updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas,
     };
 };

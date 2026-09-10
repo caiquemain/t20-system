@@ -78,7 +78,7 @@ function Ficha() {
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
         classPowersEmEdicao, setClassPowersEmEdicao,
         subclasseEmEdicao, setSubclasseEmEdicao,
-        devocaoEmEdicao, setDevocaoEmEdicao, poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
+        devocaoEmEdicao, setDevocaoEmEdicao, linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao, poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
         dadosEscolhas,
         updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas
     } = useFicha(id);
@@ -287,6 +287,10 @@ function Ficha() {
                 setDevocaoEmEdicao={setDevocaoEmEdicao}
              poderesEscolhasEmEdicao={poderesEscolhasEmEdicao}
              setPoderesEscolhasEmEdicao={setPoderesEscolhasEmEdicao}
+             linhagemEmEdicao={linhagemEmEdicao}
+             setLinhagemEmEdicao={setLinhagemEmEdicao}
+             tipoDanoEmEdicao={tipoDanoEmEdicao}
+             setTipoDanoEmEdicao={setTipoDanoEmEdicao}
                 abrirSeletor={abrirSeletor}
             />
 
