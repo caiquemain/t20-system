@@ -39,7 +39,7 @@ def test_especialista_e_mestre_em_escola(personagem_base):
     ]
     aplicar_poderes_arcanista(f)
     assert f.combate.cd_por_escola == {"Evocação": 2}
-    assert f.combate.custo_por_escola == {"Evocação": 1}
+    assert f.combate.custo_por_escola == {"Evocação": -1}  # convenção: modificador de PM
 
 
 def test_alta_arcana_nivel_20(personagem_base):
@@ -170,7 +170,7 @@ def test_familiar_falcao_imunidades(personagem_base):
     f.habilidades = [_hab("Familiar", {"familiar": "Falcão"})]
     aplicar_poderes_arcanista(f)
     assert "Não pode ser surpreendido" in f.status.imunidades
-    assert "Não fica desprevenido" in f.status.imunidades
+    assert "Nunca fica desprevenido" in f.status.imunidades
 
 
 def test_familiar_morcego_sentidos(personagem_base):
@@ -187,8 +187,8 @@ def test_familiar_sapo_com_attr_zero(personagem_base):
     f.atributos.inteligencia = 0  # mod = 0
     f.habilidades = [_hab("Familiar", {"familiar": "Sapo"})]
     aplicar_poderes_arcanista(f)
-    fontes_sapo = [fr for fr in f.status.pv_calc.fontes if fr.fonte == "Familiar: Sapo"]
-    assert len(fontes_sapo) == 0
+    fontes = f.status.pv_calc.fontes if f.status.pv_calc else []
+    assert not [fr for fr in fontes if fr.fonte == "Familiar: Sapo"]
 
 
 def test_familiar_sapo_feiticeiro_usa_carisma(personagem_base):
@@ -405,5 +405,57 @@ def test_feerica_aprimorada_cd_e_custo_escolas(personagem_base):
     aplicar_poderes_arcanista(f)
     assert f.combate.cd_por_escola.get("Encantamento") == 2
     assert f.combate.cd_por_escola.get("Ilusão") == 2
-    assert f.combate.custo_por_escola.get("Encantamento") == 1
-    assert f.combate.custo_por_escola.get("Ilusão") == 1
+    assert f.combate.custo_por_escola.get("Encantamento") == -1
+    assert f.combate.custo_por_escola.get("Ilusão") == -1
+
+
+def test_familiar_coruja_injeta_ativavel(personagem_base):
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Familiar", {"familiar": "Coruja"})]
+    aplicar_poderes_arcanista(f)
+    assert f.habilidades[0].efeitos.get("habilidade_ativavel", {}).get("custo") == 1
+
+
+def test_draconica_aprimorada_reducao_e_dano(personagem_base):
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.atributos.carisma = 3
+    f.habilidades = [
+        Habilidade(nome="Linhagem Dracônica", tipo="Habilidade de Classe",
+                   descricao="", escolhas_aplicadas={"tipo_dano": "fogo"}),
+        _hab("Herança Aprimorada"),
+    ]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.reducao_pm_tipo == {"fogo": 1}
+    assert f.combate.bonus_dano_dado_tipo == {"fogo": 1}
+
+
+def test_bruxo_foco_pv_metade(personagem_base):
+    from src.regras.status import calcular_pv_pm
+    f = _ficha_arcanista(personagem_base, subclasse="Bruxo")
+    calcular_pv_pm(f)
+    aplicar_poderes_arcanista(f)
+    assert f.combate.foco_pv_maximo == f.status.pv.maximo // 2
+    assert f.combate.foco_pv_atual == f.combate.foco_pv_maximo
+
+
+def test_rubra_superior_pm_por_tormenta(personagem_base):
+    from src.regras.status import calcular_pv_pm
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.habilidades = [
+        Habilidade(nome="Linhagem Rubra", tipo="Habilidade de Classe", descricao=""),
+        _hab("Herança Aprimorada"), _hab("Herança Superior"),
+        Habilidade(nome="Poder Tormenta A", tipo="Poder da Tormenta", descricao=""),
+        Habilidade(nome="Poder Tormenta B", tipo="Poder da Tormenta", descricao=""),
+    ]
+    calcular_pv_pm(f)
+    aplicar_poderes_arcanista(f)
+    assert any(fr.valor == 8 for fr in f.status.pm_calc.fontes if "Rubra" in fr.fonte)
+
+
+def test_feerica_basica_treina_enganacao(personagem_base):
+    from src.models import PericiaInfo
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.pericias = {"Enganação": PericiaInfo(treino=0, total=0)}
+    f.habilidades = [Habilidade(nome="Linhagem Feérica", tipo="Habilidade de Classe", descricao="")]
+    aplicar_poderes_arcanista(f)
+    assert f.pericias["Enganação"].treino == 1

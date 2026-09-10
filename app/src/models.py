@@ -229,7 +229,13 @@ class Combate(BaseModel):
     custo_por_escola: Dict[str, int] = {}
     custo_arcano_metade: bool = False
     fluxo_de_mana: bool = False   # 🆕 Lote 2: 2 sustentados c/ 1 ação livre
-    foco_vital: bool = False      # 🆕 Lote 2: foco absorve dano letal
+    foco_vital: bool = False
+    # 🆕 Varredura de fechamento do Arcanista
+    reducao_pm_tipo: Dict[str, int] = {}        # Dracônica aprimorada: -1 PM por tipo
+    bonus_dano_dado_tipo: Dict[str, int] = {}   # Dracônica aprimorada: +1 dano por dado
+    foco_pv_maximo: int = 0                     # Bruxo: foco com PV = metade dos seus
+    foco_pv_atual: int = 0
+    magias_memorizadas: List[str] = []          # Mago: memorização (UI depois)      # 🆕 Lote 2: foco absorve dano letal
 
 # --- HABILIDADES E EQUIPAMENTO ---
 
