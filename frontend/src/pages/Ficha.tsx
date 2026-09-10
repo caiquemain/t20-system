@@ -42,7 +42,6 @@ const RACAS_METADATA: Record<string, { attrs: Record<string, number>, escolhas: 
     "Meio-Elfo": { attrs: { int: 1 }, escolhas: 2 },
     "Osteon": { attrs: { con: -1 }, escolhas: 3 },
     "Sereia/Tritão": { attrs: {}, escolhas: 3 },
-    // ADICIONADO: Sátiro estava faltando!
     "Sátiro": { attrs: { car: 2, des: 1, sab: -1 }, escolhas: 0 },
     "Sílfide": { attrs: { car: 2, des: 1, for: -2 }, escolhas: 0 },
     "Suraggel (Aggelus)": { attrs: { sab: 2, car: 1 }, escolhas: 0 },
@@ -72,9 +71,7 @@ function Ficha() {
         dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
         listaDeuses, dadosDeuses, dadosHabilidades,
-        // [NOVO] Desestruturando o dado novo
         dadosHabilidadesRaciais,
-
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
@@ -88,12 +85,10 @@ function Ficha() {
     const [showRacialModal, setShowRacialModal] = useState(false);
     const [activeTab, setActiveTab] = useState<'atributos' | 'efeitos'>('atributos');
 
-    // --- ESTADOS DO GRIMÓRIO ---
     const [showGrimorio, setShowGrimorio] = useState(false);
     const [showFullGrimorio, setShowFullGrimorio] = useState(false);
     const [viewSpell, setViewSpell] = useState<Magia | null>(null);
 
-    // --- ESTADOS DE DESLOCAMENTO ESPECIAL ---
     const [isFlying, setIsFlying] = useState(false);
     const [isAquatic, setIsAquatic] = useState(false);
 
@@ -116,7 +111,6 @@ function Ficha() {
         setSelectorModalOpen(true);
     };
 
-    // --- FUNÇÃO DE ATIVAÇÃO DE HABILIDADE ---
     const handleAtivarHabilidade = (custo: number, nome: string) => {
         if (!ficha) return;
 
@@ -212,6 +206,13 @@ function Ficha() {
 
     const handleAprenderMagiaUnica = (novaMagia: Magia) => {
         if (!ficha) return;
+        // 🔒 TRAVA T20: círculo máximo vem calculado do backend
+        const circuloMax = ficha.combate?.circulo_maximo ?? 0;
+        const circulo = parseInt(String(novaMagia.circulo)) || 1;
+        if (circulo > circuloMax) {
+            alert(`🔒 ${novaMagia.nome} é uma magia de ${circulo}º círculo.\nSeu círculo máximo atual é ${circuloMax}º (definido pela sua classe e nível).`);
+            return;
+        }
         const listaAtual = ficha.combate.magias || [];
         if (!listaAtual.some(m => m.nome === novaMagia.nome)) {
             const novaLista = [...listaAtual, novaMagia];
@@ -254,9 +255,7 @@ function Ficha() {
                 dadosOrigens={dadosOrigens}
                 dadosDeuses={dadosDeuses}
                 dadosMagias={dadosMagias}
-                // [NOVO] Passando os dados de sub-habilidades para o Modal
                 dadosHabilidadesRaciais={dadosHabilidadesRaciais}
-
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}
@@ -278,6 +277,7 @@ function Ficha() {
                 magiasConhecidas={ficha.combate.magias || []}
                 pmAtual={ficha.status.pm.atual}
                 pmMaximo={ficha.status.pm.maximo}
+                circuloMaximo={ficha.combate?.circulo_maximo ?? 0}
             />
 
             <FullGrimorioModal
@@ -328,7 +328,6 @@ function Ficha() {
             <header className="ficha-header">
                 <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button>
                 <div className="header-inputs">
-                    {/* Linha 1: Nome */}
                     <input
                         className="input-nome"
                         placeholder="Nome do Personagem"
@@ -336,25 +335,20 @@ function Ficha() {
                         onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, nome: e.target.value } })}
                     />
 
-                    {/* Linha 2: Dados Principais */}
                     <div className="header-sub">
-                        {/* Raça */}
                         <select className="select-header" value={ficha.cabecalho.raca} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [] }, true)}>
                             {listaRacas.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <span>•</span>
-                        {/* Origem */}
                         <select className="select-header" value={origemBloqueada ? "" : ficha.cabecalho.origem} disabled={origemBloqueada} style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : {}} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}>
                             {origemBloqueada ? <option value="">🚫 Sem Origem</option> : listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
                         <span>•</span>
-                        {/* Deus */}
                         <select className="select-header" value={ficha.cabecalho.deus || ""} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } }, true)} style={{ color: '#ffd700' }}>
                             <option value="">Sem Devoção</option>
                             {deusesDisponiveis.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                         <span>•</span>
-                        {/* Classe */}
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
                                 const novasClasses = [...ficha.classes];
@@ -365,13 +359,11 @@ function Ficha() {
                             </select>
                             {ficha.classes[0]?.subclasse && <span className="subclass-badge" title="Caminho / Subclasse">{ficha.classes[0].subclasse}</span>}
                         </div>
-                        {/* Nível */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 10 }}>
                             <label style={{ fontSize: '0.8rem', color: '#888' }}>NV</label>
                             <input className="input-nivel" type="number" min={1} max={20} value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
                         </div>
 
-                        {/* --- NOVO: TAMANHO E DESLOCAMENTO --- */}
                         <div className="header-divider">|</div>
                         <div className="header-info-tag" title="Tamanho">
                             <span className="tag-label">TAM</span>
@@ -387,7 +379,6 @@ function Ficha() {
                 </div>
             </header>
 
-            {/* --- NAVEGAÇÃO INTERNA DA FICHA (TABS) --- */}
             <div className="ficha-tabs" style={{ display: 'flex', gap: 10, padding: '0 20px', marginBottom: 15, borderBottom: '1px solid #333' }}>
                 <button
                     className={`tab-btn ${activeTab === 'atributos' ? 'active' : ''}`}
@@ -405,10 +396,8 @@ function Ficha() {
                 </button>
             </div>
 
-            {/* --- CONTEÚDO DA ABA PRINCIPAL --- */}
             {activeTab === 'atributos' && (
                 <div className="ficha-grid">
-                    {/* COLUNA 1: ATRIBUTOS & STATUS */}
                     <div className="col-stats">
                         <div className="section-card">
                             <h3 className="section-title">Atributos</h3>
@@ -440,7 +429,6 @@ function Ficha() {
                             </div>
                         </div>
 
-                        {/* --- STATUS BARS --- */}
                         <StatusBars
                             ficha={ficha}
                             onUpdate={(data) => updateFicha(data, true)}
@@ -450,7 +438,6 @@ function Ficha() {
                         />
                     </div>
 
-                    {/* COLUNA 2: EQUIPAMENTO & HABILIDADES */}
                     <div className="col-inventory">
                         <div className="section-card">
                             <h3 className="section-title">Equipamento</h3>
@@ -474,14 +461,12 @@ function Ficha() {
                         </div>
                     </div>
 
-                    {/* COLUNA 3: PERÍCIAS */}
                     <div className="col-skills">
                         <SkillList ficha={ficha} dadosClasses={dadosClasses} updateFicha={updateFicha} listaTodasPericias={listaTodasPericias} />
                     </div>
                 </div>
             )}
 
-            {/* --- CONTEÚDO DA ABA EFEITOS --- */}
             {activeTab === 'efeitos' && (
                 <div className="tab-content" style={{ padding: '0 20px 20px 20px' }}>
                     <div className="section-card">
@@ -495,7 +480,6 @@ function Ficha() {
                         ) : (
                             <div className="effects-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 15, padding: 15 }}>
                                 {ficha.status.efeitos_ativos.map((efeito: string, i: number) => {
-                                    // Ícones dinâmicos baseados no texto
                                     let icon = '✨';
                                     let color = '#2196f3';
                                     let bg = 'rgba(33, 150, 243, 0.1)';
@@ -504,7 +488,6 @@ function Ficha() {
                                     else if (efeito.includes('Visão') || efeito.includes('Sentido') || efeito.includes('Faro')) { icon = '👁️'; color = '#00bcd4'; bg = 'rgba(0, 188, 212, 0.1)'; }
                                     else if (efeito.includes('Tamanho')) { icon = '📏'; color = '#ffeb3b'; bg = 'rgba(255, 235, 59, 0.1)'; }
 
-                                    // Separa título e descrição se houver ':'
                                     const [titulo, desc] = efeito.includes(':') ? efeito.split(/:(.+)/) : [efeito, null];
                                     const tituloLimpo = titulo.replace(/^[✨🛡️👁️📏]\s*/, '');
 
@@ -534,11 +517,17 @@ function Ficha() {
             )}
 
             {/* --- SEÇÃO GRIMÓRIO (SEMPRE VISÍVEL) --- */}
+            {/* ✅ CORREÇÃO: Adicionado <div className="section-card"> envolvendo tudo */}
             <div className="section-card" style={{ marginTop: 20 }}>
                 <div className="section-header">
                     <h3>GRIMÓRIO</h3>
                     <div className="header-actions">
-                        <span style={{ fontSize: '0.8rem', color: '#aaa', marginRight: 10 }}>PM: {ficha.status.pm.atual} / {ficha.status.pm.maximo}</span>
+                        <span style={{ fontSize: '0.8rem', color: '#aaa', marginRight: 10 }}>
+                            PM: {ficha.status.pm.atual} / {ficha.status.pm.maximo}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#ce93d8', marginRight: 10 }}>
+                            🔮 Círculo máx: {ficha.combate?.circulo_maximo ?? 0}º
+                        </span>
                         <button className="btn-small" onClick={() => setShowGrimorio(true)}>+ Adicionar</button>
                     </div>
                 </div>
