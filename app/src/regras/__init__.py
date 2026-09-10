@@ -5,6 +5,7 @@ from .habilidades import (
     limpar_habilidades_fixas,
     garantir_habilidades_iniciais,
     sincronizar_poderes_habilidades,
+    sincronizar_escolhas_de_caminho,
     processar_acumulo_habilidades,
     atualizar_efeitos_ativos
 )
@@ -41,6 +42,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     # 3. Reconstrução de Habilidades:
     garantir_habilidades_iniciais(ficha, memoria_escolhas)
     sincronizar_poderes_habilidades(ficha, memoria_escolhas)
+    sincronizar_escolhas_de_caminho(ficha)
 
     # 4. Processamentos Adicionais de Habilidades
     sincronizar_magias_habilidades(ficha)

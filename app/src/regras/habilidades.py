@@ -298,3 +298,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
                 lista_efeitos.append(f"👁️ {sentido}")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
+
+
+def sincronizar_escolhas_de_caminho(ficha: Personagem) -> Personagem:
+    """Grava a subclasse atual na habilidade de Caminho (ex.: Caminho do Arcanista),
+    para o frontend exibir a escolha como chip (padrão 'Aumento de Atributo').
+    Também limpa gatilhos vazados de saves antigos (escolha_subclasse)."""
+    if not ficha.classes:
+        return ficha
+    subclasse = ficha.classes[0].subclasse or ""
+    for h in ficha.habilidades:
+        efeitos = h.efeitos or {}
+        if efeitos.get("escolha_subclasse"):
+            escolhas = dict(h.escolhas_aplicadas or {})
+            escolhas.pop("escolha_subclasse", None)  # limpa poluição antiga
+            escolhas["subclasse"] = subclasse
+            h.escolhas_aplicadas = escolhas
+    return ficha
