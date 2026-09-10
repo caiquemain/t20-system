@@ -301,3 +301,18 @@ def test_descansar_mantem_pv_cheio_com_familiar(personagem_base):
     aplicar_poderes_arcanista(f)           # sobe máximo p/ 14 e preserva "cheio"
     assert f.status.pv.maximo == 15
     assert f.status.pv.atual == 15
+
+
+def test_caminho_recebe_chip_da_subclasse(personagem_base):
+    """Caminho do Arcanista ganha escolhas_aplicadas.subclasse (chip no card)
+    e limpa a poluição antiga de saves (escolha_subclasse)."""
+    from src.regras.habilidades import sincronizar_escolhas_de_caminho
+    f = _ficha_arcanista(personagem_base, subclasse="Bruxo")
+    f.habilidades = [Habilidade(
+        nome="Caminho do Arcanista", tipo="Classe", descricao="",
+        efeitos={"escolha_subclasse": ["Bruxo", "Feiticeiro", "Mago"]},
+        escolhas_aplicadas={"escolha_subclasse": ["Bruxo", "Feiticeiro", "Mago"]},
+    )]
+    sincronizar_escolhas_de_caminho(f)
+    assert f.habilidades[0].escolhas_aplicadas.get("subclasse") == "Bruxo"
+    assert "escolha_subclasse" not in f.habilidades[0].escolhas_aplicadas
