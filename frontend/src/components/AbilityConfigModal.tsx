@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import '../Ficha.css';
 import { RacialAbilityRow } from './RacialAbilityRow'; // Importação limpa
+import { PODERES_COM_ESCOLHA } from '../utils/poderesEscolhas';
 
 interface AbilityConfigModalProps {
-    // ... mesmas props de antes ...
     isOpen: boolean;
     onClose: () => void;
     onSave: () => void;
@@ -29,20 +29,20 @@ interface AbilityConfigModalProps {
     setSubclasseEmEdicao: (val: string) => void;
     devocaoEmEdicao: string;
     setDevocaoEmEdicao: (val: string) => void;
+    poderesEscolhasEmEdicao: Record<string, Record<string, any>>;
+    setPoderesEscolhasEmEdicao: React.Dispatch<React.SetStateAction<Record<string, Record<string, any>>>>;
     abrirSeletor: (tipo: string, titulo: string, listaRestrita?: string[], categoriaFixa?: string, onConfirm?: (val: string) => void, itensBloqueados?: string[]) => void;
 }
 
 export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
-    // ... desestruturação das props ...
     isOpen, onClose, onSave, ficha, origemNome, qtdEscolhasOrigem, listaBeneficiosOrigem = [],
     classeAtual, nivelAtual, dadosHabilidadesClasse, listaPoderesGerais = [], dadosDeuses = {},
     dadosMagias = {}, dadosOrigens = {}, dadosHabilidadesRaciais = {},
     origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao, habilidadesEmEdicao, setHabilidadesEmEdicao,
     classPowersEmEdicao = [], setClassPowersEmEdicao, subclasseEmEdicao, setSubclasseEmEdicao,
-    devocaoEmEdicao, setDevocaoEmEdicao, abrirSeletor
+    devocaoEmEdicao, setDevocaoEmEdicao, abrirSeletor,
+    poderesEscolhasEmEdicao = {}, setPoderesEscolhasEmEdicao
 }) => {
-
-    // ... useEffect de auto-população mantido ...
     useEffect(() => {
         if (isOpen && habilidadesEmEdicao.length === 0 && ficha && ficha.habilidades) {
             console.log("⚠️ Lista vazia detectada! Tentando popular automaticamente...");
@@ -90,7 +90,15 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
         setHabilidadesEmEdicao(novos);
     };
 
-    // ... (Helpers de poderesDoDeus e nomesPoderesDisponiveis mantidos) ...
+    // [LOTE 1-UI] Atualiza escolha secundária de um poder (escola/atributo/familiar)
+    const updatePoderEscolha = (poderNome: string, chave: string, valor: any) => {
+        if (!setPoderesEscolhasEmEdicao) return;
+        setPoderesEscolhasEmEdicao(prev => ({
+            ...prev,
+            [poderNome]: { ...(prev[poderNome] || {}), [chave]: valor }
+        }));
+    };
+
     const infoDeus = dadosDeuses[ficha.cabecalho.deus];
     const poderesDoDeus = infoDeus ? infoDeus.poderes : [];
 
@@ -108,9 +116,15 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
         return false;
     }).map(p => p.nome).sort();
 
+    // [LOTE 1-UI] Poderes da classe atual entram na lista de seleção
+    const nomesPoderesClasse = Object.values(dadosHabilidadesClasse || {})
+        .filter((h: any) => h.classe === classeAtual && (h.tipo || "").includes("Poder de") && (h.nivel ?? 2) <= nivelAtual)
+        .map((h: any) => h.nome);
+
     const listaCompletaHabilidadesClasse = Object.values(dadosHabilidadesClasse || {});
     const habilidadesAutomaticas = listaCompletaHabilidadesClasse.filter((h: any) => h.classe === classeAtual && h.tipo === "Habilidade de Classe" && h.nivel <= nivelAtual);
     const slotsPoderes = Math.max(0, nivelAtual - 1);
+    const nomesPoderesDisponiveisFinais = Array.from(new Set([...nomesPoderesDisponiveis, ...nomesPoderesClasse])).sort();
     const habilidadeComSubclasse: any = habilidadesAutomaticas.find((h: any) => h.efeitos && h.efeitos.escolha_subclasse);
     const opcoesSubclasse: string[] = habilidadeComSubclasse ? habilidadeComSubclasse.efeitos.escolha_subclasse : [];
 
@@ -120,7 +134,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 <button className="btn-close-panel" onClick={onClose}>X</button>
                 <h2>⚙️ Configuração de Personagem</h2>
                 <hr />
-
                 {/* 1. SUBCLASSE */}
                 {opcoesSubclasse.length > 0 && habilidadeComSubclasse && (
                     <div style={{ marginBottom: 20, padding: 15, background: '#253b50', borderRadius: 6, border: '1px solid #64b5f6' }}>
@@ -132,7 +145,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         </div>
                     </div>
                 )}
-
                 {/* 2. DEVOÇÃO */}
                 {ficha.cabecalho.deus && infoDeus && (
                     <div className="origem-box" style={{ borderColor: '#ffd700', background: '#2a2a20', marginBottom: 20 }}>
@@ -144,7 +156,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         </div>
                     </div>
                 )}
-
                 {/* 3. ORIGEM */}
                 {(() => {
                     const bloqueioOrigem = habilidadesEmEdicao.find(h => h.efeitos && h.efeitos.sem_origem);
@@ -166,7 +177,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         </div>
                     );
                 })()}
-
                 {/* 4. HABILIDADES RACIAIS */}
                 <h3 className="section-subtitle" style={{ marginTop: 20 }}>Habilidades Raciais</h3>
                 <div className="habilidades-list-wrapper">
@@ -181,13 +191,10 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                             getBlacklistGlobal={getBlacklistGlobal}
                             getNomeHabilidade={getNomeHabilidade}
                             poderesDoDeus={poderesDoDeus}
-
-                            // Lista enviada corretamente
                             listaPericias={listaNomesPericias}
                         />
                     ))}
                 </div>
-
                 {/* 5. CLASSE (Fixas) */}
                 <h3 className="section-subtitle" style={{ marginTop: 20 }}>Habilidades de Classe (Fixas)</h3>
                 <div className="lista-automatica">
@@ -200,7 +207,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                     ))}
                     {habilidadesAutomaticas.length === 0 && <p className="text-muted">Nenhuma habilidade automática neste nível.</p>}
                 </div>
-
                 {/* 6. PODERES (Slots) */}
                 <h3 className="section-subtitle" style={{ marginTop: 20 }}>Poderes ({classPowersEmEdicao.length}/{slotsPoderes})</h3>
                 {slotsPoderes > 0 ? (
@@ -208,21 +214,39 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         {[...Array(slotsPoderes)].map((_, i) => {
                             const valorAtual = classPowersEmEdicao[i] || "";
                             return (
-                                <div key={i} className="power-slot-row" style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <div style={{ width: '25px', color: '#666', fontSize: '0.8rem', textAlign: 'right' }}>{i + 2}º</div>
-                                    <input value={valorAtual} readOnly className="input-dark" placeholder="Selecionar Poder..." style={{ flex: 1 }} />
-                                    <button onClick={() => abrirSeletor('poder', `Poder de Nível ${i + 2}`, nomesPoderesDisponiveis, undefined, (v) => {
-                                        const novosPoderes = [...classPowersEmEdicao];
-                                        while (novosPoderes.length <= i) novosPoderes.push("");
-                                        novosPoderes[i] = v;
-                                        setClassPowersEmEdicao(novosPoderes);
-                                    }, getBlacklistGlobal(valorAtual))} className="btn-action" style={{ background: valorAtual ? '#4caf50' : '#2196f3', border: 'none', color: 'white' }}>{valorAtual ? 'Trocar' : 'Escolher'}</button>
+                                <div key={i} style={{ marginBottom: 10 }}>
+                                    <div className="power-slot-row" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                        <div style={{ width: '25px', color: '#666', fontSize: '0.8rem', textAlign: 'right' }}>{i + 2}º</div>
+                                        <input value={valorAtual} readOnly className="input-dark" placeholder="Selecionar Poder..." style={{ flex: 1 }} />
+                                        <button onClick={() => abrirSeletor('poder', `Poder de Nível ${i + 2}`, nomesPoderesDisponiveisFinais, undefined, (v) => {
+                                            const novosPoderes = [...classPowersEmEdicao];
+                                            while (novosPoderes.length <= i) novosPoderes.push("");
+                                            novosPoderes[i] = v;
+                                            setClassPowersEmEdicao(novosPoderes);
+                                        }, getBlacklistGlobal(valorAtual))} className="btn-action" style={{ background: valorAtual ? '#4caf50' : '#2196f3', border: 'none', color: 'white' }}>{valorAtual ? 'Trocar' : 'Escolher'}</button>
+                                    </div>
+                                    {/* [LOTE 1-UI] Seletores secundários (escola/atributo/familiar) */}
+                                    {(PODERES_COM_ESCOLHA[valorAtual] || []).map((g: any) => {
+                                        const valorEscolha = ((poderesEscolhasEmEdicao || {})[valorAtual] || {})[g.chave] || "";
+                                        return (
+                                            <div key={g.chave} style={{ display: 'flex', gap: 10, alignItems: 'center', width: '100%', marginTop: 6, marginLeft: 35 }}>
+                                                <label style={{ fontSize: '0.8rem', color: '#aaa', minWidth: 110 }}>{g.rotulo}:</label>
+                                                <select className="input-dark" value={valorEscolha} onChange={e => updatePoderEscolha(valorAtual, g.chave, e.target.value)} style={{ flex: 1 }}>
+                                                    <option value="">Selecionar...</option>
+                                                    {g.opcoes.map((o: any) => {
+                                                        const val = typeof o === 'string' ? o : o.valor;
+                                                        const rot = typeof o === 'string' ? o : o.rotulo;
+                                                        return <option key={val} value={val}>{rot}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             );
                         })}
                     </div>
                 ) : <p className="text-muted">Disponível no nível 2.</p>}
-
                 <button className="btn-apply-changes" onClick={onSave} style={{ marginTop: 30 }}>✅ Salvar Todas as Alterações</button>
             </div>
         </div>

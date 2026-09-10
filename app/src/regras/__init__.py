@@ -46,7 +46,6 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     sincronizar_magias_habilidades(ficha)
     validar_circulos_magias(ficha)
     validar_magias_conhecidas(ficha)
-    aplicar_poderes_arcanista(ficha)
     processar_acumulo_habilidades(ficha)
 
     # 5. Atributos Finais
@@ -56,6 +55,8 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     inicializar_pericias(ficha)
     calcular_pv_pm(ficha)
     calcular_defesa_e_deslocamento(ficha)
+    # [LOTE 1] Poderes de Arcanista aplicam DEPOIS de PV/PM (para não serem sobrescritos)
+    aplicar_poderes_arcanista(ficha)
 
     # 3. ATUALIZADO: Chamada da nova função
     calcular_proficiencias_e_extras(ficha)
