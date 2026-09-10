@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 import Home from './pages/Home';
@@ -13,7 +13,10 @@ function App() {
                 <Route path="/ficha/:id" element={<Ficha />} />
                 <Route path="/wizard" element={<Wizard />} />
                 <Route path="/wizard/:id" element={<Wizard />} />
-            </Routes>
+                <Route path="/ficha" element={<Navigate to="/" replace />} />
+    <Route path="/ficha/" element={<Navigate to="/" replace />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
         </Router>
     );
 }

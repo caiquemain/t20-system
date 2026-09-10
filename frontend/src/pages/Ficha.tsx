@@ -79,6 +79,7 @@ function Ficha() {
         classPowersEmEdicao, setClassPowersEmEdicao,
         subclasseEmEdicao, setSubclasseEmEdicao,
         devocaoEmEdicao, setDevocaoEmEdicao, poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
+        dadosEscolhas,
         updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas
     } = useFicha(id);
 
@@ -273,6 +274,7 @@ function Ficha() {
                 dadosDeuses={dadosDeuses}
                 dadosMagias={dadosMagias}
                 dadosHabilidadesRaciais={dadosHabilidadesRaciais}
+             dadosEscolhas={dadosEscolhas}
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}

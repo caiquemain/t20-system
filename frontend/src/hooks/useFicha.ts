@@ -3,7 +3,7 @@ import {
     fetchRacas, fetchClasses, fetchOrigens, fetchPericias, fetchPoderes, fetchDeuses,
     fetchDadosClasses, fetchDadosOrigens, fetchDadosRacas, fetchDadosHabilidadesClasse,
     fetchDadosMagias, fetchDadosHabilidades, fetchDadosDeuses, fetchDadosPoderesConcedidos,
-    fetchDadosHabilidadesRaciais,
+    fetchDadosHabilidadesRaciais, fetchDadosEscolhas,
     fetchPersonagem, updatePersonagem, createPersonagem
 } from '../services/api';
 import type { Personagem, Habilidade } from '../types';
@@ -55,6 +55,7 @@ export const useFicha = (id: string | undefined) => {
     const [dadosDeuses, setDadosDeuses] = useState<any>({});
     const [dadosPoderesConcedidos, setDadosPoderesConcedidos] = useState<any>({});
     const [dadosHabilidadesRaciais, setDadosHabilidadesRaciais] = useState<any>({});
+    const [dadosEscolhas, setDadosEscolhas] = useState<any>({});
 
     const [showHabilidadesPanel, setShowHabilidadesPanel] = useState(false);
     const [habilidadesEmEdicao, setHabilidadesEmEdicao] = useState<any[]>([]);
@@ -81,7 +82,8 @@ export const useFicha = (id: string | undefined) => {
                     fetchDeuses().catch(() => ({ data: [] })),
                     fetchDadosDeuses().catch(() => ({ data: {} })),
                     fetchDadosPoderesConcedidos().catch(() => ({ data: {} })),
-                    fetchDadosHabilidadesRaciais().catch(() => ({ data: {} }))
+                    fetchDadosHabilidadesRaciais().catch(() => ({ data: {} })),
+                fetchDadosEscolhas().catch(() => ({ data: {} }))
                 ]);
                 setListaRacas(results[0].data);
                 setListaClasses(results[1].data);
@@ -98,6 +100,7 @@ export const useFicha = (id: string | undefined) => {
                 setDadosDeuses(results[12].data);
                 setDadosPoderesConcedidos(results[13].data);
                 setDadosHabilidadesRaciais(results[14].data);
+             setDadosEscolhas(results[15]?.data || {});
 
                 const idValido = id && id !== 'novo' && id !== 'null' && id !== 'undefined';
                 if (idValido) {
@@ -288,6 +291,7 @@ export const useFicha = (id: string | undefined) => {
         subclasseEmEdicao, setSubclasseEmEdicao,
         devocaoEmEdicao, setDevocaoEmEdicao,
         poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
+     dadosEscolhas,
         updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas,
     };
 };

@@ -26,6 +26,7 @@ export const fetchDadosMagias = () => api.get('/dados/magias');
 // --- DEUSES E PODERES ---
 export const fetchDeuses = () => api.get('/deuses');
 export const fetchDadosDeuses = () => api.get('/dados/deuses');
+export const fetchDadosEscolhas = () => api.get("/dados/escolhas");
 export const fetchDadosPoderesConcedidos = () => api.get('/dados/poderes-concedidos');
 
 // --- PERSONAGEM ---
