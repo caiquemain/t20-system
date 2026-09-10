@@ -112,3 +112,178 @@ def test_linhagem_feerica_basica_limite_magias(personagem_base):
     f.habilidades = [Habilidade(nome="Linhagem Feérica", tipo="Habilidade de Classe", descricao="")]
     aplicar_poderes_arcanista(f)
     assert f.combate.limite_magias == 4
+
+
+# ═══════════════════════════════════════════
+# 🧪 TESTES COMPLEMENTARES (COBERTURA LOTE 1 COMPLETA)
+# ═══════════════════════════════════════════
+
+
+def test_alta_arcana_nao_ativa_antes_do_nivel_20(personagem_base):
+    """Alta Arcana NÃO deve marcar custo_arcano_metade em nível < 20."""
+    f = _ficha_arcanista(personagem_base, nivel=19)
+    aplicar_poderes_arcanista(f)
+    assert f.combate.custo_arcano_metade is False
+
+
+def test_alta_arcana_nao_ativa_para_outras_classes(personagem_base):
+    """Alta Arcana é exclusividade do Arcanista — outras classes nunca ativam."""
+    f = personagem_base
+    f.classes = [ClasseInfo(nome="Clérigo", nivel=20, primaria=True)]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.custo_arcano_metade is False
+
+
+def test_envolto_em_misterio_nota_condicional(personagem_base):
+    """Envolto em Mistério deve anotar nas fontes_bonus de Enganação e Intimidação."""
+    from src.models import PericiaInfo
+    f = _ficha_arcanista(personagem_base)
+    f.pericias = {
+        "Enganação": PericiaInfo(treino=0, total=0),
+        "Intimidação": PericiaInfo(treino=0, total=0),
+    }
+    f.habilidades = [_hab("Envolto em Mistério")]
+    aplicar_poderes_arcanista(f)
+    assert any("Envolto em Mistério" in nota for nota in f.pericias["Enganação"].fontes_bonus)
+    assert any("Envolto em Mistério" in nota for nota in f.pericias["Intimidação"].fontes_bonus)
+
+
+def test_familiar_cobra_cd_fortitude(personagem_base):
+    """Cobra adiciona +1 CD Fortitude."""
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Familiar", {"familiar": "Cobra"})]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.cd_por_resistencia == {"Fortitude": 1}
+
+
+def test_familiar_lagarto_cd_reflexos(personagem_base):
+    """Lagarto adiciona +1 CD Reflexos."""
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Familiar", {"familiar": "Lagarto"})]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.cd_por_resistencia == {"Reflexos": 1}
+
+
+def test_familiar_falcao_imunidades(personagem_base):
+    """Falcão concede imunidades: não surpreendido, não desprevenido."""
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Familiar", {"familiar": "Falcão"})]
+    aplicar_poderes_arcanista(f)
+    assert "Não pode ser surpreendido" in f.status.imunidades
+    assert "Não fica desprevenido" in f.status.imunidades
+
+
+def test_familiar_morcego_sentidos(personagem_base):
+    """Morcego concede Percepção às cegas (curto)."""
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Familiar", {"familiar": "Morcego"})]
+    aplicar_poderes_arcanista(f)
+    assert "Percepção às cegas (curto)" in f.status.sentidos
+
+
+def test_familiar_sapo_com_attr_zero(personagem_base):
+    """Sapo com atributo-chave 0 não deve adicionar bônus (mod=0)."""
+    f = _ficha_arcanista(personagem_base)
+    f.atributos.inteligencia = 0  # mod = 0
+    f.habilidades = [_hab("Familiar", {"familiar": "Sapo"})]
+    aplicar_poderes_arcanista(f)
+    fontes_sapo = [fr for fr in f.status.pv_calc.fontes if fr.fonte == "Familiar: Sapo"]
+    assert len(fontes_sapo) == 0
+
+
+def test_familiar_sapo_feiticeiro_usa_carisma(personagem_base):
+    """Sapo + Feiticeiro soma mod CAR no PV, não INT."""
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.atributos.carisma = 4
+    f.atributos.inteligencia = 0
+    f.habilidades = [_hab("Familiar", {"familiar": "Sapo"})]
+    aplicar_poderes_arcanista(f)
+    fonte = next((fr for fr in f.status.pv_calc.fontes if fr.fonte == "Familiar: Sapo"), None)
+    assert fonte is not None
+    assert fonte.valor == 4  # mod de CAR=4
+
+
+def test_linhagem_draconica_superior_imunidade(personagem_base):
+    """Linhagem Dracônica superior concede imunidade ao tipo de dano."""
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.atributos.carisma = 3
+    f.habilidades = [
+        Habilidade(nome="Linhagem Dracônica", tipo="Habilidade de Classe", descricao="",
+                   escolhas_aplicadas={"tipo_dano": "fogo"}),
+        _hab("Herança Aprimorada"),
+        _hab("Herança Superior"),
+    ]
+    aplicar_poderes_arcanista(f)
+    assert "Imune a fogo" in f.status.imunidades
+    # E continua dando RD básica
+    assert "fogo 5" in f.status.rd
+
+
+def test_linhagem_draconica_basica_sem_tipo_dano(personagem_base):
+    """Dracônica sem tipo_dano escolhido não adiciona RD nem imunidade."""
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.atributos.carisma = 3
+    f.habilidades = [Habilidade(
+        nome="Linhagem Dracônica", tipo="Habilidade de Classe",
+        descricao="", escolhas_aplicadas={})]
+    aplicar_poderes_arcanista(f)
+    assert f.status.rd == []
+
+
+def test_fortalecimento_arcano_sem_o_poder(personagem_base):
+    """Sem Fortalecimento Arcano, cd_magias fica em 10 (base)."""
+    f = _ficha_arcanista(personagem_base)
+    aplicar_poderes_arcanista(f)
+    assert f.combate.cd_magias == 10
+
+
+def test_especialista_sem_escolha_de_escola(personagem_base):
+    """Especialista em Escola sem escola escolhida não deve poluir cd_por_escola."""
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Especialista em Escola", {})]  # sem 'escola'
+    aplicar_poderes_arcanista(f)
+    assert f.combate.cd_por_escola == {}
+
+
+def test_ordem_da_pipeline_familiar_no_pv(personagem_base):
+    """Regressão: o processador de poderes roda DEPOIS de calcular_pv_pm,
+    então a fonte 'Familiar: Sapo' aparece na pilha final."""
+    f = _ficha_arcanista(personagem_base)
+    f.atributos.inteligencia = 3
+    f.habilidades = [_hab("Familiar", {"familiar": "Sapo"})]
+    # Simula a pipeline real
+    from src.regras.status import calcular_pv_pm
+    calcular_pv_pm(f)
+    aplicar_poderes_arcanista(f)
+    # A fonte do familiar está presente mesmo após calcular_pv_pm
+    fontes = [fr.fonte for fr in f.status.pv_calc.fontes]
+    assert "Familiar: Sapo" in fontes
+
+
+def test_multiplos_poderes_acumulam(personagem_base):
+    """Poder Mágico + Familiar + Fortalecimento todos aplicam juntos."""
+    f = _ficha_arcanista(personagem_base, nivel=5)
+    f.atributos.inteligencia = 3
+    f.combate.circulo_maximo = 2
+    f.habilidades = [
+        _hab("Poder Mágico"),
+        _hab("Fortalecimento Arcano"),
+        _hab("Familiar", {"familiar": "Sapo"}),
+    ]
+    aplicar_poderes_arcanista(f)
+    # PM: classe base + INT + Poder Mágico (5 níveis)
+    assert any("Poder Mágico" in fr.fonte and fr.valor == 5 for fr in f.status.pm_calc.fontes)
+    # CD: 10 + 1 (Fortalecimento)
+    assert f.combate.cd_magias == 11
+    # PV: familiar aplicado
+    assert any("Familiar: Sapo" in fr.fonte for fr in f.status.pv_calc.fontes)
+
+
+def test_arcano_de_batalha_feiticeiro_usa_car(personagem_base):
+    """Arcano de Batalha + Feiticeiro deve usar CAR (não INT) no dano."""
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.atributos.carisma = 4
+    f.atributos.inteligencia = 0
+    f.habilidades = [_hab("Arcano de Batalha")]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.bonus_dano_magias == 4
