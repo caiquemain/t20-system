@@ -187,9 +187,17 @@ def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
                 if nota not in info.fontes_bonus:
                     info.fontes_bonus.append(nota)
 
-    # ── Sincronização final dos totais ──
-    ficha.status.pv.maximo = ficha.status.pv_calc.total
-    ficha.status.pm.maximo = ficha.status.pm_calc.total
+    # ── Sincronização final (preservando estado "cheio" p/ Descansar) ──
+    novo_pv_max = ficha.status.pv_calc.total
+    novo_pm_max = ficha.status.pm_calc.total
+    pv_estava_cheio = ficha.status.pv.maximo > 0 and ficha.status.pv.atual >= ficha.status.pv.maximo
+    pm_estava_cheio = ficha.status.pm.maximo > 0 and ficha.status.pm.atual >= ficha.status.pm.maximo
+    ficha.status.pv.maximo = novo_pv_max
+    ficha.status.pm.maximo = novo_pm_max
+    if pv_estava_cheio:
+        ficha.status.pv.atual = novo_pv_max
+    if pm_estava_cheio:
+        ficha.status.pm.atual = novo_pm_max
     for stat in (ficha.status.pv, ficha.status.pm):
         if stat.atual == 0 or stat.atual > stat.maximo:
             stat.atual = stat.maximo
