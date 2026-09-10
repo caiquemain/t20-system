@@ -221,6 +221,13 @@ class Combate(BaseModel):
     circulo_maximo: int = 0  # 🆕 calculado pelo backend (trava de círculos T20)
     limite_magias: Optional[int] = None   # 🆕 teto de magias escolhidas
     magias_calc: Optional[StatCalculado] = None  # 🆕 transparência do limite
+    # 🆕 LOTE 1: modificadores de magia (Poderes de Arcanista)
+    cd_magias_calc: Optional[StatCalculado] = None
+    cd_por_escola: Dict[str, int] = {}
+    cd_por_resistencia: Dict[str, int] = {}
+    bonus_dano_magias: int = 0
+    custo_por_escola: Dict[str, int] = {}
+    custo_arcano_metade: bool = False
 
 # --- HABILIDADES E EQUIPAMENTO ---
 

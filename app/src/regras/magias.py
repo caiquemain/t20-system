@@ -1,6 +1,7 @@
 import logging
 from ..models import Personagem, Magia
 from ..dados_magias import DADOS_MAGIAS
+from ..dados_progressao_magias import PROGRESSAO_CIRCULOS_POR_CLASSE, MAPA_SUBCLASSE_PARA_CLASSE
 
 logger = logging.getLogger("RegrasT20")
 
@@ -116,49 +117,6 @@ CIRCULO_MINIMO_POR_NIVEL = {
 }
 
 
-def calcular_circulo_maximo(nivel: int) -> int:
-    nivel = max(1, int(nivel or 1))
-    circulo = 1
-    for c, niv_min in CIRCULO_MINIMO_POR_NIVEL.items():
-        if nivel >= niv_min:
-            circulo = max(circulo, c)
-    return circulo
-
-
-def _circulo_da_magia(magia: Magia) -> int:
-    try:
-        return int(magia.circulo)
-    except (TypeError, ValueError):
-        return 1
-
-
-def validar_circulos_magias(ficha: Personagem) -> Personagem:
-    """Trava T20: remove magias APRENDIDAS acima do círculo máximo do nível.
-    Magias concedidas por habilidades (fonte 'Habilidade:') são preservadas."""
-    circulo_max = calcular_circulo_maximo(ficha.cabecalho.nivel_total or 1)
-    ficha.combate.circulo_maximo = circulo_max
-
-    mantidas, removidas = [], []
-    for m in ficha.combate.magias:
-        eh_de_habilidade = str(m.fonte or "").startswith("Habilidade:")
-        if eh_de_habilidade or _circulo_da_magia(m) <= circulo_max:
-            mantidas.append(m)
-        else:
-            removidas.append(f"{m.nome} ({_circulo_da_magia(m)}º)")
-
-    if removidas:
-        logger.warning(f"🔒 Magias acima do círculo máximo ({circulo_max}º) removidas: {removidas}")
-        ficha.combate.magias = mantidas
-    return ficha
-
-# ═══════════════════════════════════════════
-# 🔒 CÍRCULOS DE MAGIA POR CLASSE (T20 oficial)
-# Estas definições SUBSTITUEM a tabela genérica anterior
-# (em Python, a última definição com mesmo nome vence).
-# ═══════════════════════════════════════════
-from ..dados_progressao_magias import PROGRESSAO_CIRCULOS_POR_CLASSE, MAPA_SUBCLASSE_PARA_CLASSE
-
-
 def calcular_circulo_maximo(classe: str, nivel: int) -> int:
     """Maior círculo que uma classe específica acessa no nível informado."""
     nome = MAPA_SUBCLASSE_PARA_CLASSE.get(classe or "", classe or "")
@@ -210,34 +168,14 @@ def validar_circulos_magias(ficha: Personagem) -> Personagem:
     return ficha
 
 
-def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
-    """Aplica efeitos dos Poderes de Arcanista à ficha.
-    
-    Poderes implementados (Fase A):
-    - Poder Mágico: +1 PM por nível de Arcanista (retroativo)
-    """
-    c_prim = ficha.classes[0] if ficha.classes else None
-    if not c_prim or c_prim.nome != "Arcanista":
-        return ficha
-
-    # Poder Mágico: +1 PM por nível de Arcanista (retroativo!)
-    tem_poder_magico = any(
-        h.nome == "Poder Mágico" for h in ficha.habilidades
-    )
-    if tem_poder_magico:
-        bonus = c_prim.nivel
-        if bonus > 0:
-            ficha.status.pm.maximo += bonus
-            if hasattr(ficha.status, 'pm_calc') and ficha.status.pm_calc:
-                ficha.status.pm_calc.adicionar_bonus(
-                    fonte="Poder Mágico",
-                    categoria="Poder de Classe",
-                    valor=bonus,
-                )
-
-    return ficha
+# (Movida para regras/poderes_arcanista.py — alias p/ compatibilidade)
+from .poderes_arcanista import aplicar_poderes_arcanista  # noqa: F401,E402
 
 
+# ═══════════════════════════════════════════
+# 📖 LIMITE DE MAGIAS CONHECIDAS (T20)
+# (Bloco restaurado após a movimentação de aplicar_poderes_arcanista)
+# ═══════════════════════════════════════════
 from ..models import StatCalculado
 from ..dados_magias_conhecidas import (
     REGRAS_MAGIAS_CONHECIDAS,
@@ -246,9 +184,6 @@ from ..dados_magias_conhecidas import (
 )
 
 
-# ═══════════════════════════════════════════
-# 📖 LIMITE DE MAGIAS CONHECIDAS (T20)
-# ═══════════════════════════════════════════
 def calcular_limite_magias_conhecidas(ficha: Personagem):
     """Retorna (limite, StatCalculado) de magias ESCOLHIDAS.
     limite None = classe sem regra definida (sem trava por enquanto)."""
