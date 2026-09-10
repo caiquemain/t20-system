@@ -26,3 +26,10 @@ export const PODERES_COM_ESCOLHA: Record<string, Array<{ chave: string; rotulo: 
     "Mestre em Escola": [{ chave: "escola", rotulo: "Escola de Magia", opcoes: ESCOLAS_MAGIA }],
     "Familiar": [{ chave: "familiar", rotulo: "Familiar Arcano", opcoes: FAMILIARES_ARCANOS }],
 };
+
+// Resumo dos Caminhos do Arcanista (exibido na seleção de subclasse)
+export const CAMINHOS_ARCANISTA_INFO: Record<string, string> = {
+    "Bruxo": "Atributo-chave: Inteligência. Lança magias empunhando um foco (RD 10, PV = metade dos seus); sem foco, teste de Misticismo (CD 20 + PM).",
+    "Feiticeiro": "Atributo-chave: Carisma. Poder inato por linhagem sobrenatural; aprende 1 magia nova a cada nível ímpar (3º, 5º, 7º...).",
+    "Mago": "Atributo-chave: Inteligência. Memoriza metade das magias após 1h de estudo (1×/dia); +1 magia inicial e +1 a cada círculo novo.",
+};
