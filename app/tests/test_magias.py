@@ -1,9 +1,11 @@
-from src.models import Magia, ClasseInfo
+from src.models import Magia, ClasseInfo, Habilidade
 from src.regras.magias import (
     calcular_circulo_maximo,
     calcular_circulo_maximo_ficha,
     validar_circulos_magias,
+    aplicar_poderes_arcanista,
 )
+from src.regras.status import calcular_pv_pm
 
 
 def test_progressao_arcanista():
@@ -63,10 +65,52 @@ def test_multiclasse_usa_maior_circulo(personagem_base):
         ClasseInfo(nome="Arcanista", nivel=5),
     ]
     assert calcular_circulo_maximo_ficha(personagem_base) == 2
-    
+
+
 def test_subclasse_herda_progressao_da_classe_base():
-    # Bruxo/Mago/Feiticeiro são caminhos do Arcanista
     assert calcular_circulo_maximo("Bruxo", 1) == 1
     assert calcular_circulo_maximo("Bruxo", 5) == 2
     assert calcular_circulo_maximo("Mago", 9) == 3
     assert calcular_circulo_maximo("Feiticeiro", 13) == 4
+
+
+def test_arcanista_feiticeiro_usa_carisma_no_pm(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].subclasse = "Feiticeiro"
+    personagem_base.atributos.carisma = 4
+    personagem_base.atributos.inteligencia = 0
+    calcular_pv_pm(personagem_base)
+    assert any(
+        f.fonte == "Atributo-chave: CAR" and f.valor == 4
+        for f in personagem_base.status.pm_calc.fontes
+    )
+
+
+def test_arcanista_bruxo_usa_inteligencia_no_pm(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].subclasse = "Bruxo"
+    personagem_base.atributos.inteligencia = 3
+    personagem_base.atributos.carisma = 5
+    calcular_pv_pm(personagem_base)
+    assert any(
+        f.fonte == "Atributo-chave: INT" and f.valor == 3
+        for f in personagem_base.status.pm_calc.fontes
+    )
+    assert not any(
+        f.fonte.startswith("Atributo-chave: CAR")
+        for f in personagem_base.status.pm_calc.fontes
+    )
+
+
+def test_poder_magico_adiciona_pm_por_nivel(personagem_base):
+    personagem_base.classes[0].nome = "Arcanista"
+    personagem_base.classes[0].nivel = 5
+    personagem_base.habilidades = [
+        Habilidade(nome="Poder Mágico", tipo="Poder de Arcanista", descricao=""),
+    ]
+    calcular_pv_pm(personagem_base)  # cria o pm_calc (ordem da pipeline)
+    aplicar_poderes_arcanista(personagem_base)
+    assert any(
+        f.fonte == "Poder Mágico" and f.valor == 5
+        for f in personagem_base.status.pm_calc.fontes
+    )
