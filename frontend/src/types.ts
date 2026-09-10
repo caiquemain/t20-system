@@ -170,6 +170,9 @@ export interface Combate {
     cd_magias: number;
     bba: number;
     iniciativa: number;
+    circulo_maximo?: number;
+    limite_magias?: number | null;
+    magias_calc?: any;
 }
 
 export interface Item {

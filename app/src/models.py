@@ -219,6 +219,8 @@ class Combate(BaseModel):
     bba: int = 0
     iniciativa: int = 0
     circulo_maximo: int = 0  # 🆕 calculado pelo backend (trava de círculos T20)
+    limite_magias: Optional[int] = None   # 🆕 teto de magias escolhidas
+    magias_calc: Optional[StatCalculado] = None  # 🆕 transparência do limite
 
 # --- HABILIDADES E EQUIPAMENTO ---
 

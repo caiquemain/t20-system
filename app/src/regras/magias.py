@@ -236,3 +236,89 @@ def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
                 )
 
     return ficha
+
+
+from ..models import StatCalculado
+from ..dados_magias_conhecidas import (
+    REGRAS_MAGIAS_CONHECIDAS,
+    REGRAS_MAGIAS_POR_SUBCLASSE,
+    PODERES_QUE_DAO_MAGIAS,
+)
+
+
+# ═══════════════════════════════════════════
+# 📖 LIMITE DE MAGIAS CONHECIDAS (T20)
+# ═══════════════════════════════════════════
+def calcular_limite_magias_conhecidas(ficha: Personagem):
+    """Retorna (limite, StatCalculado) de magias ESCOLHIDAS.
+    limite None = classe sem regra definida (sem trava por enquanto)."""
+    c_prim = ficha.classes[0] if ficha.classes else None
+    if not c_prim:
+        return None, None
+    regra = REGRAS_MAGIAS_CONHECIDAS.get(c_prim.nome or "")
+    if not regra:
+        return None, None
+
+    nivel = int(c_prim.nivel or 1)
+    subclasse = (c_prim.subclasse or "").strip()
+    regra_sub = REGRAS_MAGIAS_POR_SUBCLASSE.get(subclasse, {})
+
+    calc = StatCalculado()
+    calc.adicionar_bonus(
+        fonte=f"Magias iniciais de {c_prim.nome}", categoria="Classe", valor=regra["inicial"]
+    )
+    if regra_sub.get("inicial_extra"):
+        calc.adicionar_bonus(
+            fonte=f"Caminho: {subclasse} (magia adicional)",
+            categoria="Poder", valor=regra_sub["inicial_extra"],
+        )
+
+    if regra_sub.get("aprende_apenas_niveis_impares"):
+        aprendidas = len(range(3, nivel + 1, 2))
+        if aprendidas:
+            calc.adicionar_bonus(
+                fonte=f"Aprendidas em níveis ímpares ({aprendidas})",
+                categoria="Classe", valor=aprendidas,
+            )
+    else:
+        por_nivel = regra.get("por_nivel", 1)
+        ganhos = (nivel - 1) * por_nivel
+        if ganhos:
+            calc.adicionar_bonus(
+                fonte=f"+{por_nivel} magia por nível ({nivel - 1} níveis)",
+                categoria="Classe", valor=ganhos,
+            )
+
+    extra_circ = regra_sub.get("extra_por_circulo_novo", 0)
+    if extra_circ:
+        progressao = PROGRESSAO_CIRCULOS_POR_CLASSE.get(c_prim.nome or "", {})
+        circulos_novos = len([n for n, c in progressao.items() if c >= 2 and nivel >= n])
+        if circulos_novos:
+            calc.adicionar_bonus(
+                fonte=f"Magia extra por círculo novo ({circulos_novos})",
+                categoria="Poder", valor=circulos_novos * extra_circ,
+            )
+
+    for h in ficha.habilidades:
+        bonus = PODERES_QUE_DAO_MAGIAS.get(h.nome)
+        if bonus:
+            calc.adicionar_bonus(fonte=f"Poder: {h.nome}", categoria="Poder", valor=bonus)
+
+    return calc.total, calc
+
+
+def validar_magias_conhecidas(ficha: Personagem) -> Personagem:
+    """Grava o limite de magias escolhidas na ficha (NÃO remove magias)."""
+    limite, calc = calcular_limite_magias_conhecidas(ficha)
+    ficha.combate.limite_magias = limite
+    ficha.combate.magias_calc = calc
+    if limite is not None:
+        manuais = [
+            m for m in ficha.combate.magias
+            if not str(m.fonte or "").startswith("Habilidade:")
+        ]
+        if len(manuais) > limite:
+            logger.warning(
+                f"📖 Grimório com {len(manuais)} magias escolhidas acima do limite {limite}"
+            )
+    return ficha
