@@ -63,3 +63,10 @@ def test_multiclasse_usa_maior_circulo(personagem_base):
         ClasseInfo(nome="Arcanista", nivel=5),
     ]
     assert calcular_circulo_maximo_ficha(personagem_base) == 2
+    
+def test_subclasse_herda_progressao_da_classe_base():
+    # Bruxo/Mago/Feiticeiro são caminhos do Arcanista
+    assert calcular_circulo_maximo("Bruxo", 1) == 1
+    assert calcular_circulo_maximo("Bruxo", 5) == 2
+    assert calcular_circulo_maximo("Mago", 9) == 3
+    assert calcular_circulo_maximo("Feiticeiro", 13) == 4
