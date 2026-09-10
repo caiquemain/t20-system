@@ -10,7 +10,7 @@ from .habilidades import (
     atualizar_efeitos_ativos
 )
 from .magias import sincronizar_magias_habilidades, validar_circulos_magias, validar_magias_conhecidas
-from .poderes_arcanista import aplicar_poderes_arcanista
+from .poderes_arcanista import aplicar_poderes_arcanista, sincronizar_ataques_magicos
 from .pericias import inicializar_pericias
 
 # 1. ATUALIZADO: Importamos a nova função 'calcular_proficiencias_e_extras' daqui
@@ -65,6 +65,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
 
     calcular_reducoes_dano(ficha)
     sincronizar_ataques(ficha)
+    sincronizar_ataques_magicos(ficha)
     atualizar_efeitos_ativos(ficha)
 
     logger.info("✅ Ficha atualizada com sucesso.")

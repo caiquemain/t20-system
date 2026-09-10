@@ -316,3 +316,94 @@ def test_caminho_recebe_chip_da_subclasse(personagem_base):
     sincronizar_escolhas_de_caminho(f)
     assert f.habilidades[0].escolhas_aplicadas.get("subclasse") == "Bruxo"
     assert "escolha_subclasse" not in f.habilidades[0].escolhas_aplicadas
+
+
+# ═══════════════════════════════════════════
+# ⚔️ LOTE 2 — ATAQUES & ATIVÁVEIS
+# ═══════════════════════════════════════════
+from src.regras.poderes_arcanista import sincronizar_ataques_magicos
+
+
+def test_raio_arcano_ataque_base(personagem_base):
+    f = _ficha_arcanista(personagem_base)
+    f.combate.circulo_maximo = 1
+    f.habilidades = [_hab("Raio Arcano")]
+    sincronizar_ataques_magicos(f)
+    atq = next(a for a in f.combate.ataques if a.nome == "Raio Arcano")
+    assert atq.dano == "1d8"
+    assert atq.alcance == "Curto"
+    assert atq.teste == "Reflexos"
+
+
+def test_raio_arcano_escala_com_circulo(personagem_base):
+    f = _ficha_arcanista(personagem_base, nivel=9)
+    f.combate.circulo_maximo = 3
+    f.habilidades = [_hab("Raio Arcano")]
+    sincronizar_ataques_magicos(f)
+    atq = next(a for a in f.combate.ataques if a.nome == "Raio Arcano")
+    assert atq.dano == "3d8"
+
+
+def test_raio_poderoso_d12_medio(personagem_base):
+    f = _ficha_arcanista(personagem_base, nivel=9)
+    f.combate.circulo_maximo = 3
+    f.habilidades = [_hab("Raio Arcano"), _hab("Raio Poderoso")]
+    sincronizar_ataques_magicos(f)
+    atq = next(a for a in f.combate.ataques if a.nome == "Raio Arcano")
+    assert atq.dano == "3d12"
+    assert atq.alcance == "Médio"
+
+
+def test_raio_elemental_especial(personagem_base):
+    f = _ficha_arcanista(personagem_base)
+    f.combate.circulo_maximo = 1
+    f.habilidades = [_hab("Raio Arcano"), _hab("Raio Elemental")]
+    sincronizar_ataques_magicos(f)
+    atq = next(a for a in f.combate.ataques if a.nome == "Raio Arcano")
+    assert "ácido" in atq.especial
+
+
+def test_raio_removido_sem_o_poder(personagem_base):
+    f = _ficha_arcanista(personagem_base)
+    f.combate.ataques = [AtaqueMock()] if False else f.combate.ataques
+    sincronizar_ataques_magicos(f)
+    assert all(a.nome != "Raio Arcano" for a in f.combate.ataques)
+
+
+def test_magia_pungente_vira_ativavel(personagem_base):
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Magia Pungente")]
+    aplicar_poderes_arcanista(f)
+    hab = f.habilidades[0]
+    assert hab.efeitos["habilidade_ativavel"]["custo"] == 1
+
+
+def test_magia_pungente_buff_soma_cd(personagem_base):
+    from src.models import Buff
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Magia Pungente")]
+    f.status.buffs = [Buff(origem="Magia Pungente", atributo="cd_magias", valor=2, duracao="Cena")]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.cd_magias == 12
+    assert any(fr.fonte == "Magia Pungente (ativa)" for fr in f.combate.cd_magias_calc.fontes)
+
+
+def test_flags_fluxo_de_mana_e_foco_vital(personagem_base):
+    f = _ficha_arcanista(personagem_base)
+    f.habilidades = [_hab("Fluxo de Mana"), _hab("Foco Vital")]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.fluxo_de_mana is True
+    assert f.combate.foco_vital is True
+
+
+def test_feerica_aprimorada_cd_e_custo_escolas(personagem_base):
+    f = _ficha_arcanista(personagem_base, subclasse="Feiticeiro")
+    f.habilidades = [
+        Habilidade(nome="Linhagem Feérica", tipo="Habilidade de Classe", descricao=""),
+        _hab("Herança Aprimorada"),
+    ]
+    aplicar_poderes_arcanista(f)
+    assert f.combate.cd_por_escola.get("Encantamento") == 2
+    assert f.combate.cd_por_escola.get("Ilusão") == 2
+    assert f.combate.custo_por_escola.get("Encantamento") == 1
+    assert f.combate.custo_por_escola.get("Ilusão") == 1

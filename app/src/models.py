@@ -228,6 +228,8 @@ class Combate(BaseModel):
     bonus_dano_magias: int = 0
     custo_por_escola: Dict[str, int] = {}
     custo_arcano_metade: bool = False
+    fluxo_de_mana: bool = False   # 🆕 Lote 2: 2 sustentados c/ 1 ação livre
+    foco_vital: bool = False      # 🆕 Lote 2: foco absorve dano letal
 
 # --- HABILIDADES E EQUIPAMENTO ---
 

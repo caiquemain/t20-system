@@ -15,6 +15,7 @@ import { SkillList } from '../components/SkillList';
 import { StatusBars } from '../components/StatusBars';
 import { RacialAttributeModal } from '../components/RacialAttributeModal';
 import { AbilityCard } from '../components/AbilityCard';
+import { AttackList } from '../components/AttackList';
 
 // Tipos
 import type { Magia } from '../types';
@@ -462,6 +463,11 @@ function Ficha() {
                             <h3 className="section-title">Equipamento</h3>
                             <p style={{ color: '#777', textAlign: 'center' }}>Carga: {ficha.inventario.carga_total} / {ficha.inventario.carga_maxima}</p>
                         </div>
+                        <AttackList
+                            ataques={ficha.combate.ataques || []}
+                            fluxoDeMana={ficha.combate.fluxo_de_mana}
+                            focoVital={ficha.combate.foco_vital}
+                        />
                         <div className="section-card" style={{ marginTop: '25px' }}>
                             <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 Habilidades

@@ -6,7 +6,7 @@ Especialista/Mestre em Escola, Alta Arcana, Arcano de Batalha,
 Envolto em Mistério, Familiar (10 tipos) e Linhagens Dracônica/Feérica.
 """
 import logging
-from ..models import Personagem, StatCalculado
+from ..models import Personagem, StatCalculado, Ataque
 from ..dados_familiares import FAMILIARES_ARCANOS
 from .utils import calcular_modificador
 
@@ -64,6 +64,17 @@ def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
 
     nomes = [h.nome for h in habs]
 
+    # Magia Pungente: injeta estrutura ativável (custo 1 PM, +2 CD enquanto ativa)
+    for h in habs:
+        if h.nome == "Magia Pungente":
+            ef = h.efeitos if isinstance(h.efeitos, dict) else {}
+            if "habilidade_ativavel" not in ef:
+                ef["habilidade_ativavel"] = {
+                    "custo": 1, "acao": "Livre", "alcance": "Pessoal", "duracao": "Cena",
+                    "modificadores": [{"atributo": "cd_magias", "valor": 2}],
+                }
+                h.efeitos = ef
+
     if ficha.status.pv_calc is None:
         ficha.status.pv_calc = StatCalculado()
     if ficha.status.pm_calc is None:
@@ -90,6 +101,8 @@ def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
         val = 2 if (ficha.combate.circulo_maximo or 0) >= 4 else 1
         cd_calc.adicionar_bonus(
             fonte="Poder: Fortalecimento Arcano", categoria="Poder", valor=val)
+    if any(b.origem == "Magia Pungente" for b in ficha.status.buffs):
+        cd_calc.adicionar_bonus(fonte="Magia Pungente (ativa)", categoria="Poder", valor=2)
     ficha.combate.cd_magias_calc = cd_calc
     ficha.combate.cd_magias = cd_calc.total
 
@@ -181,11 +194,20 @@ def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
                 ficha.combate.magias_calc.adicionar_bonus(
                     fonte="Linhagem Feérica (básica)", categoria="Poder", valor=1)
                 ficha.combate.limite_magias = ficha.combate.magias_calc.total
+            # Feérica aprimorada/superior: +2 CD e -1 PM (Encantamento/Ilusão)
+            if heranca in ("aprimorada", "superior"):
+                for esc in ("Encantamento", "Ilusão"):
+                    ficha.combate.cd_por_escola[esc] = ficha.combate.cd_por_escola.get(esc, 0) + 2
+                    ficha.combate.custo_por_escola[esc] = ficha.combate.custo_por_escola.get(esc, 0) + 1
             info = ficha.pericias.get("Enganação")
             if info is not None:
                 nota = "Treinado por Linhagem Feérica (básica)"
                 if nota not in info.fontes_bonus:
                     info.fontes_bonus.append(nota)
+
+    # Flags de capacidades (Lote 2)
+    ficha.combate.fluxo_de_mana = "Fluxo de Mana" in nomes
+    ficha.combate.foco_vital = "Foco Vital" in nomes
 
     # ── Sincronização final (preservando estado "cheio" p/ Descansar) ──
     novo_pv_max = ficha.status.pv_calc.total
@@ -205,4 +227,31 @@ def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
         if hasattr(ficha.atributos, full):
             setattr(ficha.atributos, full, st.total)
 
+    return ficha
+
+
+def sincronizar_ataques_magicos(ficha: Personagem) -> Personagem:
+    """Lote 2: Raio Arcano/Poderoso/Elemental como ataque calculado.
+    Dano = 1d8 + 1d8 por círculo acima do 1º (d12/médio com Raio Poderoso)."""
+    ficha.combate.ataques = [a for a in ficha.combate.ataques if a.nome != "Raio Arcano"]
+    if not any(h.nome == "Raio Arcano" for h in ficha.habilidades):
+        return ficha
+    cm = ficha.combate.circulo_maximo or 0
+    dados = 1 + max(0, cm - 1)
+    tipo_dado, alcance = "d8", "Curto"
+    if any(h.nome == "Raio Poderoso" for h in ficha.habilidades):
+        tipo_dado, alcance = "d12", "Médio"
+    especial = f"Reflexos (CD {ficha.combate.cd_magias}) reduz à metade"
+    if any(h.nome == "Raio Elemental" for h in ficha.habilidades):
+        especial += " • +1 PM: tipo (ácido/eletricidade/fogo/frio/trevas) + condição"
+    ficha.combate.ataques.append(Ataque(
+        nome="Raio Arcano",
+        bonus_ataque="—",
+        dano=f"{dados}{tipo_dado}",
+        critico="—",
+        tipo="Essência",
+        alcance=alcance,
+        teste="Reflexos",
+        especial=especial,
+    ))
     return ficha
