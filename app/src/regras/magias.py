@@ -208,3 +208,31 @@ def validar_circulos_magias(ficha: Personagem) -> Personagem:
         )
         ficha.combate.magias = mantidas
     return ficha
+
+
+def aplicar_poderes_arcanista(ficha: Personagem) -> Personagem:
+    """Aplica efeitos dos Poderes de Arcanista à ficha.
+    
+    Poderes implementados (Fase A):
+    - Poder Mágico: +1 PM por nível de Arcanista (retroativo)
+    """
+    c_prim = ficha.classes[0] if ficha.classes else None
+    if not c_prim or c_prim.nome != "Arcanista":
+        return ficha
+
+    # Poder Mágico: +1 PM por nível de Arcanista (retroativo!)
+    tem_poder_magico = any(
+        h.nome == "Poder Mágico" for h in ficha.habilidades
+    )
+    if tem_poder_magico:
+        bonus = c_prim.nivel
+        if bonus > 0:
+            ficha.status.pm.maximo += bonus
+            if hasattr(ficha.status, 'pm_calc') and ficha.status.pm_calc:
+                ficha.status.pm_calc.adicionar_bonus(
+                    fonte="Poder Mágico",
+                    categoria="Poder de Classe",
+                    valor=bonus,
+                )
+
+    return ficha

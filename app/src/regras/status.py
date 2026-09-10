@@ -3,6 +3,7 @@ import logging
 from ..models import Personagem, StatCalculado, FonteBonus
 from ..dados_classes import DADOS_CLASSES
 from .utils import calcular_modificador
+from ..dados_progressao_magias import MAPA_SUBCLASSE_PARA_CLASSE
 
 logger = logging.getLogger("RegrasT20")
 
@@ -14,6 +15,11 @@ def calcular_pv_pm(ficha: Personagem):
 
     c_prim = ficha.classes[0]
     dc = DADOS_CLASSES.get(c_prim.nome or "", {})
+    if not dc:
+        # Se o nome for uma subclasse, usa os dados da classe base
+        base = MAPA_SUBCLASSE_PARA_CLASSE.get(c_prim.nome or "")
+        if base:
+            dc = DADOS_CLASSES.get(base, {})
 
     mod_con = calcular_modificador(ficha.atributos.constituicao)
     mapa_attr = {
@@ -68,7 +74,19 @@ def calcular_pv_pm(ficha: Personagem):
 
     # CORREÇÃO: atributo só entra no PM se a classe declarar "pm_atributo"
     # explicitamente em DADOS_CLASSES. Sem default: classe sem a chave não soma nada.
+    # 🔒 ATRIBUTO-CHAVE DE PM POR SUBCLASSE
+    # Arcanista: Bruxo/Mago = INT, Feiticeiro = CAR
+    # Outras classes usam o padrão do DADOS_CLASSES
     attr_pm = dc.get("pm_atributo")
+    classe_nome = c_prim.nome or ""
+    subclasse = (c_prim.subclasse or "").strip()
+
+    if classe_nome == "Arcanista" and subclasse == "Feiticeiro":
+        attr_pm = "car"
+    elif classe_nome == "Arcanista" and subclasse in ("Bruxo", "Mago"):
+        attr_pm = "int"
+    # demais classes mantêm o que vem do dados
+
     if attr_pm:
         mod_pm = calcular_modificador(
             getattr(ficha.atributos, mapa_attr.get(str(attr_pm), 'inteligencia'))

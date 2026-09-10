@@ -8,7 +8,7 @@ from .habilidades import (
     processar_acumulo_habilidades,
     atualizar_efeitos_ativos
 )
-from .magias import sincronizar_magias_habilidades, validar_circulos_magias
+from .magias import sincronizar_magias_habilidades, validar_circulos_magias, aplicar_poderes_arcanista
 from .pericias import inicializar_pericias
 
 # 1. ATUALIZADO: Importamos a nova função 'calcular_proficiencias_e_extras' daqui
@@ -52,6 +52,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     # 6. Estatísticas Derivadas
     inicializar_pericias(ficha)
     calcular_pv_pm(ficha)
+    aplicar_poderes_arcanista(ficha)
     calcular_defesa_e_deslocamento(ficha)
 
     # 3. ATUALIZADO: Chamada da nova função
