@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import '../Ficha.css';
 import { RacialAbilityRow } from './RacialAbilityRow'; // Importação limpa
-import { PODERES_COM_ESCOLHA, CAMINHOS_ARCANISTA_INFO } from '../utils/poderesEscolhas';
 
 interface AbilityConfigModalProps {
     isOpen: boolean;
@@ -19,6 +18,7 @@ interface AbilityConfigModalProps {
     dadosMagias: any;
     dadosOrigens?: any;
     dadosHabilidadesRaciais?: any;
+    dadosEscolhas?: any;
     origemBeneficiosEmEdicao: string[];
     setOrigemBeneficiosEmEdicao: (vals: string[]) => void;
     habilidadesEmEdicao: any[];
@@ -37,7 +37,7 @@ interface AbilityConfigModalProps {
 export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     isOpen, onClose, onSave, ficha, origemNome, qtdEscolhasOrigem, listaBeneficiosOrigem = [],
     classeAtual, nivelAtual, dadosHabilidadesClasse, listaPoderesGerais = [], dadosDeuses = {},
-    dadosMagias = {}, dadosOrigens = {}, dadosHabilidadesRaciais = {},
+    dadosMagias = {}, dadosOrigens = {}, dadosHabilidadesRaciais = {}, dadosEscolhas = {},
     origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao, habilidadesEmEdicao, setHabilidadesEmEdicao,
     classPowersEmEdicao = [], setClassPowersEmEdicao, subclasseEmEdicao, setSubclasseEmEdicao,
     devocaoEmEdicao, setDevocaoEmEdicao, abrirSeletor,
@@ -144,7 +144,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                     <button onClick={() => setSubclasseEmEdicao(opcao)} className={`btn-action ${subclasseEmEdicao === opcao ? 'selected' : ''}`} style={{ width: '100%', background: subclasseEmEdicao === opcao ? '#4caf50' : '#333', border: subclasseEmEdicao === opcao ? '1px solid #fff' : '1px solid #555', color: 'white' }}>
                                         {subclasseEmEdicao === opcao ? '✅ ' : ''}{opcao}
                                     </button>
-                                    {CAMINHOS_ARCANISTA_INFO[opcao] && (
+                                    {(dadosEscolhas?.CAMINHOS_ARCANISTA_INFO || {})[opcao] && (
                                         <p style={{ margin: '6px 2px 0', fontSize: '0.72rem', color: subclasseEmEdicao === opcao ? '#a5d6a7' : '#90a4ae', lineHeight: 1.35 }}>
                                             {CAMINHOS_ARCANISTA_INFO[opcao]}
                                         </p>
@@ -235,7 +235,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                         }, getBlacklistGlobal(valorAtual))} className="btn-action" style={{ background: valorAtual ? '#4caf50' : '#2196f3', border: 'none', color: 'white' }}>{valorAtual ? 'Trocar' : 'Escolher'}</button>
                                     </div>
                                     {/* [LOTE 1-UI] Seletores secundários (escola/atributo/familiar) */}
-                                    {(PODERES_COM_ESCOLHA[valorAtual] || []).map((g: any) => {
+                                    {(((dadosEscolhas?.PODERES_COM_ESCOLHA || {})[valorAtual] || []) || []).map((g: any) => {
                                         const valorEscolha = ((poderesEscolhasEmEdicao || {})[valorAtual] || {})[g.chave] || "";
                                         return (
                                             <div key={g.chave} style={{ display: 'flex', gap: 10, alignItems: 'center', width: '100%', marginTop: 6, marginLeft: 35 }}>
