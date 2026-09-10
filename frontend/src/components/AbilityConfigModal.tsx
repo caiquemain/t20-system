@@ -146,7 +146,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                     </button>
                                     {(dadosEscolhas?.CAMINHOS_ARCANISTA_INFO || {})[opcao] && (
                                         <p style={{ margin: '6px 2px 0', fontSize: '0.72rem', color: subclasseEmEdicao === opcao ? '#a5d6a7' : '#90a4ae', lineHeight: 1.35 }}>
-                                            {CAMINHOS_ARCANISTA_INFO[opcao]}
+                                            {(dadosEscolhas?.CAMINHOS_ARCANISTA_INFO || {})[opcao]}
                                         </p>
                                     )}
                                 </div>
