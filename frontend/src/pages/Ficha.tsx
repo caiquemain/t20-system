@@ -203,11 +203,27 @@ function Ficha() {
         });
     };
     const deusesDisponiveis = getDeusesPermitidos();
+        // 📖 Limite de magias conhecidas (badge do Grimório)
+    const magiasManuais = (ficha.combate.magias || []).filter((m: any) => !String(m.fonte || '').startsWith('Habilidade:'));
+    const limiteMagias = ficha.combate?.limite_magias ?? null;
+    const limiteEstourado = limiteMagias !== null && magiasManuais.length > limiteMagias;
 
     const handleAprenderMagiaUnica = (novaMagia: Magia) => {
         if (!ficha) return;
         // 🔒 TRAVA T20: círculo máximo vem calculado do backend
         const circuloMax = ficha.combate?.circulo_maximo ?? 0;
+                // 📖 TRAVA DE QUANTIDADE (backup do modal)
+        const limite = ficha.combate?.limite_magias ?? null;
+        if (limite !== null && limite !== undefined) {
+            const manuais = (ficha.combate.magias || []).filter(
+                (m: any) => !String(m.fonte || '').startsWith('Habilidade:')
+            );
+            const jaTem = manuais.some((m: any) => m.nome === novaMagia.nome);
+            if (!jaTem && manuais.length >= limite) {
+                alert(`📖 Você já conhece o máximo de magias para o seu nível (${limite}).\nNovas magias vêm com subida de nível ou poderes como Conhecimento Mágico.`);
+                return;
+            }
+        }
         const circulo = parseInt(String(novaMagia.circulo)) || 1;
         if (circulo > circuloMax) {
             alert(`🔒 ${novaMagia.nome} é uma magia de ${circulo}º círculo.\nSeu círculo máximo atual é ${circuloMax}º (definido pela sua classe e nível).`);
@@ -529,8 +545,8 @@ function Ficha() {
                         <span style={{ fontSize: '0.8rem', color: '#ce93d8', marginRight: 10 }}>
                             🔮 Círculo máx: {ficha.combate?.circulo_maximo ?? 0}º
                         </span>
-                        <span style={{ fontSize: '0.8rem', color: '#8bc34a', marginRight: 10 }}>
-                        📖 Magias: {(ficha.combate.magias || []).filter((m: any) => !String(m.fonte || '').startsWith('Habilidade:')).length} / {ficha.combate?.limite_magias ?? '∞'}
+                    <span style={{ fontSize: '0.8rem', color: limiteEstourado ? '#ff5252' : '#8bc34a', marginRight: 10 }}>
+                        📖 Magias: {magiasManuais.length} / {limiteMagias ?? '∞'}
                     </span>
                         <button className="btn-small" onClick={() => setShowGrimorio(true)}>+ Adicionar</button>
                     </div>
