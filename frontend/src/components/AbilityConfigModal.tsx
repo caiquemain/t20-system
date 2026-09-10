@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import '../Ficha.css';
 import { RacialAbilityRow } from './RacialAbilityRow'; // Importação limpa
-import { PODERES_COM_ESCOLHA } from '../utils/poderesEscolhas';
+import { PODERES_COM_ESCOLHA, CAMINHOS_ARCANISTA_INFO } from '../utils/poderesEscolhas';
 
 interface AbilityConfigModalProps {
     isOpen: boolean;
@@ -140,7 +140,16 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         <h3 className="section-subtitle" style={{ marginTop: 0, color: '#64b5f6' }}>{habilidadeComSubclasse.nome}</h3>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                             {opcoesSubclasse.map(opcao => (
-                                <button key={opcao} onClick={() => setSubclasseEmEdicao(opcao)} className={`btn-action ${subclasseEmEdicao === opcao ? 'selected' : ''}`} style={{ flex: 1, background: subclasseEmEdicao === opcao ? '#4caf50' : '#333', border: subclasseEmEdicao === opcao ? '1px solid #fff' : '1px solid #555', color: 'white' }}>{opcao}</button>
+                                <div key={opcao} style={{ flex: 1, minWidth: 180 }}>
+                                    <button onClick={() => setSubclasseEmEdicao(opcao)} className={`btn-action ${subclasseEmEdicao === opcao ? 'selected' : ''}`} style={{ width: '100%', background: subclasseEmEdicao === opcao ? '#4caf50' : '#333', border: subclasseEmEdicao === opcao ? '1px solid #fff' : '1px solid #555', color: 'white' }}>
+                                        {subclasseEmEdicao === opcao ? '✅ ' : ''}{opcao}
+                                    </button>
+                                    {CAMINHOS_ARCANISTA_INFO[opcao] && (
+                                        <p style={{ margin: '6px 2px 0', fontSize: '0.72rem', color: subclasseEmEdicao === opcao ? '#a5d6a7' : '#90a4ae', lineHeight: 1.35 }}>
+                                            {CAMINHOS_ARCANISTA_INFO[opcao]}
+                                        </p>
+                                    )}
+                                </div>
                             ))}
                         </div>
                     </div>
