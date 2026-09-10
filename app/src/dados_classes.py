@@ -213,3 +213,49 @@ DADOS_CLASSES["Santo"] = {
     "pericias_iniciais": ["Luta", "Vontade"],
     "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Cura", "Diplomacia", "Fortitude", "Guerra", "Iniciativa", "Intuição", "Nobreza", "Percepção", "Religião"]
 }
+
+
+# ═══════════════════════════════════════════
+# 📚 PATCH OFICIAL DO LIVRO BASE (T20) — Características de Classe
+# Aplicado na importação. Não sobrescreve proficiências já populadas.
+# ═══════════════════════════════════════════
+_PATCH_LIVRO_BASE = {
+    "Arcanista": {"pv_inicial": 8, "pv_nivel": 2, "pm_inicial": 6, "pm_nivel": 6},
+    "Bárbaro": {"pv_inicial": 24, "pv_nivel": 6, "pm_inicial": 3, "pm_nivel": 3,
+                "proficiencias": ["Armas marciais", "Escudos"]},
+    "Bardo": {"pv_inicial": 12, "pv_nivel": 3, "pm_inicial": 4, "pm_nivel": 4,
+              "pm_atributo": "car", "proficiencias": ["Armas marciais"]},
+    "Bucaneiro": {"pv_inicial": 16, "pv_nivel": 4, "pm_inicial": 3, "pm_nivel": 3,
+                  "proficiencias": ["Armas marciais"]},
+    "Caçador": {"pv_inicial": 16, "pv_nivel": 4, "pm_inicial": 4, "pm_nivel": 4,
+                "proficiencias": ["Armas marciais", "Escudos"]},
+    "Cavaleiro": {"pv_inicial": 20, "pv_nivel": 5, "pm_inicial": 3, "pm_nivel": 3,
+                  "proficiencias": ["Armas marciais", "Armaduras pesadas", "Escudos"]},
+    "Clérigo": {"pv_inicial": 16, "pv_nivel": 4, "pm_inicial": 5, "pm_nivel": 5,
+                "pm_atributo": "sab", "proficiencias": ["Armaduras pesadas", "Escudos"]},
+    "Druida": {"pv_inicial": 16, "pv_nivel": 4, "pm_inicial": 4, "pm_nivel": 4,
+               "pm_atributo": "sab", "proficiencias": ["Escudos"]},
+    "Guerreiro": {"pv_inicial": 20, "pv_nivel": 5, "pm_inicial": 3, "pm_nivel": 3,
+                  "proficiencias": ["Armas marciais", "Armaduras pesadas", "Escudos"]},
+    "Inventor": {"pv_inicial": 12, "pv_nivel": 3, "pm_inicial": 4, "pm_nivel": 4,
+                 "proficiencias": []},
+    "Ladino": {"pv_inicial": 12, "pv_nivel": 3, "pm_inicial": 4, "pm_nivel": 4,
+               "proficiencias": []},
+    "Lutador": {"pv_inicial": 20, "pv_nivel": 5, "pm_inicial": 3, "pm_nivel": 3,
+                "proficiencias": []},
+    "Nobre": {"pv_inicial": 16, "pv_nivel": 4, "pm_inicial": 4, "pm_nivel": 4,
+              "proficiencias": ["Armas marciais", "Armaduras pesadas", "Escudos"]},
+    "Paladino": {"pv_inicial": 20, "pv_nivel": 5, "pm_inicial": 3, "pm_nivel": 3,
+                 "pm_atributo": "car", "proficiencias": ["Armas marciais", "Armaduras pesadas", "Escudos"]},
+}
+_CONJURADORES_COM_CHAVE = {"Bardo", "Clérigo", "Druida", "Paladino", "Arcanista"}
+for _nome, _vals in _PATCH_LIVRO_BASE.items():
+    _entry = DADOS_CLASSES.setdefault(_nome, {})
+    for _chave, _valor in _vals.items():
+        # proficiências: preserva se já existir conteúdo populado
+        if _chave == "proficiencias" and _entry.get(_chave):
+            continue
+        _entry[_chave] = _valor
+    # não-conjurador NÃO soma atributo no PM (regra: sem pm_atributo = sem bônus)
+    if _nome not in _CONJURADORES_COM_CHAVE:
+        _entry.pop("pm_atributo", None)
