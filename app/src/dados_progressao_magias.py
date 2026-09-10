@@ -14,3 +14,12 @@ PROGRESSAO_CIRCULOS_POR_CLASSE = {
     "Bardo":     {1: 1, 6: 2, 10: 3, 14: 4},
     "Druida":    {1: 1, 6: 2, 10: 3, 14: 4},
 }
+
+
+# Subclasses (Caminhos) que herdam a progressão da classe base.
+# Ex.: "Caminho do Arcanista" -> Bruxo / Mago / Feiticeiro
+MAPA_SUBCLASSE_PARA_CLASSE = {
+    "Bruxo": "Arcanista",
+    "Mago": "Arcanista",
+    "Feiticeiro": "Arcanista",
+}

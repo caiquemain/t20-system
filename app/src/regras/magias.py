@@ -156,12 +156,13 @@ def validar_circulos_magias(ficha: Personagem) -> Personagem:
 # Estas definições SUBSTITUEM a tabela genérica anterior
 # (em Python, a última definição com mesmo nome vence).
 # ═══════════════════════════════════════════
-from ..dados_progressao_magias import PROGRESSAO_CIRCULOS_POR_CLASSE
+from ..dados_progressao_magias import PROGRESSAO_CIRCULOS_POR_CLASSE, MAPA_SUBCLASSE_PARA_CLASSE
 
 
 def calcular_circulo_maximo(classe: str, nivel: int) -> int:
     """Maior círculo que uma classe específica acessa no nível informado."""
-    progressao = PROGRESSAO_CIRCULOS_POR_CLASSE.get(classe or "", {})
+    nome = MAPA_SUBCLASSE_PARA_CLASSE.get(classe or "", classe or "")
+    progressao = PROGRESSAO_CIRCULOS_POR_CLASSE.get(nome, {})
     nivel = int(nivel or 1)
     circulo = 0
     for niv_min, circ in progressao.items():
