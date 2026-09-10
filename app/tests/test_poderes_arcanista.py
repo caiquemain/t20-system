@@ -287,3 +287,17 @@ def test_arcano_de_batalha_feiticeiro_usa_car(personagem_base):
     f.habilidades = [_hab("Arcano de Batalha")]
     aplicar_poderes_arcanista(f)
     assert f.combate.bonus_dano_magias == 4
+
+
+def test_descansar_mantem_pv_cheio_com_familiar(personagem_base):
+    """Regressão: após Descansar, o PV cheio deve incluir o bônus do Sapo.
+    (calcular_pv_pm clampava antes de aplicar_poderes subir o máximo.)"""
+    from src.regras.status import calcular_pv_pm
+    f = _ficha_arcanista(personagem_base)
+    f.atributos.inteligencia = 4
+    f.habilidades = [_hab("Familiar", {"familiar": "Sapo"})]
+    calcular_pv_pm(f)                      # maximo intermediário = 10, atual clampado = 10 (cheio)
+    f.status.pv.atual = f.status.pv.maximo  # simula o clique em Descansar
+    aplicar_poderes_arcanista(f)           # sobe máximo p/ 14 e preserva "cheio"
+    assert f.status.pv.maximo == 15
+    assert f.status.pv.atual == 15

@@ -20,17 +20,21 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
         return '#666';
     };
 
-    // ✨ Chips de ESCOLHAS REAIS (filtra gatilhos vazados e objetos)
+    // ✨ Chips de ESCOLHAS REAIS
     const efeitos = habilidade.efeitos || {};
     const escolhas = habilidade.escolhas_aplicadas || {};
     const chavesEscolha = Object.keys(escolhas).filter(chave => {
-        // 1) Gatilhos de escolha (presentes em efeitos ou sufixo _escolha) não são escolhas
-        if (chave in efeitos || chave.endsWith('_escolha')) return false;
+        // Gatilhos de escolha nunca são escolhas reais
+        if (chave.endsWith('_escolha')) return false;
         const v = escolhas[chave];
-        // 2) Objetos não renderizam (evita [object Object])
+        // Objetos não renderizam (evita [object Object])
         if (v !== null && typeof v === 'object' && !Array.isArray(v)) return false;
-        // 3) Arrays de objetos também não
-        if (Array.isArray(v) && v.some(item => typeof item === 'object')) return false;
+        if (Array.isArray(v)) {
+            // Arrays de objetos não renderizam
+            if (v.some(item => typeof item === 'object')) return false;
+            // Array IDÊNTICO ao de efeitos = gatilho vazado (ex.: escolha_subclasse com as 3 opções)
+            if (chave in efeitos && JSON.stringify(efeitos[chave]) === JSON.stringify(v)) return false;
+        }
         return true;
     });
 
