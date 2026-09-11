@@ -144,3 +144,37 @@ def test_hynne_passo_dano_arremesso(personagem_base):
     garantir_habilidades_iniciais(f)
     sincronizar_ataques(f)
     assert f.combate.passo_dano_arremesso == 1
+
+
+def test_condicao_ativa_soma_bonus_na_pericia(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais
+    from src.regras.pericias import inicializar_pericias
+    f = _ficha("Anão")
+    garantir_habilidades_iniciais(f)
+    f.condicoes_ativas = ["subterraneo"]
+    inicializar_pericias(f)
+    info = f.pericias["Percepção"]
+    assert info.total == 2  # 0 base + 2 da condição ativa
+    assert any("condição ativa" in linha for linha in info.fontes_bonus)
+
+
+def test_condicao_inativa_mantem_situacional(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais
+    from src.regras.pericias import inicializar_pericias
+    f = _ficha("Anão")
+    garantir_habilidades_iniciais(f)
+    f.condicoes_ativas = []
+    inicializar_pericias(f)
+    info = f.pericias["Percepção"]
+    assert info.total == 0
+    assert any("situacional" in linha for linha in info.fontes_bonus)
+
+
+def test_trog_sem_armadura_ativa_furtividade(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais
+    from src.regras.pericias import inicializar_pericias
+    f = _ficha("Trog")
+    garantir_habilidades_iniciais(f)
+    f.condicoes_ativas = ["sem_armadura"]
+    inicializar_pericias(f)
+    assert f.pericias["Furtividade"].total == 5

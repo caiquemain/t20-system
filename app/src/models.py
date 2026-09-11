@@ -299,6 +299,7 @@ class Personagem(BaseModel):
 
     escolhas_atributos_raciais: List[str] = []
     escolhas_origem: List[str] = []
+    condicoes_ativas: List[str] = []  # 🎚️ condições situacionais ligadas (subterrâneo, sem armadura...)
 
     descricao: Descricao = Field(default_factory=Descricao)
     status: Status = Field(default_factory=Status)

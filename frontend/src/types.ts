@@ -251,6 +251,7 @@ export interface Personagem {
 
     escolhas_atributos_raciais: string[];
     escolhas_origem: string[];
+  condicoes_ativas?: string[];
 
     status: Status;
     pericias: Record<string, PericiaInfo>;
