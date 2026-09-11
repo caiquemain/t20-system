@@ -178,3 +178,58 @@ def test_trog_sem_armadura_ativa_furtividade(personagem_base):
     f.condicoes_ativas = ["sem_armadura"]
     inicializar_pericias(f)
     assert f.pericias["Furtividade"].total == 5
+
+
+def test_qareen_rd_escolha_aplica_tipo(personagem_base):
+    from src.models import Habilidade
+    from src.regras.status import calcular_reducoes_dano
+    f = _ficha("Qareen")
+    f.habilidades = [Habilidade(nome="Resistência Elemental", tipo="Racial", descricao="",
+                                efeitos={"resistencia_rd_escolha": 10},
+                                escolhas_aplicadas={"resistencia_rd_escolha": "fogo"})]
+    calcular_reducoes_dano(f)
+    assert "fogo 10" in f.status.rd
+
+
+def test_qareen_rd_sem_escolha_nao_gera_lixo(personagem_base):
+    from src.models import Habilidade
+    from src.regras.status import calcular_reducoes_dano
+    f = _ficha("Qareen")
+    f.habilidades = [Habilidade(nome="Resistência Elemental", tipo="Racial", descricao="",
+                                efeitos={"resistencia_rd_escolha": 10}, escolhas_aplicadas={})]
+    calcular_reducoes_dano(f)
+    assert f.status.rd == []
+
+
+def test_golem_imunidade_elemento(personagem_base):
+    from src.models import Habilidade
+    from src.regras.status import calcular_proficiencias_e_extras
+    f = _ficha("Golem")
+    f.habilidades = [Habilidade(nome="Fonte Elemental", tipo="Racial", descricao="",
+                                efeitos={"imunidade_dano_escolha": True},
+                                escolhas_aplicadas={"imunidade_dano_escolha": "fogo"})]
+    calcular_proficiencias_e_extras(f)
+    assert "Imune a fogo" in f.status.imunidades
+
+
+def test_osteon_memoria_postuma_cria_racial(personagem_base):
+    from src.models import Habilidade
+    from src.regras.habilidades import sincronizar_poderes_habilidades
+    f = _ficha("Osteon")
+    f.habilidades = [Habilidade(nome="Memória Póstuma", tipo="Racial", descricao="",
+                                efeitos={"pericia_ou_poder_ou_raca_escolha": 1},
+                                escolhas_aplicadas={"memoria_postuma": "Faro"})]
+    sincronizar_poderes_habilidades(f)
+    assert any(h.nome == "Faro" and h.fonte == "Habilidade: Memória Póstuma" for h in f.habilidades)
+
+
+def test_vanguardista_oficio_bonus_mais_dois(personagem_base):
+    from src.models import Habilidade, PericiaInfo
+    from src.regras.pericias import inicializar_pericias
+    f = _ficha("Kliren")
+    f.habilidades = [Habilidade(nome="Vanguardista", tipo="Racial", descricao="",
+                                efeitos={"pericia_bonus_escolha": {"Ofício": 2}},
+                                escolhas_aplicadas={"pericia_bonus_0": "Ofício (ferreiro)"})]
+    f.pericias["Ofício (ferreiro)"] = PericiaInfo(treino=1, total=0)
+    inicializar_pericias(f)
+    assert f.pericias["Ofício (ferreiro)"].bonus_automatico == 2

@@ -273,8 +273,9 @@ def calcular_reducoes_dano(ficha: Personagem):
             for t, v in efeitos["resistencia_rd"].items():
                 lista_rd.append(f"{t} {v}")
 
-        if efeitos.get("resistencia_rd_escolha"):
-            lista_rd.append(f"{efeitos['resistencia_rd_escolha']} 10")
+        rd_esc = efeitos.get("resistencia_rd_escolha")
+        if isinstance(rd_esc, str) and rd_esc:
+            lista_rd.append(f"{rd_esc} 10")
 
         if "rd_escalavel_tormenta" in efeitos:
             dados = efeitos["rd_escalavel_tormenta"]
@@ -336,6 +337,10 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
                 imunidades.update(val)
             else:
                 imunidades.add(str(val))
+        # Golem: espírito elemental escolhido vira imunidade a dano
+        val_imn_elem = efeitos.get("imunidade_dano_escolha")
+        if isinstance(val_imn_elem, str) and val_imn_elem:
+            imunidades.add(f"Imune a {val_imn_elem}")
 
         if "imunidade_penalidade_mov" in efeitos:
             imunidades.add("Deslocamento (Armadura/Carga)")

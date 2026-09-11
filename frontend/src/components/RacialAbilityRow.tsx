@@ -130,13 +130,17 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
     // --- B. BÔNUS EM PERÍCIAS (EX: LEFOU / DEFORMIDADE) - DESIGN VERSÁTIL ---
     if (efeitos.pericia_bonus_escolha) {
         let qtd = 0;
+        let prefixoRestrito = '';
     let restricaoPrefixo = '';
         if (typeof efeitos.pericia_bonus_escolha === 'number') {
             qtd = efeitos.pericia_bonus_escolha;
         } else if (typeof efeitos.pericia_bonus_escolha === 'object' && efeitos.pericia_bonus_escolha !== null) {
         qtd = 1;
         restricaoPrefixo = Object.keys(efeitos.pericia_bonus_escolha)[0] || '';
-    } else {
+    } else if (typeof efeitos.pericia_bonus_escolha === 'object' && efeitos.pericia_bonus_escolha !== null) {
+        qtd = 1;
+        prefixoRestrito = Object.keys(efeitos.pericia_bonus_escolha)[0] || '';
+        } else {
         qtd = parseInt(efeitos.pericia_bonus_escolha);
     }
 
@@ -353,6 +357,36 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         );
     }
 
+    // --- E2. ESCOLHAS ELEMENTAIS (Qareen RD10 / Golem imunidade) ---
+    const OPCOES_ELEMENTAIS: Record<string, { v: string; l: string }[]> = {
+        resistencia_rd_escolha: [
+            { v: 'frio', l: 'Frio (qareen da água)' }, { v: 'eletricidade', l: 'Eletricidade (do ar)' },
+            { v: 'fogo', l: 'Fogo (do fogo)' }, { v: 'ácido', l: 'Ácido (da terra)' },
+            { v: 'luz', l: 'Luz (da luz)' }, { v: 'trevas', l: 'Trevas (das trevas)' },
+        ],
+        imunidade_dano_escolha: [
+            { v: 'frio', l: 'Espírito de Água (frio)' }, { v: 'eletricidade', l: 'Espírito de Ar (eletricidade)' },
+            { v: 'fogo', l: 'Espírito de Fogo (fogo)' }, { v: 'ácido', l: 'Espírito de Terra (ácido)' },
+        ],
+    };
+    Object.entries(OPCOES_ELEMENTAIS).forEach(([chaveElem, opcoes]) => {
+        if (efeitos[chaveElem]) {
+            const valorAtual = hab.escolhas_aplicadas?.[chaveElem] || '';
+            renderizadores.push(
+                <div key={chaveElem} className="sub-section" style={{ marginTop: 10 }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <label style={{ fontSize: '0.85rem', color: '#4fc3f7', width: 110 }}>
+                            {chaveElem === 'resistencia_rd_escolha' ? 'Ascendência:' : 'Fonte Elemental:'}
+                        </label>
+                        <select value={valorAtual} onChange={(e) => updateRacialChoice(index, chaveElem, e.target.value)} className="input-dark" style={{ flex: 1 }}>
+                            <option value="">Selecione...</option>
+                            {opcoes.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+                        </select>
+                    </div>
+                </div>
+            );
+        }
+    });
     // --- F. ATRIBUTOS ---
     if (efeitos.atributo_bonus_escolha) {
         const qtd = efeitos.atributo_bonus_escolha;
