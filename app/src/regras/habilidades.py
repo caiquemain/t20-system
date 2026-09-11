@@ -201,6 +201,9 @@ def sincronizar_poderes_habilidades(ficha: Personagem, memoria_global: Optional[
                 elif isinstance(val, str) and val:
                     poderes_permitidos[val] = hab.nome
 
+        mp_val = escolhas.get("memoria_postuma")
+        if isinstance(mp_val, str) and mp_val:
+            poderes_permitidos[mp_val] = hab.nome
         for chave, valor in escolhas.items():
             if (chave.startswith("poder_") or "_poder" in chave or "habilidade_" in chave) and chave not in chaves_de_busca:
                 if isinstance(valor, str) and valor:
@@ -265,7 +268,7 @@ def sincronizar_poderes_habilidades(ficha: Personagem, memoria_global: Optional[
                 ))
                 nomes_atuais.add(nome_real)
         else:
-            if id_escolha not in nomes_atuais:
+            if id_escolha not in nomes_atuais and id_escolha not in DADOS_PERICIAS and not id_escolha.startswith("Ofício"):
                 nome_formatado = id_escolha.replace(
                     "_", " ").title() if "_" in id_escolha else id_escolha
                 novos_poderes.append(Habilidade(
@@ -325,6 +328,12 @@ def atualizar_efeitos_ativos(ficha: Personagem):
         if "sentidos" in efeitos:
             for sentido in efeitos["sentidos"]:
                 lista_efeitos.append(f"👁️ {sentido}")
+        rd_esc = efeitos.get("resistencia_rd_escolha")
+        if isinstance(rd_esc, str) and rd_esc:
+            lista_efeitos.append(f"🛡️ RD 10 a {rd_esc} (ascendência)")
+        imn_esc = efeitos.get("imunidade_dano_escolha")
+        if isinstance(imn_esc, str) and imn_esc:
+            lista_efeitos.append(f"🛡️ Imune a {imn_esc} (fonte elemental)")
         if efeitos.get("resistencia_tormenta"):
             lista_efeitos.append(f"🎲 +{efeitos['resistencia_tormenta']} em resistências vs Tormenta/lefeu")
         if efeitos.get("tipo_criatura"):
