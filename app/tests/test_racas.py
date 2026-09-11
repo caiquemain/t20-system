@@ -89,3 +89,58 @@ def test_desmarcar_pericia_remove_treino(personagem_base):
     personagem_base.pericias["Luta"].treino = 0
     inicializar_pericias(personagem_base)
     assert personagem_base.pericias["Luta"].treino == 0
+
+
+def test_kliren_vanguardista_proficiencia_armas_de_fogo(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais
+    from src.regras.status import calcular_proficiencias_e_extras
+    f = _ficha("Kliren")
+    garantir_habilidades_iniciais(f)
+    calcular_proficiencias_e_extras(f)
+    assert "armas de fogo" in f.status.proficiencias
+
+
+def test_anao_bonus_pericia_condicional_fora_do_total(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais
+    from src.regras.pericias import inicializar_pericias
+    f = _ficha("Anão")
+    garantir_habilidades_iniciais(f)
+    inicializar_pericias(f)
+    info = f.pericias["Percepção"]
+    assert any("Conhecimento das Rochas" in linha and "situacional" in linha
+               for linha in info.fontes_bonus)
+    assert info.bonus_automatico == 0  # condicional NÃO infla o total
+
+
+def test_lefou_resistencia_tormenta_em_efeitos(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais, atualizar_efeitos_ativos
+    f = _ficha("Lefou")
+    garantir_habilidades_iniciais(f)
+    atualizar_efeitos_ativos(f)
+    assert any("Tormenta" in e for e in f.status.efeitos_ativos)
+
+
+def test_golem_tipo_criatura_em_efeitos(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais, atualizar_efeitos_ativos
+    f = _ficha("Golem")
+    garantir_habilidades_iniciais(f)
+    atualizar_efeitos_ativos(f)
+    assert any("Construto" in e for e in f.status.efeitos_ativos)
+
+
+def test_sereia_bonus_dano_arma_agregado(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais
+    from src.regras.combate import sincronizar_ataques
+    f = _ficha("Sereia/Tritão")
+    garantir_habilidades_iniciais(f)
+    sincronizar_ataques(f)
+    assert f.combate.bonus_dano_arma == {"azagaia": 2, "lança": 2, "tridente": 2}
+
+
+def test_hynne_passo_dano_arremesso(personagem_base):
+    from src.regras.habilidades import garantir_habilidades_iniciais
+    from src.regras.combate import sincronizar_ataques
+    f = _ficha("Hynne")
+    garantir_habilidades_iniciais(f)
+    sincronizar_ataques(f)
+    assert f.combate.passo_dano_arremesso == 1

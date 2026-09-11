@@ -325,6 +325,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
         if "sentidos" in efeitos:
             for sentido in efeitos["sentidos"]:
                 lista_efeitos.append(f"👁️ {sentido}")
+        if efeitos.get("resistencia_tormenta"):
+            lista_efeitos.append(f"🎲 +{efeitos['resistencia_tormenta']} em resistências vs Tormenta/lefeu")
+        if efeitos.get("tipo_criatura"):
+            lista_efeitos.append(f"🧬 Tipo de criatura: {efeitos['tipo_criatura']}")
+        ba = efeitos.get("bonus_ataque_arma") or {}
+        for vv in sorted(set(ba.values())):
+            armas = ", ".join(k for k, v in ba.items() if v == vv)
+            lista_efeitos.append(f"⚔️ +{vv} ataque com: {armas}")
+        bd = efeitos.get("bonus_dano_arma") or {}
+        for vv in sorted(set(bd.values())):
+            armas = ", ".join(k for k, v in bd.items() if v == vv)
+            lista_efeitos.append(f"💥 +{vv} dano com: {armas}")
+        if efeitos.get("dano_arma_base"):
+            lista_efeitos.append("💥 Dano de arremesso/funda aumentado em 1 passo")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 

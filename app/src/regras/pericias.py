@@ -8,6 +8,12 @@ from ..dados_pericias import DADOS_PERICIAS
 from .utils import calcular_modificador
 
 logger = logging.getLogger("RegrasT20")
+# Condições narrativas dos bônus condicionais de perícia (T20 JdA)
+CONDICOES_BONUS_PERICIA = {
+    "Conhecimento das Rochas": "no subterrâneo",
+    "Reptiliano": "sem armadura ou roupas pesadas",
+}
+
 
 
 def _garantir_chave_str(valor: Any) -> str:
@@ -38,6 +44,7 @@ def inicializar_pericias(ficha: Personagem):
     opcoes_atributos_extras: Dict[str, List[str]] = {}
     detalhamento_bonus: Dict[str, List[Dict[str, Any]]] = {}
     bonus_por_atributo: Dict[str, int] = {}
+    bonus_condicional: Dict[str, List[Dict[str, Any]]] = {}
 
     tamanho = getattr(ficha.descricao, "tamanho", TamanhoEnum.MEDIO)
     penalidade_tamanho_furt = - \
@@ -86,6 +93,15 @@ def inicializar_pericias(ficha: Personagem):
                 if isinstance(attr_chave, str) and isinstance(v_bonus, (int, float)):
                     bonus_por_atributo[attr_chave] = bonus_por_atributo.get(
                         attr_chave, 0) + int(v_bonus)
+        # 2b. Bônus CONDICIONAIS (Anão subterrâneo, Trog sem armadura)
+        if "bonus_pericia_condicional" in efeitos and isinstance(efeitos["bonus_pericia_condicional"], dict):
+            condicao_txt = CONDICOES_BONUS_PERICIA.get(hab.nome, "condição especial")
+            for p_nome, v_bonus in efeitos["bonus_pericia_condicional"].items():
+                if isinstance(p_nome, str) and isinstance(v_bonus, (int, float)):
+                    if p_nome not in bonus_condicional:
+                        bonus_condicional[p_nome] = []
+                    bonus_condicional[p_nome].append(
+                        {"fonte": hab.nome, "valor": int(v_bonus), "condicao": condicao_txt})
 
         # 3. Bônus de Tormenta Escalável (Ex: Antenas)
         # Aplica +1 por poder da Tormenta nas perícias listadas
@@ -309,6 +325,12 @@ def inicializar_pericias(ficha: Personagem):
         # Soma tudo
         total_final = bonus_metade_nivel + mod_attr + bonus_treino + \
             info_antiga.outros + total_automatico + penalidade_aplicada
+        # Bônus condicionais: fora do total base, mas com total situacional visível
+        for item in bonus_condicional.get(nome_pericia, []):
+            sinal = "+" if item["valor"] >= 0 else ""
+            fontes_bonus.append(
+                "⛰️ " + item["fonte"] + ": " + sinal + str(item["valor"]) + " se " + item["condicao"] +
+                " (não somado ao total base; total situacional: " + str(total_final + item["valor"]) + ")")
 
         # ═══════════════════════════════════════════
         # 🎯 PILHA DE MODIFICADORES DA PERÍCIA

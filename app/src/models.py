@@ -236,7 +236,11 @@ class Combate(BaseModel):
     bonus_dano_dado_tipo: Dict[str, int] = {}   # Dracônica aprimorada: +1 dano por dado
     foco_pv_maximo: int = 0                     # Bruxo: foco com PV = metade dos seus
     foco_pv_atual: int = 0
-    magias_memorizadas: List[str] = []          # Mago: memorização (UI depois)      # 🆕 Lote 2: foco absorve dano letal
+    magias_memorizadas: List[str] = []
+    # 🆕 LOTE R3: modificadores raciais de arma específicos
+    bonus_ataque_arma: Dict[str, int] = {}
+    bonus_dano_arma: Dict[str, int] = {}
+    passo_dano_arremesso: int = 0          # Mago: memorização (UI depois)      # 🆕 Lote 2: foco absorve dano letal
 
 # --- HABILIDADES E EQUIPAMENTO ---
 

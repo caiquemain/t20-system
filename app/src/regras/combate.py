@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 from ..models import Personagem, Ataque
 from ..dados_classes import DADOS_CLASSES
 
@@ -58,3 +59,22 @@ def sincronizar_ataques(ficha: Personagem):
     for n in novos:
         if n.nome not in existentes:
             ficha.combate.ataques.append(n)
+    _sincronizar_bonus_armas(ficha)
+
+
+def _sincronizar_bonus_armas(ficha: Personagem):
+    """Lote R3: agrega bônus raciais de arma específicos (Anão, Sereia, Hynne)."""
+    ba: Dict[str, int] = {}
+    bd: Dict[str, int] = {}
+    passo = 0
+    for hab in ficha.habilidades:
+        efeitos = {**(hab.efeitos or {}), **(hab.escolhas_aplicadas or {})}
+        for k, v in (efeitos.get("bonus_ataque_arma") or {}).items():
+            ba[k] = ba.get(k, 0) + int(v)
+        for k, v in (efeitos.get("bonus_dano_arma") or {}).items():
+            bd[k] = bd.get(k, 0) + int(v)
+        if efeitos.get("dano_arma_base"):
+            passo += int((efeitos.get("dano_arma_base") or {}).get("passos", 1))
+    ficha.combate.bonus_ataque_arma = ba
+    ficha.combate.bonus_dano_arma = bd
+    ficha.combate.passo_dano_arremesso = passo
