@@ -9,7 +9,8 @@ from .habilidades import (
     processar_acumulo_habilidades,
     atualizar_efeitos_ativos
 )
-from .magias import sincronizar_magias_habilidades, validar_circulos_magias, validar_magias_conhecidas
+from .magias import sincronizar_magias_habilidades, validar_circulos_magias, validar_magias_conhecidas, sincronizar_magias_raciais
+from .custo_magia import calcular_custo_magia, calcular_cd_magia
 from .poderes_arcanista import aplicar_poderes_arcanista, sincronizar_ataques_magicos
 from .pericias import inicializar_pericias
 
@@ -46,6 +47,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
 
     # 4. Processamentos Adicionais de Habilidades
     sincronizar_magias_habilidades(ficha)
+    sincronizar_magias_raciais(ficha)
     validar_circulos_magias(ficha)
     validar_magias_conhecidas(ficha)
     processar_acumulo_habilidades(ficha)
