@@ -311,7 +311,8 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
 
         keys_prof = [
             "proficiencia_add", "proficiencia_simples", "proficiencia_marcial",
-            "proficiencia_exotica", "proficiencia_armadura", "proficiencia_escudo"
+            "proficiencia_exotica", "proficiencia_armadura", "proficiencia_escudo",
+            "proficiencia_adicional"
         ]
 
         for k in keys_prof:
