@@ -201,6 +201,8 @@ class Magia(BaseModel):
     fonte: Optional[str] = ""
     efeito: Optional[str] = ""
     aprimoramentos: Optional[List[Dict[str, Any]]] = []
+    fonte_origem: Optional[str] = ""   # 🆕 R5: "Racial: Dahllan", "Classe: Mago"...
+    isento_armadura: bool = False      # 🆕 R5: raça/poder/item ignoram limitação de armadura
 
     @model_validator(mode='before')
     @classmethod

@@ -264,3 +264,62 @@ def validar_magias_conhecidas(ficha: Personagem) -> Personagem:
                 f"📖 Grimório com {len(manuais)} magias escolhidas acima do limite {limite}"
             )
     return ficha
+
+
+# 🆕 LOTE R5 — Tabela 4-1: Custo de Magias por círculo
+CUSTO_POR_CIRCULO = {1: 1, 2: 3, 3: 6, 4: 10, 5: 15}
+
+
+def sincronizar_magias_raciais(ficha: Personagem):
+    """Lote R5: injeta no Grimório as magias concedidas por habilidades
+    raciais (magia_adicional fixa e magia_adicional_escolha) e remove
+    as que não valem mais após troca de escolha."""
+    from ..models import Magia as MagiaModel
+    try:
+        from ..dados_magias import DADOS_MAGIAS
+    except Exception:
+        DADOS_MAGIAS = {}
+
+    desejadas: Dict[str, tuple] = {}
+    for hab in ficha.habilidades:
+        ma = (hab.efeitos or {}).get("magia_adicional")
+        if isinstance(ma, dict) and ma.get("nome"):
+            desejadas[ma["nome"]] = (hab.nome, ma.get("atributo", ""))
+        mae = (hab.efeitos or {}).get("magia_adicional_escolha")
+        if isinstance(mae, dict):
+            qtd = int(mae.get("quantidade", 1))
+            for i in range(qtd):
+                escolha = (hab.escolhas_aplicadas or {}).get(f"magia_{i}")
+                if isinstance(escolha, str) and escolha:
+                    desejadas[escolha] = (hab.nome, mae.get("atributo", ""))
+
+    # Remove magias raciais que não valem mais (troca de escolha)
+    ficha.combate.magias = [
+        m for m in ficha.combate.magias
+        if not (m.fonte_origem or "").startswith("Racial:") or m.nome in desejadas
+    ]
+    existentes = {m.nome for m in ficha.combate.magias}
+
+    for nome, (fonte_hab, attr) in desejadas.items():
+        if nome in existentes:
+            continue
+        dados = DADOS_MAGIAS.get(nome) or {}
+        circ_raw = dados.get("circulo", 1)
+        circ = int(circ_raw) if str(circ_raw).isdigit() else 1
+        ficha.combate.magias.append(MagiaModel(
+            nome=nome,
+            circulo=circ,
+            escola=dados.get("escola", ""),
+            tipo=dados.get("tipo", "Universal"),
+            execucao=dados.get("execucao", ""),
+            alcance=dados.get("alcance", ""),
+            alvo=dados.get("alvo", ""),
+            duracao=dados.get("duracao", ""),
+            resistencia=dados.get("resistencia", ""),
+            custo_pm=CUSTO_POR_CIRCULO.get(circ, 1),
+            descricao=dados.get("descricao", ""),
+            atributo_chave=attr or dados.get("atributo_chave", ""),
+            fonte_origem=f"Racial: {fonte_hab}",
+            isento_armadura=True,
+        ))
+    logger.info(f"[R5] Magias raciais sincronizadas: {[m.nome for m in ficha.combate.magias if (m.fonte_origem or '').startswith('Racial:')]}")
