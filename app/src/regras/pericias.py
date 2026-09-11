@@ -167,6 +167,7 @@ def inicializar_pericias(ficha: Personagem):
 
     # De Classe
     fixas_classe: List[str] = []
+    selecao_fixa: List[str] = []
     if ficha.classes:
         nome_classe_safe = _garantir_chave_str(ficha.classes[0].nome)
         dados_classe = DADOS_CLASSES.get(nome_classe_safe, {})
@@ -177,7 +178,43 @@ def inicializar_pericias(ficha: Personagem):
             for f in fixas:
                 if isinstance(f, str):
                     fixas_classe.append(f)
+        # Requisito com escolha (ex.: Guerreiro: Luta OU Pontaria)
+        sel = dados_classe.get("pericias_fixas_selecao", []) or []
+        if isinstance(sel, list):
+            selecao_fixa = [x for x in sel if isinstance(x, str)]
 
+    # VALIDAÇÃO DE SLOTS
+    # Calcula quantos slots de classe e inteligência já foram usados
+    slots_classe_total = 0
+    slots_int_total = 0
+    if ficha.classes:
+        dados_classe_validacao = DADOS_CLASSES.get(ficha.classes[0].nome or "", {})
+        slots_classe_total = dados_classe_validacao.get("pericias_escolha", 0) or 0
+    mod_int = calcular_modificador(ficha.atributos.inteligencia)
+    slots_int_total = max(0, mod_int)
+    
+    # Conta quantas perícias treinadas são da classe vs fora da classe
+    pericias_da_classe_possiveis = []
+    if ficha.classes:
+        pericias_da_classe_possiveis = DADOS_CLASSES.get(ficha.classes[0].nome or "", {}).get("pericias_lista", []) or []
+    
+    # Perícias marcadas manualmente pelo usuário (não fixas, nem de habilidades/origem)
+    pericias_treinadas_manualmente = [
+        nome for nome, info in ficha.pericias.items()
+        if info.treino > 0 and nome not in pericias_extras and nome not in fixas_classe
+    ]
+
+    gastos_classe = 0
+    gastos_int = 0
+    for p in pericias_treinadas_manualmente:
+        if p in pericias_da_classe_possiveis or p.startswith("Ofício"):
+            gastos_classe += 1
+        else:
+            gastos_int += 1
+    
+    slots_classe_restantes = max(0, slots_classe_total - gastos_classe)
+    slots_int_restantes = max(0, slots_int_total - gastos_int)
+    
     # 4. Construção da Lista Final de Perícias
     novas_pericias: Dict[str, PericiaInfo] = {}
 
@@ -200,8 +237,23 @@ def inicializar_pericias(ficha: Personagem):
 
         info_antiga = ficha.pericias.get(nome_pericia, PericiaInfo())
 
-        esta_treinado = (nome_pericia in pericias_extras) or (
-            nome_pericia in fixas_classe)
+        # Respeita escolhas manuais do usuário (treino > 0) se não for fixa da classe/habilidade
+        # MAS valida se ainda há slots disponíveis
+        foi_treinado_manualmente = info_antiga.treino > 0 and nome_pericia not in fixas_classe and nome_pericia not in pericias_extras
+        
+        # Validação permissiva: se já estava treinada, mantém (não remove por falta de slot)
+        # Só bloqueia NOVAS escolhas quando não há slot
+        if foi_treinado_manualmente:
+            eh_da_classe = nome_pericia in pericias_da_classe_possiveis or nome_pericia.startswith("Ofício")
+            if eh_da_classe:
+                # Mantém se já estava treinada OU se há slot
+                esta_treinado = info_antiga.treino > 0 or slots_classe_restantes > 0
+            else:
+                # Mantém se já estava treinada OU se há slot de INT
+                esta_treinado = info_antiga.treino > 0 or slots_int_restantes > 0
+        else:
+            esta_treinado = (nome_pericia in pericias_extras) or (nome_pericia in fixas_classe) or (
+            nome_pericia in selecao_fixa and info_antiga.treino > 0)
 
         # Definição do Atributo
         attr_padrao = str(dados_base.get("atributo", "int"))
@@ -292,3 +344,6 @@ def inicializar_pericias(ficha: Personagem):
             fontes_bonus=fontes_bonus,  # Mantém compatibilidade
             calculo=calc                # 🚀 Nova transparência
         )
+
+    # ── SYNC FINAL: persiste o dicionário recalculado (Lote R1) ──
+    ficha.pericias = novas_pericias

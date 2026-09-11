@@ -232,6 +232,33 @@ export const useFicha = (id: string | undefined) => {
         setShowHabilidadesPanel(true);
     };
 
+    const sanitizarEscolhasAplicadas = (habilidade: any) => {
+        const efeitos = habilidade.efeitos || {};
+        const escolhasOriginais = habilidade.escolhas_aplicadas || {};
+        const limpas: Record<string, any> = {};
+
+        Object.entries(escolhasOriginais).forEach(([k, v]) => {
+            // Remove gatilhos vazados dos efeitos, ex.: pericia_escolha: 1
+            if (k in efeitos && v === efeitos[k]) return;
+
+            // Chaves *_escolha só são escolha real quando string não vazia.
+            // Ex.: pericia_escolha = "Diplomacia"
+            if (k.endsWith('_escolha')) {
+                if (typeof v === 'string' && v.trim().length > 0) {
+                    limpas[k] = v;
+                }
+                return;
+            }
+
+            // Preserva demais escolhas reais, como pericia_bonus_0, poder_ambicao_0 etc.
+            if (v !== undefined && v !== null && v !== '') {
+                limpas[k] = v;
+            }
+        });
+
+        return limpas;
+    };
+
     const handleSaveEscolhas = async () => {
         if (!ficha) return;
         const novaFicha = { ...ficha };
@@ -256,8 +283,12 @@ export const useFicha = (id: string | undefined) => {
             const gatilhos = def?.efeitos || {};
             let escolhas: Record<string, any> = { ...(editada ? editada.escolhas_aplicadas : h.escolhas_aplicadas) || {} };
             Object.keys(escolhas).forEach(k => {
-                if (k in gatilhos || k.endsWith('_escolha')) delete escolhas[k];
-            });
+            const v = escolhas[k];
+            // PRESERVA escolha real em string (ex.: pericia_escolha='Diplomacia')
+            if (typeof v === 'string' && v.length > 0) return;
+            const ehGatilho = (k in gatilhos) || k.endsWith('_escolha');
+            if (ehGatilho) delete escolhas[k];
+        });
             if (gatilhos.escolha_subclasse) escolhas.subclasse = subclasseEmEdicao;
             return { ...h, escolhas_aplicadas: escolhas };
         });
@@ -291,6 +322,9 @@ export const useFicha = (id: string | undefined) => {
                 habilidadesFinais.push({ nome: dPoder.nome, tipo: "Poder Concedido", descricao: dPoder.descricao, fonte: `Devoção: ${novaFicha.cabecalho.deus}` });
             }
         }
+        console.log('[SAVE][RACIAIS] escolhas pós-cleanup:', habilidadesFinais
+            .filter((h: any) => h.tipo === 'Racial')
+            .map((h: any) => ({ nome: h.nome, escolhas: h.escolhas_aplicadas })));
         updateFicha({ ...novaFicha, habilidades: habilidadesFinais }, true);
         setShowHabilidadesPanel(false);
     };

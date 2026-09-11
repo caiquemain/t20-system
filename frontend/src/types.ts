@@ -118,6 +118,7 @@ export interface Status {
     proficiencias: string[];
     imunidades: string[];
     sentidos: string[];
+    vulnerabilidades: string[];
 }
 
 export interface PericiaInfo {

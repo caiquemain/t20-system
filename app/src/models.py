@@ -159,6 +159,7 @@ class Status(BaseModel):
     proficiencias: List[str] = []
     imunidades: List[str] = []
     sentidos: List[str] = []
+    vulnerabilidades: List[str] = []
 # --- PERÍCIAS E COMBATE ---
 
 class PericiaInfo(BaseModel):

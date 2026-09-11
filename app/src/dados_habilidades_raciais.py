@@ -88,7 +88,7 @@ DADOS_HABILIDADES_RACIAIS = {
 
     # --- ELFO ---
     "Graca_Glorienn_Elfo": {
-        "nome": "Graça de Glanna",
+        "nome": "Graça de Glórienn",
         "tipo": "Racial",
         "descricao": "Seu deslocamento é 12m (em vez de 9m).",
         "fonte": "T20 JdA",
@@ -180,6 +180,7 @@ DADOS_HABILIDADES_RACIAIS = {
         "fonte": "T20 JdA",
         "efeitos": {
             "visao_faro_desprevenido": True,
+         "faro": True,
             "info_extra": {"alcance": "Curto", "detalhe": "Ignora camuflagem/desprevenido"}
         }
     },
@@ -264,7 +265,7 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Seu tamanho é Pequeno (veja a página 106) e seu deslocamento é 6m. Você recebe +2 em Enganação e pode usar Destreza como atributo-chave de Atletismo (em vez de Força).",
         "fonte": "T20 JdA",
-        "efeitos": {"deslocamento": 6, "bonus_pericia": {"Enganação": 2}, "atletismo_des": True}
+        "efeitos": {"deslocamento": 6, "bonus_pericia": {"Enganação": 2}, "pericia_atributo_opcao": {"Atletismo": "des"}}
     },
     "Sorte_Salvadora_Hynne": {
         "nome": "Sorte Salvadora",
