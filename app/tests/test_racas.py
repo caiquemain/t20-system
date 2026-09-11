@@ -261,3 +261,34 @@ def test_chip_exibicao_ascendencia_qareen(personagem_base):
     garantir_habilidades_iniciais(f, mem)
     hab = next(h for h in f.habilidades if h.nome == "Resistência Elemental")
     assert hab.escolhas_aplicadas.get("ascendencia_elemental") == "fogo"
+
+
+def test_oficio_permite_trocar_atributo_chave(personagem_base):
+    from src.models import PericiaInfo
+    from src.regras.pericias import inicializar_pericias
+    f = _ficha("Kliren")
+    f.pericias["Ofício (ferreiro)"] = PericiaInfo(treino=1, total=0)
+    inicializar_pericias(f)
+    assert set(f.pericias["Ofício (ferreiro)"].atributos_possiveis) == {
+        'for', 'des', 'con', 'int', 'sab', 'car'}
+
+
+def test_chip_oficio_vanguardista_kliren(personagem_base):
+    from src.models import Habilidade
+    from src.regras.habilidades import limpar_habilidades_fixas, garantir_habilidades_iniciais
+    f = _ficha("Kliren")
+    f.habilidades = [Habilidade(
+        nome="Vanguardista", tipo="Racial", descricao="x",
+        efeitos={"pericia_bonus_escolha": {"Ofício": 2}},
+        escolhas_aplicadas={"pericia_bonus_0": "Ofício (ferreiro)"})]
+    mem = limpar_habilidades_fixas(f)
+    garantir_habilidades_iniciais(f, mem)
+    hab = next(h for h in f.habilidades if h.nome == "Vanguardista")
+    assert hab.escolhas_aplicadas.get("oficio_vanguardista") == "Ofício (ferreiro)"
+
+
+def test_catalogo_vanguardista_usa_chave_do_consumidor(personagem_base):
+    from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
+    v = DADOS_HABILIDADES_RACIAIS["Vanguardista_Kliren"]
+    assert "pericia_bonus_escolha" in v["efeitos"]
+    assert isinstance(v["efeitos"]["pericia_bonus_escolha"], dict)

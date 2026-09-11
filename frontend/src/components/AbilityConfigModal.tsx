@@ -64,7 +64,6 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     if (!isOpen) return null;
 
     // Helper para lista de perícias
-    const listaNomesPericias = ficha && ficha.pericias ? Object.keys(ficha.pericias) : [];
 
     const getNomeHabilidade = (id: string) => {
         if (!id) return "";
@@ -233,7 +232,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                             getBlacklistGlobal={getBlacklistGlobal}
                             getNomeHabilidade={getNomeHabilidade}
                             poderesDoDeus={poderesDoDeus}
-                            listaPericias={listaNomesPericias}
+                            listaPericias={Object.keys(ficha?.pericias || {})}
                         />
                     ))}
                 </div>

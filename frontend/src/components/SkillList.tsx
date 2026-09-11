@@ -74,6 +74,13 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         });
     };
 
+    const removerOficio = (nome: string) => {
+        if (!window.confirm(`Remover o Ofício "${nome}" da ficha?`)) return;
+        const novaLista = { ...periciasTreinadas };
+        delete novaLista[nome];
+        updateFicha({ pericias: novaLista });
+    };
+
     const togglePericia = (pericia: string) => {
         if (periciasFixas.includes(pericia) || periciasOrigem.includes(pericia)) return;
 
@@ -172,6 +179,11 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                         {meta.penalidade_armadura && <span title="Penalidade de Armadura" className="icon-badge shield">🛡️</span>}
                         {isFixa && <span className="text-badge class">(C)</span>}
                         {isOrigem && <span className="text-badge origin">(O)</span>}
+                        {chavePericia.startsWith("Ofício") && (
+                            <span className="icon-badge" title="Remover Ofício"
+                                onClick={(e) => { e.stopPropagation(); removerOficio(chavePericia); }}
+                                style={{ cursor: 'pointer', color: '#ef5350', marginLeft: 2 }}>✕</span>
+                        )}
                     </div>
                 </div>
 
@@ -248,7 +260,9 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         if (!novoOficio) return;
         const nomeCompleto = `Ofício (${novoOficio})`;
         if (!periciasTreinadas[nomeCompleto]) {
-            togglePericia(nomeCompleto);
+            // Cria a linha de Ofício SEM treinar (não consome slot de INT);
+            // bônus como Vanguardista (+2) entram via escolha racial.
+            updateFicha({ pericias: { ...periciasTreinadas, [nomeCompleto]: { treino: 0, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 } } });
             setNovoOficio("");
         }
     };

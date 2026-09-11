@@ -173,6 +173,8 @@ export interface Combate {
     iniciativa: number;
     circulo_maximo: number;
     limite_magias: number;
+    fluxo_de_mana?: number;
+    foco_vital?: number;
     bonus_ataque_arma?: Record<string, number>;
     bonus_dano_arma?: Record<string, number>;
     passo_dano_arremesso?: number;

@@ -268,7 +268,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                         <button className="btn-cancel" onClick={onClose} style={{ marginRight: '10px' }}>Cancelar</button>
                         <button
                             className="btn-save"
-                            disabled={!magiaSelecionada || magiaEhIlegal}
+                            disabled={Boolean(!magiaSelecionada || magiaEhIlegal)}
                             onClick={handleAprender}
                             style={{
                                 opacity: (!magiaSelecionada || magiaEhIlegal) ? 0.5 : 1,
