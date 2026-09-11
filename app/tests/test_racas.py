@@ -233,3 +233,31 @@ def test_vanguardista_oficio_bonus_mais_dois(personagem_base):
     f.pericias["Ofício (ferreiro)"] = PericiaInfo(treino=1, total=0)
     inicializar_pericias(f)
     assert f.pericias["Ofício (ferreiro)"].bonus_automatico == 2
+
+
+def test_descricao_do_card_mostra_escolha_elemental(personagem_base):
+    from src.models import Habilidade
+    from src.regras.habilidades import limpar_habilidades_fixas, garantir_habilidades_iniciais
+    f = _ficha("Qareen")
+    f.habilidades = [Habilidade(
+        nome="Resistência Elemental", tipo="Racial", descricao="base",
+        efeitos={"resistencia_rd_escolha": 10},
+        escolhas_aplicadas={"resistencia_rd_escolha": "fogo"})]
+    mem = limpar_habilidades_fixas(f)
+    garantir_habilidades_iniciais(f, mem)
+    hab = next(h for h in f.habilidades if h.nome == "Resistência Elemental")
+    assert "Ascendência: fogo" in hab.descricao
+
+
+def test_chip_exibicao_ascendencia_qareen(personagem_base):
+    from src.models import Habilidade
+    from src.regras.habilidades import limpar_habilidades_fixas, garantir_habilidades_iniciais
+    f = _ficha("Qareen")
+    f.habilidades = [Habilidade(
+        nome="Resistência Elemental", tipo="Racial", descricao="x",
+        efeitos={"resistencia_rd_escolha": 10},
+        escolhas_aplicadas={"resistencia_rd_escolha": "fogo"})]
+    mem = limpar_habilidades_fixas(f)
+    garantir_habilidades_iniciais(f, mem)
+    hab = next(h for h in f.habilidades if h.nome == "Resistência Elemental")
+    assert hab.escolhas_aplicadas.get("ascendencia_elemental") == "fogo"

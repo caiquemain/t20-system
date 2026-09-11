@@ -120,11 +120,37 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
 
                     escolhas_finais = {
                         **dados_hab.get("efeitos", {}), **escolhas_anteriores}
+                    # Resumo das escolhas aparece no card da habilidade
+                    rotulos = {
+                        "resistencia_rd_escolha": "Ascendência",
+                        "imunidade_dano_escolha": "Espírito",
+                        "pericia_escolha": "Perícia",
+                        "pericia_bonus_0": "Bônus de perícia",
+                        "memoria_postuma": "Memória",
+                    }
+                    partes = [f"{rot}: {escolhas_finais[k]}" for k, rot in rotulos.items()
+                              if isinstance(escolhas_finais.get(k), str) and escolhas_finais[k]]
+                    descricao_final = dados_hab.get("descricao", "")
+                    if partes:
+                        descricao_final += " ⭢ " + " • ".join(partes)
 
+                    # Chave-espelho de EXIBIÇÃO: escolhas salvas na mesma chave
+                    # do gatilho ficariam ocultas no chip do card (mecânica do
+                    # card só mostra chaves que não existem em efeitos).
+                    display_keys = {
+                        "resistencia_rd_escolha": "ascendencia_elemental",
+                        "imunidade_dano_escolha": "espirito_elemental",
+                    }
+                    for src, dst in display_keys.items():
+                        v = escolhas_finais.get(src)
+                        if isinstance(v, str) and v:
+                            escolhas_finais[dst] = v
+                        else:
+                            escolhas_finais.pop(dst, None)
                     novas_habs.append(Habilidade(
                         nome=nome_real,
                         tipo="Racial",
-                        descricao=dados_hab.get("descricao", ""),
+                        descricao=descricao_final,
                         fonte=raca_nome,
                         escolhas_aplicadas=_sanitizar_escolhas_aplicadas(dados_hab.get("efeitos", {}), escolhas_finais),
                         efeitos=dados_hab.get("efeitos", {})
@@ -324,16 +350,16 @@ def atualizar_efeitos_ativos(ficha: Personagem):
 
         if "imunidade" in efeitos:
             for imune in efeitos["imunidade"]:
-                lista_efeitos.append(f"🛡️ Imune a {imune.capitalize()}")
+                lista_efeitos.append(f"🚫 Imune a {imune.capitalize()}")
         if "sentidos" in efeitos:
             for sentido in efeitos["sentidos"]:
                 lista_efeitos.append(f"👁️ {sentido}")
         rd_esc = efeitos.get("resistencia_rd_escolha")
         if isinstance(rd_esc, str) and rd_esc:
-            lista_efeitos.append(f"🛡️ RD 10 a {rd_esc} (ascendência)")
+            lista_efeitos.append(f"✨ RD 10 a {rd_esc} (ascendência)")
         imn_esc = efeitos.get("imunidade_dano_escolha")
         if isinstance(imn_esc, str) and imn_esc:
-            lista_efeitos.append(f"🛡️ Imune a {imn_esc} (fonte elemental)")
+            lista_efeitos.append(f"🚫 Imune a {imn_esc} (fonte elemental)")
         if efeitos.get("resistencia_tormenta"):
             lista_efeitos.append(f"🎲 +{efeitos['resistencia_tormenta']} em resistências vs Tormenta/lefeu")
         if efeitos.get("tipo_criatura"):
