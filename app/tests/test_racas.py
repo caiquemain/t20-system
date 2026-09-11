@@ -284,7 +284,9 @@ def test_chip_oficio_vanguardista_kliren(personagem_base):
     mem = limpar_habilidades_fixas(f)
     garantir_habilidades_iniciais(f, mem)
     hab = next(h for h in f.habilidades if h.nome == "Vanguardista")
-    assert hab.escolhas_aplicadas.get("oficio_vanguardista") == "Ofício (ferreiro)"
+    # Chip único: pericia_bonus_0 não é gatilho do catálogo, então não precisa de espelho
+    assert hab.escolhas_aplicadas.get("pericia_bonus_0") == "Ofício (ferreiro)"
+    assert "oficio_vanguardista" not in hab.escolhas_aplicadas
 
 
 def test_catalogo_vanguardista_usa_chave_do_consumidor(personagem_base):
