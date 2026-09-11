@@ -5,6 +5,7 @@ import { useFicha } from '../hooks/useFicha';
 
 // Componentes Modulares
 import { PowerSelectorModal } from '../components/PowerSelectorModal';
+import { CondicoesRaciais } from '../components/CondicoesRaciais';
 import { AbilityConfigModal } from '../components/AbilityConfigModal';
 import { GrimorioModal } from '../components/GrimorioModal';
 import { FullGrimorioModal } from '../components/FullGrimorioModal';
@@ -503,6 +504,7 @@ function Ficha() {
                     <div className="section-card">
                         <h3 className="section-title" style={{ color: '#2196f3', borderBottomColor: '#2196f3' }}>✨ Efeitos Ativos & Condições</h3>
 
+                        <CondicoesRaciais ficha={ficha} updateFicha={updateFicha} />
                         {(!ficha.status.efeitos_ativos || ficha.status.efeitos_ativos.length === 0) ? (
                             <div style={{ padding: 40, textAlign: 'center', color: '#666', border: '1px dashed #444', borderRadius: 8, margin: 20 }}>
                                 <p style={{ fontSize: '1.2rem', marginBottom: 10 }}>🧘‍♂️ Nenhum efeito ativo</p>
