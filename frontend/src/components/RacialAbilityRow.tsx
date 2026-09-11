@@ -32,6 +32,9 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         }
     }
     const efeitos = { ...(defOriginal?.efeitos || {}), ...(hab.efeitos || {}) };
+    if (!(efeitos as any).pericia_bonus_escolha && (efeitos as any).bonus_pericia_escolha) {
+        (efeitos as any).pericia_bonus_escolha = (efeitos as any).bonus_pericia_escolha;
+    }
 
     // --- 2. HELPERS DE FILTROS ---
     const getPoderesGeraisValidos = () => {
@@ -49,12 +52,6 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         }).map(p => p.nome).sort();
     };
 
-    const getListaPoderesTormenta = () => {
-        return listaPoderesGerais.filter(p => {
-            const t = (p.tipo || p.categoria || "").toString();
-            return t.includes("Tormenta");
-        }).map(p => p.nome).sort();
-    };
 
     const getListaPoderesEOrigens = () => {
         const nomesGerais = listaPoderesGerais.filter(p => {
@@ -129,153 +126,81 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
 
     // --- B. BÔNUS EM PERÍCIAS (EX: LEFOU / DEFORMIDADE) - DESIGN VERSÁTIL ---
     if (efeitos.pericia_bonus_escolha) {
+        console.log('[RACIAL][B]', hab.nome, { raw: efeitos.pericia_bonus_escolha, defEfeitos: defOriginal?.efeitos, habEfeitos: hab.efeitos });
         let qtd = 0;
         let prefixoRestrito = '';
-    let restricaoPrefixo = '';
         if (typeof efeitos.pericia_bonus_escolha === 'number') {
             qtd = efeitos.pericia_bonus_escolha;
         } else if (typeof efeitos.pericia_bonus_escolha === 'object' && efeitos.pericia_bonus_escolha !== null) {
-        qtd = 1;
-        restricaoPrefixo = Object.keys(efeitos.pericia_bonus_escolha)[0] || '';
-    } else if (typeof efeitos.pericia_bonus_escolha === 'object' && efeitos.pericia_bonus_escolha !== null) {
-        qtd = 1;
-        prefixoRestrito = Object.keys(efeitos.pericia_bonus_escolha)[0] || '';
+            qtd = 1;
+            prefixoRestrito = Object.keys(efeitos.pericia_bonus_escolha)[0] || '';
         } else {
-        qtd = parseInt(efeitos.pericia_bonus_escolha);
-    }
+            qtd = parseInt(efeitos.pericia_bonus_escolha);
+        }
 
         if (!isNaN(qtd) && qtd > 0) {
             const permiteTroca = efeitos.troca_poder_tormenta === true;
             const maxTrocas = 1;
 
-            // Conta quantas trocas já foram feitas
             let slotsComoPoder = 0;
             for (let k = 0; k < qtd; k++) {
-                // Se tiver valor de poder salvo, ou se o modo estiver setado explicitamente
-                if (hab.escolhas_aplicadas?.[`poder_tormenta_${k}`] || hab.escolhas_aplicadas?.[`modo_slot_${k}`] === 'poder') {
+                const poderSalvo = hab.escolhas_aplicadas?.[`poder_tormenta_${k}`];
+                const modoSalvo = hab.escolhas_aplicadas?.[`modo_slot_${k}`];
+                if (poderSalvo || modoSalvo === 'poder') {
                     slotsComoPoder++;
                 }
             }
 
-            renderizadores.push(
-                <div key="pericia_bonus" className="sub-section" style={{ marginTop: 10 }}>
-                    {Array.from({ length: qtd }).map((_, i) => {
-                        const chavePericia = `pericia_bonus_${i}`;
-                        const chavePoder = `poder_tormenta_${i}`;
-                        const chaveModo = `modo_slot_${i}`;
+            for (let i = 0; i < qtd; i++) {
+                const chavePericia = `pericia_bonus_${i}`;
+                const chavePoder = `poder_tormenta_${i}`;
+                const chaveModo = `modo_slot_${i}`;
 
-                        const valorPericia = hab.escolhas_aplicadas?.[chavePericia] || "";
-                        const valorPoder = hab.escolhas_aplicadas?.[chavePoder] || "";
+                const valorPericia = hab.escolhas_aplicadas?.[chavePericia] || '';
+                const valorPoder = hab.escolhas_aplicadas?.[chavePoder] || '';
+                const modoAtual = hab.escolhas_aplicadas?.[chaveModo] || (valorPoder ? 'poder' : 'pericia');
+                const isPowerMode = modoAtual === 'poder';
+                const podeTrocarAgora = slotsComoPoder < maxTrocas || isPowerMode;
 
-                        // Define o modo atual deste slot
-                        const isPowerMode = !!valorPoder || hab.escolhas_aplicadas?.[chaveModo] === 'poder';
+                renderizadores.push(
+                    <div key={i} className="sub-section" style={{ marginTop: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'bold' }}>
+                                {isPowerMode ? `Slot ${i + 1}: Poder da Tormenta` : `Slot ${i + 1}: Perícia (+2)${prefixoRestrito ? ' — ' + prefixoRestrito : ''}`}
+                            </span>
+                            {permiteTroca && (
+                                <button
+                                    className="btn-action"
+                                    style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                                    disabled={!podeTrocarAgora && !isPowerMode}
+                                    onClick={() => updateRacialChoice(hab.nome, chaveModo, isPowerMode ? 'pericia' : 'poder')}
+                                >
+                                    {isPowerMode ? 'Virar Perícia' : 'Virar Poder'}
+                                </button>
+                            )}
+                        </div>
 
-                        // Pode trocar se: O modo já é poder, OU ainda temos slots livres para troca
-                        const canSwitchToPower = isPowerMode || (slotsComoPoder < maxTrocas);
-
-                        // Função para alternar modo
-                        const switchMode = (m: 'pericia' | 'poder') => {
-                            if (m === 'poder' && !canSwitchToPower) return; // Bloqueia
-
-                            // Atualiza o modo
-                            updateRacialChoice(hab.nome, chaveModo, m);
-
-                            // Limpa o valor do outro modo para não ficar lixo no banco
-                            if (m === 'pericia') updateRacialChoice(hab.nome, chavePoder, "");
-                            else updateRacialChoice(hab.nome, chavePericia, "");
-                        };
-
-                        return (
-                            <div key={i} className="sub-section" style={{ marginTop: 8, padding: 8, border: '1px dashed #555', borderRadius: 4, background: 'rgba(0,0,0,0.2)' }}>
-                                {/* LINHA 1: Label e Botões de Troca */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
-                                    <label style={{ fontSize: '0.85rem', color: isPowerMode ? '#ff5252' : '#81c784' }}>
-                                        {isPowerMode ? `Slot ${i + 1}: Poder da Tormenta` : `Slot ${i + 1}: Perícia (+2)${prefixoRestrito ? ' — ' + prefixoRestrito : ''}`}
-                                    </label>
-
-                                    {permiteTroca && (
-                                        <div style={{ display: 'flex', gap: 5 }}>
-                                            <button
-                                                onClick={() => switchMode('pericia')}
-                                                style={{
-                                                    fontSize: '0.7rem',
-                                                    padding: '3px 8px',
-                                                    background: !isPowerMode ? '#00bcd4' : '#333',
-                                                    color: !isPowerMode ? '#000' : '#888',
-                                                    border: '1px solid #444',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                Perícia
-                                            </button>
-                                            <button
-                                                onClick={() => switchMode('poder')}
-                                                disabled={!canSwitchToPower}
-                                                title={!canSwitchToPower ? "Máximo de trocas atingido" : ""}
-                                                style={{
-                                                    fontSize: '0.7rem',
-                                                    padding: '3px 8px',
-                                                    background: isPowerMode ? '#d32f2f' : '#333',
-                                                    color: isPowerMode ? '#fff' : (canSwitchToPower ? '#888' : '#444'),
-                                                    border: '1px solid #444',
-                                                    cursor: canSwitchToPower ? 'pointer' : 'not-allowed',
-                                                    opacity: canSwitchToPower ? 1 : 0.5
-                                                }}
-                                            >
-                                                Poder
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* LINHA 2: Input e Botão Escolher */}
-                                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                    <input
-                                        value={isPowerMode ? valorPoder : valorPericia}
-                                        readOnly
-                                        className="input-dark"
-                                        style={{ flex: 1, borderColor: isPowerMode ? '#d32f2f' : '#444' }}
-                                        placeholder={isPowerMode ? "Selecione Poder..." : "Selecione Perícia..."}
-                                    />
-                                    {isPowerMode ? (
-                                        <button
-                                            className="btn-action"
-                                            style={{ background: '#d32f2f' }}
-                                            onClick={() => abrirSeletor(
-                                                'poder',
-                                                'Escolha: Poder da Tormenta',
-                                                getListaPoderesTormenta(),
-                                                undefined,
-                                                (v) => updateRacialChoice(hab.nome, chavePoder, v),
-                                                getBlacklistGlobal(valorPoder)
-                                            )}
-                                        >
-                                            Escolher
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="btn-action"
-                                            onClick={() => abrirSeletor(
-                                                'pericia',
-                                                'Escolha: Perícia (+2)',
-                                                (listaOficios.length ? listaOficios : []),
-                                                undefined,
-                                                (v) => updateRacialChoice(hab.nome, chavePericia, v),
-                                                getBlacklistGlobal(valorPericia)
-                                            )}
-                                        >
-                                            Escolher
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            );
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                            <input type="text" readOnly value={getNomeHabilidade(isPowerMode ? valorPoder : valorPericia) || (isPowerMode ? valorPoder : valorPericia)} placeholder="Selecione..." style={{ flex: 1 }} />
+                            <button
+                                className="btn-action"
+                                onClick={() => abrirSeletor(
+                                    isPowerMode ? 'poder' : 'pericia',
+                                    isPowerMode ? 'Escolha: Poder da Tormenta' : 'Escolha: Perícia (+2)',
+                                    isPowerMode ? [] : (prefixoRestrito ? listaPericias.filter(pp => pp.startsWith(prefixoRestrito)) : listaPericias),
+                                    undefined,
+                                    (v) => updateRacialChoice(hab.nome, isPowerMode ? chavePoder : chavePericia, v),
+                                    getBlacklistGlobal(isPowerMode ? valorPoder : valorPericia)
+                                )}
+                            >
+                                Escolher
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
         }
     }
-
     // --- C. OSTEON (Memória Póstuma) ---
     if (efeitos.pericia_ou_poder_ou_raca_escolha) {
         const keyStore = 'memoria_postuma';
@@ -294,7 +219,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                 </div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder={`Selecione ${modoEscolha}...`} />
-                    {modoEscolha === 'pericia' && <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, [], undefined, (v) => updateRacialChoice(hab.nome, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
+                    {modoEscolha === 'pericia' && <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, listaPericias, undefined, (v) => updateRacialChoice(hab.nome, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
                     {modoEscolha === 'poder' && <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', `Escolha: Poder`, listaGerais, undefined, (v) => updateRacialChoice(hab.nome, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
                     {modoEscolha === 'racial' && <button className="btn-action" style={{ background: '#ff9800', color: 'black' }} onClick={() => abrirSeletor('poder', `Escolha: Racial`, listaRaciais, undefined, (v) => updateRacialChoice(hab.nome, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
                 </div>
@@ -328,7 +253,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                     {isPower ? (
                         <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', 'Escolha: Poder Geral', getPoderesGeraisValidos(), undefined, (v) => updateRacialChoice(hab.nome, 'poder_geral', v), getBlacklistGlobal(valorAtual))}>Escolher</button>
                     ) : (
-                        <button className="btn-action" onClick={() => abrirSeletor('pericia', 'Escolha: Perícia', [], undefined, (v) => updateRacialChoice(hab.nome, 'pericia_2', v), getBlacklistGlobal(valorAtual))}>Escolher</button>
+                        <button className="btn-action" onClick={() => abrirSeletor('pericia', 'Escolha: Perícia', listaPericias, undefined, (v) => updateRacialChoice(hab.nome, 'pericia_2', v), getBlacklistGlobal(valorAtual))}>Escolher</button>
                     )}
                 </div>
             </div>
@@ -337,7 +262,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
 
     // --- E. PERÍCIA SIMPLES ---
     if (efeitos.pericia_escolha) {
-        const qtd = efeitos.pericia_escolha;
+        const qtd = parseInt(String(defOriginal?.efeitos?.pericia_escolha ?? efeitos.pericia_escolha), 10) || 1;
         const chaveBase = hab.nome === "Versátil" ? "pericia_1" : "pericia_escolha";
 
         renderizadores.push(
@@ -349,7 +274,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                         <div key={i} style={{ marginBottom: 5, display: 'flex', gap: 10, alignItems: 'center' }}>
                             <label style={{ fontSize: '0.85rem', color: '#81c784', width: 70 }}>Perícia:</label>
                             <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
-                            <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, [], undefined, (v) => updateRacialChoice(hab.nome, chaveBase, v), getBlacklistGlobal(valorAtual))}>Escolher</button>
+                            <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, listaPericias, undefined, (v) => updateRacialChoice(hab.nome, chaveBase, v), getBlacklistGlobal(valorAtual))}>Escolher</button>
                         </div>
                     )
                 })}
@@ -484,7 +409,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                     if (key.endsWith('_escolha') && !key.includes('magia') && !key.includes('imunidade') && key !== 'bonus_pericia_escolha') {
                         const valRaw = hab.escolhas_aplicadas?.[key];
                     const val = (typeof valRaw === 'string' || typeof valRaw === 'number') ? valRaw : '';
-                        return <div key={key} style={{ marginTop: 8 }}><button onClick={() => abrirSeletor('pericia', `Escolha`, [], undefined, (v) => updateRacialChoice(hab.nome, key, v), getBlacklistGlobal(val))} className="btn-action">Escolher</button> {val}</div>
+                        return <div key={key} style={{ marginTop: 8 }}><button onClick={() => abrirSeletor('pericia', `Escolha`, [], undefined, (v) => updateRacialChoice(hab.nome, key, v), getBlacklistGlobal(String(val)))} className="btn-action">Escolher</button> {val}</div>
                     }
                     return null;
                 })}

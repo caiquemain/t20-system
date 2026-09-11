@@ -304,8 +304,7 @@ function Ficha() {
                 pmAtual={ficha.status.pm.atual}
                 pmMaximo={ficha.status.pm.maximo}
                 circuloMaximo={ficha.combate?.circulo_maximo ?? 0}
-                limiteMagias={ficha.combate?.limite_magias ?? null}
-            />
+                            />
 
             <FullGrimorioModal
                 isOpen={showFullGrimorio}
@@ -471,9 +470,9 @@ function Ficha() {
                             <p style={{ color: '#777', textAlign: 'center' }}>Carga: {ficha.inventario.carga_total} / {ficha.inventario.carga_maxima}</p>
                         </div>
                         <AttackList
-                            ataques={ficha.combate.ataques || []}
-                            fluxoDeMana={ficha.combate.fluxo_de_mana}
-                            focoVital={ficha.combate.foco_vital}
+                            ataques={(ficha.combate.ataques || []).map((a: any) => ({ ...a, teste: a.teste || '—' }))}
+                            fluxoDeMana={Boolean(ficha.combate.fluxo_de_mana)}
+                            focoVital={Boolean(ficha.combate.foco_vital)}
                         />
                         <div className="section-card" style={{ marginTop: '25px' }}>
                             <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

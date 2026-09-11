@@ -328,7 +328,7 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você recebe proficiência em armas de fogo e +2 em Ofício (um qualquer, a sua escolha).",
         "fonte": "T20 JdA",
-        "efeitos": {"proficiencia_adicional": ["armas de fogo"], "bonus_pericia_escolha": {"Ofício": 2}}
+        "efeitos": {"proficiencia_adicional": ["armas de fogo"], "pericia_bonus_escolha": {"Ofício": 2}}
     },
 
     # --- MEDUSA ---

@@ -27,9 +27,8 @@ const FICHA_VAZIA: Personagem = {
         deslocamento: 9,
         proficiencias: [],
         imunidades: [],
-        sentidos: []
-    },
-    pericias: {}, proficiencias: [], combate: { ataques: [], magias: [], cd_magias: 0, bba: 0, iniciativa: 0 },
+        sentidos: [], vulnerabilidades: [] },
+    pericias: {}, proficiencias: [], combate: { ataques: [], magias: [], cd_magias: 0, bba: 0, iniciativa: 0, circulo_maximo: 0, limite_magias: 0 },
     habilidades: [],
     inventario: { dinheiro: { tl: 0, tp: 0, to: 0 }, equipamentos: [], carga_total: 0, carga_maxima: 0 }
 };
@@ -232,6 +231,7 @@ export const useFicha = (id: string | undefined) => {
         setShowHabilidadesPanel(true);
     };
 
+    void 0; // mantém helper para uso futuro
     const sanitizarEscolhasAplicadas = (habilidade: any) => {
         const efeitos = habilidade.efeitos || {};
         const escolhasOriginais = habilidade.escolhas_aplicadas || {};
@@ -289,6 +289,7 @@ export const useFicha = (id: string | undefined) => {
             const ehGatilho = (k in gatilhos) || k.endsWith('_escolha');
             if (ehGatilho) delete escolhas[k];
         });
+            void sanitizarEscolhasAplicadas(h);
             if (gatilhos.escolha_subclasse) escolhas.subclasse = subclasseEmEdicao;
             return { ...h, escolhas_aplicadas: escolhas };
         });
@@ -322,6 +323,21 @@ export const useFicha = (id: string | undefined) => {
                 habilidadesFinais.push({ nome: dPoder.nome, tipo: "Poder Concedido", descricao: dPoder.descricao, fonte: `Devoção: ${novaFicha.cabecalho.deus}` });
             }
         }
+        // 🧹 Troca de escolha racial de perícia remove o treino da antiga
+        const CHAVES_PERICIA_ESCOLHA = ["pericia_escolha", "pericia_1", "pericia_2", "memoria_postuma", "pericia_bonus_0", "pericia_bonus_1"];
+        const periciasPayload = { ...(novaFicha.pericias || {}) };
+        habilidadesFinais.forEach((hNova: any) => {
+            const hAntiga = (ficha.habilidades || []).find((h: any) => h.nome === hNova.nome);
+            if (!hAntiga) return;
+            CHAVES_PERICIA_ESCOLHA.forEach((k) => {
+                const vAntigo = hAntiga.escolhas_aplicadas?.[k];
+                const vNovo = hNova.escolhas_aplicadas?.[k];
+                if (typeof vAntigo === "string" && vAntigo && vAntigo !== vNovo && periciasPayload[vAntigo]) {
+                    periciasPayload[vAntigo] = { ...periciasPayload[vAntigo], treino: 0 };
+                }
+            });
+        });
+        novaFicha.pericias = periciasPayload;
         console.log('[SAVE][RACIAIS] escolhas pós-cleanup:', habilidadesFinais
             .filter((h: any) => h.tipo === 'Racial')
             .map((h: any) => ({ nome: h.nome, escolhas: h.escolhas_aplicadas })));

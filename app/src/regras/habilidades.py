@@ -140,6 +140,8 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
                     display_keys = {
                         "resistencia_rd_escolha": "ascendencia_elemental",
                         "imunidade_dano_escolha": "espirito_elemental",
+                        "pericia_bonus_0": "oficio_vanguardista",
+                        "pericia_escolha": "pericia_treinada",
                     }
                     for src, dst in display_keys.items():
                         v = escolhas_finais.get(src)

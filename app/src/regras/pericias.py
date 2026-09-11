@@ -67,6 +67,8 @@ def inicializar_pericias(ficha: Personagem):
         efeitos = (hab.efeitos or {}).copy()
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
+            if "pericia_bonus_escolha" not in efeitos and "bonus_pericia_escolha" in efeitos:
+                efeitos["pericia_bonus_escolha"] = efeitos["bonus_pericia_escolha"]
 
         if "penalidade_armadura" in efeitos:
             penalidade_armadura += int(efeitos["penalidade_armadura"])
@@ -224,6 +226,9 @@ def inicializar_pericias(ficha: Personagem):
 
         attr_padrao = str(dados_base.get("atributo", "int"))
         possiveis = [attr_padrao]
+        # Ofícios podem usar qualquer atributo-chave (cada ofício é uma atividade)
+        if nome_pericia.startswith("Ofício"):
+            possiveis = ['for', 'des', 'con', 'int', 'sab', 'car']  # Ofício (atividade)
         if nome_pericia in opcoes_atributos_extras:
             for opt in opcoes_atributos_extras[nome_pericia]:
                 if opt not in possiveis:
