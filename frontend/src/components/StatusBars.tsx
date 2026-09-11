@@ -17,7 +17,7 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
     isFlying,
     isAquatic
 }) => {
-    const { pv, pm, defesa, deslocamento, rd, proficiencias, imunidades, sentidos } = ficha.status;
+    const { pv, pm, defesa, deslocamento, rd, proficiencias, imunidades, sentidos, vulnerabilidades} = ficha.status;
     const statusAny = ficha.status as any;
 
     let iconeDeslocamento = '🦵';
@@ -137,7 +137,7 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
             )}
 
             {/* RD, IMUNIDADES & SENTIDOS */}
-            {((rd && rd.length > 0) || elementoGolem || (imunidades && imunidades.length > 0) || (sentidos && sentidos.length > 0)) && (
+            {((rd && rd.length > 0) || elementoGolem || (imunidades && imunidades.length > 0) || (sentidos && sentidos.length > 0) || (vulnerabilidades && vulnerabilidades.length > 0)) && (
                 <div className="rd-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #333' }}>
                     <span className="status-section-label">Resistências & Sentidos</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>

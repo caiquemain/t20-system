@@ -355,6 +355,19 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
         if efeitos.get("faro"):
             sentidos.add("Faro")
 
+    # ── VULNERABILIDADES (Kliren/Trog) ──
+    vulnerabilidades = []
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+        vuln = efeitos.get("vulnerabilidade_dado")
+        if vuln and isinstance(vuln, dict):
+            tipo = vuln.get("tipo", "")
+            valor = vuln.get("valor", 1)
+            vulnerabilidades.append(f"{tipo.capitalize()} +{valor}/dado")
+
     ficha.status.proficiencias = sorted(list(proficiencias))
     ficha.status.imunidades = sorted(list(imunidades))
     ficha.status.sentidos = sorted(list(sentidos))
+    ficha.status.vulnerabilidades = sorted(list(set(vulnerabilidades)))

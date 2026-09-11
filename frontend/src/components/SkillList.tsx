@@ -98,12 +98,15 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
             if (!podeComprar) return;
 
+            // PRESERVA campos calculados pelo backend (atributo_selecionado, bonus_automatico, etc)
+            const anterior = novaLista[pericia] || {};
             novaLista[pericia] = {
+                ...anterior,
                 treino: 1,
                 bonus_nivel: Math.floor((ficha.cabecalho.nivel_total || 1) / 2),
-                atributo_valor: 0,
-                outros: 0,
-                total: 0
+                atributo_valor: anterior.atributo_valor || 0,
+                outros: anterior.outros || 0,
+                total: anterior.total || 0
             };
         }
         updateFicha({ pericias: novaLista });

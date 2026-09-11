@@ -88,10 +88,18 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
         return Array.from(blocked);
     };
 
-    const updateRacialChoice = (index: number, key: string, value: any) => {
+    const updateRacialChoice = (ref: number | string, key: string, value: any) => {
         const novos = [...habilidadesEmEdicao];
-        if (!novos[index].escolhas_aplicadas) novos[index].escolhas_aplicadas = {};
-        novos[index].escolhas_aplicadas = { ...novos[index].escolhas_aplicadas, [key]: value };
+        let idx = typeof ref === 'number' ? ref : novos.findIndex(h => h.nome === ref);
+        if (idx === -1 || !novos[idx]) {
+            console.error('[MODAL][RACIAL] alvo não encontrado:', { ref, key, value });
+            return;
+        }
+        console.log('[MODAL][RACIAL] gravando:', { alvo: novos[idx].nome, key, value });
+        novos[idx] = {
+            ...novos[idx],
+            escolhas_aplicadas: { ...(novos[idx].escolhas_aplicadas || {}), [key]: value }
+        };
         setHabilidadesEmEdicao(novos);
     };
 

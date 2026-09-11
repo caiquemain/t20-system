@@ -119,7 +119,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                         <div key={i} style={{ marginBottom: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
                             <label style={{ fontSize: '0.85rem', color: '#ffcc80', width: 70 }}>Ambição:</label>
                             <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Poder ou Origem..." />
-                            <button className="btn-action" onClick={() => abrirSeletor('poder', `Ambição #${i + 1}`, lista, undefined, (v: string) => updateRacialChoice(index, chaveSalva, v), getBlacklistGlobal(valorAtual))}>Escolher</button>
+                            <button className="btn-action" onClick={() => abrirSeletor('poder', `Ambição #${i + 1}`, lista, undefined, (v: string) => updateRacialChoice(hab.nome, chaveSalva, v), getBlacklistGlobal(valorAtual))}>Escolher</button>
                         </div>
                     );
                 })}
@@ -130,11 +130,15 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
     // --- B. BÔNUS EM PERÍCIAS (EX: LEFOU / DEFORMIDADE) - DESIGN VERSÁTIL ---
     if (efeitos.pericia_bonus_escolha) {
         let qtd = 0;
+    let restricaoPrefixo = '';
         if (typeof efeitos.pericia_bonus_escolha === 'number') {
             qtd = efeitos.pericia_bonus_escolha;
-        } else {
-            qtd = parseInt(efeitos.pericia_bonus_escolha);
-        }
+        } else if (typeof efeitos.pericia_bonus_escolha === 'object' && efeitos.pericia_bonus_escolha !== null) {
+        qtd = 1;
+        restricaoPrefixo = Object.keys(efeitos.pericia_bonus_escolha)[0] || '';
+    } else {
+        qtd = parseInt(efeitos.pericia_bonus_escolha);
+    }
 
         if (!isNaN(qtd) && qtd > 0) {
             const permiteTroca = efeitos.troca_poder_tormenta === true;
@@ -170,11 +174,11 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                             if (m === 'poder' && !canSwitchToPower) return; // Bloqueia
 
                             // Atualiza o modo
-                            updateRacialChoice(index, chaveModo, m);
+                            updateRacialChoice(hab.nome, chaveModo, m);
 
                             // Limpa o valor do outro modo para não ficar lixo no banco
-                            if (m === 'pericia') updateRacialChoice(index, chavePoder, "");
-                            else updateRacialChoice(index, chavePericia, "");
+                            if (m === 'pericia') updateRacialChoice(hab.nome, chavePoder, "");
+                            else updateRacialChoice(hab.nome, chavePericia, "");
                         };
 
                         return (
@@ -182,7 +186,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                                 {/* LINHA 1: Label e Botões de Troca */}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
                                     <label style={{ fontSize: '0.85rem', color: isPowerMode ? '#ff5252' : '#81c784' }}>
-                                        {isPowerMode ? `Slot ${i + 1}: Poder da Tormenta` : `Slot ${i + 1}: Perícia (+2)`}
+                                        {isPowerMode ? `Slot ${i + 1}: Poder da Tormenta` : `Slot ${i + 1}: Perícia (+2)${prefixoRestrito ? ' — ' + prefixoRestrito : ''}`}
                                     </label>
 
                                     {permiteTroca && (
@@ -238,7 +242,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                                                 'Escolha: Poder da Tormenta',
                                                 getListaPoderesTormenta(),
                                                 undefined,
-                                                (v) => updateRacialChoice(index, chavePoder, v),
+                                                (v) => updateRacialChoice(hab.nome, chavePoder, v),
                                                 getBlacklistGlobal(valorPoder)
                                             )}
                                         >
@@ -250,9 +254,9 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                                             onClick={() => abrirSeletor(
                                                 'pericia',
                                                 'Escolha: Perícia (+2)',
-                                                [],
+                                                (listaOficios.length ? listaOficios : []),
                                                 undefined,
-                                                (v) => updateRacialChoice(index, chavePericia, v),
+                                                (v) => updateRacialChoice(hab.nome, chavePericia, v),
                                                 getBlacklistGlobal(valorPericia)
                                             )}
                                         >
@@ -286,9 +290,9 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                 </div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder={`Selecione ${modoEscolha}...`} />
-                    {modoEscolha === 'pericia' && <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, [], undefined, (v) => updateRacialChoice(index, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
-                    {modoEscolha === 'poder' && <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', `Escolha: Poder`, listaGerais, undefined, (v) => updateRacialChoice(index, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
-                    {modoEscolha === 'racial' && <button className="btn-action" style={{ background: '#ff9800', color: 'black' }} onClick={() => abrirSeletor('poder', `Escolha: Racial`, listaRaciais, undefined, (v) => updateRacialChoice(index, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
+                    {modoEscolha === 'pericia' && <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, [], undefined, (v) => updateRacialChoice(hab.nome, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
+                    {modoEscolha === 'poder' && <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', `Escolha: Poder`, listaGerais, undefined, (v) => updateRacialChoice(hab.nome, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
+                    {modoEscolha === 'racial' && <button className="btn-action" style={{ background: '#ff9800', color: 'black' }} onClick={() => abrirSeletor('poder', `Escolha: Racial`, listaRaciais, undefined, (v) => updateRacialChoice(hab.nome, keyStore, v), getBlacklistGlobal(valorAtual))}>Escolher</button>}
                 </div>
             </div>
         );
@@ -302,8 +306,8 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
 
         const switchMode = (m: 'pericia' | 'poder') => {
             setModoEscolha(m);
-            if (m === 'pericia') updateRacialChoice(index, 'poder_geral', "");
-            else updateRacialChoice(index, 'pericia_2', "");
+            if (m === 'pericia') updateRacialChoice(hab.nome, 'poder_geral', "");
+            else updateRacialChoice(hab.nome, 'pericia_2', "");
         };
 
         renderizadores.push(
@@ -318,9 +322,9 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder={isPower ? "Poder Geral..." : "Perícia..."} />
                     {isPower ? (
-                        <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', 'Escolha: Poder Geral', getPoderesGeraisValidos(), undefined, (v) => updateRacialChoice(index, 'poder_geral', v), getBlacklistGlobal(valorAtual))}>Escolher</button>
+                        <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', 'Escolha: Poder Geral', getPoderesGeraisValidos(), undefined, (v) => updateRacialChoice(hab.nome, 'poder_geral', v), getBlacklistGlobal(valorAtual))}>Escolher</button>
                     ) : (
-                        <button className="btn-action" onClick={() => abrirSeletor('pericia', 'Escolha: Perícia', [], undefined, (v) => updateRacialChoice(index, 'pericia_2', v), getBlacklistGlobal(valorAtual))}>Escolher</button>
+                        <button className="btn-action" onClick={() => abrirSeletor('pericia', 'Escolha: Perícia', [], undefined, (v) => updateRacialChoice(hab.nome, 'pericia_2', v), getBlacklistGlobal(valorAtual))}>Escolher</button>
                     )}
                 </div>
             </div>
@@ -335,12 +339,13 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         renderizadores.push(
             <div key="pericia_simples" className="sub-section" style={{ marginTop: 10 }}>
                 {Array.from({ length: qtd }).map((_, i) => {
-                    const valorAtual = hab.escolhas_aplicadas?.[chaveBase] || "";
+                    const rawE = hab.escolhas_aplicadas?.[chaveBase];
+                const valorAtual = typeof rawE === 'string' ? rawE : "";
                     return (
                         <div key={i} style={{ marginBottom: 5, display: 'flex', gap: 10, alignItems: 'center' }}>
                             <label style={{ fontSize: '0.85rem', color: '#81c784', width: 70 }}>Perícia:</label>
                             <input value={valorAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione..." />
-                            <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, [], undefined, (v) => updateRacialChoice(index, chaveBase, v), getBlacklistGlobal(valorAtual))}>Escolher</button>
+                            <button className="btn-action" onClick={() => abrirSeletor('pericia', `Escolha: Perícia`, [], undefined, (v) => updateRacialChoice(hab.nome, chaveBase, v), getBlacklistGlobal(valorAtual))}>Escolher</button>
                         </div>
                     )
                 })}
@@ -359,7 +364,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                 {Array.from({ length: qtd }).map((_, i) => (
                     <div key={i} className="selector-row" style={{ marginBottom: 5 }}>
                         <select value={currentSelections[i] || ""} onChange={(e) => {
-                            const newSel = [...currentSelections]; newSel[i] = e.target.value; updateRacialChoice(index, 'atributo_bonus', newSel);
+                            const newSel = [...currentSelections]; newSel[i] = e.target.value; updateRacialChoice(hab.nome, 'atributo_bonus', newSel);
                         }} className="input-dark" style={{ width: '100%' }}>
                             <option value="">Selecione Atributo...</option>
                             {['forca', 'destreza', 'constituicao', 'inteligencia', 'sabedoria', 'carisma'].map(a => <option key={a} value={MapaAttrInv[a]} disabled={currentSelections.includes(MapaAttrInv[a]) && currentSelections[i] !== MapaAttrInv[a]}>{a.toUpperCase()}</option>)}
@@ -390,7 +395,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                 {Array.from({ length: quantidade }).map((_, i) => (
                     <div key={i} style={{ marginBottom: 5, display: 'flex', gap: 10 }}>
                         <input value={hab.escolhas_aplicadas?.[`magia_${i}`] || ""} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Magia..." />
-                        <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', `Magia`, opcoesMagias, undefined, (v: string) => updateRacialChoice(index, `magia_${i}`, v), [])}>Escolher</button>
+                        <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', `Magia`, opcoesMagias, undefined, (v: string) => updateRacialChoice(hab.nome, `magia_${i}`, v), [])}>Escolher</button>
                     </div>
                 ))}
             </div>
@@ -428,7 +433,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                                 while (newSel.length < qtd) newSel.push("");
                                 newSel[i] = val;
                                 const valorFinal = qtd === 1 ? newSel[0] : newSel.filter(x => x);
-                                updateRacialChoice(index, chaveLista, valorFinal);
+                                updateRacialChoice(hab.nome, chaveLista, valorFinal);
                             }, qtd > 1 ? escolhasAtuais : [])} className="btn-action">Escolher</button>
                         </div>
                     );
@@ -442,9 +447,10 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         renderizadores.push(
             <div key="fallback" className="sub-section" style={{ marginTop: 10 }}>
                 {Object.entries(hab.efeitos).map(([key, _]) => {
-                    if (key.endsWith('_escolha') && !key.includes('magia') && !key.includes('imunidade')) {
-                        const val = hab.escolhas_aplicadas?.[key] || '';
-                        return <div key={key} style={{ marginTop: 8 }}><button onClick={() => abrirSeletor('pericia', `Escolha`, [], undefined, (v) => updateRacialChoice(index, key, v), getBlacklistGlobal(val))} className="btn-action">Escolher</button> {val}</div>
+                    if (key.endsWith('_escolha') && !key.includes('magia') && !key.includes('imunidade') && key !== 'bonus_pericia_escolha') {
+                        const valRaw = hab.escolhas_aplicadas?.[key];
+                    const val = (typeof valRaw === 'string' || typeof valRaw === 'number') ? valRaw : '';
+                        return <div key={key} style={{ marginTop: 8 }}><button onClick={() => abrirSeletor('pericia', `Escolha`, [], undefined, (v) => updateRacialChoice(hab.nome, key, v), getBlacklistGlobal(val))} className="btn-action">Escolher</button> {val}</div>
                     }
                     return null;
                 })}

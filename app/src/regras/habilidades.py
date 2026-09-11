@@ -11,6 +11,35 @@ from ..dados_magias import DADOS_MAGIAS
 
 logger = logging.getLogger("RegrasT20")
 
+def _sanitizar_escolhas_aplicadas(efeitos: Dict[str, Any], escolhas: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove gatilhos vazados de efeitos dentro de escolhas_aplicadas.
+
+    Exemplo inválido:
+      efeitos = {"pericia_escolha": 1}
+      escolhas_aplicadas = {"pericia_escolha": 1}
+
+    Exemplo válido:
+      escolhas_aplicadas = {"pericia_escolha": "Diplomacia"}
+    """
+    limpas: Dict[str, Any] = {}
+    for k, v in (escolhas or {}).items():
+        # Remove valor idêntico ao gatilho do efeito.
+        if k in efeitos and v == efeitos.get(k):
+            continue
+
+        # *_escolha só é escolha real se for string não vazia.
+        if k.endswith("_escolha"):
+            if isinstance(v, str) and v.strip():
+                limpas[k] = v
+            continue
+
+        # Preserva escolhas reais auxiliares: pericia_bonus_0, poder_ambicao_0 etc.
+        if v is not None and v != "":
+            limpas[k] = v
+
+    return limpas
+
+
 # Lista de IDs ou partes de nomes que identificam sub-habilidades do Duende/Sátiro
 PALAVRAS_CHAVE_SUB_RACIAIS = [
     "Natureza", "Tamanho", "Afinidade", "Encantar", "Enfeitiçar",
@@ -97,7 +126,7 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
                         tipo="Racial",
                         descricao=dados_hab.get("descricao", ""),
                         fonte=raca_nome,
-                        escolhas_aplicadas=escolhas_finais,
+                        escolhas_aplicadas=_sanitizar_escolhas_aplicadas(dados_hab.get("efeitos", {}), escolhas_finais),
                         efeitos=dados_hab.get("efeitos", {})
                     ))
                     nomes_existentes.add(nome_real)
