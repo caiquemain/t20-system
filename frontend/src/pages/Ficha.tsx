@@ -363,7 +363,20 @@ function Ficha() {
                     />
 
                     <div className="header-sub">
-                        <select className="select-header" value={ficha.cabecalho.raca} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [] }, true)}>
+                        <select className="select-header" value={ficha.cabecalho.raca} onChange={e => {
+                                const periciasLimpas = { ...(ficha.pericias || {}) };
+                                const chavesPericia = ['pericia_escolha', 'pericia_1', 'pericia_2', 'pericia_bonus_0', 'pericia_bonus_1', 'memoria_postuma'];
+                                (ficha.habilidades || []).forEach((h: any) => {
+                                    if (!(h.tipo || '').includes('Racial')) return;
+                                    chavesPericia.forEach(k => {
+                                        const v = h.escolhas_aplicadas?.[k];
+                                        if (typeof v === 'string' && v && periciasLimpas[v]) {
+                                            periciasLimpas[v] = { ...periciasLimpas[v], treino: 0 };
+                                        }
+                                    });
+                                });
+                                updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [], pericias: periciasLimpas }, true);
+                            }}>
                             {listaRacas.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <span>•</span>

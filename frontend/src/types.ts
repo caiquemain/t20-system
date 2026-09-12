@@ -173,7 +173,11 @@ export interface Combate {
     cd_magias: number;
     bba: number;
     iniciativa: number;
-    circulo_maximo: number;
+                    bonus_dano_dado_tipo?: Record<string, number>;
+reducao_pm_tipo?: Record<string, number>;
+custo_arcano_metade?: boolean;
+magias_calc?: any;
+circulo_maximo: number;
     limite_magias: number;
     fluxo_de_mana?: number;
     foco_vital?: number;

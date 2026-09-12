@@ -16,7 +16,7 @@ interface GrimorioModalProps {
 
 export const GrimorioModal: React.FC<GrimorioModalProps> = ({
     isOpen, onClose, onAddMagia,
-    dadosMagias, magiasConhecidas, pmAtual, pmMaximo, circuloMaximo, limiteMagias
+    dadosMagias, limiteMagias, magiasConhecidas, pmAtual, pmMaximo, circuloMaximo
 }) => {
     const [busca, setBusca] = useState('');
     const [filtroCirculo, setFiltroCirculo] = useState<number | 'todos'>('todos');
@@ -295,7 +295,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                         <button className="btn-cancel" onClick={onClose} style={{ marginRight: '10px' }}>Cancelar</button>
                         <button
                             className="btn-save"
-                            disabled={botaoBloqueado}
+                            disabled={!!botaoBloqueado}
                             onClick={handleAprender}
                             style={{
                                 opacity: botaoBloqueado ? 0.5 : 1,

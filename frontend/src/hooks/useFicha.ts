@@ -232,7 +232,7 @@ export const useFicha = (id: string | undefined) => {
     };
 
     void 0; // mantém helper para uso futuro
-    const sanitizarEscolhasAplicadas = (habilidade: any) => {
+    const _sanitizarEscolhasAplicadas = (habilidade: any) => {
         const efeitos = habilidade.efeitos || {};
         const escolhasOriginais = habilidade.escolhas_aplicadas || {};
         const limpas: Record<string, any> = {};

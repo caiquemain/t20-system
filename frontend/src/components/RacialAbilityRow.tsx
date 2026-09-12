@@ -408,7 +408,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                 {Object.entries(hab.efeitos).map(([key, _]) => {
                     if (key.endsWith('_escolha') && !key.includes('magia') && !key.includes('imunidade') && key !== 'bonus_pericia_escolha') {
                         const valRaw = hab.escolhas_aplicadas?.[key];
-                    const val = (typeof valRaw === 'string' || typeof valRaw === 'number') ? valRaw : '';
+                    const val = (typeof valRaw === 'string' || typeof valRaw === 'number') ? String(valRaw) : '';
                         return <div key={key} style={{ marginTop: 8 }}><button onClick={() => abrirSeletor('pericia', `Escolha`, [], undefined, (v) => updateRacialChoice(hab.nome, key, v), getBlacklistGlobal(String(val)))} className="btn-action">Escolher</button> {val}</div>
                     }
                     return null;
