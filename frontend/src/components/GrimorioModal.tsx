@@ -10,18 +10,18 @@ interface GrimorioModalProps {
     magiasConhecidas: Magia[];
     pmAtual: number;
     pmMaximo: number;
-    circuloMaximo: number; // 🆕 Vem calculado do backend (T20)
+    circuloMaximo: number;      // 🔒 trava de círculo (backend)
+    limiteMagias: number | null; // 📖 trava de quantidade (backend)
 }
 
 export const GrimorioModal: React.FC<GrimorioModalProps> = ({
     isOpen, onClose, onAddMagia,
-    dadosMagias, magiasConhecidas, pmAtual, pmMaximo, circuloMaximo
+    dadosMagias, magiasConhecidas, pmAtual, pmMaximo, circuloMaximo, limiteMagias
 }) => {
     const [busca, setBusca] = useState('');
     const [filtroCirculo, setFiltroCirculo] = useState<number | 'todos'>('todos');
     const [filtroTipo, setFiltroTipo] = useState<string>('todos');
-    const [filtroAcessiveis, setFiltroAcessiveis] = useState<boolean>(false); // 🆕
-
+    const [filtroAcessiveis, setFiltroAcessiveis] = useState<boolean>(false);
     const [magiaSelecionada, setMagiaSelecionada] = useState<Magia | null>(null);
 
     useEffect(() => {
@@ -38,6 +38,14 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
 
     const circuloAtual = typeof circuloMaximo === 'number' ? circuloMaximo : 0;
 
+    // 📖 Magias escolhidas manualmente (as de habilidades não consomem slot)
+    const magiasManuais = magiasConhecidas.filter(
+        m => !String((m as any).fonte || '').startsWith('Habilidade:')
+    );
+    const limiteAtingido =
+        limiteMagias !== null && limiteMagias !== undefined &&
+        magiasManuais.length >= limiteMagias;
+
     const todasMagias = Object.values(dadosMagias);
     const magiasFiltradas = todasMagias.filter(m => {
         const matchNome = m.nome.toLowerCase().includes(busca.toLowerCase());
@@ -51,16 +59,21 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
 
     const handleAprender = () => {
         if (!magiaSelecionada) return;
-        // Trava de segurança extra no frontend (o backend também valida)
-        if ((magiaSelecionada.circulo || 1) > circuloAtual) {
-            alert(`🔒 ${magiaSelecionada.nome} é uma magia de ${magiaSelecionada.circulo}º círculo.\nSeu círculo máximo atual é ${circuloAtual}º.`);
+        const circulo = magiaSelecionada.circulo || 1;
+        if (circulo > circuloAtual) {
+            alert(`🔒 ${magiaSelecionada.nome} é uma magia de ${circulo}º círculo.\nSeu círculo máximo atual é ${circuloAtual}º (definido pela sua classe e nível).`);
+            return;
+        }
+        if (limiteAtingido) {
+            alert(`📖 Você já conhece o máximo de magias para o seu nível (${limiteMagias}).\nNovas magias vêm com subida de nível ou poderes como Conhecimento Mágico.`);
             return;
         }
         onAddMagia(magiaSelecionada);
         setMagiaSelecionada(null);
     };
 
-    const magiaEhIlegal = magiaSelecionada && (magiaSelecionada.circulo || 1) > circuloAtual;
+    const magiaEhIlegal = !!magiaSelecionada && (magiaSelecionada.circulo || 1) > circuloAtual;
+    const botaoBloqueado = !magiaSelecionada || magiaEhIlegal || limiteAtingido;
     const selectedTypeColor = getTypeColor(magiaSelecionada?.tipo);
     const selectedSchoolColor = getSchoolColor(magiaSelecionada?.escola);
 
@@ -83,7 +96,6 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                         style={{ flex: 1.5, minWidth: 180 }}
                         autoFocus
                     />
-
                     <select
                         className="input-dark"
                         value={filtroTipo}
@@ -95,12 +107,11 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                         <option value="Divina">Divina</option>
                         <option value="Universal">Universal</option>
                     </select>
-
                     <select
                         className="input-dark"
                         value={filtroCirculo}
                         onChange={e => setFiltroCirculo(e.target.value === 'todos' ? 'todos' : Number(e.target.value))}
-                        style={{ width: '130px' }}
+                        style={{ width: '140px' }}
                     >
                         <option value="todos">Todos Círculos</option>
                         {[1, 2, 3, 4, 5].map(c => (
@@ -109,8 +120,6 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                             </option>
                         ))}
                     </select>
-
-                    {/* 🆕 TOGGLE: Mostrar apenas acessíveis */}
                     <label
                         style={{
                             display: 'flex', alignItems: 'center', gap: 6,
@@ -143,7 +152,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                 const isSelected = magiaSelecionada?.nome === m.nome;
                                 const schoolColor = getSchoolColor(m.escola);
                                 const circulo = m.circulo || 1;
-                                const travada = circulo > circuloAtual;
+                                const travadaCirculo = circulo > circuloAtual;
 
                                 return (
                                     <div
@@ -154,14 +163,14 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                             borderBottom: '1px solid #252525',
                                             cursor: 'pointer',
                                             background: isSelected ? '#2e2e2e' : 'transparent',
-                                            opacity: travada ? 0.5 : 1,
+                                            opacity: travadaCirculo ? 0.5 : 1,
                                             borderLeft: isSelected ? `4px solid ${schoolColor}` : '4px solid transparent',
                                             transition: 'background 0.1s, opacity 0.1s'
                                         }}
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontWeight: 'bold', color: isSelected ? (travada ? '#888' : '#fff') : (travada ? '#777' : '#ccc') }}>
-                                                {travada && '🔒 '}{m.nome}
+                                            <span style={{ fontWeight: 'bold', color: isSelected ? (travadaCirculo ? '#888' : '#fff') : (travadaCirculo ? '#777' : '#ccc') }}>
+                                                {travadaCirculo && '🔒 '}{m.nome}
                                             </span>
                                             <span style={{ fontSize: '0.75rem', color: getCircleColor(m.circulo), fontWeight: 'bold' }}>{m.circulo}º</span>
                                         </div>
@@ -169,7 +178,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                             <div style={{ fontSize: '0.75rem', color: schoolColor, textTransform: 'uppercase' }}>
                                                 {m.escola}
                                             </div>
-                                            {travada && (
+                                            {travadaCirculo && (
                                                 <span style={{
                                                     fontSize: '0.65rem', color: '#ff5252',
                                                     background: 'rgba(255, 82, 82, 0.1)',
@@ -190,7 +199,6 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                     <div style={{ flex: 1.6, padding: '25px', overflowY: 'auto', background: '#1a1a1a' }}>
                         {magiaSelecionada ? (
                             <div>
-                                {/* 🆕 Aviso de magia acima do círculo */}
                                 {magiaEhIlegal && (
                                     <div style={{
                                         background: 'rgba(255, 82, 82, 0.1)',
@@ -206,7 +214,26 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                             </strong>
                                             <span style={{ fontSize: '0.85rem', color: '#aaa' }}>
                                                 Seu círculo máximo atual é <strong style={{ color: '#ffd700' }}>{circuloAtual}º</strong>.
-                                                Suba de nível para desbloquear magias mais poderosas.
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {limiteAtingido && (
+                                    <div style={{
+                                        background: 'rgba(255, 152, 0, 0.1)',
+                                        border: '1px solid rgba(255, 152, 0, 0.4)',
+                                        borderRadius: 8, padding: '12px 16px',
+                                        marginBottom: 16, color: '#ffcc80',
+                                        display: 'flex', alignItems: 'center', gap: 10
+                                    }}>
+                                        <span style={{ fontSize: '1.5rem' }}>📖</span>
+                                        <div>
+                                            <strong style={{ display: 'block', color: '#ff9800' }}>
+                                                Limite de magias conhecidas atingido ({limiteMagias})
+                                            </strong>
+                                            <span style={{ fontSize: '0.85rem', color: '#aaa' }}>
+                                                Você aprende novas magias subindo de nível ou com poderes como Conhecimento Mágico.
                                             </span>
                                         </div>
                                     </div>
@@ -261,23 +288,25 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                 <div className="modal-footer" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.9rem', color: '#888' }}>
                         PM: <strong style={{ color: '#ce93d8' }}>{pmAtual}</strong> / {pmMaximo}
-                        &nbsp;&nbsp;•&nbsp;&nbsp;
-                        🔮 Círculo máx: <strong style={{ color: '#ffd700' }}>{circuloAtual}º</strong>
+                        &nbsp;•&nbsp; 🔮 Círculo máx: <strong style={{ color: '#ffd700' }}>{circuloAtual}º</strong>
+                        &nbsp;•&nbsp; 📖 Magias: <strong style={{ color: limiteAtingido ? '#ff5252' : '#8bc34a' }}>{magiasManuais.length}</strong> / {limiteMagias ?? '∞'}
                     </span>
                     <div>
                         <button className="btn-cancel" onClick={onClose} style={{ marginRight: '10px' }}>Cancelar</button>
                         <button
                             className="btn-save"
-                            disabled={Boolean(!magiaSelecionada || magiaEhIlegal)}
+                            disabled={botaoBloqueado}
                             onClick={handleAprender}
                             style={{
-                                opacity: (!magiaSelecionada || magiaEhIlegal) ? 0.5 : 1,
-                                background: (!magiaSelecionada || magiaEhIlegal) ? '#333' : (magiaEhIlegal ? '#555' : '#4caf50'),
-                                color: (!magiaSelecionada || magiaEhIlegal) ? '#888' : 'white',
-                                cursor: (!magiaSelecionada || magiaEhIlegal) ? 'not-allowed' : 'pointer'
+                                opacity: botaoBloqueado ? 0.5 : 1,
+                                background: botaoBloqueado ? '#333' : '#4caf50',
+                                color: botaoBloqueado ? '#888' : 'white',
+                                cursor: botaoBloqueado ? 'not-allowed' : 'pointer'
                             }}
                         >
-                            {magiaEhIlegal ? '🔒 Círculo Insuficiente' : '+ Adicionar ao Grimório'}
+                            {limiteAtingido
+                                ? '📖 Limite de magias atingido'
+                                : (magiaEhIlegal ? '🔒 Círculo Insuficiente' : '+ Adicionar ao Grimório')}
                         </button>
                     </div>
                 </div>

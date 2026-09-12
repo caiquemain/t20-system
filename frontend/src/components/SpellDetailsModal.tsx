@@ -1,14 +1,15 @@
 import React from 'react';
 import type { Magia } from '../types';
-import { getSchoolColor, getCircleColor, getTypeColor } from '../utils/magicUtils'; // <--- IMPORT
+import { getSchoolColor, getCircleColor, getTypeColor, calcularCustoMagiaView } from '../utils/magicUtils'; // <--- IMPORT
 
 interface SpellDetailsModalProps {
     magia: Magia | null;
     onClose: () => void;
     onRemove: () => void;
+    ficha?: any;
 }
 
-export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onClose, onRemove }) => {
+export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onClose, onRemove, ficha }) => {
     if (!magia) return null;
 
     const typeColor = getTypeColor(magia.tipo);
@@ -49,7 +50,18 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
                             {magia.circulo}º Círculo
                         </span>
 
-                        <span className="badge-pm">{magia.custo_pm} PM</span>
+                        <span className="badge-pm">{calcularCustoMagiaView(magia, ficha).total} PM</span>
+                    </div>
+                    <div style={{ marginTop: '6px', background: '#151515', border: '1px solid #333', borderRadius: '4px', padding: '6px 10px', fontSize: '0.72rem', color: '#aaa' }}>
+                        {calcularCustoMagiaView(magia, ficha).fontes.map((f: any, i: number) => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span>{f.label}</span>
+                                <span style={{ color: f.valor < 0 ? '#81c784' : '#ccc' }}>{f.valor >= 0 ? `+${f.valor}` : f.valor} PM</span>
+                            </div>
+                        ))}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #444', marginTop: '4px', paddingTop: '4px', color: '#ce93d8', fontWeight: 'bold' }}>
+                            <span>Total</span><span>{calcularCustoMagiaView(magia, ficha).total} PM</span>
+                        </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: '#1a1a1a', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #333' }}>
@@ -69,9 +81,15 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
                             <h4 style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '10px' }}>Aprimoramentos</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {magia.aprimoramentos.map((ap, idx) => (
-                                    <div key={idx} style={{ display: 'flex', gap: '10px', background: '#1a1a1a', padding: '8px', borderRadius: '4px', border: '1px solid #2a2a2a' }}>
-                                        <div style={{ color: '#ce93d8', fontWeight: 'bold', fontSize: '0.85rem', whiteSpace: 'nowrap', minWidth: '50px' }}>{ap.custo}</div>
+                                    <div key={idx} style={{ display: 'flex', gap: '10px', background: '#1a1a1a', padding: '8px', borderRadius: '4px', border: '1px solid #2a2a2a', flexWrap: 'wrap' }}>
+                                        <div style={{ color: ap.custo === 'Truque' ? '#80deea' : '#ce93d8', fontWeight: 'bold', fontSize: '0.85rem', whiteSpace: 'nowrap', minWidth: '50px' }}>{ap.custo === 'Truque' ? 'Truque · 0 PM' : ap.custo}</div>
                                         <div style={{ color: '#ccc', fontSize: '0.9rem', lineHeight: '1.4' }}>{ap.descricao}</div>
+                                            {ap.custo === 'Truque' && (
+                                                <div style={{ color: '#80deea', fontSize: '0.7rem', minWidth: '100%' }}>💡 Truque: custo 0 PM — não combina com outros aprimoramentos</div>
+                                            )}
+                                            {/Requer \dº círculo/.test(ap.descricao) && (magia.fonte_origem || '').startsWith('Racial') && (
+                                                <div style={{ color: '#ff8a80', fontSize: '0.7rem', minWidth: '100%' }}>🔒 Pré-requisito de círculo: magias raciais não podem cumpri-lo</div>
+                                            )}
                                     </div>
                                 ))}
                             </div>

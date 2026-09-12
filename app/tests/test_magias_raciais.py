@@ -67,3 +67,24 @@ def test_truque_custa_zero():
     m = Magia(nome="Luz", circulo=1, custo_pm=1)
     calc = calcular_custo_magia(f, m, eh_truque=True)
     assert calc.total == 0
+
+
+def test_reducao_se_conhecida_aplica_quando_magia_ja_existe():
+    from src.regras.magias import sincronizar_magias_raciais
+    from src.regras.custo_magia import calcular_custo_magia
+    f = _ficha()
+    # Magia já no Grimório como racial (Dahllan)
+    f.habilidades = [Habilidade(
+        nome="Amiga das Plantas", tipo="Racial", descricao="",
+        efeitos={"magia_adicional": {"nome": "Controlar Plantas", "atributo": "Sab"},
+                 "reducao_custo_magia": {"nomes": ["Controlar Plantas"], "valor": 1}})]
+    sincronizar_magias_raciais(f)
+    m = next(x for x in f.combate.magias if x.nome == "Controlar Plantas")
+    # Agora aprende de novo via Qareen (reducao_custo_se_conhecida: 1)
+    f.habilidades.append(Habilidade(
+        nome="Tatuagem Mística", tipo="Racial", descricao="",
+        efeitos={"reducao_custo_se_conhecida": 1}))
+    calc = calcular_custo_magia(f, m)
+    assert calc.total == 1  # base 1 − racial 1 − se_conhecida 1 = mínimo 1 PM
+    labels = [fo.fonte for fo in calc.fontes]
+    assert any("reaprendizado" in l for l in labels)

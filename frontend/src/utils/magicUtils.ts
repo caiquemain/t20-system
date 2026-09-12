@@ -40,3 +40,29 @@ export const getTypeColor = (tipo?: string) => {
     if (t.includes('divina')) return '#ffc107'; // Dourado/Amarelo
     return '#ff5252'; // Vermelho (Universal)
 };
+// 🆕 LOTE R5 — Tabela 4-1 + reduções (espelho de app/src/regras/custo_magia.py)
+export const CUSTO_POR_CIRCULO: Record<number, number> = { 1: 1, 2: 3, 3: 6, 4: 10, 5: 15 };
+
+export function calcularCustoMagiaView(magia: any, ficha: any) {
+    const circ = parseInt(String(magia?.circulo), 10) || 1;
+    const base = CUSTO_POR_CIRCULO[circ] ?? 1;
+    const fontes: { label: string; valor: number }[] = [{ label: `Custo do ${circ}º círculo (Tabela 4-1)`, valor: base }];
+    let total = base;
+    for (const hab of ficha?.habilidades || []) {
+        const ef: any = { ...(hab.efeitos || {}), ...(hab.escolhas_aplicadas || {}) };
+        const mult = ef.reducao_custo_magia_global;
+        if (typeof mult === 'number' && mult > 0 && mult < 1) {
+            const antes = total;
+            total = Math.floor(total * mult);
+            fontes.push({ label: `${hab.nome} (×${mult})`, valor: total - antes });
+        }
+        const rc = ef.reducao_custo_magia;
+        if (rc && Array.isArray(rc.nomes) && rc.nomes.includes(magia?.nome)) {
+            const v = parseInt(rc.valor, 10) || 1;
+            total -= v;
+            fontes.push({ label: `${hab.nome} (−${v} PM)`, valor: -v });
+        }
+    }
+    total = Math.max(1, total); // mínimo 1 PM (0 só para Truque)
+    return { total, base, fontes };
+}

@@ -296,6 +296,7 @@ function Ficha() {
             />
 
             <GrimorioModal
+                    ficha={ficha}
                 isOpen={showGrimorio}
                 onClose={() => setShowGrimorio(false)}
                 onAddMagia={handleAprenderMagiaUnica}
@@ -315,7 +316,7 @@ function Ficha() {
                 pmMaximo={ficha.status.pm.maximo}
             />
 
-            <SpellDetailsModal
+            <SpellDetailsModal ficha={ficha}
                 magia={viewSpell}
                 onClose={() => setViewSpell(null)}
                 onRemove={() => { if (viewSpell) { handleRemoverMagia(viewSpell.nome); setViewSpell(null); } }}
