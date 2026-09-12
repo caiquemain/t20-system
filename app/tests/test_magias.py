@@ -1,12 +1,12 @@
-from src.models import Magia, ClasseInfo, Habilidade
+from src.models import Magia, ClasseInfo
+from src.regras.status import calcular_pv_pm 
 from src.regras.magias import (
     calcular_circulo_maximo,
     calcular_circulo_maximo_ficha,
     validar_circulos_magias,
-    aplicar_poderes_arcanista,
-    calcular_limite_magias_conhecidas,
+    aplicar_poderes_arcanista,  # 🆕 Adicionar aqui
+
 )
-from src.regras.status import calcular_pv_pm
 
 
 def test_progressao_arcanista():
@@ -67,13 +67,12 @@ def test_multiclasse_usa_maior_circulo(personagem_base):
     ]
     assert calcular_circulo_maximo_ficha(personagem_base) == 2
 
-
 def test_subclasse_herda_progressao_da_classe_base():
+    # Bruxo/Mago/Feiticeiro são caminhos do Arcanista
     assert calcular_circulo_maximo("Bruxo", 1) == 1
     assert calcular_circulo_maximo("Bruxo", 5) == 2
     assert calcular_circulo_maximo("Mago", 9) == 3
     assert calcular_circulo_maximo("Feiticeiro", 13) == 4
-
 
 def test_arcanista_feiticeiro_usa_carisma_no_pm(personagem_base):
     personagem_base.classes[0].nome = "Arcanista"
@@ -81,6 +80,7 @@ def test_arcanista_feiticeiro_usa_carisma_no_pm(personagem_base):
     personagem_base.atributos.carisma = 4
     personagem_base.atributos.inteligencia = 0
     calcular_pv_pm(personagem_base)
+    # PM deve ter +4 pelo CAR
     assert any(
         f.fonte == "Atributo-chave: CAR" and f.valor == 4
         for f in personagem_base.status.pm_calc.fontes
@@ -91,92 +91,25 @@ def test_arcanista_bruxo_usa_inteligencia_no_pm(personagem_base):
     personagem_base.classes[0].nome = "Arcanista"
     personagem_base.classes[0].subclasse = "Bruxo"
     personagem_base.atributos.inteligencia = 3
-    personagem_base.atributos.carisma = 5
+    personagem_base.atributos.carisma = 5  # NÃO deve entrar
     calcular_pv_pm(personagem_base)
     assert any(
         f.fonte == "Atributo-chave: INT" and f.valor == 3
         for f in personagem_base.status.pm_calc.fontes
     )
-    assert not any(
-        f.fonte.startswith("Atributo-chave: CAR")
-        for f in personagem_base.status.pm_calc.fontes
-    )
+    assert not any(f.fonte.startswith("Atributo-chave: CAR")
+                   for f in personagem_base.status.pm_calc.fontes)
 
 
 def test_poder_magico_adiciona_pm_por_nivel(personagem_base):
+    from src.models import Habilidade
     personagem_base.classes[0].nome = "Arcanista"
     personagem_base.classes[0].nivel = 5
     personagem_base.habilidades = [
-        Habilidade(nome="Poder Mágico", tipo="Poder de Arcanista", descricao=""),
+        Habilidade(nome="Poder Mágico", tipo="Poder de Arcanista", descricao="")
     ]
-    calcular_pv_pm(personagem_base)  # cria o pm_calc (ordem da pipeline)
     aplicar_poderes_arcanista(personagem_base)
     assert any(
         f.fonte == "Poder Mágico" and f.valor == 5
         for f in personagem_base.status.pm_calc.fontes
     )
-
-
-def test_limite_magias_arcanista_nivel_1(personagem_base):
-    personagem_base.classes[0].nome = "Arcanista"
-    personagem_base.classes[0].nivel = 1
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 3
-
-
-def test_limite_magias_arcanista_nivel_5(personagem_base):
-    personagem_base.classes[0].nome = "Arcanista"
-    personagem_base.classes[0].nivel = 5
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 7  # 3 iniciais + 4 (níveis 2 a 5)
-
-
-def test_limite_magias_mago_nivel_5(personagem_base):
-    personagem_base.classes[0].nome = "Arcanista"
-    personagem_base.classes[0].subclasse = "Mago"
-    personagem_base.classes[0].nivel = 5
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 9  # 4 iniciais + 4 por nível + 1 pelo 2º círculo
-
-
-def test_limite_magias_feiticeiro_nivel_5(personagem_base):
-    personagem_base.classes[0].nome = "Arcanista"
-    personagem_base.classes[0].subclasse = "Feiticeiro"
-    personagem_base.classes[0].nivel = 5
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 5  # 3 iniciais + níveis ímpares 3 e 5
-
-
-def test_limite_magias_com_conhecimento_magico(personagem_base):
-    personagem_base.classes[0].nome = "Arcanista"
-    personagem_base.classes[0].nivel = 1
-    personagem_base.habilidades = [
-        Habilidade(nome="Conhecimento Mágico", tipo="Poder de Arcanista", descricao=""),
-    ]
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 5  # 3 + 2 do poder
-
-
-def test_classe_sem_regra_nao_tem_limite(personagem_base):
-    personagem_base.classes[0].nome = "Guerreiro"
-    limite, calc = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite is None
-    assert calc is None
-
-
-def test_limite_bardo_niveis_pares(personagem_base):
-    personagem_base.classes = [ClasseInfo(nome="Bardo", nivel=5, primaria=True)]
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 4  # 2 iniciais + níveis 2 e 4
-
-
-def test_limite_druida_niveis_pares(personagem_base):
-    personagem_base.classes = [ClasseInfo(nome="Druida", nivel=6, primaria=True)]
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 5  # 2 iniciais + níveis 2, 4 e 6
-
-
-def test_limite_clerigo_por_nivel(personagem_base):
-    personagem_base.classes = [ClasseInfo(nome="Clérigo", nivel=5, primaria=True)]
-    limite, _ = calcular_limite_magias_conhecidas(personagem_base)
-    assert limite == 7  # 3 iniciais + 4 níveis

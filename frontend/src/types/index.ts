@@ -152,6 +152,7 @@ export interface Combate {
     cd_magias: number;
     bba: number;
     iniciativa: number;
+    limite_magias: number;
 }
 
 export interface Item {

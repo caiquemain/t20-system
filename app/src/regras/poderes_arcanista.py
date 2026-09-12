@@ -31,6 +31,10 @@ def aplicar_poderes_arcanista(ficha: Personagem):
     ficha.combate.foco_vital = False
     ficha.combate.reducao_pm_tipo = {}
     ficha.combate.bonus_dano_dado_tipo = {}
+    ficha.combate.bonus_dano_magias = 0
+    ficha.combate.cd_por_escola = {}
+    ficha.combate.custo_por_escola = {}
+    ficha.combate.cd_por_resistencia = {}
     
     # Determina atributo-chave
     if subclasse == "Feiticeiro":

@@ -74,6 +74,15 @@ def calcular_custo_magia(ficha: Personagem, magia,
             total -= valor
             calc.adicionar_bonus(f"{hab.nome} (−{valor} PM)", "Redução", -valor)
 
+    # Reduções se a magia já é conhecida de outra fonte (Qareen/Sereia/Bardo)
+    for hab in ficha.habilidades:
+        efeitos = {**(hab.efeitos or {}), **(hab.escolhas_aplicadas or {})}
+        for chave in ("reducao_custo_se_conhecida", "reducao_custo_reaprendizado"):
+            valor = efeitos.get(chave)
+            if isinstance(valor, (int, float)) and valor and _ja_conhecida_de_outra_fonte(ficha, magia, f"Racial: {hab.nome}"):
+                total -= int(valor)
+                calc.adicionar_bonus(f"{hab.nome} (−{int(valor)} PM, reaprendizado)", "Reaprendizado", -int(valor))
+
     # Mínimo 1 PM (regra confirmada); limite de gasto por magia = nível
     total = max(1, total)
     limite_pm = max(1, ficha.cabecalho.nivel_total or 1)
@@ -82,3 +91,16 @@ def calcular_custo_magia(ficha: Personagem, magia,
         calc.adicionar_bonus(f"Limite de PM por magia (nível {limite_pm})", "Limite", total - max(1, total))
     calc.total = total
     return calc
+
+
+# 🆕 Regras complementares (T20 JdA, cap. 4): redução se magia já é conhecida
+# - reducao_custo_magia: sempre aplica (ex.: Dahllan, Suraggel, Dhampir)
+# - reducao_custo_se_conhecida: aplica se a magia já está no Grimório
+#   (ex.: Qareen/Sereia — "se aprender novamente, custo −1 PM")
+# - reducao_custo_reaprendizado: idem (ex.: Bardo — reaprender reduz custo)
+def _ja_conhecida_de_outra_fonte(ficha: Personagem, magia, fonte_atual: str) -> bool:
+    """Verifica se a magia já existe no Grimório com uma fonte diferente."""
+    for m in ficha.combate.magias:
+        if m.nome == magia.nome and (m.fonte_origem or "") != fonte_atual:
+            return True
+    return False

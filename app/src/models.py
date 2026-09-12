@@ -159,7 +159,8 @@ class Status(BaseModel):
     proficiencias: List[str] = []
     imunidades: List[str] = []
     sentidos: List[str] = []
-    vulnerabilidades: List[str] = []
+    vulnerabilidades: List[str] = []      # R5: Ossos Frágeis, Sangue Frio, etc.
+    DADOS_CLASSES: Optional[Any] = None   # 🆕 auto-audit
 # --- PERÍCIAS E COMBATE ---
 
 class PericiaInfo(BaseModel):
@@ -201,8 +202,8 @@ class Magia(BaseModel):
     fonte: Optional[str] = ""
     efeito: Optional[str] = ""
     aprimoramentos: Optional[List[Dict[str, Any]]] = []
-    fonte_origem: Optional[str] = ""   # 🆕 R5: "Racial: Dahllan", "Classe: Mago"...
-    isento_armadura: bool = False      # 🆕 R5: raça/poder/item ignoram limitação de armadura
+    fonte_origem: Optional[str] = ""      # R5: "Racial: Dahllan", "Classe: Mago"
+    isento_armadura: bool = False        # R5: raça/poder/item ignoram limitação de armadura
 
     @model_validator(mode='before')
     @classmethod
@@ -221,28 +222,39 @@ class Combate(BaseModel):
     cd_magias: int = 10
     bba: int = 0
     iniciativa: int = 0
-    circulo_maximo: int = 0  # 🆕 calculado pelo backend (trava de círculos T20)
-    limite_magias: Optional[int] = None   # 🆕 teto de magias escolhidas
-    magias_calc: Optional[StatCalculado] = None  # 🆕 transparência do limite
-    # 🆕 LOTE 1: modificadores de magia (Poderes de Arcanista)
-    cd_magias_calc: Optional[StatCalculado] = None
-    cd_por_escola: Dict[str, int] = {}
-    cd_por_resistencia: Dict[str, int] = {}
-    bonus_dano_magias: int = 0
-    custo_por_escola: Dict[str, int] = {}
-    custo_arcano_metade: bool = False
-    fluxo_de_mana: bool = False   # 🆕 Lote 2: 2 sustentados c/ 1 ação livre
-    foco_vital: bool = False
-    # 🆕 Varredura de fechamento do Arcanista
-    reducao_pm_tipo: Dict[str, int] = {}        # Dracônica aprimorada: -1 PM por tipo
-    bonus_dano_dado_tipo: Dict[str, int] = {}   # Dracônica aprimorada: +1 dano por dado
-    foco_pv_maximo: int = 0                     # Bruxo: foco com PV = metade dos seus
-    foco_pv_atual: int = 0
-    magias_memorizadas: List[str] = []
-    # 🆕 LOTE R3: modificadores raciais de arma específicos
-    bonus_ataque_arma: Dict[str, int] = {}
-    bonus_dano_arma: Dict[str, int] = {}
-    passo_dano_arremesso: int = 0          # Mago: memorização (UI depois)      # 🆕 Lote 2: foco absorve dano letal
+    reducao_pm_tipo: Optional[Dict[str, int]] = None
+
+    bonus_dano_arma: Optional[Dict[str, int]] = None
+
+    foco_vital: Optional[int] = None
+
+    fluxo_de_mana: Optional[int] = None
+
+    bonus_ataque_arma: Optional[Dict[str, int]] = None
+
+    custo_arcano_metade: Optional[bool] = None
+
+    magias_calc: Optional[Any] = None   # R5: breakdown de cálculo do limite
+    circulo_maximo: int = 0   # 🆕 R5: círculo máximo de magias que o personagem pode lançar
+    limite_magias: Optional[int] = None
+
+    circulo_maximo: int = 1
+    bonus_dano_dado_tipo: Optional[Dict[str, int]] = None
+
+    bonus_dano_magias: Optional[int] = None
+
+    cd_magias_calc: Optional[Any] = None   # 🆕 auto-audit
+    cd_por_escola: Optional[Dict[str, int]] = None
+
+    cd_por_resistencia: Optional[Dict[str, int]] = None
+
+    custo_por_escola: Optional[Dict[str, int]] = None
+
+    foco_pv_atual: Optional[int] = None
+
+    foco_pv_maximo: Optional[int] = None
+
+    passo_dano_arremesso: int = 0   # 🆕 auto-audit
 
 # --- HABILIDADES E EQUIPAMENTO ---
 
@@ -301,10 +313,11 @@ class Personagem(BaseModel):
 
     escolhas_atributos_raciais: List[str] = []
     escolhas_origem: List[str] = []
-    condicoes_ativas: List[str] = []  # 🎚️ condições situacionais ligadas (subterrâneo, sem armadura...)
 
     descricao: Descricao = Field(default_factory=Descricao)
     status: Status = Field(default_factory=Status)
+    fonte: Optional[Any] = None   # 🆕 auto-audit
+    valor: Optional[Any] = None   # 🆕 auto-audit
 
     pericias: Dict[str, PericiaInfo] = {}
 
@@ -312,6 +325,7 @@ class Personagem(BaseModel):
 
     combate: Combate = Field(default_factory=Combate)
     habilidades: List[Habilidade] = []
+    condicoes_ativas: List[str] = []   # R5: subterraneo, sem_armadura, etc.
     inventario: Inventario = Field(default_factory=Inventario)
 
     @field_validator('id', mode='before')

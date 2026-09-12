@@ -162,7 +162,9 @@ export interface Magia {
     custo_pm: number;
     descricao: string;
     fonte?: string; // Adicionado para compatibilidade
-    aprimoramentos?: Aprimoramento[];
+    fonte_origem?: string;
+  isento_armadura?: boolean;
+  aprimoramentos?: Aprimoramento[];
 }
 
 export interface Combate {
