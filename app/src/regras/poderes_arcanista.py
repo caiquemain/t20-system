@@ -8,6 +8,7 @@ import logging
 logger = logging.getLogger("RegrasT20")
 
 def aplicar_poderes_arcanista(ficha: Personagem):
+    ficha.combate.custo_arcano_metade = False
     """Processa todos os poderes de Arcanista e aplica efeitos."""
     logger.info("--- [8] Aplicando Poderes de Arcanista ---")
     
