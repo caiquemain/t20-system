@@ -289,7 +289,7 @@ export const useFicha = (id: string | undefined) => {
             const ehGatilho = (k in gatilhos) || k.endsWith('_escolha');
             if (ehGatilho) delete escolhas[k];
         });
-            void sanitizarEscolhasAplicadas(h);
+            void _sanitizarEscolhasAplicadas(h);
             if (gatilhos.escolha_subclasse) escolhas.subclasse = subclasseEmEdicao;
             return { ...h, escolhas_aplicadas: escolhas };
         });
