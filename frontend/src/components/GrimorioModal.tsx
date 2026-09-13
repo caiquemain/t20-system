@@ -3,6 +3,7 @@ import type { Magia } from '../types';
 import { getSchoolColor, getCircleColor, getTypeColor } from '../utils/magicUtils';
 
 interface GrimorioModalProps {
+    ficha?: any;
     isOpen: boolean;
     onClose: () => void;
     onAddMagia: (magia: Magia) => void;
