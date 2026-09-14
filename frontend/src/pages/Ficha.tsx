@@ -497,9 +497,11 @@ function Ficha() {
                                 {ficha.habilidades.map((hab, i) => (
                                     <AbilityCard
                                         key={`${hab.nome}-${i}`}
-                                        habilidade={hab}
+                                        habilidade={{ ...hab, _ficha_habilidades: ficha.habilidades }}
                                         pmAtual={ficha.status.pm.atual}
                                         onAtivar={handleAtivarHabilidade}
+                                        updateFicha={updateFicha}
+                                        magiasConhecidas={(ficha.combate?.magias || []).map((m: any) => m.nome)}
                                     />
                                 ))}
                             </div>
