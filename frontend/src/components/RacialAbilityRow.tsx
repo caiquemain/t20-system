@@ -340,24 +340,47 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
     if (configMagia) {
         const quantidade = configMagia.quantidade || 1;
         const circulo = configMagia.circulo || 1;
+        const listaRestrita = configMagia.lista || [];
         let opcoesMagias: string[] = [];
         if (dadosMagias) {
-            opcoesMagias = Object.values(dadosMagias)
-                // @ts-ignore
-                .filter((m: any) => String(m.circulo) === String(circulo))
-                // @ts-ignore
-                .map((m: any) => m.nome).sort();
+            const todas = Object.values(dadosMagias).map((m: any) => m.nome);
+            if (listaRestrita.length > 0) {
+                // Lista explícita (ex.: Sereia Canção dos Mares)
+                opcoesMagias = todas.filter((nome: string) => 
+                    listaRestrita.some((restrita: string) => 
+                        nome.toLowerCase().includes(restrita.toLowerCase())
+                    )
+                ).sort();
+            } else {
+                // Filtro por círculo (padrão)
+                opcoesMagias = Object.values(dadosMagias)
+                    // @ts-ignore
+                    .filter((m: any) => String(m.circulo) === String(circulo))
+                    // @ts-ignore
+                    .map((m: any) => m.nome).sort();
+            }
+        }
+
+        // Coleta escolhas já feitas para bloquear no seletor (evita duplicata)
+        const escolhasJaFeitas: string[] = [];
+        for (let i = 0; i < quantidade; i++) {
+            const val = hab.escolhas_aplicadas?.[`magia_${i}`];
+            if (typeof val === 'string' && val) escolhasJaFeitas.push(val);
         }
 
         renderizadores.push(
             <div key="magia" className="sub-section" style={{ marginTop: 10 }}>
                 <p style={{ fontSize: '0.8rem', color: '#ccc' }}>Magias ({circulo}º Círculo):</p>
-                {Array.from({ length: quantidade }).map((_, i) => (
-                    <div key={i} style={{ marginBottom: 5, display: 'flex', gap: 10 }}>
-                        <input value={hab.escolhas_aplicadas?.[`magia_${i}`] || ""} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Magia..." />
-                        <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', `Magia`, opcoesMagias, undefined, (v: string) => updateRacialChoice(hab.nome, `magia_${i}`, v), [])}>Escolher</button>
-                    </div>
-                ))}
+                {Array.from({ length: quantidade }).map((_, i) => {
+                    const magiaAtual = hab.escolhas_aplicadas?.[`magia_${i}`] || "";
+                    const bloqueadasParaEsteSlot = escolhasJaFeitas.filter(m => m !== magiaAtual);
+                    return (
+                        <div key={i} style={{ marginBottom: 5, display: 'flex', gap: 10 }}>
+                            <input value={magiaAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Magia..." />
+                            <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', `Magia #${i + 1}`, opcoesMagias, undefined, (v: string) => updateRacialChoice(hab.nome, `magia_${i}`, v), bloqueadasParaEsteSlot)}>Escolher</button>
+                        </div>
+                    );
+                })}
             </div>
         );
     }
