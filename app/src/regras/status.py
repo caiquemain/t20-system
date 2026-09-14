@@ -59,7 +59,7 @@ def calcular_pv_pm(ficha: Personagem):
             pv_calc.adicionar_bonus(
                 fonte=f"Classe: {c.nome} ({n} nível{'is' if n > 1 else ''})",
                 categoria="Classe",
-                valor=n * (d.get("pv_nivel", 5) + mod_con + b_pv_nivel)
+                valor=n * (d.get("pv_nivel", 5) + mod_con)
             )
 
     # ═══════════════════════════════════════════
@@ -120,6 +120,29 @@ def calcular_pv_pm(ficha: Personagem):
     # ═══════════════════════════════════════════
     # 💾 SALVAR NA FICHA
     # ═══════════════════════════════════════════
+        # ═══════════════════════════════════════════
+    # 🌟 BÔNUS GLOBAIS POR NÍVEL (Racial/Poderes)
+    # ═══════════════════════════════════════════
+    nivel_total = sum(c.nivel for c in ficha.classes)
+    if b_pv_nivel != 0:
+        pv_calc.adicionar_bonus(
+            fonte="Habilidades (PV por nível)",
+            categoria="Poder",
+            valor=nivel_total * b_pv_nivel
+        )
+    if b_pm_niv != 0:
+        pm_calc.adicionar_bonus(
+            fonte="Habilidades (PM por nível)",
+            categoria="Poder",
+            valor=nivel_total * b_pm_niv
+        )
+    if b_pm_impar != 0:
+        pm_calc.adicionar_bonus(
+            fonte="Habilidades (PM por nível ímpar)",
+            categoria="Poder",
+            valor=((nivel_total + 1) // 2) * b_pm_impar
+        )
+
     ficha.status.pv_calc = pv_calc
     ficha.status.pm_calc = pm_calc
     ficha.status.pv.maximo = pv_calc.total
