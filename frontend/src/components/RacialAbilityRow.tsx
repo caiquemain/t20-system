@@ -363,7 +363,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
     }
 
     // --- H2. PODER GERAL À ESCOLHA (qtd numérica; ex.: Golem Propósito de Criação) ---
-    const qtdPoderGeral = typeof efeitos.poder_escolha === 'number' ? efeitos.poder_escolha : 0;
+    const qtdPoderGeral = (typeof efeitos.poder_escolha === 'number' || typeof efeitos.poder_escolha === 'string') ? 1 : 0;
     if (qtdPoderGeral > 0 && !efeitos.pericia_ou_poder_escolha && !efeitos.pericia_ou_poder_ou_raca_escolha) {
         const listaGerais = getPoderesGeraisValidos();
         const rawSalvo = hab.escolhas_aplicadas?.poder_escolha;

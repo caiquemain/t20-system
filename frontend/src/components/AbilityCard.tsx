@@ -26,9 +26,20 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
     // ✨ Chips de ESCOLHAS REAIS
     const efeitos = habilidade.efeitos || {};
     const escolhas = habilidade.escolhas_aplicadas || {};
+    const ROTULOS_ESCOLHA: Record<string, string> = {
+        poder_escolha: 'Poder Geral',
+        resistencia_rd_escolha: 'Ascendência',
+    };
     const chavesEscolha = Object.keys(escolhas).filter(chave => {
-        // Gatilhos de escolha nunca são escolhas reais
-        if (chave.endsWith('_escolha')) return false;
+        // Gatilhos de escolha nunca são escolhas reais — EXCETO quando o
+        // gatilho é numérico (quantidade) e o valor salvo é string
+        // (escolha real), ex.: poder_escolha=1 + "Lobo Solitário"
+        if (chave.endsWith('_escolha')) {
+            const vEfeito = (efeitos as any)[chave];
+            const vEscolha = escolhas[chave];
+            // Gatilho pode ser number (quantidade) OU string (nome já escolhido)
+            if (!(typeof vEscolha === 'string' && vEscolha)) return false;
+        }
         const v = escolhas[chave];
         // Objetos não renderizam (evita [object Object])
         if (v !== null && typeof v === 'object' && !Array.isArray(v)) return false;
@@ -61,7 +72,7 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                                     padding: '2px 8px', borderRadius: '4px',
                                     border: '1px solid rgba(0, 188, 212, 0.4)'
                                 }}>
-                                    ✨ {chave.replace(/_/g, ' ')}: <strong>{String(v)}</strong>
+                                    ✨ {ROTULOS_ESCOLHA[chave] || chave.replace(/_/g, ' ')}: <strong>{String(v)}</strong>
                                 </span>
                             ));
                         })}
