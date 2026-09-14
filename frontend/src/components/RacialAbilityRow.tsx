@@ -362,6 +362,34 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         );
     }
 
+    // --- H2. PODER GERAL À ESCOLHA (qtd numérica; ex.: Golem Propósito de Criação) ---
+    const qtdPoderGeral = typeof efeitos.poder_escolha === 'number' ? efeitos.poder_escolha : 0;
+    if (qtdPoderGeral > 0 && !efeitos.pericia_ou_poder_escolha && !efeitos.pericia_ou_poder_ou_raca_escolha) {
+        const listaGerais = getPoderesGeraisValidos();
+        const rawSalvo = hab.escolhas_aplicadas?.poder_escolha;
+        const salvos: string[] = Array.isArray(rawSalvo) ? rawSalvo : (typeof rawSalvo === 'string' && rawSalvo ? [rawSalvo] : []);
+
+        renderizadores.push(
+            <div key="poder_geral_livre" className="sub-section" style={{ marginTop: 10 }}>
+                {Array.from({ length: qtdPoderGeral }).map((_, i) => {
+                    const valAtual = salvos[i] || '';
+                    return (
+                        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 5 }}>
+                            <label style={{ fontSize: '0.85rem', color: '#ce93d8', width: 90 }}>Poder Geral:</label>
+                            <input value={getNomeHabilidade(valAtual) || valAtual} readOnly className="input-dark" style={{ flex: 1 }} placeholder="Selecione poder geral..." />
+                            <button className="btn-action" style={{ background: '#9c27b0' }} onClick={() => abrirSeletor('poder', 'Escolha: Poder Geral', listaGerais, undefined, (v: string) => {
+                                const novos = [...salvos];
+                                while (novos.length < qtdPoderGeral) novos.push('');
+                                novos[i] = v;
+                                updateRacialChoice(hab.nome, 'poder_escolha', qtdPoderGeral === 1 ? v : novos.filter(x => x));
+                            }, getBlacklistGlobal(valAtual))}>Escolher</button>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
+
     // --- H. LISTA RESTRITA ---
     let listaOpcoesIDs: string[] = [];
     const chaveLista = 'poder_escolha';
@@ -407,7 +435,7 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         renderizadores.push(
             <div key="fallback" className="sub-section" style={{ marginTop: 10 }}>
                 {Object.entries(hab.efeitos).map(([key, _]) => {
-                    if (key.endsWith('_escolha') && !key.includes('magia') && !key.includes('imunidade') && key !== 'bonus_pericia_escolha') {
+                    if (key.endsWith('_escolha') && !key.includes('magia') && !key.includes('imunidade') && key !== 'bonus_pericia_escolha' && key !== 'poder_escolha') {
                         const valRaw = hab.escolhas_aplicadas?.[key];
                     const val = (typeof valRaw === 'string' || typeof valRaw === 'number') ? String(valRaw) : '';
                         return <div key={key} style={{ marginTop: 8 }}><button onClick={() => abrirSeletor('pericia', `Escolha`, [], undefined, (v) => updateRacialChoice(hab.nome, key, v), getBlacklistGlobal(String(val)))} className="btn-action">Escolher</button> {val}</div>
