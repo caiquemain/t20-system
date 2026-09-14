@@ -260,6 +260,7 @@ export interface Personagem {
     escolhas_atributos_raciais: string[];
     escolhas_origem: string[];
   condicoes_ativas?: string[];
+    engenhosidade_pericia?: string | null;
 
     status: Status;
     pericias: Record<string, PericiaInfo>;

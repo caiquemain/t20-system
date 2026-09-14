@@ -325,7 +325,8 @@ class Personagem(BaseModel):
 
     combate: Combate = Field(default_factory=Combate)
     habilidades: List[Habilidade] = []
-    condicoes_ativas: List[str] = []   # R5: subterraneo, sem_armadura, etc.
+    condicoes_ativas: List[str] = []
+    engenhosidade_pericia: Optional[str] = None  # Perícia com Engenhosidade ativa (Kliren)   # R5: subterraneo, sem_armadura, etc.
     inventario: Inventario = Field(default_factory=Inventario)
 
     @field_validator('id', mode='before')

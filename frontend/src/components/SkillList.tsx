@@ -119,6 +119,24 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
         updateFicha({ pericias: novaLista });
     };
 
+    // ── Engenhosidade (Kliren): toggle com custo de PM ──
+    const toggleEngenhosidade = (pericia: string) => {
+        const custo = 2;
+        const pm = ficha.status?.pm?.atual || 0;
+        const ativa = (ficha as any).engenhosidade_pericia === pericia;
+        if (!ativa && pm < custo) {
+            window.alert(`PM insuficiente para Engenhosidade (custa ${custo} PM).`);
+            return;
+        }
+        updateFicha({
+            engenhosidade_pericia: ativa ? null : pericia,
+            status: {
+                ...ficha.status,
+                pm: { ...ficha.status.pm, atual: ativa ? pm + custo : pm - custo }
+            }
+        } as any);
+    };
+
     const renderSkillRow = (nomeExibicao: string, chavePericia: string, index: number) => {
         const info = periciasTreinadas[chavePericia] || { treino: 0, bonus_nivel: 0, atributo_valor: 0, outros: 0, total: 0 };
         const bonusAuto = (info as any).bonus_automatico || 0;
@@ -155,6 +173,10 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
         // SOMA VISUAL DO CAMPO "OUTROS"
         const outrosExibicao = info.outros + bonusAuto;
+        // ── Engenhosidade (Kliren) ──
+        const temEngenhosidade = (ficha.habilidades || []).some((h: any) => h.nome === "Engenhosidade");
+        const engenhosidadeAtiva = (ficha as any).engenhosidade_pericia === chavePericia;
+        const podeAtivarEngenhosidade = temEngenhosidade && !chavePericia.startsWith("Ofício");
         const totalVal = info.total;
 
         let rowBg = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
@@ -179,6 +201,14 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                         {meta.penalidade_armadura && <span title="Penalidade de Armadura" className="icon-badge shield">🛡️</span>}
                         {isFixa && <span className="text-badge class">(C)</span>}
                         {isOrigem && <span className="text-badge origin">(O)</span>}
+                        {podeAtivarEngenhosidade && (
+                            <span
+                                className={`icon-badge${engenhosidadeAtiva ? ' active' : ''}`}
+                                title={engenhosidadeAtiva ? 'Desativar Engenhosidade (devolve 2 PM)' : 'Ativar Engenhosidade (gasta 2 PM, soma INT no teste)'}
+                                onClick={(e) => { e.stopPropagation(); toggleEngenhosidade(chavePericia); }}
+                                style={{ cursor: 'pointer', color: engenhosidadeAtiva ? '#ffc107' : '#888', marginLeft: 2, textShadow: engenhosidadeAtiva ? '0 0 8px rgba(255,193,7,.6)' : 'none' }}
+                            >⚡</span>
+                        )}
                         {chavePericia.startsWith("Ofício") && (
                             <span className="icon-badge" title="Remover Ofício"
                                 onClick={(e) => { e.stopPropagation(); removerOficio(chavePericia); }}
