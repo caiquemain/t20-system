@@ -1,13 +1,16 @@
 import React from 'react';
+import { DesejosButton } from './DesejosButton';
 import type { Habilidade } from '../types';
 
 interface AbilityCardProps {
     habilidade: Habilidade;
     pmAtual: number;
     onAtivar: (custo: number, nome: string) => void;
+    updateFicha?: (data: any) => void;
+    magiasConhecidas?: string[];
 }
 
-export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, onAtivar }) => {
+export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, onAtivar, updateFicha, magiasConhecidas = [] }) => {
     const ativavel = habilidade.efeitos?.habilidade_ativavel;
     const podePagar = ativavel ? pmAtual >= ativavel.custo : false;
 
@@ -70,6 +73,23 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                         {ativavel.duracao && <Badge label="Duração" value={ativavel.duracao} />}
                         {ativavel.resistencia && <Badge label="Resistência" value={ativavel.resistencia} />}
                     </div>
+                )}
+                {habilidade.nome === "Desejos" && updateFicha && (
+                    <DesejosButton
+                        magiaAtual={escolhas.magia_desejada || ''}
+                        magiasConhecidas={magiasConhecidas}
+                        reducao={efeitos.reducao_pm_condicional || 1}
+                        onEscolher={(nome: string) => {
+                            const novasEscolhas = { ...escolhas, magia_desejada: nome || null };
+                            const novasHabilidades = (habilidade as any)._ficha_habilidades || [];
+                            const habIndex = novasHabilidades.findIndex((h: any) => h.nome === habilidade.nome);
+                            if (habIndex >= 0) {
+                                const updated = [...novasHabilidades];
+                                updated[habIndex] = { ...updated[habIndex], escolhas_aplicadas: novasEscolhas };
+                                updateFicha({ habilidades: updated });
+                            }
+                        }}
+                    />
                 )}
             </div>
             {ativavel && (

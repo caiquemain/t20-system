@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface RacialRowProps {
     hab: any;
     index: number;
+    magiasConhecidas?: string[];
     dadosHabilidadesRaciais: any;
     listaPoderesGerais: any[];
     dadosMagias: any;
@@ -16,7 +17,7 @@ interface RacialRowProps {
 }
 
 export const RacialAbilityRow: React.FC<RacialRowProps> = ({
-    hab, index, dadosHabilidadesRaciais, listaPoderesGerais, dadosMagias, dadosOrigens,
+    hab, index, dadosHabilidadesRaciais, listaPoderesGerais, dadosMagias, dadosOrigens, magiasConhecidas = [],
     abrirSeletor, updateRacialChoice, getBlacklistGlobal, getNomeHabilidade, poderesDoDeus,
     listaPericias
 }) => {
