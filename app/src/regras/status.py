@@ -26,16 +26,30 @@ def calcular_pv_pm(ficha: Personagem):
         'int': 'inteligencia', 'sab': 'sabedoria', 'car': 'carisma'
     }
 
-    # Bônus de habilidades (coletados uma única vez)
-    b_pv_ini = b_pv_nivel = b_pm_niv = b_pm_impar = 0
+    # Bônus de habilidades (coletados com rastreio de fonte)
+    b_pv_ini = 0
+    fontes_pv_ini = []
+    fontes_pv_nivel = []
+    fontes_pm_nivel = []
+    fontes_pm_impar = []
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
-        b_pv_ini += efeitos.get("pv_max_ini", 0)
-        b_pv_nivel += efeitos.get("pv_max_nivel", 0)
-        b_pm_niv += efeitos.get("pm_max_nivel", 0)
-        b_pm_impar += efeitos.get("pm_por_nivel_impar", 0)
+        nome = hab.nome or "Habilidade"
+        v = efeitos.get("pv_max_ini", 0)
+        if v:
+            b_pv_ini += v
+            fontes_pv_ini.append((nome, v))
+        v = efeitos.get("pv_max_nivel", 0)
+        if v:
+            fontes_pv_nivel.append((nome, v))
+        v = efeitos.get("pm_max_nivel", 0)
+        if v:
+            fontes_pm_nivel.append((nome, v))
+        v = efeitos.get("pm_por_nivel_impar", 0)
+        if v:
+            fontes_pm_impar.append((nome, v))
 
     # ═══════════════════════════════════════════
     # 🛡️ PV - PILHA DE MODIFICADORES
@@ -48,8 +62,8 @@ def calcular_pv_pm(ficha: Personagem):
     )
     if mod_con != 0:
         pv_calc.adicionar_bonus(fonte="Constituição", categoria="Atributo", valor=mod_con)
-    if b_pv_ini != 0:
-        pv_calc.adicionar_bonus(fonte="Habilidades (PV inicial)", categoria="Poder", valor=b_pv_ini)
+    for nome, v in fontes_pv_ini:
+        pv_calc.adicionar_bonus(fonte=f"{nome} (PV inicial)", categoria="Poder", valor=v)
 
     for c in ficha.classes:
         n = c.nivel - 1 if c == c_prim else c.nivel
@@ -106,32 +120,28 @@ def calcular_pv_pm(ficha: Personagem):
     # ═══════════════════════════════════════════
     nivel_total = sum(c.nivel for c in ficha.classes)
     
-    if b_pv_nivel != 0:
+    for nome, v in fontes_pv_nivel:
         pv_calc.adicionar_bonus(
-            fonte="Habilidades (PV por nível)",
+            fonte=f"{nome} (+{v} PV/nível)",
             categoria="Poder",
-            valor=nivel_total * b_pv_nivel
+            valor=nivel_total * v
         )
-    if b_pm_niv != 0:
+    for nome, v in fontes_pm_nivel:
         pm_calc.adicionar_bonus(
-            fonte="Habilidades (PM por nível)",
+            fonte=f"{nome} (+{v} PM/nível)",
             categoria="Poder",
-            valor=nivel_total * b_pm_niv
+            valor=nivel_total * v
         )
-    if b_pm_impar != 0:
-        impares = ((nivel_total + 1) // 2) * b_pm_impar
-        if impares > 0:
-            pm_calc.adicionar_bonus(
-                fonte="Habilidades (Níveis Ímpares)",
-                categoria="Poder",
-                valor=impares
-            )
+    impares = (nivel_total + 1) // 2
+    for nome, v in fontes_pm_impar:
+        pm_calc.adicionar_bonus(
+            fonte=f"{nome} (+{v} PM/nível ímpar)",
+            categoria="Poder",
+            valor=impares * v
+        )
 
-    # ═══════════════════════════════════════════
-    # 💾 SALVAR NA FICHA
-    # ═══════════════════════════════════════════
-    ficha.status.pv_calc = pv_calc
     ficha.status.pm_calc = pm_calc
+    ficha.status.pv_calc = pv_calc
     ficha.status.pv.maximo = pv_calc.total
     ficha.status.pm.maximo = pm_calc.total
 
