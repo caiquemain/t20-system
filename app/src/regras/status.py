@@ -16,7 +16,6 @@ def calcular_pv_pm(ficha: Personagem):
     c_prim = ficha.classes[0]
     dc = DADOS_CLASSES.get(c_prim.nome or "", {})
     if not dc:
-        # Se o nome for uma subclasse, usa os dados da classe base
         base = MAPA_SUBCLASSE_PARA_CLASSE.get(c_prim.nome or "")
         if base:
             dc = DADOS_CLASSES.get(base, {})
@@ -72,11 +71,6 @@ def calcular_pv_pm(ficha: Personagem):
         valor=dc.get("pm_inicial", 5)
     )
 
-    # CORREÇÃO: atributo só entra no PM se a classe declarar "pm_atributo"
-    # explicitamente em DADOS_CLASSES. Sem default: classe sem a chave não soma nada.
-    # 🔒 ATRIBUTO-CHAVE DE PM POR SUBCLASSE
-    # Arcanista: Bruxo/Mago = INT, Feiticeiro = CAR
-    # Outras classes usam o padrão do DADOS_CLASSES
     attr_pm = dc.get("pm_atributo")
     classe_nome = c_prim.nome or ""
     subclasse = (c_prim.subclasse or "").strip()
@@ -85,7 +79,6 @@ def calcular_pv_pm(ficha: Personagem):
         attr_pm = "car"
     elif classe_nome == "Arcanista" and subclasse in ("Bruxo", "Mago"):
         attr_pm = "int"
-    # demais classes mantêm o que vem do dados
 
     if attr_pm:
         mod_pm = calcular_modificador(
@@ -108,22 +101,11 @@ def calcular_pv_pm(ficha: Personagem):
                 valor=n * d.get("pm_nivel", 5)
             )
 
-    if b_pm_impar > 0:
-        impares = math.ceil(ficha.cabecalho.nivel_total / 2) * b_pm_impar
-        if impares > 0:
-            pm_calc.adicionar_bonus(
-                fonte="Habilidades (Níveis Ímpares)",
-                categoria="Poder",
-                valor=impares
-            )
-
     # ═══════════════════════════════════════════
-    # 💾 SALVAR NA FICHA
-    # ═══════════════════════════════════════════
-        # ═══════════════════════════════════════════
-    # 🌟 BÔNUS GLOBAIS POR NÍVEL (Racial/Poderes)
+    # 🌟 BÔNUS GLOBAIS POR NÍVEL (Habilidades)
     # ═══════════════════════════════════════════
     nivel_total = sum(c.nivel for c in ficha.classes)
+    
     if b_pv_nivel != 0:
         pv_calc.adicionar_bonus(
             fonte="Habilidades (PV por nível)",
@@ -137,12 +119,17 @@ def calcular_pv_pm(ficha: Personagem):
             valor=nivel_total * b_pm_niv
         )
     if b_pm_impar != 0:
-        pm_calc.adicionar_bonus(
-            fonte="Habilidades (PM por nível ímpar)",
-            categoria="Poder",
-            valor=((nivel_total + 1) // 2) * b_pm_impar
-        )
+        impares = ((nivel_total + 1) // 2) * b_pm_impar
+        if impares > 0:
+            pm_calc.adicionar_bonus(
+                fonte="Habilidades (Níveis Ímpares)",
+                categoria="Poder",
+                valor=impares
+            )
 
+    # ═══════════════════════════════════════════
+    # 💾 SALVAR NA FICHA
+    # ═══════════════════════════════════════════
     ficha.status.pv_calc = pv_calc
     ficha.status.pm_calc = pm_calc
     ficha.status.pv.maximo = pv_calc.total
