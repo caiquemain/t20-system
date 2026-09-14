@@ -105,7 +105,7 @@ def calcular_pv_pm(ficha: Personagem):
             pm_calc.adicionar_bonus(
                 fonte=f"Classe: {c.nome} ({n} nível{'is' if n > 1 else ''})",
                 categoria="Classe",
-                valor=n * (d.get("pm_nivel", 5) + b_pm_niv)
+                valor=n * d.get("pm_nivel", 5)
             )
 
     if b_pm_impar > 0:
