@@ -283,8 +283,17 @@ def inicializar_pericias(ficha: Personagem):
                 sinal = "+" if val >= 0 else ""
                 fontes_bonus.append(f"{item['fonte']} ({sinal}{val}, condição ativa)")
 
+        # ── Engenhosidade (Kliren): soma INT na perícia escolhida ──
+        engenhosidade_bonus = 0
+        engenhosidade_pericia = getattr(ficha, "engenhosidade_pericia", None)
+        if engenhosidade_pericia == nome_pericia:
+            mod_int = modificadores.get("int", 0)
+            engenhosidade_bonus = mod_int
+            total_automatico += engenhosidade_bonus
+            fontes_bonus.append(f"⚡ Engenhosidade (+{mod_int} INT)")
+
         total_final = bonus_metade_nivel + mod_attr + bonus_treino + \
-            info_antiga.outros + total_automatico + penalidade_aplicada
+            info_antiga.outros + total_automatico + penalidade_aplicada + engenhosidade_bonus
 
         # Bônus condicionais INATIVOS: linha informativa com total situacional
         for item in itens_cond:
@@ -316,6 +325,8 @@ def inicializar_pericias(ficha: Personagem):
             calc.adicionar_bonus("Bônus Geral", "Racial", bonus_attr_geral)
         if penalidade_aplicada != 0:
             calc.adicionar_bonus("Penalidade (Armadura/Tamanho)", "Penalidade", penalidade_aplicada)
+        if engenhosidade_bonus != 0:
+            calc.adicionar_bonus("⚡ Engenhosidade", "Poder", engenhosidade_bonus)
         for item in itens_cond:
             if item.get("condicao_id") and item["condicao_id"] in condicoes_ativas:
                 calc.adicionar_bonus(item["fonte"], "Condicional", int(item["valor"]))
