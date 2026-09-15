@@ -345,10 +345,11 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
         if (dadosMagias) {
             const todas = Object.values(dadosMagias).map((m: any) => m.nome);
             if (listaRestrita.length > 0) {
-                // Lista explícita (ex.: Sereia Canção dos Mares)
+                // Lista explícita (ex.: Sereia Canção dos Mares, Sílfide Magia das Fadas)
+                // Match EXATO de nomes (case-insensitive), não substring
                 opcoesMagias = todas.filter((nome: string) => 
                     listaRestrita.some((restrita: string) => 
-                        nome.toLowerCase().includes(restrita.toLowerCase())
+                        nome.toLowerCase() === restrita.toLowerCase()
                     )
                 ).sort();
             } else {
