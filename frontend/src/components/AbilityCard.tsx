@@ -30,6 +30,18 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
         poder_escolha: 'Poder Geral',
         resistencia_rd_escolha: 'Ascendência',
     };
+
+    // Formata rótulo legível: magia_0 -> "Magia 1", magia_1 -> "Magia 2"
+    const formatarRotuloEscolha = (chave: string): string => {
+        if (ROTULOS_ESCOLHA[chave]) return ROTULOS_ESCOLHA[chave];
+        const m = chave.match(/^(.+)_(\d+)$/);
+        if (m) {
+            const base = m[1].replace(/_/g, ' ');
+            const idx = parseInt(m[2], 10) + 1;
+            return base.charAt(0).toUpperCase() + base.slice(1) + ' ' + idx;
+        }
+        return chave.replace(/_/g, ' ');
+    };
     const chavesEscolha = Object.keys(escolhas).filter(chave => {
         // Gatilhos de escolha nunca são escolhas reais — EXCETO quando o
         // gatilho é numérico (quantidade) e o valor salvo é string
@@ -72,7 +84,7 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                                     padding: '2px 8px', borderRadius: '4px',
                                     border: '1px solid rgba(0, 188, 212, 0.4)'
                                 }}>
-                                    ✨ {ROTULOS_ESCOLHA[chave] || chave.replace(/_/g, ' ')}: <strong>{String(v)}</strong>
+                                    ✨ {formatarRotuloEscolha(chave)}: <strong>{String(v)}</strong>
                                 </span>
                             ));
                         })}
