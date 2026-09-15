@@ -185,6 +185,7 @@ class Ataque(BaseModel):
     alcance: str = "Curto"
     teste: str = "Luta"
     especial: Optional[str] = ""
+    fonte: Optional[str] = None  # Origem: "Racial" | "Poder" | "Classe" | None (manual/equipamento)
 
 class Magia(BaseModel):
     nome: str

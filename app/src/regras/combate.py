@@ -35,6 +35,14 @@ def calcular_proficiencias_e_sentidos(ficha: Personagem):
 
 def sincronizar_ataques(ficha: Personagem):
     logger.info("--- [5.3] Ataques Naturais ---")
+    
+    # 🧹 Remove ataques derivados ANTES de recriar (evita órfãos em troca de raça)
+    if ficha.combate and ficha.combate.ataques:
+        ficha.combate.ataques = [
+            a for a in ficha.combate.ataques
+            if a.fonte != "Racial"
+        ]
+    
     novos = []
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
@@ -46,19 +54,20 @@ def sincronizar_ataques(ficha: Personagem):
             if isinstance(raw, dict):
                 novos.append(Ataque(
                     nome=raw.get("nome", "Arma"), teste="Luta", dano=raw.get("dano", "1d4"),
-                    critico=raw.get("critico", "x2"), tipo=raw.get("tipo", "Impacto"), alcance=raw.get("alcance", "Curto")
+                    critico=raw.get("critico", "x2"), tipo=raw.get("tipo", "Impacto"), alcance=raw.get("alcance", "Curto"),
+                    fonte="Racial"
                 ))
             elif isinstance(raw, str):
                 partes = raw.split(" ", 1)
                 novos.append(Ataque(
                     nome=partes[0], teste="Luta", dano=partes[1] if len(partes) > 1 else "1d4",
-                    critico="x2", tipo="Impacto", alcance="Curto"
+                    critico="x2", tipo="Impacto", alcance="Curto",
+                    fonte="Racial"
                 ))
 
-    existentes = [a.nome for a in ficha.combate.ataques]
+    # Todos os "novos" são da raça atual (limpamos os antigos acima)
     for n in novos:
-        if n.nome not in existentes:
-            ficha.combate.ataques.append(n)
+        ficha.combate.ataques.append(n)
     _sincronizar_bonus_armas(ficha)
 
 
