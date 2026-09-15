@@ -25,7 +25,10 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
     if (isFlying) { iconeDeslocamento = '🪽'; labelDeslocamento = 'Voo Ativo'; }
     else if (isAquatic) { iconeDeslocamento = '🧜‍♀️'; labelDeslocamento = 'Natação'; }
 
-    const valorDeslocamento = overrideDeslocamento || deslocamento;
+    const deslocamentoNatacao = (ficha.status as any).deslocamento_natacao;
+    const valorDeslocamento = overrideDeslocamento !== undefined 
+        ? overrideDeslocamento 
+        : (isAquatic && deslocamentoNatacao ? deslocamentoNatacao : deslocamento);
     const pvPerc = Math.min(100, Math.max(0, (pv.atual / (pv.maximo || 1)) * 100));
     const pmPerc = Math.min(100, Math.max(0, (pm.atual / (pm.maximo || 1)) * 100));
 
