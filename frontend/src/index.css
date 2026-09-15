@@ -1,3 +1,28 @@
+/* ═══════════════════════════════════════════
+   🎨 FONTE TORMENTA (identidade visual T20)
+   ═══════════════════════════════════════════ */
+@font-face {
+    font-family: 'Tormenta';
+    src: url('/fonts/Tormenta.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Aplicação GLOBAL: tudo herda a Tormenta */
+html, body, #root {
+    font-family: 'Tormenta', 'Segoe UI', Tahoma, sans-serif !important;
+    letter-spacing: 0.02em;
+}
+
+/* Elementos que NÃO herdam por padrão + reforço geral */
+button, input, select, textarea,
+h1, h2, h3, h4, h5, h6,
+label, span, div, p, a, strong, em, small,
+td, th, li, blockquote, code {
+    font-family: inherit !important;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
