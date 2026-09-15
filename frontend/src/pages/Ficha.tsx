@@ -15,6 +15,7 @@ import { AttributeCard } from '../components/AttributeCard';
 import { SkillList } from '../components/SkillList';
 import { StatusBars } from '../components/StatusBars';
 import { RacialAttributeModal } from '../components/RacialAttributeModal';
+import { EntitySelectorModal, type EntityItem } from '../components/EntitySelectorModal';
 import { AbilityCard } from '../components/AbilityCard';
 import { AttackList } from '../components/AttackList';
 
@@ -89,6 +90,7 @@ function Ficha() {
     const [activeTab, setActiveTab] = useState<'atributos' | 'efeitos'>('atributos');
 
     const [showGrimorio, setShowGrimorio] = useState(false);
+    const [selectorAtivo, setSelectorAtivo] = useState<'raca' | 'origem' | 'deus' | 'classe' | null>(null);
     const [showFullGrimorio, setShowFullGrimorio] = useState(false);
     const [viewSpell, setViewSpell] = useState<Magia | null>(null);
 
@@ -103,6 +105,49 @@ function Ficha() {
             setEscolhasRaciais(ficha.escolhas_atributos_raciais || []);
         }
     }, [ficha?.cabecalho.raca, ficha?.escolhas_atributos_raciais]);
+
+    const handleSelecionarEntidade = (tipo: 'raca' | 'origem' | 'deus' | 'classe', nome: string) => {
+        if (!ficha) return;
+        
+        if (tipo === 'raca') {
+            // Lógica exata do onChange original: limpa escolhas raciais e perícias de racial
+            const periciasLimpas = { ...(ficha.pericias || {}) };
+            const chavesPericia = ['pericia_escolha', 'pericia_1', 'pericia_2', 'pericia_bonus_0', 'pericia_bonus_1', 'memoria_postuma'];
+            (ficha.habilidades || []).forEach((h: any) => {
+                if (!(h.tipo || '').includes('Racial')) return;
+                chavesPericia.forEach(k => {
+                    const v = h.escolhas_aplicadas?.[k];
+                    if (typeof v === 'string' && v && periciasLimpas[v]) {
+                        periciasLimpas[v] = { ...periciasLimpas[v], treino: 0 };
+                    }
+                });
+            });
+            updateFicha({
+                cabecalho: { ...ficha.cabecalho, raca: nome },
+                escolhas_atributos_raciais: [],
+                pericias: periciasLimpas
+            }, true);
+        }
+        
+        if (tipo === 'origem') {
+            updateFicha({
+                cabecalho: { ...ficha.cabecalho, origem: nome },
+                escolhas_origem: []
+            }, true);
+        }
+        
+        if (tipo === 'deus') {
+            updateFicha({ cabecalho: { ...ficha.cabecalho, deus: nome } }, true);
+        }
+        
+        if (tipo === 'classe') {
+            const novasClasses = [...ficha.classes];
+            novasClasses[0] = { ...novasClasses[0], nome: nome, subclasse: undefined };
+            updateFicha({ classes: novasClasses, pericias: {} }, true);
+        }
+        
+        setSelectorAtivo(null);
+    };
 
     const handleSalvarAtributosRaciais = () => {
         updateFicha({ escolhas_atributos_raciais: escolhasRaciais });
@@ -374,40 +419,43 @@ function Ficha() {
                     />
 
                     <div className="header-sub">
-                        <select className="select-header" value={ficha.cabecalho.raca} onChange={e => {
-                                const periciasLimpas = { ...(ficha.pericias || {}) };
-                                const chavesPericia = ['pericia_escolha', 'pericia_1', 'pericia_2', 'pericia_bonus_0', 'pericia_bonus_1', 'memoria_postuma'];
-                                (ficha.habilidades || []).forEach((h: any) => {
-                                    if (!(h.tipo || '').includes('Racial')) return;
-                                    chavesPericia.forEach(k => {
-                                        const v = h.escolhas_aplicadas?.[k];
-                                        if (typeof v === 'string' && v && periciasLimpas[v]) {
-                                            periciasLimpas[v] = { ...periciasLimpas[v], treino: 0 };
-                                        }
-                                    });
-                                });
-                                updateFicha({ cabecalho: { ...ficha.cabecalho, raca: e.target.value }, escolhas_atributos_raciais: [], pericias: periciasLimpas }, true);
-                            }}>
-                            {listaRacas.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
+                        <button
+                            className="select-header"
+                            onClick={() => setSelectorAtivo('raca')}
+                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555' }}
+                            title="Clique para trocar de raça"
+                        >
+                            🧬 {ficha.cabecalho.raca} ▾
+                        </button>
                         <span>•</span>
-                        <select className="select-header" value={origemBloqueada ? "" : ficha.cabecalho.origem} disabled={origemBloqueada} style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : {}} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: e.target.value }, escolhas_origem: [] }, true)}>
-                            {origemBloqueada ? <option value="">🚫 Sem Origem</option> : listaOrigens.map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
+                        <button
+                            className="select-header"
+                            onClick={() => !origemBloqueada && setSelectorAtivo('origem')}
+                            disabled={origemBloqueada}
+                            style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : { cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555' }}
+                            title={origemBloqueada ? 'Raça bloqueia origem (Golem)' : 'Clique para trocar de origem'}
+                        >
+                            📜 {origemBloqueada ? 'Sem Origem' : (ficha.cabecalho.origem || 'Selecionar...')} ▾
+                        </button>
                         <span>•</span>
-                        <select className="select-header" value={ficha.cabecalho.deus || ""} onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: e.target.value } }, true)} style={{ color: '#ffd700' }}>
-                            <option value="">Sem Devoção</option>
-                            {deusesDisponiveis.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
+                        <button
+                            className="select-header"
+                            onClick={() => setSelectorAtivo('deus')}
+                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', color: '#ffd700' }}
+                            title="Clique para trocar de devoção"
+                        >
+                            ⛪ {ficha.cabecalho.deus || 'Sem Devoção'} ▾
+                        </button>
                         <span>•</span>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <select className="select-header" value={ficha.classes[0]?.nome} onChange={e => {
-                                const novasClasses = [...ficha.classes];
-                                novasClasses[0] = { ...novasClasses[0], nome: e.target.value, subclasse: undefined };
-                                updateFicha({ classes: novasClasses, pericias: {} }, true);
-                            }}>
-                                {listaClasses.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                            <button
+                                className="select-header"
+                                onClick={() => setSelectorAtivo('classe')}
+                                style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555' }}
+                                title="Clique para trocar de classe"
+                            >
+                                ⚔️ {ficha.classes[0]?.nome || 'Selecionar...'} ▾
+                            </button>
                             {ficha.classes[0]?.subclasse && <span className="subclass-badge" title="Caminho / Subclasse">{ficha.classes[0].subclasse}</span>}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 10 }}>
@@ -602,6 +650,63 @@ function Ficha() {
                     />
                 </div>
             </div>
+            {/* ── Modais de seleção de entidade (raça/origem/deus/classe) ── */}
+            <EntitySelectorModal
+                aberto={selectorAtivo === 'raca'}
+                titulo="Escolha sua Raça"
+                iconeTitulo="🧬"
+                selecionado={ficha.cabecalho.raca}
+                itens={listaRacas.map((r): EntityItem => {
+                    const meta: any = (dadosRacas as any)?.[r] || (RACAS_METADATA as any)?.[r] || {};
+                    const attrs = meta.attrs || {};
+                    const bonus = Object.entries(attrs)
+                        .filter(([, v]: any) => v !== 0)
+                        .map(([k, v]: any) => `${v > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
+                        .join(', ');
+                    const ICONES: Record<string, string> = {
+                        Humano: '👤', Elfo: '🧝', 'Anão': '⛏️', Goblin: '👹', Kliren: '🔧',
+                        Qareen: '🧞', Golem: '🤖', Osteon: '💀', Sereia: '🧜', 'Sílfide': '🧚',
+                        Suraggel: '👼', Trog: '🦎', Medusa: '🐍', Minotauro: '🐂',
+                        Dahllan: '🌿', Lefou: '🌀', Hynne: '🍀'
+                    };
+                    return { nome: r, icone: ICONES[r] || '⚔️', bonus: bonus || undefined };
+                })}
+                onConfirm={(nome) => handleSelecionarEntidade('raca', nome)}
+                onFechar={() => setSelectorAtivo(null)}
+            />
+
+            <EntitySelectorModal
+                aberto={selectorAtivo === 'origem'}
+                titulo="Escolha sua Origem"
+                iconeTitulo="📜"
+                selecionado={ficha.cabecalho.origem}
+                itens={listaOrigens.map((o): EntityItem => ({ nome: o, icone: '🎭' }))}
+                onConfirm={(nome) => handleSelecionarEntidade('origem', nome)}
+                onFechar={() => setSelectorAtivo(null)}
+            />
+
+            <EntitySelectorModal
+                aberto={selectorAtivo === 'deus'}
+                titulo="Escolha sua Devoção"
+                iconeTitulo="⛪"
+                selecionado={ficha.cabecalho.deus || ''}
+                permitirVazio={true}
+                labelVazio="Sem Devoção"
+                itens={deusesDisponiveis.map((d): EntityItem => ({ nome: d, icone: '✨' }))}
+                onConfirm={(nome) => handleSelecionarEntidade('deus', nome)}
+                onFechar={() => setSelectorAtivo(null)}
+            />
+
+            <EntitySelectorModal
+                aberto={selectorAtivo === 'classe'}
+                titulo="Escolha sua Classe"
+                iconeTitulo="⚔️"
+                selecionado={ficha.classes[0]?.nome}
+                itens={listaClasses.map((c): EntityItem => ({ nome: c, icone: '🗡️' }))}
+                onConfirm={(nome) => handleSelecionarEntidade('classe', nome)}
+                onFechar={() => setSelectorAtivo(null)}
+            />
+
         </div>
     );
 }
