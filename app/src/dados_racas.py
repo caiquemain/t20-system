@@ -4,6 +4,7 @@ from src.models import TamanhoEnum
 DADOS_RACAS = {
     # --- RAÇAS BÁSICAS ---
     "Humano": {
+        "fonte": "T20 JdA",
         "attrs": {},  # +2 em três atributos diferentes (escolha)
         "escolhas": 3,
         "tamanho": TamanhoEnum.MEDIO,
@@ -11,30 +12,35 @@ DADOS_RACAS = {
         "habilidades": ["Versatil_Humano"]
     },
     "Anão": {
+        "fonte": "T20 JdA",
         "attrs": {"con": 2, "sab": 1, "des": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 6,
         "habilidades": ["Conhecimento_Rochas_Anao", "Devagar_Sempre_Anao", "Duro_Pedra_Anao", "Tradicao_Heredrimm_Anao"]
     },
     "Dahllan": {
+        "fonte": "T20 JdA",
         "attrs": {"sab": 2, "des": 1, "int": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Amiga_Plantas_Dahllan", "Armadura_Allihanna_Dahllan", "Empatia_Selvagem_Dahllan"]
     },
     "Elfo": {
+        "fonte": "T20 JdA",
         "attrs": {"int": 2, "des": 1, "con": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 12,
         "habilidades": ["Graca_Glorienn_Elfo", "Sangue_Magico_Elfo", "Sentidos_Elficos_Elfo"]
     },
     "Goblin": {
+        "fonte": "T20 JdA",
         "attrs": {"des": 2, "int": 1, "car": -1},
         "tamanho": TamanhoEnum.PEQUENO,
         "deslocamento": 9,
         "habilidades": ["Engenhoso_Goblin", "Espelunqueiro_Goblin", "Peste_Esguia_Goblin", "Rato_Ruas_Goblin"]
     },
     "Lefou": {
+        "fonte": "T20 JdA",
         # +1 em três atributos diferentes (exceto Carisma)
         "attrs": {"car": -1},
         "escolhas": 3,
@@ -43,42 +49,49 @@ DADOS_RACAS = {
         "habilidades": ["Cria_Tormenta_Lefou", "Deformidade_Lefou"]
     },
     "Minotauro": {
+        "fonte": "T20 JdA",
         "attrs": {"for": 2, "con": 1, "sab": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Chifres_Minotauro", "Couro_Rigido_Minotauro", "Faro_Minotauro", "Medo_Altura_Minotauro"]
     },
     "Qareen": {
+        "fonte": "T20 JdA",
         "attrs": {"car": 2, "int": 1, "sab": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Desejos_Qareen", "Resistencia_Elemental_Qareen", "Tatuagem_Mist_Qareen"]
     },
     "Golem": {
+        "fonte": "T20 JdA",
         "attrs": {"for": 2, "con": 1, "car": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 6,
         "habilidades": ["Chassi_Golem", "Criatura_Artificial_Golem", "Fonte_Elemental_Golem", "Proposito_Criacao_Golem"]
     },
     "Hynne": {
+        "fonte": "T20 JdA",
         "attrs": {"des": 2, "car": 1, "for": -1},
         "tamanho": TamanhoEnum.PEQUENO,
         "deslocamento": 6,
         "habilidades": ["Arremessador_Hynne", "Pequeno_Rechonchudo_Hynne", "Sorte_Salvadora_Hynne"]
     },
     "Kliren": {
+        "fonte": "T20 JdA",
         "attrs": {"int": 2, "car": 1, "for": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Hibrido_Kliren", "Engenhosidade_Kliren", "Ossos_Frageis_Kliren", "Vanguardista_Kliren"]
     },
     "Medusa": {
+        "fonte": "T20 JdA",
         "attrs": {"des": 2, "car": 1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Cria_Megalokk_Medusa", "Natureza_Venenosa_Medusa", "Olhar_Atordoante_Medusa"]
     },
     "Osteon": {
+        "fonte": "T20 JdA",
         "attrs": {"con": -1},  # +1 em três atributos (exceto Con)
         "escolhas": 3,
         "tamanho": TamanhoEnum.MEDIO,
@@ -86,6 +99,7 @@ DADOS_RACAS = {
         "habilidades": ["Armadura_Ossea_Osteon", "Memoria_Postuma_Osteon", "Natureza_Esqueletica_Osteon", "Preco_Nao_Vida_Osteon"]
     },
     "Sereia/Tritão": {
+        "fonte": "T20 JdA",
         "attrs": {},  # +1 em três atributos diferentes
         "escolhas": 3,
         "tamanho": TamanhoEnum.MEDIO,
@@ -93,24 +107,28 @@ DADOS_RACAS = {
         "habilidades": ["Cancao_Mares_Sereia", "Mestre_Tridente_Sereia", "Transf_Anfibia_Sereia"]
     },
     "Sílfide": {
+        "fonte": "T20 JdA",
         "attrs": {"car": 2, "des": 1, "for": -2},
         "tamanho": TamanhoEnum.MINUSCULO,
         "deslocamento": 9,  # Voo
         "habilidades": ["Asas_Borboleta_Silfide", "Esp_Natureza_Silfide", "Magia_Fadas_Silfide"]
     },
     "Suraggel (Aggelus)": {
+        "fonte": "T20 JdA",
         "attrs": {"sab": 2, "car": 1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Heranca_Divina_Suraggel", "Luz_Sagrada_Aggelus"]
     },
     "Suraggel (Sulfure)": {
+        "fonte": "T20 JdA",
         "attrs": {"des": 2, "int": 1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Heranca_Divina_Suraggel", "Sombras_Prof_Sulfure"]
     },
     "Trog": {
+        "fonte": "T20 JdA",
         "attrs": {"con": 2, "for": 1, "int": -1},
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
