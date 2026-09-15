@@ -1,5 +1,11 @@
 import React from 'react';
 import { DesejosButton } from './DesejosButton';
+
+// Condições situacionais ativáveis direto no card da habilidade
+const CONDICOES_TOGGLE: Record<string, { id: string; label: string; icone: string }> = {
+    "Reptiliano": { id: "sem_armadura", label: "Sem armadura ou roupas pesadas", icone: "🦎" },
+    "Conhecimento das Rochas": { id: "subterraneo", label: "No subterrâneo", icone: "⛰️" },
+};
 import type { Habilidade } from '../types';
 
 interface AbilityCardProps {
@@ -8,9 +14,10 @@ interface AbilityCardProps {
     onAtivar: (custo: number, nome: string) => void;
     updateFicha?: (data: any) => void;
     magiasConhecidas?: string[];
+    condicoesAtivas?: string[];
 }
 
-export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, onAtivar, updateFicha, magiasConhecidas = [] }) => {
+export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, onAtivar, updateFicha, magiasConhecidas = [], condicoesAtivas = [] }) => {
     const ativavel = habilidade.efeitos?.habilidade_ativavel;
     const podePagar = ativavel ? pmAtual >= ativavel.custo : false;
 
@@ -97,6 +104,35 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                         {ativavel.resistencia && <Badge label="Resistência" value={ativavel.resistencia} />}
                     </div>
                 )}
+                {CONDICOES_TOGGLE[habilidade.nome] && (efeitos as any).bonus_pericia_condicional && updateFicha && (() => {
+                    const cfg = CONDICOES_TOGGLE[habilidade.nome];
+                    const ativa = condicoesAtivas.includes(cfg.id);
+                    const bonusTxt = Object.entries((efeitos as any).bonus_pericia_condicional as Record<string, number>)
+                        .map(([p, v]) => `+${v} ${p}`).join(', ');
+                    return (
+                        <div style={{ marginTop: 10 }}>
+                            <button
+                                className="btn-action"
+                                style={{
+                                    background: ativa ? 'rgba(76, 175, 80, 0.15)' : 'transparent',
+                                    border: `1px solid ${ativa ? '#4caf50' : '#555'}`,
+                                    color: ativa ? '#4caf50' : '#888',
+                                    fontWeight: 'bold', fontSize: '0.8rem', padding: '6px 12px',
+                                    display: 'block', width: '100%', textAlign: 'left'
+                                }}
+                                title={ativa ? 'Desativar condição (remove o bônus)' : 'Ativar condição (aplica o bônus)'}
+                                onClick={() => {
+                                    const novas = ativa
+                                        ? condicoesAtivas.filter((c: string) => c !== cfg.id)
+                                        : [...condicoesAtivas, cfg.id];
+                                    updateFicha({ condicoes_ativas: novas } as any);
+                                }}
+                            >
+                                {cfg.icone} {ativa ? 'ATIVO:' : 'Ativar:'} {cfg.label} ({bonusTxt})
+                            </button>
+                        </div>
+                    );
+                })()}
                 {habilidade.nome === "Desejos" && updateFicha && (
                     <DesejosButton
                         magiaAtual={escolhas.magia_desejada || ''}

@@ -513,6 +513,7 @@ function Ficha() {
                                         onAtivar={handleAtivarHabilidade}
                                         updateFicha={updateFicha}
                                         magiasConhecidas={(ficha.combate?.magias || []).map((m: any) => m.nome)}
+                                        condicoesAtivas={ficha.condicoes_ativas || []}
                                     />
                                 ))}
                             </div>
