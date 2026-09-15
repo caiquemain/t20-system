@@ -150,9 +150,20 @@ function Ficha() {
                         duracao: efeitosAtivaveis.duracao || "Cena"
                     });
                 });
+            } else {
+                // Buff MARCADOR: habilidades ativáveis SEM modificadores
+                // numéricos (Transformação Anfíbia, Asas de Borboleta)
+                // precisam de um buff para que jaEstaAtivo detecte a
+                // desativação no próximo clique
+                novosBuffs.push({
+                    origem: nome,
+                    atributo: "marcador_ativacao",
+                    valor: 0,
+                    duracao: efeitosAtivaveis.duracao || "Cena"
+                });
             }
-            else if (nome === "Asas de Borboleta") setIsFlying(true);
-            else if (nome === "Transformação Anfíbia") setIsAquatic(true);
+            if (nome === "Asas de Borboleta") setIsFlying(true);
+            if (nome === "Transformação Anfíbia") setIsAquatic(true);
 
             console.log(`⚡ ${nome} ativado!`);
         }
