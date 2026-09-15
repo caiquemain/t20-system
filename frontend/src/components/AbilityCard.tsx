@@ -79,24 +79,48 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
             </div>
             <div style={{ padding: '15px', color: '#ccc', fontSize: '0.9rem', lineHeight: '1.5' }}>
                 {habilidade.descricao}
-                {chavesEscolha.length > 0 && (
-                    <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {chavesEscolha.map(chave => {
-                            const valor = escolhas[chave];
-                            const valores = Array.isArray(valor) ? valor : [valor];
-                            return valores.map((v: any, i: number) => (
-                                <span key={`${chave}-${i}`} style={{
-                                    fontSize: '0.75rem', color: '#80deea',
-                                    background: 'rgba(0, 188, 212, 0.1)',
-                                    padding: '2px 8px', borderRadius: '4px',
-                                    border: '1px solid rgba(0, 188, 212, 0.4)'
-                                }}>
-                                    ✨ {formatarRotuloEscolha(chave)}: <strong>{String(v)}</strong>
-                                </span>
-                            ));
-                        })}
-                    </div>
-                )}
+                {(() => {
+                    // Oculta metadados de UI (modo_slot_*) e chaves vazias
+                    const chavesVisiveis = chavesEscolha.filter(c =>
+                        !c.startsWith('modo_slot') &&
+                        (Array.isArray(escolhas[c]) ? escolhas[c] : [escolhas[c]])
+                            .some((v: any) => v !== '' && v !== null && v !== undefined)
+                    );
+                    // Rótulos legíveis por família de chave (Deformidade/Lefou)
+                    const ROTULOS_FAMILIA: Record<string, string> = {
+                        poder_tormenta: 'Poder da Tormenta',
+                        pericia_bonus: 'Perícia +2',
+                    };
+                    if (chavesVisiveis.length === 0) return null;
+                    return (
+                        <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {chavesVisiveis.map(chave => {
+                                const valores = (Array.isArray(escolhas[chave]) ? escolhas[chave] : [escolhas[chave]])
+                                    .filter((v: any) => v !== '' && v !== null && v !== undefined);
+                                const mFam = chave.match(/^(.+)_(\d+)$/);
+                                const familia = mFam ? mFam[1] : null;
+                                // Numera só quando há 2+ escolhas da mesma família
+                                const qtdFamilia = familia
+                                    ? chavesVisiveis.filter(c => c.startsWith(familia + '_')).length
+                                    : 0;
+                                const idx = mFam ? parseInt(mFam[2], 10) + 1 : 0;
+                                const rotulo = familia && ROTULOS_FAMILIA[familia]
+                                    ? (qtdFamilia > 1 ? `${ROTULOS_FAMILIA[familia]} (${idx})` : ROTULOS_FAMILIA[familia])
+                                    : formatarRotuloEscolha(chave);
+                                return valores.map((v: any, i: number) => (
+                                    <span key={`${chave}-${i}`} style={{
+                                        fontSize: '0.75rem', color: '#80deea',
+                                        background: 'rgba(0, 188, 212, 0.1)',
+                                        padding: '2px 8px', borderRadius: '4px',
+                                        border: '1px solid rgba(0, 188, 212, 0.4)'
+                                    }}>
+                                        ✨ {rotulo}: <strong>{String(v)}</strong>
+                                    </span>
+                                ));
+                            })}
+                        </div>
+                    );
+                })()}
                 {ativavel && (
                     <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         {ativavel.alcance && <Badge label="Alcance" value={ativavel.alcance} />}
