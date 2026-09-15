@@ -10,6 +10,7 @@ interface RacialRowProps {
     dadosOrigens: any;
     abrirSeletor: (tipo: string, titulo: string, listaRestrita?: string[], categoriaFixa?: string, onConfirm?: (val: string) => void, itensBloqueados?: string[]) => void;
     updateRacialChoice: (idx: number, key: string, val: any) => void;
+    updateRacialChoiceMulti?: (idx: number, updates: Record<string, any>) => void;
     getBlacklistGlobal: (ignorar?: string) => string[];
     getNomeHabilidade: (id: string) => string;
     poderesDoDeus: string[];
@@ -18,7 +19,7 @@ interface RacialRowProps {
 
 export const RacialAbilityRow: React.FC<RacialRowProps> = ({
     hab, index, dadosHabilidadesRaciais, listaPoderesGerais, dadosMagias, dadosOrigens, magiasConhecidas = [],
-    abrirSeletor, updateRacialChoice, getBlacklistGlobal, getNomeHabilidade, poderesDoDeus,
+    abrirSeletor, updateRacialChoice, updateRacialChoiceMulti, getBlacklistGlobal, getNomeHabilidade, poderesDoDeus,
     listaPericias
 }) => {
     const [modoEscolha, setModoEscolha] = useState<'pericia' | 'poder' | 'racial'>('pericia');
@@ -139,6 +140,9 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
             qtd = parseInt(efeitos.pericia_bonus_escolha);
         }
 
+        // Lista restrita de Poderes da Tormenta (filtrada por categoria)
+        const poderesTormenta = listaPoderesGerais.filter((p: any) => p.categoria === 'Tormenta');
+
         if (!isNaN(qtd) && qtd > 0) {
             const permiteTroca = efeitos.troca_poder_tormenta === true;
             const maxTrocas = 1;
@@ -163,40 +167,119 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                 const isPowerMode = modoAtual === 'poder';
                 const podeTrocarAgora = slotsComoPoder < maxTrocas || isPowerMode;
 
+                const switchMode = (m: 'pericia' | 'poder') => {
+                    // Gravação atômica: modo + limpeza da chave oposta numa única chamada
+                    const updates: Record<string, any> = { [chaveModo]: m };
+                    if (m === 'pericia') {
+                        updates[chavePoder] = "";
+                    } else {
+                        updates[chavePericia] = "";
+                    }
+                    if (updateRacialChoiceMulti) {
+                        updateRacialChoiceMulti(hab.nome, updates);
+                    } else {
+                        // Fallback: duas chamadas (pode causar race condition)
+                        updateRacialChoice(hab.nome, chaveModo, m);
+                        updateRacialChoice(hab.nome, m === 'pericia' ? chavePoder : chavePericia, "");
+                    }
+                };
+
                 renderizadores.push(
-                    <div key={i} className="sub-section" style={{ marginTop: 8 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                            <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'bold' }}>
-                                {isPowerMode ? `Slot ${i + 1}: Poder da Tormenta` : `Slot ${i + 1}: Perícia (+2)${prefixoRestrito ? ' — ' + prefixoRestrito : ''}`}
-                            </span>
+                    <div key={i} className="sub-section" style={{
+                        marginTop: 10, padding: 10,
+                        border: `1px dashed ${isPowerMode ? '#9c27b0' : '#555'}`,
+                        borderRadius: 4,
+                        background: isPowerMode ? 'rgba(156, 39, 176, 0.05)' : 'rgba(0,0,0,0.15)'
+                    }}>
+                        <div style={{
+                            display: 'flex', justifyContent: 'space-between',
+                            marginBottom: 8, alignItems: 'center'
+                        }}>
+                            <label style={{
+                                fontSize: '0.85rem',
+                                color: isPowerMode ? '#ce93d8' : '#ffd700',
+                                fontWeight: 'bold'
+                            }}>
+                                {permiteTroca ? `Bônus ${i + 1}` : `Perícia ${i + 1} (+2)`}
+                            </label>
                             {permiteTroca && (
-                                <button
-                                    className="btn-action"
-                                    style={{ padding: '2px 8px', fontSize: '0.7rem' }}
-                                    disabled={!podeTrocarAgora && !isPowerMode}
-                                    onClick={() => updateRacialChoice(hab.nome, chaveModo, isPowerMode ? 'pericia' : 'poder')}
-                                >
-                                    {isPowerMode ? 'Virar Perícia' : 'Virar Poder'}
-                                </button>
+                                <div style={{ display: 'flex', gap: 5 }}>
+                                    <button
+                                        onClick={() => switchMode('pericia')}
+                                        disabled={!podeTrocarAgora && isPowerMode}
+                                        style={{
+                                            fontSize: '0.7rem', padding: '3px 8px',
+                                            background: !isPowerMode ? '#00bcd4' : '#333',
+                                            color: !isPowerMode ? '#000' : '#888',
+                                            border: 'none', borderRadius: 3, cursor: 'pointer',
+                                            opacity: (!podeTrocarAgora && isPowerMode) ? 0.4 : 1
+                                        }}
+                                        title="Bônus de +2 em perícia"
+                                    >
+                                        🎯 Perícia (+2)
+                                    </button>
+                                    <button
+                                        onClick={() => switchMode('poder')}
+                                        disabled={!podeTrocarAgora && !isPowerMode}
+                                        style={{
+                                            fontSize: '0.7rem', padding: '3px 8px',
+                                            background: isPowerMode ? '#9c27b0' : '#333',
+                                            color: isPowerMode ? '#fff' : '#888',
+                                            border: 'none', borderRadius: 3, cursor: 'pointer',
+                                            opacity: (!podeTrocarAgora && !isPowerMode) ? 0.4 : 1
+                                        }}
+                                        title="Poder da Tormenta (máx 1)"
+                                    >
+                                        🌀 Poder da Tormenta
+                                    </button>
+                                </div>
                             )}
                         </div>
 
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                            <input type="text" readOnly value={getNomeHabilidade(isPowerMode ? valorPoder : valorPericia) || (isPowerMode ? valorPoder : valorPericia)} placeholder="Selecione..." style={{ flex: 1 }} />
-                            <button
-                                className="btn-action"
-                                onClick={() => abrirSeletor(
-                                    isPowerMode ? 'poder' : 'pericia',
-                                    isPowerMode ? 'Escolha: Poder da Tormenta' : 'Escolha: Perícia (+2)',
-                                    isPowerMode ? [] : (prefixoRestrito ? listaPericias.filter(pp => pp.startsWith(prefixoRestrito)) : listaPericias),
-                                    undefined,
-                                    (v) => updateRacialChoice(hab.nome, isPowerMode ? chavePoder : chavePericia, v),
-                                    getBlacklistGlobal(isPowerMode ? valorPoder : valorPericia)
-                                )}
-                            >
-                                Escolher
-                            </button>
+                            <input
+                                value={getNomeHabilidade(isPowerMode ? valorPoder : valorPericia) || (isPowerMode ? valorPoder : valorPericia)}
+                                readOnly
+                                className="input-dark"
+                                style={{ flex: 1 }}
+                                placeholder={isPowerMode ? "Poder da Tormenta..." : `Perícia (+2)${prefixoRestrito ? ' — ' + prefixoRestrito : ''}...`}
+                            />
+                            {isPowerMode ? (
+                                <button
+                                    className="btn-action"
+                                    style={{ background: '#9c27b0' }}
+                                    onClick={() => abrirSeletor(
+                                        'poder',
+                                        'Escolha: Poder da Tormenta',
+                                        poderesTormenta.map((p: any) => p.nome),
+                                        undefined,
+                                        (v) => updateRacialChoice(hab.nome, chavePoder, v),
+                                        getBlacklistGlobal(valorPoder)
+                                    )}
+                                >
+                                    Escolher
+                                </button>
+                            ) : (
+                                <button
+                                    className="btn-action"
+                                    onClick={() => abrirSeletor(
+                                        'pericia',
+                                        'Escolha: Perícia (+2)',
+                                        prefixoRestrito ? listaPericias.filter(pp => pp.startsWith(prefixoRestrito)) : listaPericias,
+                                        undefined,
+                                        (v) => updateRacialChoice(hab.nome, chavePericia, v),
+                                        getBlacklistGlobal(valorPericia)
+                                    )}
+                                >
+                                    Escolher
+                                </button>
+                            )}
                         </div>
+                        {!permiteTroca && (
+                            <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 4, fontStyle: 'italic' }}>
+                                Bônus de +2 em perícia à sua escolha
+                            </div>
+                        )}
                     </div>
                 );
             }

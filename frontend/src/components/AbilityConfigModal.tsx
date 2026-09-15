@@ -102,6 +102,22 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
         setHabilidadesEmEdicao(novos);
     };
 
+    // Gravação atômica de múltiplas chaves (evita race condition em switchMode)
+    const updateRacialChoiceMulti = (ref: number | string, updates: Record<string, any>) => {
+        const novos = [...habilidadesEmEdicao];
+        let idx = typeof ref === 'number' ? ref : novos.findIndex(h => h.nome === ref);
+        if (idx === -1 || !novos[idx]) {
+            console.error('[MODAL][RACIAL] alvo não encontrado:', { ref, updates });
+            return;
+        }
+        console.log('[MODAL][RACIAL] gravando múltiplas chaves:', { alvo: novos[idx].nome, updates });
+        novos[idx] = {
+            ...novos[idx],
+            escolhas_aplicadas: { ...(novos[idx].escolhas_aplicadas || {}), ...updates }
+        };
+        setHabilidadesEmEdicao(novos);
+    };
+
     // [LOTE 1-UI] Atualiza escolha secundária de um poder (escola/atributo/familiar)
     const updatePoderEscolha = (poderNome: string, chave: string, valor: any) => {
         if (!setPoderesEscolhasEmEdicao) return;
@@ -229,6 +245,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                             dadosMagias={dadosMagias} dadosOrigens={dadosOrigens}
                             abrirSeletor={abrirSeletor}
                             updateRacialChoice={updateRacialChoice}
+                            updateRacialChoiceMulti={updateRacialChoiceMulti}
                             getBlacklistGlobal={getBlacklistGlobal}
                             getNomeHabilidade={getNomeHabilidade}
                             poderesDoDeus={poderesDoDeus}
