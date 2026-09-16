@@ -19,13 +19,9 @@ def _ficha_com(*itens):
     return p
 
 
-def _set_des(ficha, base):
-    attr = getattr(ficha.atributos, "destreza", None)
-    if attr is None or not hasattr(attr, "base"):
-        pytest.skip("shape de atributo sem campo base")
-    attr.base = base
-    if calcular_modificador(ficha.atributos.destreza) == 0:
-        pytest.skip("modificador não reflete base")
+def _set_des(ficha, mod):
+    """atributos guardam o modificador direto (point-buy), ex.: destreza=2."""
+    ficha.atributos.destreza = mod
 
 
 # --- Catálogo ---
@@ -164,14 +160,14 @@ def test_defesa_acumula_armadura_e_escudo():
 
 def test_armadura_pesada_ignora_destreza():
     p = _ficha_com(Item(nome="Cota de malha", tipo="Armadura", equipado=True))
-    _set_des(p, 14)
+    _set_des(p, 2)
     calcular_defesa_e_deslocamento(p)
     assert not [f for f in p.status.defesa_calc.fontes if f.fonte == "Destreza"]
 
 
 def test_armadura_leve_mantem_destreza():
     p = _ficha_com(Item(nome="Armadura de couro", tipo="Armadura", equipado=True))
-    _set_des(p, 14)
+    _set_des(p, 2)
     calcular_defesa_e_deslocamento(p)
     assert [f for f in p.status.defesa_calc.fontes if f.fonte == "Destreza"]
 
@@ -229,3 +225,14 @@ def test_penalidade_inclui_sobrecarga():
     )
     sincronizar_carga(p)
     assert calcular_penalidade_armadura(p) == 10  # 5 armadura + 5 sobrecarga
+
+
+def test_carga_reage_a_forca():
+    """Regressão: carga máxima usava campo 'for' inexistente (modelo é 'forca')."""
+    p = _ficha_com()
+    p.atributos.forca = 2   # mod +2 -> limite 10 + 2*2 = 14
+    sincronizar_carga(p)
+    assert p.inventario.carga_maxima == 14
+    p.atributos.forca = -1  # mod negativo: -1 por ponto -> 10 - 1 = 9
+    sincronizar_carga(p)
+    assert p.inventario.carga_maxima == 9
