@@ -17,6 +17,7 @@ import { StatusBars } from '../components/StatusBars';
 import { RacialAttributeModal } from '../components/RacialAttributeModal';
 import { EntitySelectorModal, type EntityItem } from '../components/EntitySelectorModal';
 import { AbilityCard } from '../components/AbilityCard';
+import { EquipamentoCard } from '../components/EquipamentoCard';
 import { AttackList } from '../components/AttackList';
 
 // Tipos
@@ -71,7 +72,7 @@ function Ficha() {
 
     const {
         ficha, loading,
-        dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
+        dadosClasses, dadosOrigens, dadosRacas, dadosEquipamentos, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
         listaDeuses, dadosDeuses, dadosHabilidades,
         dadosHabilidadesRaciais,
@@ -147,6 +148,10 @@ function Ficha() {
         }
         
         setSelectorAtivo(null);
+    };
+
+    const handleUpdateInventario = (novoInventario: any) => {
+        updateFicha({ inventario: novoInventario }, true);
     };
 
     const handleSalvarAtributosRaciais = () => {
@@ -538,10 +543,11 @@ function Ficha() {
                     </div>
 
                     <div className="col-inventory">
-                        <div className="section-card">
-                            <h3 className="section-title">Equipamento</h3>
-                            <p style={{ color: '#777', textAlign: 'center' }}>Carga: {ficha.inventario.carga_total} / {ficha.inventario.carga_maxima}</p>
-                        </div>
+                        <EquipamentoCard
+                            inventario={ficha.inventario}
+                            dadosEquipamentos={dadosEquipamentos}
+                            onUpdateInventario={handleUpdateInventario}
+                        />
                         <AttackList
                             ataques={(ficha.combate.ataques || []).map((a: any) => ({ ...a, teste: a.teste || '—' }))}
                             fluxoDeMana={Boolean(ficha.combate.fluxo_de_mana)}
