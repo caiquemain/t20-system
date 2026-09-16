@@ -3,7 +3,7 @@ import {
     fetchRacas, fetchClasses, fetchOrigens, fetchPericias, fetchPoderes, fetchDeuses,
     fetchDadosClasses, fetchDadosOrigens, fetchDadosRacas, fetchDadosHabilidadesClasse,
     fetchDadosMagias, fetchDadosHabilidades, fetchDadosDeuses, fetchDadosPoderesConcedidos,
-    fetchDadosHabilidadesRaciais, fetchDadosEscolhas,
+    fetchDadosHabilidadesRaciais, fetchDadosEscolhas, fetchDadosEquipamentos,
     fetchPersonagem, updatePersonagem, createPersonagem
 } from '../services/api';
 import type { Personagem, Habilidade } from '../types';
@@ -48,6 +48,7 @@ export const useFicha = (id: string | undefined) => {
     const [dadosClasses, setDadosClasses] = useState<any>({});
     const [dadosOrigens, setDadosOrigens] = useState<any>({});
     const [dadosRacas, setDadosRacas] = useState<any>({});
+    const [dadosEquipamentos, setDadosEquipamentos] = useState<any>(null);
     const [dadosHabilidadesClasse, setDadosHabilidadesClasse] = useState<any>({});
     const [dadosMagias, setDadosMagias] = useState<any>({});
     const [dadosHabilidades, setDadosHabilidades] = useState<any>({});
@@ -84,7 +85,8 @@ export const useFicha = (id: string | undefined) => {
                     fetchDadosDeuses().catch(() => ({ data: {} })),
                     fetchDadosPoderesConcedidos().catch(() => ({ data: {} })),
                     fetchDadosHabilidadesRaciais().catch(() => ({ data: {} })),
-                fetchDadosEscolhas().catch(() => ({ data: {} }))
+                fetchDadosEscolhas().catch(() => ({ data: {} })),
+                fetchDadosEquipamentos().catch(() => ({ data: { armas: {}, armaduras: {} } }))
                 ]);
                 setListaRacas(results[0].data);
                 setListaClasses(results[1].data);
@@ -102,6 +104,7 @@ export const useFicha = (id: string | undefined) => {
                 setDadosPoderesConcedidos(results[13].data);
                 setDadosHabilidadesRaciais(results[14].data);
              setDadosEscolhas(results[15]?.data || {});
+             setDadosEquipamentos(results[16]?.data || { armas: {}, armaduras: {} });
 
                 const idValido = id && id !== 'novo' && id !== 'null' && id !== 'undefined';
                 if (idValido) {
@@ -348,7 +351,7 @@ export const useFicha = (id: string | undefined) => {
     return {
         ficha, setFicha, loading, salvando, error,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes, listaDeuses,
-        dadosClasses, dadosOrigens, dadosRacas, dadosHabilidadesClasse, dadosMagias,
+        dadosClasses, dadosOrigens, dadosRacas, dadosEquipamentos, dadosHabilidadesClasse, dadosMagias,
         dadosHabilidades, dadosDeuses, dadosPoderesConcedidos, dadosHabilidadesRaciais,
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,

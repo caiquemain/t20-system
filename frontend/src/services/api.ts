@@ -37,3 +37,4 @@ export const updatePersonagem = (id: string, data: Partial<Personagem>) => api.p
 export const deletePersonagem = (id: string) => api.delete(`/personagens/${id}`);
 export const fetchDadosHabilidadesRaciais = () => api.get('/dados/habilidades-raciais');
 export default api;
+export const fetchDadosEquipamentos = () => api.get('/dados/equipamentos');
