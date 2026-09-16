@@ -13,6 +13,7 @@ from src.dados_deuses import DADOS_DEUSES
 from src.dados_poderes_concedidos import DADOS_PODERES_CONCEDIDOS
 from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
 from src.dados_poderes_tormenta import DADOS_PODERES_TORMENTA
+from src.dados_equipamentos import DADOS_ARMAS, DADOS_ARMADURAS
 
 router = APIRouter(tags=["Dados"])
 
@@ -158,3 +159,9 @@ def get_dados_escolhas():
     """Catálogo único de opções de escolha (fonte de verdade p/ frontend)."""
     from src.dados_escolhas import montar_catalogo_escolhas
     return montar_catalogo_escolhas()
+
+
+@router.get("/dados/equipamentos", tags=["Dados Estáticos"])
+async def get_equipamentos():
+    """Catálogo de armas (T3-3) e armaduras/escudos (T3-5)."""
+    return {"armas": DADOS_ARMAS, "armaduras": DADOS_ARMADURAS}
