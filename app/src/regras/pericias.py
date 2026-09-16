@@ -32,6 +32,11 @@ def _garantir_chave_str(valor: Any) -> str:
     return str(valor)
 
 
+# T20 JdA p.153: penalidade de armadura aplica em Acrobacia,
+# Furtividade e Ladinagem (+ Atletismo em natação; simplificado: toda a perícia)
+PERICIAS_PENALIDADE_ARMADURA = {"Acrobacia", "Furtividade", "Ladinagem", "Atletismo"}
+
+
 def inicializar_pericias(ficha: Personagem):
     logger.info("--- [3] Inicializando Perícias (Refatorado & Genérico) ---")
 
@@ -58,7 +63,31 @@ def inicializar_pericias(ficha: Personagem):
     tamanho = getattr(ficha.descricao, "tamanho", TamanhoEnum.MEDIO)
     penalidade_tamanho_furt = -2 if tamanho == TamanhoEnum.GRANDE else (
         -5 if tamanho == TamanhoEnum.ENORME else 0)
-    penalidade_armadura = 0
+    # Penalidade de armadura/escudo/sobrecarga já calculada pelo motor de equipamento
+    # Status guarda magnitude positiva; aqui precisa ser NEGATIVA (subtrai do total)
+    penalidade_armadura = -abs(getattr(ficha.status, "penalidade_armadura", 0) or 0)
+
+    # Regra de NÃO PROFICIÊNCIA (p.152): se veste armadura/escudo sem ser proficiente,
+    # TODAS as perícias de FOR e DES sofrem a penalidade (além das 3 de agilidade)
+    _nao_prof_armadura = False
+    if penalidade_armadura > 0:
+        from .inventario import catalogo_do_item
+        _profs = " ".join(getattr(ficha, "proficiencias", []) or []).lower()
+        _vestidas = []
+        for _it in getattr(ficha.inventario, "equipamentos", []) or []:
+            if not _it.equipado:
+                continue
+            _cat = catalogo_do_item(_it.nome)
+            if _cat and _cat.get("_categoria") in ("Leve", "Pesada", "Escudo"):
+                _vestidas.append(_cat)
+        if _vestidas:
+            _nao_prof_armadura = any(
+                not (
+                    "escudos" in _profs if _c["_categoria"] == "Escudo"
+                    else f"armaduras {_c['_categoria'].lower()}" in _profs
+                )
+                for _c in _vestidas
+            )
 
     qtd_tormenta = sum(
         1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
@@ -266,7 +295,11 @@ def inicializar_pericias(ficha: Personagem):
             fontes_bonus.append(f"Racial/Geral ({sinal}{bonus_attr_geral})")
 
         penalidade_aplicada = 0
-        if dados_base.get("penalidade_armadura"):
+        # Regra p.153: perícias de agilidade (+Atletismo/natação) ou flag em dados_base
+        if dados_base.get("penalidade_armadura") or nome_pericia in PERICIAS_PENALIDADE_ARMADURA:
+            penalidade_aplicada += penalidade_armadura
+        # Regra p.152: não proficiente -> TODAS as perícias de FOR/DES sofrem
+        elif _nao_prof_armadura and attr_final in ("for", "des"):
             penalidade_aplicada += penalidade_armadura
 
         if nome_pericia == "Furtividade" and penalidade_tamanho_furt != 0:
