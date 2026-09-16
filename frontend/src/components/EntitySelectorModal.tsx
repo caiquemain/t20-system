@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 
 export interface EntityItem {
     nome: string;
+    tooltip?: string;
     icone?: string;
     descricao?: string;
     bonus?: string;  // ex: "+2 FOR, +1 CON" ou "Benefícios: 2 escolhas"

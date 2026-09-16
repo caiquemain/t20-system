@@ -15,24 +15,33 @@ def catalogo_do_item(nome: str) -> Optional[Dict]:
     return None
 
 
+# Abreviações T20 -> nomes de campo no modelo Personagem
+_ALIASES = {
+    "for": "forca", "des": "destreza", "con": "constituicao",
+    "int": "inteligencia", "sab": "sabedoria", "car": "carisma",
+}
+
+
 def mod_atributo(ficha: Personagem, chave: str) -> int:
     """Lê o modificador de um atributo de forma defensiva (for/des/con...)."""
     attrs = getattr(ficha, "atributos", None)
     if attrs is None:
         return 0
-    obj = getattr(attrs, chave, None)
-    if obj is None:
-        obj = getattr(attrs, chave + "_", None)
-    if obj is None and isinstance(attrs, dict):
-        obj = attrs.get(chave) or attrs.get(chave + "_")
-    if obj is None:
-        return 0
-    if isinstance(obj, (int, float)):
-        return int(obj)
-    for campo in ("mod", "modificador", "total", "valor"):
-        v = obj.get(campo) if isinstance(obj, dict) else getattr(obj, campo, None)
-        if isinstance(v, (int, float)):
-            return int(v)
+    nomes = [chave, _ALIASES.get(chave, ""), chave + "_"]
+    for nome in nomes:
+        if not nome:
+            continue
+        obj = getattr(attrs, nome, None)
+        if obj is None and isinstance(attrs, dict):
+            obj = attrs.get(nome)
+        if obj is None:
+            continue
+        if isinstance(obj, (int, float)):
+            return int(obj)
+        for campo in ("mod", "modificador", "total", "valor"):
+            v = obj.get(campo) if isinstance(obj, dict) else getattr(obj, campo, None)
+            if isinstance(v, (int, float)):
+                return int(v)
     return 0
 
 
