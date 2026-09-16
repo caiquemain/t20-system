@@ -286,6 +286,7 @@ class Inventario(BaseModel):
     equipamentos: List[Item] = []
     carga_total: int = 0
     carga_maxima: int = 0
+    sobrecargado: bool = False  # carga_total > carga_maxima: -5 pen. armadura, -3m desloc.
 
 class ClasseInfo(BaseModel):
     nome: str

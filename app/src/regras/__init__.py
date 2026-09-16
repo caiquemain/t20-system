@@ -23,6 +23,7 @@ from .status import (
 )
 
 # 2. ATUALIZADO: Removemos 'calcular_proficiencias_e_sentidos' daqui (pois movida para status)
+from .inventario import sincronizar_carga, sincronizar_ataques_equipamento
 from .combate import sincronizar_ataques
 
 from ..models import Personagem
@@ -67,6 +68,8 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
 
     calcular_reducoes_dano(ficha)
     sincronizar_ataques(ficha)
+    sincronizar_ataques_equipamento(ficha)
+    sincronizar_carga(ficha)
     sincronizar_ataques_magicos(ficha)
     atualizar_efeitos_ativos(ficha)
 
