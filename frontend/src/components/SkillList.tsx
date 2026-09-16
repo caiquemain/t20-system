@@ -229,6 +229,16 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                         </div>
                         <div className="tooltip-row"><span>Treino</span><span>+{treinoVal}</span></div>
 
+                        {/* Penalidades (Armadura/Tamanho): linha própria p/ a conta fechar */}
+                        {((info as any).calculo?.fontes || [])
+                            .filter((f: any) => f.categoria === 'Penalidade')
+                            .map((f: any, idx: number) => (
+                                <div key={`pen-${idx}`} className="tooltip-row" style={{ color: '#ff8a80', fontWeight: 'bold' }}>
+                                    <span>🛡️ {f.fonte}</span>
+                                    <span>{f.valor >= 0 ? `+${f.valor}` : f.valor}</span>
+                                </div>
+                            ))}
+
                         {/* SEÇÃO DE OUTROS DETALHADA */}
                         <div style={{ marginTop: 5, borderTop: '1px dashed #444', paddingTop: 3 }}>
                             <div className="tooltip-row" style={{ color: outrosExibicao !== 0 ? '#4fc3f7' : '#ccc', fontWeight: 'bold' }}>
