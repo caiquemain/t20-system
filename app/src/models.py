@@ -145,6 +145,7 @@ class Status(BaseModel):
     defesa: DefesaDetalhe = Field(default_factory=DefesaDetalhe)
     rd: List[str] = []
     deslocamento: float = 9.0
+    penalidade_armadura: int = 0  # Acumulada: armadura + escudo + sobrecarga (-5)
     detalhes_deslocamento: Optional[DetalhesDeslocamento] = None
     buffs: List[Buff] = []
     efeitos_ativos: List[str] = []

@@ -1,3 +1,4 @@
+from .inventario import catalogo_do_item, calcular_penalidade_armadura
 import math
 import logging
 from ..models import Personagem, StatCalculado, FonteBonus
@@ -159,13 +160,35 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
     # ═══════════════════════════════════════════
     defesa_calc = StatCalculado(base=10, total=10)
 
-    # Destreza
-    if mod_des != 0:
+    # Destreza (só se não usar armadura pesada)
+    usa_pesada = any(
+        item.equipado and 
+        (catalogo_do_item(item.nome) or {}).get("tipo_armadura") == "Pesada"
+        for item in ficha.inventario.equipamentos
+    )
+    if mod_des != 0 and not usa_pesada:
         defesa_calc.adicionar_bonus(
             fonte="Destreza",
             categoria="Atributo",
             valor=mod_des
         )
+    
+    # Armadura vestida e escudo empunhado
+    for item in ficha.inventario.equipamentos:
+        if not item.equipado:
+            continue
+        cat = catalogo_do_item(item.nome)
+        if not cat:
+            continue
+        tipo_arm = cat.get("tipo_armadura")
+        if tipo_arm in ["Leve", "Pesada", "Escudo"]:
+            bonus_def = cat.get("bonus_defesa", 0)
+            if bonus_def > 0:
+                defesa_calc.adicionar_bonus(
+                    fonte=f"Equipamento: {item.nome}",
+                    categoria="Equipamento",
+                    valor=bonus_def
+                )
 
     qtd_tormenta = sum(
         1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
@@ -230,6 +253,33 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
             ))
             deslocamento_calc.total = novo_val
 
+    # Armadura pesada vestida: -3m deslocamento (respeita imunidade)
+    if usa_pesada:
+        # Verificar imunidade
+        tem_imunidade = any(
+            "imunidade_penalidade_mov" in (h.efeitos or {})
+            for h in ficha.habilidades
+        )
+        if not tem_imunidade:
+            deslocamento_calc.total -= 3
+            deslocamento_calc.fontes.append(FonteBonus(
+                fonte="Armadura Pesada", categoria="Equipamento",
+                valor=-3, descricao="Reduz deslocamento em 3m"
+            ))
+    
+    # Sobrecarga: -3m deslocamento (respeita imunidade)
+    if ficha.inventario.sobrecargado:
+        tem_imunidade = any(
+            "imunidade_penalidade_mov" in (h.efeitos or {})
+            for h in ficha.habilidades
+        )
+        if not tem_imunidade:
+            deslocamento_calc.total -= 3
+            deslocamento_calc.fontes.append(FonteBonus(
+                fonte="Sobrecarga", categoria="Inventário",
+                valor=-3, descricao="Reduz deslocamento em 3m"
+            ))
+    
     if hasattr(ficha.status, 'buffs'):
         for b in ficha.status.buffs:
             if b.atributo.lower() == "deslocamento":
