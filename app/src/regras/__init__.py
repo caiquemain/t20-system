@@ -57,10 +57,11 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     calcular_atributos_finais(ficha)
 
     # 6. Estatísticas Derivadas
+    # Penalidade de armadura calculada ANTES de perícias (elas a consomem)
+    ficha.status.penalidade_armadura = calcular_penalidade_armadura(ficha)
     inicializar_pericias(ficha)
     calcular_pv_pm(ficha)
     calcular_defesa_e_deslocamento(ficha)
-    ficha.status.penalidade_armadura = calcular_penalidade_armadura(ficha)
     # [LOTE 1] Poderes de Arcanista aplicam DEPOIS de PV/PM (para não serem sobrescritos)
     aplicar_poderes_arcanista(ficha)
 
