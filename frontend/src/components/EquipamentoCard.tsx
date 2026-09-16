@@ -25,6 +25,7 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     const [filtroCategoria, setFiltroCategoria] = useState('todas');
     const [filtroProposito, setFiltroProposito] = useState('todos');
     const [filtroTipo, setFiltroTipo] = useState('todos');
+    const [tt, setTt] = useState<any>(null);
 
     const { equipamentos = [], carga_total = 0, carga_maxima = 0, sobrecargado = false, dinheiro } = inventario || {};
     const armas = dadosEquipamentos?.armas || {};
@@ -73,6 +74,18 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
         }
         return itens;
     }, [armas, armaduras, filtroCategoria, filtroProposito, filtroTipo, busca, modoArmadura, modoArma]);
+
+    const mostrarTooltip = (e: React.MouseEvent<HTMLDivElement>, conteudo: React.ReactNode) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const abaixo = r.top < 340;  // sem espaço acima -> flip para baixo
+        setTt({
+            conteudo,
+            x: Math.min(Math.max(r.left + r.width / 2, 130), window.innerWidth - 130),
+            top: abaixo ? r.bottom + 8 : r.top - 8,
+            abaixo,
+        });
+    };
+    const esconderTooltip = () => setTt(null);
 
     const adicionarItem = (nome: string) => {
         const cat = armas[nome] || armaduras[nome];
@@ -127,7 +140,7 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
 
     // Tooltips no padrão SkillList/StatusBars (borda dourada, rows tracejadas, total laranja)
     const tooltipArma = (d: any) => (
-        <div className="equip-tooltip">
+        <div className="equip-tooltip-box">
             <div className="tooltip-row"><span>Preço</span><span>T$ {d.preco}</span></div>
             {d.dano && <div className="tooltip-row"><span>Dano</span><span>{d.dano} {d.tipo}</span></div>}
             <div className="tooltip-row"><span>Crítico</span><span>{d.critico}</span></div>
@@ -147,7 +160,7 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     );
 
     const tooltipArmadura = (d: any) => (
-        <div className="equip-tooltip">
+        <div className="equip-tooltip-box">
             <div className="tooltip-row"><span>Preço</span><span>T$ {d.preco}</span></div>
             <div className="tooltip-row"><span>Bônus Defesa</span><span>+{d.bonus_defesa}</span></div>
             <div className="tooltip-row"><span>Penalidade</span><span>{d.penalidade_armadura}</span></div>
@@ -168,23 +181,12 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     return (
         <>
             <style>{`
-                .equip-card { position: relative; }
-                .equip-tooltip {
-                    visibility: hidden; opacity: 0;
-                    position: absolute; bottom: 100%; left: 50%;
-                    transform: translateX(-50%) translateY(0px);
+                .equip-tooltip-box {
                     width: 240px; background-color: #1a1a1a;
                     border: 1px solid #ffd700; border-radius: 6px;
-                    padding: 10px; z-index: 9999;
-                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.9);
-                    transition: opacity 0.2s, transform 0.2s;
-                    pointer-events: none; margin-bottom: 6px;
+                    padding: 10px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.9);
                 }
-                .equip-card:hover .equip-tooltip {
-                    visibility: visible; opacity: 1;
-                    transform: translateX(-50%) translateY(-6px);
-                }
-                .equip-tooltip .source-row {
+                .equip-tooltip-box .source-row {
                     font-size: 0.7rem; color: #888;
                     border-bottom: none; margin-bottom: 1px; padding-left: 5px;
                 }
@@ -287,13 +289,13 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                             </select>
                         </div>
 
-                        <div style={{ flex: 1, overflowY: 'auto', marginBottom: 15, paddingTop: 4 }}>
+                        <div style={{ flex: 1, overflowY: 'auto', marginBottom: 15, paddingTop: 4 }} onScroll={() => setTt(null)}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12, rowGap: 16 }}>
                                 {catalogoItens.map(({ nome, d, ehArma }) => (
                                     <div key={nome} className="equip-card" onClick={() => adicionarItem(nome)}
                                         style={{ background: '#252525', padding: 12, borderRadius: 6, cursor: 'pointer', border: '2px solid #333', transition: 'all 0.2s' }}
-                                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#ffd700')}
-                                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#333')}>
+                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ffd700'; mostrarTooltip(e, ehArma ? tooltipArma(d) : tooltipArmadura(d)); }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; esconderTooltip(); }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                                             <span style={{ fontSize: '1.2rem' }}>{ehArma ? '⚔️' : (d.tipo_armadura === 'Escudo' ? '🛡️' : '🛡️')}</span>
                                             <strong style={{ fontSize: '0.9rem' }}>{nome}</strong>
@@ -304,7 +306,6 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                                         <div style={{ fontSize: '0.75rem', color: '#888' }}>
                                             {ehArma ? `${d.categoria} · ${d.empunhadura} · ${d.espacos} esp` : `${d.tipo_armadura} · ${d.espacos} esp`}
                                         </div>
-                                        {ehArma ? tooltipArma(d) : tooltipArmadura(d)}
                                     </div>
                                 ))}
                                 {catalogoItens.length === 0 && (
@@ -317,6 +318,19 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                             Fechar
                         </button>
                     </div>
+                </div>
+            )}
+
+            {tt && (
+                <div style={{
+                    position: 'fixed',
+                    left: tt.x,
+                    top: tt.top,
+                    transform: tt.abaixo ? 'translateX(-50%)' : 'translate(-50%, -100%)',
+                    zIndex: 10000,
+                    pointerEvents: 'none',
+                }}>
+                    {tt.conteudo}
                 </div>
             )}
         </>
