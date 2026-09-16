@@ -23,7 +23,7 @@ from .status import (
 )
 
 # 2. ATUALIZADO: Removemos 'calcular_proficiencias_e_sentidos' daqui (pois movida para status)
-from .inventario import sincronizar_carga, sincronizar_ataques_equipamento
+from .inventario import sincronizar_carga, sincronizar_ataques_equipamento, calcular_penalidade_armadura
 from .combate import sincronizar_ataques
 
 from ..models import Personagem
@@ -60,6 +60,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     inicializar_pericias(ficha)
     calcular_pv_pm(ficha)
     calcular_defesa_e_deslocamento(ficha)
+    ficha.status.penalidade_armadura = calcular_penalidade_armadura(ficha)
     # [LOTE 1] Poderes de Arcanista aplicam DEPOIS de PV/PM (para não serem sobrescritos)
     aplicar_poderes_arcanista(ficha)
 

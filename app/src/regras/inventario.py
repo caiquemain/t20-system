@@ -96,3 +96,22 @@ def sincronizar_ataques_equipamento(ficha: Personagem) -> None:
     ficha.combate.ataques = [
         a for a in ficha.combate.ataques if a.fonte != "Equipamento"
     ] + ataques_de_equipamento(ficha)
+
+
+def calcular_penalidade_armadura(ficha: Personagem) -> int:
+    """Penalidade acumulada de armadura vestida + escudo empunhado + sobrecarga."""
+    pen = 0
+    for item in ficha.inventario.equipamentos:
+        if not item.equipado:
+            continue
+        cat = catalogo_do_item(item.nome)
+        if not cat:
+            continue
+        # Armadura vestida (tipo_armadura: Leve/Pesada/Escudo)
+        tipo_arm = cat.get("tipo_armadura")
+        if tipo_arm in ["Leve", "Pesada", "Escudo"]:
+            pen += abs(cat.get("penalidade_armadura", 0))
+    # Sobrecarga: -5 (regra p.141: "penalidade de armadura -5")
+    if ficha.inventario.sobrecargado:
+        pen += 5
+    return pen
