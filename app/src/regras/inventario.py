@@ -134,9 +134,11 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
         teste = "Luta" if cat.get("proposito") == "Corpo a Corpo" else "Pontaria"
         especial = []
         if cat.get("habilidades"):
-            especial.append(", ".join(cat["habilidades"]))
+            outras = [h for h in cat["habilidades"] if not (h == "versátil" and cat.get("versatil"))]
+            if outras:
+                especial.append(", ".join(outras))
         if cat.get("versatil"):
-            especial.append(cat["versatil"])
+            especial.append(f"Versátil: {cat['versatil']} (manobra, não soma no dano)")
         if "desbalanceada" in cat.get("habilidades", []):
             especial.append("-2 ataque (desbalanceada)")
         if simples_pela_habilidade:
