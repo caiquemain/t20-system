@@ -236,3 +236,93 @@ def test_carga_reage_a_forca():
     p.atributos.forca = -1  # mod negativo: -1 por ponto -> 10 - 1 = 9
     sincronizar_carga(p)
     assert p.inventario.carga_maxima == 9
+
+
+# --- Mestre do Tridente (Sereia/Tritão, T20 JdA) ---
+
+def _sereia_com_tridente(empunhado=True):
+    p = Personagem()
+    p.cabecalho.raca = "Sereia/Tritão"
+    p.proficiencias = ["Armas Simples"]
+
+    class _Hab:
+        nome = "Mestre do Tridente"
+        tipo = "Racial"
+        fonte = "Racial"
+        descricao = ""
+        efeitos = {"proficiencia_simples": ["tridente"],
+                   "bonus_dano_arma": {"azagaia": 2, "lança": 2, "tridente": 2}}
+        escolhas_aplicadas = {}
+
+    p.habilidades = [_Hab()]
+    p.inventario.equipamentos.append(Item(nome="Tridente", tipo="Arma", equipado=empunhado))
+    return p
+
+
+def test_mestre_tridente_dano_e_proficiencia():
+    p = _sereia_com_tridente()
+    sincronizar_ataques_equipamento(p)
+    a = [x for x in p.combate.ataques if x.fonte == "Equipamento"][0]
+    assert a.dano == "1d8+2"
+    assert "-5" not in a.especial  # tridente conta como arma simples
+    assert "Mestre do Tridente (+2 dano)" in a.especial
+
+
+def test_mestre_tridente_guardado_sem_ataque():
+    p = _sereia_com_tridente(empunhado=False)
+    sincronizar_ataques_equipamento(p)
+    assert not [x for x in p.combate.ataques if x.fonte == "Equipamento"]
+
+
+def test_sem_racial_tridente_tem_penalidade():
+    p = Personagem()
+    p.proficiencias = []  # sem proficiência marcial nem a racial
+    p.inventario.equipamentos.append(Item(nome="Tridente", tipo="Arma", equipado=True))
+    sincronizar_ataques_equipamento(p)
+    a = [x for x in p.combate.ataques if x.fonte == "Equipamento"][0]
+    assert a.dano == "1d8"
+    assert "-5" in a.especial
+
+
+def test_mestre_tridente_cobre_lanca():
+    p = _sereia_com_tridente()
+    p.inventario.equipamentos.append(Item(nome="Lança", tipo="Arma", equipado=True))
+    sincronizar_ataques_equipamento(p)
+    lanca = [x for x in p.combate.ataques if x.nome == "Lança"][0]
+    assert lanca.dano == "1d6+2"
+
+
+def test_mestre_tridente_nao_rebaixa_proficiencia():
+    """Guerreiro (marciais) já era proficiente no tridente marcial:
+    a racial não pode remover essa proficiência."""
+    p = _sereia_com_tridente()
+    p.proficiencias = ["Armas Marciais"]
+    sincronizar_ataques_equipamento(p)
+    a = [x for x in p.combate.ataques if x.fonte == "Equipamento"][0]
+    assert "-5" not in a.especial
+    assert "conta como arma simples" not in a.especial  # não foi a racial que deu
+    assert a.dano == "1d8+2"
+
+
+def test_proficiente_marcial_usa_arma_marcial():
+    """Regressão: 'marcial' não é substring de 'marciais' (plural do
+    livro); Guerreiro tomava -5 em toda arma marcial desde sempre."""
+    p = Personagem()
+    p.proficiencias = ["Armas Marciais"]
+    p.inventario.equipamentos.append(Item(nome="Espada longa", tipo="Arma", equipado=True))
+    sincronizar_ataques_equipamento(p)
+    a = [x for x in p.combate.ataques if x.fonte == "Equipamento"][0]
+    assert "-5" not in a.especial
+
+
+def test_proficiencias_vindas_do_sync_de_classe():
+    """Fluxo real: o sync de classe grava em status.proficiencias;
+    os ataques de equipamento precisam ler lá também (não só top-level)."""
+    from src.regras import atualizar_ficha
+    p = Personagem()
+    if p.classes:
+        p.classes[0].nome = "Guerreiro"
+    p.inventario.equipamentos.append(Item(nome="Espada longa", tipo="Arma", equipado=True))
+    atualizar_ficha(p)
+    a = [x for x in p.combate.ataques if x.fonte == "Equipamento"][0]
+    assert "-5" not in a.especial
