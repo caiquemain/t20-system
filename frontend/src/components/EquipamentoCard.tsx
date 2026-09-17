@@ -15,6 +15,8 @@ interface EquipamentoCardProps {
     onUpdateInventario: (novoInventario: any) => void;
 }
 
+const ICONE_GERAL: Record<string, string> = { Aventura: '🎒', Alquímico: '⚗️', Símbolo: '✨', Ferramenta: '🛠️' };
+
 export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     inventario,
     dadosEquipamentos,
@@ -25,11 +27,13 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     const [filtroCategoria, setFiltroCategoria] = useState('todas');
     const [filtroProposito, setFiltroProposito] = useState('todos');
     const [filtroTipo, setFiltroTipo] = useState('todos');
+    const [filtroGeral, setFiltroGeral] = useState('todos');
     const [tt, setTt] = useState<any>(null);
 
     const { equipamentos = [], carga_total = 0, carga_maxima = 0, sobrecargado = false, dinheiro } = inventario || {};
     const armas = dadosEquipamentos?.armas || {};
     const armaduras = dadosEquipamentos?.armaduras || {};
+    const gerais = dadosEquipamentos?.gerais || {};
 
     // Limites T20 (p.141)
     const empunhados = equipamentos.filter((i: Item) => {
@@ -48,54 +52,50 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     const corCarga = sobrecargado ? '#ff5252' : carga_total > carga_maxima * 0.8 ? '#ffa726' : '#66bb6a';
     const percentual = carga_maxima > 0 ? Math.min(100, (carga_total / carga_maxima) * 100) : 0;
 
-    // Filtros mutuamente excludentes: tipo de armadura exclui armas;
-    // categoria/propósito excluem armaduras
+    // Filtros mutuamente excludentes (armas x armaduras x gerais)
     const modoArmadura = filtroTipo !== 'todos';
     const modoArma = filtroCategoria !== 'todas' || filtroProposito !== 'todos';
+    const modoGeral = filtroGeral !== 'todos';
 
     const catalogoItens = useMemo(() => {
         const itens: any[] = [];
         const termo = busca.trim().toLowerCase();
-
-        if (!modoArmadura) {
-            Object.entries(armas).forEach(([nome, d]: [string, any]) => {
-                if (filtroCategoria !== 'todas' && d.categoria !== filtroCategoria) return;
-                if (filtroProposito !== 'todos' && d.proposito !== filtroProposito) return;
-                if (termo && !nome.toLowerCase().includes(termo)) return;
-                itens.push({ nome, d, ehArma: true });
-            });
+        if (!modoGeral) {
+            if (!modoArmadura) {
+                Object.entries(armas).forEach(([nome, d]: [string, any]) => {
+                    if (filtroCategoria !== 'todas' && d.categoria !== filtroCategoria) return;
+                    if (filtroProposito !== 'todos' && d.proposito !== filtroProposito) return;
+                    if (termo && !nome.toLowerCase().includes(termo)) return;
+                    itens.push({ nome, d, tipoCat: 'arma' });
+                });
+            }
+            if (!modoArma) {
+                Object.entries(armaduras).forEach(([nome, d]: [string, any]) => {
+                    if (filtroTipo !== 'todos' && d.tipo_armadura !== filtroTipo) return;
+                    if (termo && !nome.toLowerCase().includes(termo)) return;
+                    itens.push({ nome, d, tipoCat: 'armadura' });
+                });
+            }
         }
-        if (!modoArma) {
-            Object.entries(armaduras).forEach(([nome, d]: [string, any]) => {
-                if (filtroTipo !== 'todos' && d.tipo_armadura !== filtroTipo) return;
+        if (!modoArma && !modoArmadura) {
+            Object.entries(gerais).forEach(([nome, d]: [string, any]) => {
+                if (modoGeral && d.subcategoria !== filtroGeral) return;
                 if (termo && !nome.toLowerCase().includes(termo)) return;
-                itens.push({ nome, d, ehArma: false });
+                itens.push({ nome, d, tipoCat: 'geral' });
             });
         }
         return itens;
-    }, [armas, armaduras, filtroCategoria, filtroProposito, filtroTipo, busca, modoArmadura, modoArma]);
+    }, [armas, armaduras, gerais, filtroCategoria, filtroProposito, filtroTipo, filtroGeral, busca, modoArmadura, modoArma, modoGeral]);
 
-    const mostrarTooltip = (e: React.MouseEvent<HTMLDivElement>, conteudo: React.ReactNode) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        const abaixo = r.top < 340;  // sem espaço acima -> flip para baixo
-        setTt({
-            conteudo,
-            x: Math.min(Math.max(r.left + r.width / 2, 130), window.innerWidth - 130),
-            top: abaixo ? r.bottom + 8 : r.top - 8,
-            abaixo,
-        });
-    };
-    const esconderTooltip = () => setTt(null);
-
-    const adicionarItem = (nome: string) => {
-        const cat = armas[nome] || armaduras[nome];
+    const adicionarItem = (nome: string, tipoCat: string) => {
+        const cat = armas[nome] || armaduras[nome] || gerais[nome];
         if (!cat) return;
         const novoItem: Item = {
             nome,
             qtd: 1,
             espaco: cat.espacos || 1,
             descricao: '',
-            tipo: armas[nome] ? 'Arma' : 'Armadura',
+            tipo: tipoCat === 'arma' ? 'Arma' : tipoCat === 'armadura' ? 'Armadura' : 'Geral',
             equipado: false,
         };
         onUpdateInventario({ ...inventario, equipamentos: [...equipamentos, novoItem] });
@@ -105,6 +105,7 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     const toggleEquipado = (index: number) => {
         const novos = [...equipamentos];
         const item = { ...novos[index] };
+        if (gerais[item.nome]) return; // item geral não é equipável
         const cat = armas[item.nome] || armaduras[item.nome];
         if (!cat) return;
         if (!item.equipado) {
@@ -131,14 +132,26 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
 
     const getBadgeEstado = (item: Item) => {
         const cat = armas[item.nome] || armaduras[item.nome];
-        if (!item.equipado) return { label: 'Guardado', cor: '#666' };
+        if (gerais[item.nome] || !item.equipado) return { label: 'Guardado', cor: '#666' };
         if (cat?.proposito) return { label: 'Empunhada', cor: '#ff9800' };
         if (cat?.tipo_armadura === 'Escudo') return { label: 'Empunhado', cor: '#ff9800' };
         if (cat?.tipo_armadura) return { label: 'Vestida', cor: '#4caf50' };
         return { label: 'Equipado', cor: '#2196f3' };
     };
 
-    // Tooltips no padrão SkillList/StatusBars (borda dourada, rows tracejadas, total laranja)
+    const mostrarTooltip = (e: React.MouseEvent<HTMLDivElement>, conteudo: React.ReactNode) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const abaixo = r.top < 340;
+        setTt({
+            conteudo,
+            x: Math.min(Math.max(r.left + r.width / 2, 130), window.innerWidth - 130),
+            top: abaixo ? r.bottom + 8 : r.top - 8,
+            abaixo,
+        });
+    };
+    const esconderTooltip = () => setTt(null);
+
+    // Tooltips padrão-ouro (mesmo design de perícias/status)
     const tooltipArma = (d: any) => (
         <div className="equip-tooltip-box">
             <div className="tooltip-row"><span>Preço</span><span>T$ {d.preco}</span></div>
@@ -154,7 +167,6 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                 </div>
             ))}
             {d.arremessavel && <div className="tooltip-row source-row"><span>↳ Arremessável</span><span>✓</span></div>}
-            {d.for_no_dano && <div className="tooltip-row source-row"><span>↳ FOR no dano</span><span>✓</span></div>}
             <div className="tooltip-total"><span>{d.categoria}</span><span>{d.proposito}</span></div>
         </div>
     );
@@ -176,7 +188,27 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
         </div>
     );
 
+    const tooltipGeral = (d: any) => (
+        <div className="equip-tooltip-box">
+            <div className="tooltip-row"><span>Preço</span><span>T$ {d.preco}</span></div>
+            <div className="tooltip-row"><span>Espaços</span><span>{d.espacos}</span></div>
+            {d.notas && <div className="tooltip-row source-row"><span>↳ {d.notas}</span><span>•</span></div>}
+            <div className="tooltip-total"><span>Item Geral</span><span>{d.subcategoria}</span></div>
+        </div>
+    );
+
+    const tooltipDe = (tipoCat: string, d: any) =>
+        tipoCat === 'arma' ? tooltipArma(d) : tipoCat === 'armadura' ? tooltipArmadura(d) : tooltipGeral(d);
+
+    const iconeDe = (tipoCat: string, d: any) =>
+        tipoCat === 'arma' ? '⚔️' : tipoCat === 'armadura' ? '🛡️' : (ICONE_GERAL[d.subcategoria] || '🎒');
+
     const selectStyle = { padding: '6px 10px', borderRadius: 4, background: '#333', color: 'white', border: '1px solid #444', fontSize: '0.8rem' };
+    const limpaConflitantes = (qual: 'arma' | 'armadura' | 'geral') => {
+        if (qual !== 'arma') { setFiltroCategoria('todas'); setFiltroProposito('todos'); }
+        if (qual !== 'armadura') setFiltroTipo('todos');
+        if (qual !== 'geral') setFiltroGeral('todos');
+    };
 
     return (
         <>
@@ -227,11 +259,14 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                         <p style={{ color: '#666', textAlign: 'center', padding: 20, margin: 0 }}>Nenhum item no inventário</p>
                     ) : (
                         equipamentos.map((item: Item, i: number) => {
-                            const cat = armas[item.nome] || armaduras[item.nome];
+                            const cat = armas[item.nome] || armaduras[item.nome] || gerais[item.nome];
+                            const ehGeral = !!gerais[item.nome];
                             const badge = getBadgeEstado(item);
-                            const icon = armas[item.nome] ? '⚔️' : (cat?.tipo_armadura === 'Escudo' ? '🛡️' : (cat?.tipo_armadura ? '🛡️' : '🎒'));
+                            const icon = ehGeral
+                                ? (ICONE_GERAL[cat?.subcategoria] || '🎒')
+                                : (armas[item.nome] ? '⚔️' : '🛡️');
                             return (
-                                <div key={i} className="equip-card" style={{ background: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
                                     <span style={{ fontSize: '1.2rem' }}>{icon}</span>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -242,6 +277,7 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                                             <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
                                                 {cat.dano && <span>{cat.dano} {cat.tipo} · </span>}
                                                 {cat.bonus_defesa && <span>+{cat.bonus_defesa} Def · </span>}
+                                                {ehGeral && cat.notas && <span>{cat.notas} · </span>}
                                                 {cat.espacos || item.espaco} espaço(s)
                                             </div>
                                         )}
@@ -251,9 +287,11 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                                         <span style={{ fontSize: '0.9rem', minWidth: 20, textAlign: 'center' }}>{item.qtd}</span>
                                         <button onClick={() => alterarQuantidade(i, 1)} style={{ background: '#333', border: 'none', color: 'white', width: 20, height: 20, borderRadius: 3, cursor: 'pointer' }}>+</button>
                                     </div>
-                                    <button onClick={() => toggleEquipado(i)} style={{ background: item.equipado ? '#ff9800' : '#4caf50', border: 'none', color: 'white', padding: '4px 10px', borderRadius: 3, cursor: 'pointer', fontSize: '0.8rem' }}>
-                                        {item.equipado ? 'Guardar' : 'Equipar'}
-                                    </button>
+                                    {!ehGeral && (
+                                        <button onClick={() => toggleEquipado(i)} style={{ background: item.equipado ? '#ff9800' : '#4caf50', border: 'none', color: 'white', padding: '4px 10px', borderRadius: 3, cursor: 'pointer', fontSize: '0.8rem' }}>
+                                            {item.equipado ? 'Guardar' : 'Equipar'}
+                                        </button>
+                                    )}
                                     <button onClick={() => removerItem(i)} style={{ background: '#ff5252', border: 'none', color: 'white', width: 24, height: 24, borderRadius: 3, cursor: 'pointer' }}>🗑️</button>
                                 </div>
                             );
@@ -269,42 +307,54 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
 
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 15 }}>
                             <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="🔍 Buscar item..." className="input-dark" style={{ flex: 1, minWidth: 180 }} />
-                            <select value={filtroCategoria} onChange={(e) => { setFiltroCategoria(e.target.value); if (e.target.value !== 'todas') setFiltroTipo('todos'); }} style={selectStyle}>
+                            <select value={filtroCategoria} onChange={(e) => { setFiltroCategoria(e.target.value); if (e.target.value !== 'todas') limpaConflitantes('arma'); }} style={selectStyle}>
                                 <option value="todas">Armas: todas</option>
                                 <option value="Simples">Simples</option>
                                 <option value="Marcial">Marcial</option>
                                 <option value="Exótica">Exótica</option>
                                 <option value="Fogo">De Fogo</option>
                             </select>
-                            <select value={filtroProposito} onChange={(e) => { setFiltroProposito(e.target.value); if (e.target.value !== 'todos') setFiltroTipo('todos'); }} style={selectStyle}>
+                            <select value={filtroProposito} onChange={(e) => { setFiltroProposito(e.target.value); if (e.target.value !== 'todos') limpaConflitantes('arma'); }} style={selectStyle}>
                                 <option value="todos">Propósito: todos</option>
                                 <option value="Corpo a Corpo">Corpo a Corpo</option>
                                 <option value="À Distância">À Distância</option>
                             </select>
-                            <select value={filtroTipo} onChange={(e) => { setFiltroTipo(e.target.value); if (e.target.value !== 'todos') { setFiltroCategoria('todas'); setFiltroProposito('todos'); } }} style={selectStyle}>
+                            <select value={filtroTipo} onChange={(e) => { setFiltroTipo(e.target.value); if (e.target.value !== 'todos') limpaConflitantes('armadura'); }} style={selectStyle}>
                                 <option value="todos">Armaduras: todas</option>
                                 <option value="Leve">Armadura Leve</option>
                                 <option value="Pesada">Armadura Pesada</option>
                                 <option value="Escudo">Escudo</option>
                             </select>
+                            <select value={filtroGeral} onChange={(e) => { setFiltroGeral(e.target.value); if (e.target.value !== 'todos') limpaConflitantes('geral'); }} style={selectStyle}>
+                                <option value="todos">Gerais: todos</option>
+                                <option value="Aventura">Aventura</option>
+                                <option value="Alquímico">Alquímico</option>
+                                <option value="Símbolo">Símbolo</option>
+                                <option value="Ferramenta">Ferramenta</option>
+                            </select>
                         </div>
 
                         <div style={{ flex: 1, overflowY: 'auto', marginBottom: 15, paddingTop: 4 }} onScroll={() => setTt(null)}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12, rowGap: 16 }}>
-                                {catalogoItens.map(({ nome, d, ehArma }) => (
-                                    <div key={nome} className="equip-card" onClick={() => adicionarItem(nome)}
+                                {catalogoItens.map(({ nome, d, tipoCat }) => (
+                                    <div key={nome}
+                                        onClick={() => adicionarItem(nome, tipoCat)}
                                         style={{ background: '#252525', padding: 12, borderRadius: 6, cursor: 'pointer', border: '2px solid #333', transition: 'all 0.2s' }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ffd700'; mostrarTooltip(e, ehArma ? tooltipArma(d) : tooltipArmadura(d)); }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ffd700'; mostrarTooltip(e, tooltipDe(tipoCat, d)); }}
                                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; esconderTooltip(); }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                            <span style={{ fontSize: '1.2rem' }}>{ehArma ? '⚔️' : (d.tipo_armadura === 'Escudo' ? '🛡️' : '🛡️')}</span>
+                                            <span style={{ fontSize: '1.2rem' }}>{iconeDe(tipoCat, d)}</span>
                                             <strong style={{ fontSize: '0.9rem' }}>{nome}</strong>
                                         </div>
                                         <div style={{ fontSize: '0.8rem', color: '#80deea', marginBottom: 4 }}>
-                                            {ehArma ? (d.dano ? `${d.dano} ${d.tipo || ''}` : 'Sem dano') : `+${d.bonus_defesa} Defesa`}
+                                            {tipoCat === 'arma' ? (d.dano ? `${d.dano} ${d.tipo || ''}` : 'Sem dano')
+                                                : tipoCat === 'armadura' ? `+${d.bonus_defesa} Defesa`
+                                                : (d.notas || d.subcategoria)}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: '#888' }}>
-                                            {ehArma ? `${d.categoria} · ${d.empunhadura} · ${d.espacos} esp` : `${d.tipo_armadura} · ${d.espacos} esp`}
+                                            {tipoCat === 'arma' ? `${d.categoria} · ${d.empunhadura} · ${d.espacos} esp`
+                                                : tipoCat === 'armadura' ? `${d.tipo_armadura} · ${d.espacos} esp`
+                                                : `${d.subcategoria} · ${d.espacos} esp`}
                                         </div>
                                     </div>
                                 ))}

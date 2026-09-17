@@ -86,7 +86,7 @@ export const useFicha = (id: string | undefined) => {
                     fetchDadosPoderesConcedidos().catch(() => ({ data: {} })),
                     fetchDadosHabilidadesRaciais().catch(() => ({ data: {} })),
                 fetchDadosEscolhas().catch(() => ({ data: {} })),
-                fetchDadosEquipamentos().catch(() => ({ data: { armas: {}, armaduras: {} } }))
+                fetchDadosEquipamentos().catch(() => ({ data: { armas: {}, armaduras: {}, gerais: {} } }))
                 ]);
                 setListaRacas(results[0].data);
                 setListaClasses(results[1].data);

@@ -13,7 +13,7 @@ from src.dados_deuses import DADOS_DEUSES
 from src.dados_poderes_concedidos import DADOS_PODERES_CONCEDIDOS
 from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
 from src.dados_poderes_tormenta import DADOS_PODERES_TORMENTA
-from src.dados_equipamentos import DADOS_ARMAS, DADOS_ARMADURAS
+from src.dados_equipamentos import DADOS_ARMAS, DADOS_ARMADURAS, DADOS_GERAIS
 
 router = APIRouter(tags=["Dados"])
 
@@ -164,4 +164,4 @@ def get_dados_escolhas():
 @router.get("/dados/equipamentos", tags=["Dados Estáticos"])
 async def get_equipamentos():
     """Catálogo de armas (T3-3) e armaduras/escudos (T3-5)."""
-    return {"armas": DADOS_ARMAS, "armaduras": DADOS_ARMADURAS}
+    return {"armas": DADOS_ARMAS, "armaduras": DADOS_ARMADURAS, "gerais": DADOS_GERAIS}
