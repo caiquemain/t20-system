@@ -6,6 +6,7 @@ from src.regras import atualizar_ficha
 def _ficha(proficiencias):
     p = Personagem()
     p.proficiencias = proficiencias
+    p.status.proficiencias = proficiencias  # fonte real p/ sync de classe
     return p
 
 
@@ -23,6 +24,10 @@ def test_proficiente_sofre_so_pericias_de_agilidade():
 
 def test_nao_proficiente_penaliza_for_e_des():
     p = _ficha([])
+    # Arcanista não tem proficiência de armadura (Guerreiro tem, e o
+    # sync de proficiencias recalcula da classe por cima do [])
+    if p.classes:
+        p.classes[0].nome = 'Arcanista'
     p.inventario.equipamentos.append(Item(nome='Couro batido', tipo='Armadura', equipado=True))
     atualizar_ficha(p)
     assert p.status.penalidade_armadura == 1

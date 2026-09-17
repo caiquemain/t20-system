@@ -1,6 +1,6 @@
 import logging
 from .utils import calcular_nivel_personagem
-from .atributos import aplicar_bonus_atributos_raciais, calcular_atributos_finais
+from .atributos import aplicar_bonus_atributos_raciais, calcular_atributos_finais, aplicar_escolhas_atributos_raciais
 from .habilidades import (
     limpar_habilidades_fixas,
     garantir_habilidades_iniciais,
@@ -55,6 +55,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
 
     # 5. Atributos Finais
     calcular_atributos_finais(ficha)
+    aplicar_escolhas_atributos_raciais(ficha)  # escolhas variáveis pós-rebuild
 
     # 6. Estatísticas Derivadas
     # Penalidade de armadura calculada ANTES de perícias (elas a consomem)
