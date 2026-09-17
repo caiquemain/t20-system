@@ -70,3 +70,36 @@ DADOS_ARMADURAS = {
     "Escudo leve": {"tipo_armadura": "Escudo", "preco": 5, "bonus_defesa": 1, "penalidade_armadura": -1, "espacos": 1, "extras": ""},
     "Escudo pesado": {"tipo_armadura": "Escudo", "preco": 15, "bonus_defesa": 2, "penalidade_armadura": -2, "espacos": 2, "extras": ""},
 }
+
+
+# --- TABELA 3-6: ITENS GERAIS ---
+DADOS_GERAIS = {
+    # Aventura
+    "Mochila": {"subcategoria": "Aventura", "preco": 2, "espacos": 1, "notas": ""},
+    "Corda (15m)": {"subcategoria": "Aventura", "preco": 5, "espacos": 1, "notas": ""},
+    "Tocha": {"subcategoria": "Aventura", "preco": 1, "espacos": 1, "notas": "Luz 9m por 1h"},
+    "Lanterna": {"subcategoria": "Aventura", "preco": 10, "espacos": 1, "notas": "Luz 9m; consome 1 óleo por 4h"},
+    "Farol": {"subcategoria": "Aventura", "preco": 30, "espacos": 2, "notas": "Luz direcional 18m"},
+    "Óleo (frasco)": {"subcategoria": "Aventura", "preco": 2, "espacos": 1, "notas": "Combustível p/ lanterna e farol"},
+    "Pederneira": {"subcategoria": "Aventura", "preco": 1, "espacos": 1, "notas": "Acende fogo"},
+    "Barraca (2 pessoas)": {"subcategoria": "Aventura", "preco": 10, "espacos": 2, "notas": ""},
+    "Saco de dormir": {"subcategoria": "Aventura", "preco": 2, "espacos": 1, "notas": ""},
+    "Cantil": {"subcategoria": "Aventura", "preco": 1, "espacos": 1, "notas": ""},
+    "Ração de viagem (dia)": {"subcategoria": "Aventura", "preco": 1, "espacos": 1, "notas": ""},
+    "Espelho de metal": {"subcategoria": "Aventura", "preco": 25, "espacos": 1, "notas": ""},
+    "Apito": {"subcategoria": "Aventura", "preco": 5, "espacos": 1, "notas": ""},
+    "Alforje": {"subcategoria": "Aventura", "preco": 5, "espacos": 1, "notas": ""},
+    # Alquímicos
+    "Ácido (frasco)": {"subcategoria": "Alquímico", "preco": 10, "espacos": 1, "notas": "Corrosivo (situacional)"},
+    "Água benta (frasco)": {"subcategoria": "Alquímico", "preco": 25, "espacos": 1, "notas": "Contra mortos-vivos e trevas"},
+    # Símbolos
+    "Símbolo sagrado (prata)": {"subcategoria": "Símbolo", "preco": 25, "espacos": 1, "notas": "Foco p/ magias divinas"},
+    "Símbolo sagrado (madeira)": {"subcategoria": "Símbolo", "preco": 5, "espacos": 1, "notas": "Foco p/ magias divinas"},
+    # Ferramentas
+    "Kit de ferramentas": {"subcategoria": "Ferramenta", "preco": 20, "espacos": 2, "notas": "Usado em Ofício"},
+    "Kit de disfarces": {"subcategoria": "Ferramenta", "preco": 25, "espacos": 2, "notas": "Usado em Enganação (disfarce)"},
+    "Kit de ladrão": {"subcategoria": "Ferramenta", "preco": 30, "espacos": 1, "notas": "Usado em Ladinagem (fechaduras)"},
+    "Kit de medicamentos": {"subcategoria": "Ferramenta", "preco": 50, "espacos": 2, "notas": "Usado em Cura (medicina)"},
+    "Instrumento musical (comum)": {"subcategoria": "Ferramenta", "preco": 15, "espacos": 2, "notas": "Usado em Atuação"},
+    "Tinta (frasco)": {"subcategoria": "Ferramenta", "preco": 8, "espacos": 1, "notas": ""},
+}

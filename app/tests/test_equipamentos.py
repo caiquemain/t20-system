@@ -334,3 +334,32 @@ def test_proficiencias_vindas_do_sync_de_classe():
     assert "marciais" in profs  # o sync de classe populou
     a = [x for x in p.combate.ataques if x.fonte == "Equipamento"][0]
     assert "-5" not in a.especial
+
+
+# --- Itens gerais (T3-6) ---
+
+def test_catalogo_gerais_completo():
+    from src.dados_equipamentos import GERAIS
+    for nome in ["Mochila", "Corda (15m)", "Tocha", "Símbolo sagrado (prata)", "Kit de ladrão"]:
+        assert nome in GERAIS
+        assert GERAIS[nome]["preco"] >= 0
+        assert GERAIS[nome]["espacos"] >= 0
+        assert GERAIS[nome]["subcategoria"] in ("Aventura", "Alquímico", "Símbolo", "Ferramenta")
+
+
+def test_item_geral_soma_carga_sem_ataque_ou_penalidade():
+    p = Personagem()
+    p.inventario.equipamentos.append(Item(nome="Mochila", tipo="Geral", equipado=False))
+    p.inventario.equipamentos.append(Item(nome="Tocha", tipo="Geral", equipado=False))
+    sincronizar_carga(p)
+    sincronizar_ataques_equipamento(p)
+    esp = catalogo_do_item("Mochila")["espacos"] + catalogo_do_item("Tocha")["espacos"]
+    assert p.inventario.carga_total == esp
+    assert not [a for a in p.combate.ataques if a.fonte == "Equipamento"]
+    assert calcular_penalidade_armadura(p) == 0
+
+
+def test_geral_tem_categoria_propria():
+    assert catalogo_do_item("Tocha")["_categoria"] == "Geral"
+    assert catalogo_do_item("Símbolo sagrado (prata)")["_categoria"] == "Geral"
+    assert catalogo_do_item("Tridente")["_categoria"] == "Arma"

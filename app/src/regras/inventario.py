@@ -2,7 +2,7 @@
 from typing import Dict, List, Optional
 
 from ..models import Personagem, Ataque
-from ..dados_equipamentos import DADOS_ARMAS, DADOS_ARMADURAS
+from ..dados_equipamentos import DADOS_ARMAS, DADOS_ARMADURAS, DADOS_GERAIS
 
 
 def catalogo_do_item(nome: str) -> Optional[Dict]:
@@ -12,6 +12,8 @@ def catalogo_do_item(nome: str) -> Optional[Dict]:
     if nome in DADOS_ARMADURAS:
         d = DADOS_ARMADURAS[nome]
         return {"_categoria": d.get("tipo_armadura", "Armadura"), **d}
+    if nome in DADOS_GERAIS:
+        return {"_categoria": "Geral", **DADOS_GERAIS[nome]}
     return None
 
 
