@@ -319,10 +319,18 @@ def test_proficiencias_vindas_do_sync_de_classe():
     """Fluxo real: o sync de classe grava em status.proficiencias;
     os ataques de equipamento precisam ler lá também (não só top-level)."""
     from src.regras import atualizar_ficha
+    from src import models
+    Classe = None
+    for nome in ("ClasseInfo", "Classe", "ClassePersonagem"):
+        Classe = getattr(models, nome, None)
+        if Classe:
+            break
+    assert Classe is not None, "modelo de classe não encontrado"
     p = Personagem()
-    if p.classes:
-        p.classes[0].nome = "Guerreiro"
+    p.classes = [Classe(nome="Guerreiro", nivel=1, primaria=True, subclasse="")]
     p.inventario.equipamentos.append(Item(nome="Espada longa", tipo="Arma", equipado=True))
     atualizar_ficha(p)
+    profs = " ".join(p.status.proficiencias).lower()
+    assert "marciais" in profs  # o sync de classe populou
     a = [x for x in p.combate.ataques if x.fonte == "Equipamento"][0]
     assert "-5" not in a.especial
