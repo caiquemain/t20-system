@@ -70,9 +70,12 @@ def inicializar_pericias(ficha: Personagem):
     # Regra de NÃO PROFICIÊNCIA (p.152): se veste armadura/escudo sem ser proficiente,
     # TODAS as perícias de FOR e DES sofrem a penalidade (além das 3 de agilidade)
     _nao_prof_armadura = False
-    if penalidade_armadura > 0:
+    if penalidade_armadura != 0:  # valor é negativo (sinal corrigido); != cobre ambos
         from .inventario import catalogo_do_item
-        _profs = " ".join(getattr(ficha, "proficiencias", []) or []).lower()
+        _profs = " ".join(
+            list(getattr(ficha, "proficiencias", None) or []) +
+            list(getattr(ficha.status, "proficiencias", None) or [])
+        ).lower()
         _vestidas = []
         for _it in getattr(ficha.inventario, "equipamentos", []) or []:
             if not _it.equipado:
