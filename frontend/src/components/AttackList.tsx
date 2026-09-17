@@ -11,8 +11,30 @@ interface AttackListProps {
     focoVital?: boolean;
 }
 
+// Classificação visual dos efeitos (mesmo idioma de cores do sistema)
+const ehPenalidade = (t: string) => /-\d/.test(t) || /não proficiente|penalidade|desbalanceada/i.test(t);
+const ehBuff = (t: string) => /\+\d/.test(t) || /conta como/i.test(t);
+
 export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, focoVital }) => (
     <div className="section-card" style={{ marginTop: 25 }}>
+        <style>{`
+            .ataque-tooltip {
+                visibility: hidden; opacity: 0;
+                position: absolute; bottom: 100%; left: 0;
+                transform: translateY(0);
+                width: 250px; background-color: #1a1a1a;
+                border: 1px solid #ffd700; border-radius: 6px;
+                padding: 10px; z-index: 9999;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.9);
+                transition: opacity 0.2s, transform 0.2s;
+                pointer-events: none; margin-bottom: 6px;
+                text-transform: none;
+            }
+            .tooltip-container:hover .ataque-tooltip {
+                visibility: visible; opacity: 1;
+                transform: translateY(-6px);
+            }
+        `}</style>
         <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <h3 className="section-title" style={{ margin: 0 }}>⚔️ Ataques</h3>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -38,9 +60,32 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                 <tbody>
                     {ataques.map((a, i) => (
                         <tr key={i} style={{ borderBottom: '1px solid #252525' }}>
-                            <td style={{ padding: '6px' }}>
+                            <td style={{ padding: '6px' }} className="tooltip-container">
                                 <strong style={{ color: '#e0e0e0' }}>{a.nome}</strong>
-                                {a.especial && <div style={{ fontSize: '0.7rem', color: '#888', marginTop: 2 }}>{a.especial}</div>}
+                                {a.especial && (
+                                    <>
+                                        <span
+                                            style={{ marginLeft: 6, fontSize: '0.7rem', cursor: 'help' }}
+                                            title={ehPenalidade(a.especial) ? 'Há penalidades neste ataque' : 'Efeitos especiais'}
+                                        >
+                                            {ehPenalidade(a.especial) ? '⚠️' : '✨'}
+                                        </span>
+                                        <div className="ataque-tooltip">
+                                            {a.especial.split('; ').map((t, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="tooltip-row"
+                                                    style={{
+                                                        color: ehPenalidade(t) ? '#ff8a80' : ehBuff(t) ? '#80deea' : '#ccc',
+                                                        fontWeight: (ehPenalidade(t) || ehBuff(t)) ? 'bold' : 'normal',
+                                                    }}
+                                                >
+                                                    {t}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </td>
                             <td style={{ padding: '6px', color: '#ccc' }}>{a.bonus_ataque}</td>
                             <td style={{ padding: '6px', color: '#ffcc80', fontWeight: 'bold' }}>{a.dano}</td>
