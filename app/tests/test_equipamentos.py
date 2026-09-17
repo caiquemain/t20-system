@@ -339,7 +339,7 @@ def test_proficiencias_vindas_do_sync_de_classe():
 # --- Itens gerais (T3-6) ---
 
 def test_catalogo_gerais_completo():
-    from src.dados_equipamentos import GERAIS
+    from src.dados_equipamentos import DADOS_GERAIS as GERAIS
     for nome in ["Mochila", "Corda (15m)", "Tocha", "Símbolo sagrado (prata)", "Kit de ladrão"]:
         assert nome in GERAIS
         assert GERAIS[nome]["preco"] >= 0
