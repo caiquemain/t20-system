@@ -1,3 +1,4 @@
+import { gerarPDF } from '../utils/gerarPDF';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../Ficha.css';
@@ -342,7 +343,10 @@ function Ficha() {
     const origemBloqueada = ficha.habilidades.some((h: any) => h.efeitos?.sem_origem || h.escolhas_aplicadas?.sem_origem);
 
     return (
-        <div className="ficha-container">
+        <div
+
+        
+ className="ficha-container">
             <AbilityConfigModal
                 isOpen={showHabilidadesPanel}
                 onClose={() => setShowHabilidadesPanel(false)}
@@ -437,7 +441,12 @@ function Ficha() {
 
             {/* --- HEADER --- */}
             <header className="ficha-header">
-                <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button>
+                <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button> <button
+          onClick={() => gerarPDF(ficha, id)}
+          style={{ padding: "8px 16px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginLeft: "8px" }}
+        >
+          📥 Baixar PDF
+        </button>
                 <div className="header-inputs">
                     <input
                         className="input-nome"
@@ -629,7 +638,10 @@ function Ficha() {
                                     const tituloLimpo = titulo.replace(/^[✨🛡️👁️📏]\s*/, '');
 
                                     return (
-                                        <div key={i} className="effect-card" style={{
+                                        <div
+
+        
+ key={i} className="effect-card" style={{
                                             background: bg,
                                             border: `1px solid ${color}`,
                                             borderRadius: 8,
