@@ -107,6 +107,18 @@ function Ficha() {
         }
     }, [ficha?.cabecalho.raca, ficha?.escolhas_atributos_raciais]);
 
+    // [RACIAL-DEBUG] espelho do estado a cada mudança relevante
+    useEffect(() => {
+        if (!ficha) return;
+        console.log('[RACIAL-DEBUG] estado da ficha:', {
+            raca: ficha.cabecalho?.raca,
+            escolhas: ficha.escolhas_atributos_raciais,
+            modRaciais: ficha.modificadores_raciais,
+            atributos: ficha.atributos,
+            base: ficha.atributos_base,
+        });
+    }, [ficha?.escolhas_atributos_raciais, ficha?.modificadores_raciais, ficha?.atributos]);
+
     const handleSelecionarEntidade = (tipo: 'raca' | 'origem' | 'deus' | 'classe', nome: string) => {
         if (!ficha) return;
         
@@ -155,6 +167,7 @@ function Ficha() {
     };
 
     const handleSalvarAtributosRaciais = () => {
+        console.log('[RACIAL-DEBUG] modal salvou escolhas:', JSON.parse(JSON.stringify(escolhasRaciais)));
         updateFicha({ escolhas_atributos_raciais: escolhasRaciais });
         setShowRacialModal(false);
     };
@@ -245,8 +258,18 @@ function Ficha() {
         const shortKey = MAPA_ATTR_KEY[attrKey];
         const valorFixo = infoRacaAtual.attrs?.[shortKey] || 0;
         if (valorFixo !== 0) return;
-        if (escolhasRaciais.includes(attrKey)) setEscolhasRaciais(prev => prev.filter(k => k !== attrKey));
-        else if (escolhasRaciais.length < qtdEscolhasRacial) setEscolhasRaciais(prev => [...prev, attrKey]);
+        let novas = escolhasRaciais;
+        if (escolhasRaciais.includes(attrKey)) {
+            novas = escolhasRaciais.filter(k => k !== attrKey);
+        } else if (escolhasRaciais.length < qtdEscolhasRacial) {
+            novas = [...escolhasRaciais, attrKey];
+        } else {
+            alert(`Limite de ${qtdEscolhasRacial} escolhas raciais atingido.`);
+            return;
+        }
+        setEscolhasRaciais(novas);
+        // FONTE ÚNICA DE VERDADE: persiste já; o effect resincroniza do servidor
+        updateFicha({ escolhas_atributos_raciais: novas }, true);
     };
 
     const poderesDaClasse = ficha ? extrairPoderesDaClasse(dadosHabilidadesClasse, ficha.classes[0].nome) : [];
@@ -528,7 +551,7 @@ function Ficha() {
                                     const outrosMods = (valTotalBackend - valBase - racialTotal);
                                     const valorTotalExibicao = valBase + racialTotal + outrosMods;
 
-                                    return <AttributeCard key={key} attrKey={key} valBase={valBase} valTotal={valorTotalExibicao} racialFixo={racialFixo} isRacialChosen={isEscolhido} canChooseRacial={canChooseRacial} isRacialDisabled={isRacialDisabled} onBaseChange={(k, delta) => handleAtributoBaseChange(k, String(valBase + delta))} onToggleRacial={toggleRacialChoice} />;
+                                    return <AttributeCard key={key} attrKey={key} valBase={valBase} valTotal={valorTotalExibicao} racialFixo={racialFixo} isRacialChosen={isEscolhido} canChooseRacial={canChooseRacial} isRacialDisabled={isRacialDisabled} bonusEscolha={(infoRacaAtual as any).bonus_por_escolha || 1} onBaseChange={(k, delta) => handleAtributoBaseChange(k, String(valBase + delta))} onToggleRacial={toggleRacialChoice} />;
                                 })}
                             </div>
                         </div>
