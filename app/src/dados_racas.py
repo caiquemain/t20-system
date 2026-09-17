@@ -5,8 +5,9 @@ DADOS_RACAS = {
     # --- RAÇAS BÁSICAS ---
     "Humano": {
         "fonte": "T20 JdA",
-        "attrs": {},  # +2 em três atributos diferentes (escolha)
+        "attrs": {},  # +1 em três atributos diferentes (escolha)
         "escolhas": 3,
+        "bonus_por_escolha": 1,  # T20 JdA: Humano = +1 em três atributos diferentes
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Versatil_Humano"]
@@ -44,6 +45,7 @@ DADOS_RACAS = {
         # +1 em três atributos diferentes (exceto Carisma)
         "attrs": {"car": -1},
         "escolhas": 3,
+        "bonus_por_escolha": 1,
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Cria_Tormenta_Lefou", "Deformidade_Lefou"]
@@ -94,6 +96,7 @@ DADOS_RACAS = {
         "fonte": "T20 JdA",
         "attrs": {"con": -1},  # +1 em três atributos (exceto Con)
         "escolhas": 3,
+        "bonus_por_escolha": 1,
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
         "habilidades": ["Armadura_Ossea_Osteon", "Memoria_Postuma_Osteon", "Natureza_Esqueletica_Osteon", "Preco_Nao_Vida_Osteon"]
@@ -102,6 +105,7 @@ DADOS_RACAS = {
         "fonte": "T20 JdA",
         "attrs": {},  # +1 em três atributos diferentes
         "escolhas": 3,
+        "bonus_por_escolha": 1,
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,  # +12m natação (regra especial)
         "habilidades": ["Cancao_Mares_Sereia", "Mestre_Tridente_Sereia", "Transf_Anfibia_Sereia"]

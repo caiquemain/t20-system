@@ -16,6 +16,7 @@ interface AttributeCardProps {
     isRacialChosen: boolean;   // Se o checkbox está marcado (Humano)
     canChooseRacial: boolean;  // Se deve exibir o checkbox
     isRacialDisabled: boolean; // Se o checkbox deve estar travado (limite atingido)
+    bonusEscolha?: number; // Bônus por escolha da raça (Humano +2, demais +1)
 
     // Ações
     onBaseChange: (key: string, delta: number) => void;
@@ -25,14 +26,14 @@ interface AttributeCardProps {
 export const AttributeCard: React.FC<AttributeCardProps> = ({
     attrKey, valBase, valTotal,
     racialFixo, isRacialChosen, canChooseRacial, isRacialDisabled,
-    onBaseChange, onToggleRacial
+    bonusEscolha = 1, onBaseChange, onToggleRacial
 }) => {
 
     // Labels
     const label = attrKey.substring(0, 3).toUpperCase();
 
     // Cálculos
-    const racialTotal = racialFixo + (isRacialChosen ? 1 : 0);
+    const racialTotal = racialFixo + (isRacialChosen ? bonusEscolha : 0);
     const outrosMods = valTotal - valBase - racialTotal;
     const custoProximo = TABELA_CUSTO[String(valBase + 1)];
 
@@ -117,7 +118,7 @@ export const AttributeCard: React.FC<AttributeCardProps> = ({
                             disabled={isRacialDisabled && !isRacialChosen}
                             style={{ width: 12, height: 12, accentColor: '#2196f3', cursor: 'inherit' }}
                         />
-                        +1 Racial
+                        +{bonusEscolha} Racial
                     </label>
                 )}
 

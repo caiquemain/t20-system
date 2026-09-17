@@ -51,17 +51,8 @@ def aplicar_bonus_atributos_raciais(ficha: Personagem):
                     )
                     ficha.modificadores_raciais[full_key] = int(val)
 
-        # B. Escolhas Variáveis de Atributos Raciais
-        for key_escolha in ficha.escolhas_atributos_raciais:
-            chave_segura = str(key_escolha)
-            if chave_segura in ficha.atributos_calc:
-                ficha.atributos_calc[chave_segura].adicionar_bonus(
-                    fonte=f"Escolha Racial ({raca_nome})",
-                    categoria="Racial",
-                    valor=1
-                )
-                prev = ficha.modificadores_raciais.get(chave_segura, 0)
-                ficha.modificadores_raciais[chave_segura] = prev + 1
+        # B. Escolhas Variáveis: agora em aplicar_escolhas_atributos_raciais
+        #    (roda DEPOIS de calcular_atributos_finais, senão o rebuild apaga)
 
         # C. Tamanho e Deslocamento
         tamanho = dados_raca.get("tamanho", TamanhoEnum.MEDIO)
@@ -117,3 +108,27 @@ def calcular_atributos_finais(ficha: Personagem):
     for attr_full, stat in ficha.atributos_calc.items():
         if hasattr(ficha.atributos, attr_full):
             setattr(ficha.atributos, attr_full, stat.total)
+
+def aplicar_escolhas_atributos_raciais(ficha: Personagem):
+    """Escolhas variáveis de atributos raciais (Humano/Lefou/Osteon/Sereia: +1x3).
+
+    Deve rodar DEPOIS de calcular_atributos_finais: o rebuild do
+    atributos_calc apagava bônus aplicados antes dele.
+    """
+    raca_nome = ficha.cabecalho.raca
+    dados_raca = DADOS_RACAS.get(raca_nome) or {}
+    bonus = int(dados_raca.get("bonus_por_escolha", 1))
+    for key_escolha in ficha.escolhas_atributos_raciais or []:
+        # Normaliza chave curta ('for') -> chave do modelo ('forca')
+        chave = MAPA_ATRIBUTOS.get(str(key_escolha), str(key_escolha))
+        if chave not in ficha.atributos_calc:
+            continue
+        ficha.atributos_calc[chave].adicionar_bonus(
+            fonte=f"Escolha Racial ({raca_nome})",
+            categoria="Racial",
+            valor=bonus
+        )
+        prev = ficha.modificadores_raciais.get(chave, 0)
+        ficha.modificadores_raciais[chave] = prev + bonus
+        # Reflete no total final (o rebuild já passou)
+        setattr(ficha.atributos, chave, getattr(ficha.atributos, chave, 0) + bonus)
