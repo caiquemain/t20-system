@@ -34,7 +34,8 @@ Fluxo alvo:
 - [ ] `content-roll20.ts`: injeta e preenche campos em app.roll20.net
 - [ ] `popup.html/ts`: escolher ficha + botão enviar + status da transferência
 - [ ] `field-mapping.ts`: nossos campos → names dos inputs do Roll20
-- [ ] Inspecionar HTML da ficha no Roll20 (F12): listar `name=` de inputs/selects
+- [x] Inspecionar HTML da ficha no Roll20: mapa completo em `docs/roll20-field-mapping.md`
+      (332+ campos extraídos, incluindo repeating sections e campos menace/NPC)
 - [x] Template decidido: **Tormenta20 Game of the Year** (JdA, mais recente)
       → field-mapping.ts mapeia SOMENTE os campos desse template
 - [ ] Decidir: criar ficha nova no Roll20 ou preencher ficha existente (ou ambos)
