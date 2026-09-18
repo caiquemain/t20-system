@@ -1,6 +1,6 @@
 # 📜 Histórico da Ficha ("git da ficha") — Checklist
 
-**Status:** 🚧 Em andamento (MVP backend)
+**Status:** ✅ MVP completo (backend + frontend) — refinamentos na fila
 **Conceito:** eventos append-only + snapshot por nível = memória do personagem
 **Decisão de design:** resumo de level-up vem do DIFF antes/depois do
 `atualizar_ficha()` — a memória nunca mente, pois nasce do motor de regras.
@@ -20,12 +20,12 @@
 - [ ] Bloquear level-up com escolhas pendentes obrigatórias
 
 ## Frontend
-- [ ] Botão "⬆️ Subir de Nível" no header (substituir input NV? decidir)
+- [x] Botão "⬆️ Level Up" no header (coexiste com input NV — decisão de design)
 - [ ] LevelUpModal passo 1: mostrar resumo de ganhos (só leitura)
 - [ ] LevelUpModal passos de escolhas (poder/magia/perícia)
-- [ ] Aba/painel "📜 Histórico": linha do tempo clicável
+- [x] Aba "📜 HISTÓRICO": linha do tempo com cards roxos/laranja
 - [ ] Ver snapshot de um evento (ficha read-only naquele nível)
-- [ ] Botão "Restaurar" (grava evento de restauração, não apaga nada)
+- [x] Botão "⏪ Restaurar" por evento (append-only, nunca apaga)
 
 ## Regras de ouro
 - Histórico é append-only: NUNCA deletar ou reescrever eventos
