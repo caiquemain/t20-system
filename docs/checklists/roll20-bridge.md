@@ -29,9 +29,9 @@ Fluxo alvo:
 - [ ] Reusar formato de snapshot do histórico (mesma shape)
 
 ## Fase 2 — Extensão Chromium (MV3, Edge primeiro)
-- [ ] Scaffold `t20-roll20-bridge/` (manifest.v3.json, popup, 2 content scripts)
-- [ ] `content-t20system.ts`: lê a ficha em localhost:5173
-- [ ] `content-roll20.ts`: injeta e preenche campos em app.roll20.net
+- [x] Scaffold `t20-roll20-bridge/` (MV3, sem build: JS puro) (manifest.v3.json, popup, 2 content scripts)
+- [x] `content-t20system.js`: botão flutuante lê a ficha via API
+- [x] `content-roll20.js`: campos simples (Sessão 1) — repeating na Sessão 2
 - [ ] `popup.html/ts`: escolher ficha + botão enviar + status da transferência
 - [ ] `field-mapping.ts`: nossos campos → names dos inputs do Roll20
 - [x] Inspecionar HTML da ficha no Roll20: mapa completo em `docs/roll20-field-mapping.md`
@@ -39,7 +39,7 @@ Fluxo alvo:
 - [x] Template decidido: **Tormenta20 Game of the Year** (JdA, mais recente)
       → field-mapping.ts mapeia SOMENTE os campos desse template
 - [ ] Decidir: criar ficha nova no Roll20 ou preencher ficha existente (ou ambos)
-- [ ] Teste manual: Edge → edge://extensions → carregar sem compactação
+- [x] Teste manual no Edge: NÍVEL/PV/PM ok, console limpo
 
 ## Fase 3 — Monstros & NPCs (depois da ponte de ficha)
 - [ ] Bestiário no backend (dados próprios ou OGL — ver nota de licença)

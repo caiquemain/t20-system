@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "T20 System → Roll20 Bridge",
+  "version": "0.1.0",
+  "description": "Envia a ficha do T20 System para a ficha oficial JdA do Roll20 (Tormenta20 Game of the Year).",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "http://localhost:5173/*",
+    "http://localhost:8000/*",
+    "https://app.roll20.net/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:5173/ficha/*"],
+      "js": ["content-t20system.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://app.roll20.net/*"],
+      "js": ["content-roll20.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
