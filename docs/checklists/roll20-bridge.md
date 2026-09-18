@@ -67,8 +67,9 @@ Fluxo alvo:
 
 ## Pendências da ponte (futuro)
 - [ ] Perícias: checkbox `_treinada` + select `atributo2` + diff em `outros` (Sessão 2b)
-- [x] Dinheiro (attr_ts / attr_to): DECIDIDO — gestão manual no Roll20 por
-      enquanto (ficha principal não tem campo de dinheiro); revisitar se ganhar.
+- [x] Dinheiro (attr_ts / attr_to): SINCRONIZADO — a ficha principal TEM campo
+      Dinheiro (to/tl/tp). Mapeamento: tl→attr_ts (T$), to→attr_to (T. Ouro);
+      cobre (tp) não tem campo na ficha JdA oficial — ignorado de propósito.
 - [x] Condições ativas: DECIDIDO — jogador marca na mesa; Roll20 é a fonte
       durante a sessão. Ponte NÃO sincroniza condições.
 - [ ] Modo "ficha nova": criar character no Roll20 direto da ponte

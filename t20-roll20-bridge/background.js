@@ -237,6 +237,12 @@ async function fillRoll20ViaModels(ficha) {
     domSet('form.sheetform [name="attr_playername"]', (ficha.cabecalho || {}).jogador || '');
   } catch (e) {}
 
+  // ── Dinheiro (Tibar): a ficha principal TEM campo, então sincroniza ──
+  const din = ficha.inventario?.dinheiro || {};
+  setAttr('ts', din.tl ?? 0); // T$ prata (Tibar padrão da ficha JdA)
+  setAttr('to', din.to ?? 0); // T. Ouro
+  // cobre (tp) não tem campo na ficha JdA oficial — ignorado de propósito
+
   return { ok: true, charId, attrs: n };
 }
 
