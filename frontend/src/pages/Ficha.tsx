@@ -242,7 +242,34 @@ function Ficha() {
         }, true);
     };
 
-    if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
+    
+    // ─── LEVEL-UP ASSISTIDO (grava histórico) ───
+    const handleLevelUp = async () => {
+        if (!ficha || !id) return;
+        const nivelAtual = ficha.classes[0]?.nivel || 1;
+        if (nivelAtual >= 20) {
+            alert("🎯 Nível 20 é o máximo do T20!");
+            return;
+        }
+        if (!confirm(`Subir do nível ${nivelAtual} para ${nivelAtual + 1}?\nIsso recalculará a ficha e gravará o evento no histórico.`)) return;
+
+        try {
+            const resp = await fetch(`http://localhost:8000/personagens/${id}/level-up`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: '{}'
+            });
+            if (!resp.ok) throw new Error(await resp.text());
+            const data = await resp.json();
+
+            // Recarrega a ficha do servidor (novo nível + ganhos)
+            window.location.reload();
+        } catch (err) {
+            alert("Erro ao subir de nível: " + (err as Error).message);
+        }
+    };
+
+if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
 
     const calcularPontosGastos = () => {
         let gastos = 0;
@@ -498,6 +525,13 @@ function Ficha() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 10 }}>
                             <label style={{ fontSize: '0.8rem', color: '#888' }}>NV</label>
                             <input className="input-nivel" type="number" min={1} max={20} value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
+                            <button
+                                onClick={handleLevelUp}
+                                style={{ padding: "4px 10px", backgroundColor: "#9c27b0", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem" }}
+                                title="Sobe 1 nível e grava no histórico (level-up assistido)"
+                            >
+                                ⬆️ Level Up
+                            </button>
                         </div>
 
                         <div className="header-divider">|</div>
