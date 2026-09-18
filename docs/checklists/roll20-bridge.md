@@ -67,7 +67,9 @@ Fluxo alvo:
 
 ## Pendências da ponte (futuro)
 - [ ] Perícias: checkbox `_treinada` + select `atributo2` + diff em `outros` (Sessão 2b)
-- [ ] Dinheiro (attr_ts / attr_to) e espaços extras
-- [ ] Condições ativas (checkboxes attr_abalado etc.)
+- [x] Dinheiro (attr_ts / attr_to): DECIDIDO — gestão manual no Roll20 por
+      enquanto (ficha principal não tem campo de dinheiro); revisitar se ganhar.
+- [x] Condições ativas: DECIDIDO — jogador marca na mesa; Roll20 é a fonte
+      durante a sessão. Ponte NÃO sincroniza condições.
 - [ ] Modo "ficha nova": criar character no Roll20 direto da ponte
 - [ ] Fase 3: monstros/NPCs (cstype=1 + campos attr_menace_*)
