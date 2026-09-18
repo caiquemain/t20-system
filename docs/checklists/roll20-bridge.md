@@ -23,22 +23,22 @@ Fluxo alvo:
 4. Content script injetado em app.roll20.net preenche os campos da ficha
 
 ## Fase 1 — Export/Import JSON (sem extensão ainda)
-- [ ] `GET /personagens/{id}/export` → JSON limpo da ficha
-- [ ] Botão "📤 Exportar JSON" na ficha (download local)
-- [ ] `POST /personagens/import` → cria ficha a partir de JSON (evento "criacao")
-- [ ] Reusar formato de snapshot do histórico (mesma shape)
+
+
+
+
 
 ## Fase 2 — Extensão Chromium (MV3, Edge primeiro)
 - [x] Scaffold `t20-roll20-bridge/` (MV3, sem build: JS puro) (manifest.v3.json, popup, 2 content scripts)
 - [x] `content-t20system.js`: botão flutuante lê a ficha via API
 - [x] `content-roll20.js`: campos simples (Sessão 1) — repeating na Sessão 2
-- [ ] `popup.html/ts`: escolher ficha + botão enviar + status da transferência
-- [ ] `field-mapping.ts`: nossos campos → names dos inputs do Roll20
+
+
 - [x] Inspecionar HTML da ficha no Roll20: mapa completo em `docs/roll20-field-mapping.md`
       (332+ campos extraídos, incluindo repeating sections e campos menace/NPC)
 - [x] Template decidido: **Tormenta20 Game of the Year** (JdA, mais recente)
       → field-mapping.ts mapeia SOMENTE os campos desse template
-- [ ] Decidir: criar ficha nova no Roll20 ou preencher ficha existente (ou ambos)
+
 - [x] Teste manual no Edge: NÍVEL/PV/PM ok, console limpo
 
 ## Fase 3 — Monstros & NPCs (depois da ponte de ficha)
@@ -66,7 +66,7 @@ Fluxo alvo:
       defesa e totais de perícia a partir dos nossos atributos
 
 ## Pendências da ponte (futuro)
-- [ ] Perícias: checkbox `_treinada` + select `atributo2` + diff em `outros` (Sessão 2b)
+
 - [x] Dinheiro (attr_ts / attr_to): SINCRONIZADO — a ficha principal TEM campo
       Dinheiro (to/tl/tp). Mapeamento: tl→attr_ts (T$), to→attr_to (T. Ouro);
       cobre (tp) não tem campo na ficha JdA oficial — ignorado de propósito.
@@ -74,3 +74,36 @@ Fluxo alvo:
       durante a sessão. Ponte NÃO sincroniza condições.
 - [ ] Modo "ficha nova": criar character no Roll20 direto da ponte
 - [ ] Fase 3: monstros/NPCs (cstype=1 + campos attr_menace_*)
+
+## Estado REAL da ponte (atualizado após Sessão 2b + dinheiro)
+
+### ✅ Já entregue e funcionando (persiste no Roll20 via window.Campaign)
+- [x] Scaffold MV3 + 2 content scripts + background service worker
+- [x] Cabeçalho completo (nome, jogador, raça, origem, classe/nível, XP, divindade)
+- [x] Nome do personagem via `character.save({name})` (referência reservada do Roll20)
+- [x] 6 atributos (FOR/DES/CON/INT/SAB/CAR)
+- [x] PV/PM máx+atuais, deslocamento, tamanho
+- [x] Proficiências e anotações
+- [x] Perícias: checkbox `_treinada` + select `atributo2` + diff em `outros`
+  (coluna Outros = 0 confirma que motor e ficha JdA concordam na regra de treino)
+- [x] Dinheiro: Tibar (tl→attr_ts) e T. Ouro (to→attr_to); cobre (tp) sem campo na JdA
+- [x] Ataques (repeating_attacks) com crítico parseado (margem/multiplicador)
+- [x] Habilidades gerais (repeating_abilities)
+- [x] Poderes de classe (repeating_powers)
+- [x] Magias por círculo (repeating_spells1..5)
+- [x] Equipamentos (repeating_equipment) com quantidade e slots
+
+### ⏳ Pendências REAIS da ponte
+- [ ] **Modo "ficha nova"**: criar character no Roll20 direto da ponte (sem precisar criar no site primeiro)
+- [ ] **Fase 3 — Monstros/NPCs** com 1 clique:
+  - Botão separado no backend "monstros" com `cstype=1`
+  - Mapa: `attr_menace_name`, `menace_nd`, `menace_hp`, `menace_mp`,
+    `menace_for/des/con/int/sab/car`, `menace_desloc`, `menace_defense`,
+    `menace_perception`, `menace_init`, `menace_fortitude`, `menace_reflex`,
+    `menace_will`, `repeating_menaceabilities`, `repeating_menacespells`,
+    `repeating_menacemelee`, `repeating_menacedistance`, `menace_treasure`,
+    `menace_treasures`
+
+### ❌ Cortado por decisão de escopo
+- Condições ativas (attr_abalado etc.) — jogador marca na mesa; Roll20 é a fonte
+- Dinheiro em cobre (tp) — ficha JdA oficial não tem campo
