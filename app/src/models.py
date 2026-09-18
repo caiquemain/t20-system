@@ -1,4 +1,5 @@
 from typing import List, Dict, Optional, Any, Union
+from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 
@@ -340,4 +341,29 @@ class Personagem(BaseModel):
         return str(v)
 
     # Pydantic V2 Config
+    model_config = ConfigDict(populate_by_name=True)
+
+
+# --- HISTÓRICO DA FICHA (o "git" da ficha) ---
+class EventoFicha(BaseModel):
+    """Evento imutável da linha do tempo do personagem.
+
+    Append-only: nunca deletar ou reescrever. Restaurar = evento novo.
+    """
+    id: Optional[str] = Field(default=None, alias="_id")
+    personagem_id: str
+    tipo: str = "edicao_manual"   # criacao | level_up | restauracao | edicao_manual
+    nivel: int = 1
+    resumo: List[str] = Field(default_factory=list)      # linhas legíveis do diff
+    escolhas: Dict[str, Any] = Field(default_factory=dict)  # escolhas do jogador
+    snapshot: Optional[Dict[str, Any]] = None            # ficha completa no momento
+    criado_em: datetime = Field(default_factory=datetime.utcnow)
+
+    @field_validator('id', mode='before')
+    @classmethod
+    def converter_objectid(cls, v):
+        if v is None:
+            return None
+        return str(v)
+
     model_config = ConfigDict(populate_by_name=True)
