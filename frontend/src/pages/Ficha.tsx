@@ -101,6 +101,9 @@ function Ficha() {
 
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
+    const [showHistorico, setShowHistorico] = useState(false);
+    const [historicoData, setHistoricoData] = useState<any[]>([]);
+    const [loadingHistorico, setLoadingHistorico] = useState(false);
 
     useEffect(() => {
         if (ficha) {
@@ -267,6 +270,47 @@ function Ficha() {
         } catch (err) {
             alert("Erro ao subir de nível: " + (err as Error).message);
         }
+    };
+
+
+    const carregarHistorico = async () => {
+        if (!id) return;
+        setLoadingHistorico(true);
+        try {
+            const resp = await fetch(`http://localhost:8000/personagens/${id}/historico`);
+            if (!resp.ok) throw new Error(await resp.text());
+            const data = await resp.json();
+            setHistoricoData(data);
+        } catch (err) {
+            console.error("Erro ao carregar histórico:", err);
+            setHistoricoData([]);
+        } finally {
+            setLoadingHistorico(false);
+        }
+    };
+
+    const handleRestaurarEvento = async (eventoId: string) => {
+        if (!id) return;
+        const evento = historicoData.find(e => e.id === eventoId);
+        if (!evento) return;
+        if (!confirm(`Restaurar ficha ao nível ${evento.nivel}?\n\nResumo: ${evento.resumo.join(', ')}\n\nIsso criará um novo evento de restauração no histórico.`)) return;
+        try {
+            const resp = await fetch(`http://localhost:8000/personagens/${id}/historico/${eventoId}/restaurar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: '{}'
+            });
+            if (!resp.ok) throw new Error(await resp.text());
+            alert("✅ Ficha restaurada com sucesso!");
+            window.location.reload();
+        } catch (err) {
+            alert("Erro ao restaurar: " + (err as Error).message);
+        }
+    };
+
+    const handleMostrarHistorico = () => {
+        setShowHistorico(true);
+        carregarHistorico();
     };
 
 if (loading || !ficha) return <div className="loading-screen">Carregando grimório...</div>;
@@ -552,21 +596,28 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             <div className="ficha-tabs" style={{ display: 'flex', gap: 10, padding: '0 20px', marginBottom: 15, borderBottom: '1px solid #333' }}>
                 <button
                     className={`tab-btn ${activeTab === 'atributos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('atributos')}
+                    onClick={() => { setActiveTab('atributos'); setShowHistorico(false); }}
                     style={{ background: 'transparent', border: 'none', color: activeTab === 'atributos' ? '#ffd700' : '#888', borderBottom: activeTab === 'atributos' ? '2px solid #ffd700' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                     ATRIBUTOS & PERÍCIAS
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'efeitos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('efeitos')}
+                    onClick={() => { setActiveTab('efeitos'); setShowHistorico(false); }}
                     style={{ background: 'transparent', border: 'none', color: activeTab === 'efeitos' ? '#2196f3' : '#888', borderBottom: activeTab === 'efeitos' ? '2px solid #2196f3' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                     EFEITOS & CONDIÇÕES
                 </button>
+                <button
+                    className={`tab-btn ${showHistorico ? 'active' : ''}`}
+                    onClick={handleMostrarHistorico}
+                    style={{ background: 'transparent', border: 'none', color: showHistorico ? '#9c27b0' : '#888', borderBottom: showHistorico ? '2px solid #9c27b0' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                    📜 HISTÓRICO
+                </button>
             </div>
 
-            {activeTab === 'atributos' && (
+            {!showHistorico && activeTab === 'atributos' && (
                 <div className="ficha-grid">
                     <div className="col-stats">
                         <div className="section-card">
@@ -646,7 +697,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 </div>
             )}
 
-            {activeTab === 'efeitos' && (
+            {!showHistorico && activeTab === 'efeitos' && (
                 <div className="tab-content" style={{ padding: '0 20px 20px 20px' }}>
                     <div className="section-card">
                         <h3 className="section-title" style={{ color: '#2196f3', borderBottomColor: '#2196f3' }}>✨ Efeitos Ativos & Condições</h3>
@@ -782,8 +833,97 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 onFechar={() => setSelectorAtivo(null)}
             />
 
-        </div>
+        {showHistorico && (
+            <div className="tab-content" style={{ padding: '0 20px 20px 20px' }}>
+                <div className="section-card">
+                    <h3 className="section-title" style={{ color: '#9c27b0', borderBottomColor: '#9c27b0' }}>
+                        📜 Linha do Tempo do Personagem
+                    </h3>
+                    {loadingHistorico ? (
+                        <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
+                            <p>Carregando histórico...</p>
+                        </div>
+                    ) : historicoData.length === 0 ? (
+                        <div style={{ padding: 40, textAlign: 'center', color: '#666', border: '1px dashed #444', borderRadius: 8, margin: 20 }}>
+                            <p style={{ fontSize: '1.2rem', marginBottom: 10 }}>📭 Nenhum evento no histórico</p>
+                            <p style={{ fontSize: '0.9rem' }}>
+                                Use o botão <strong>⬆️ Level Up</strong> no header para subir de nível e gravar eventos aqui.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="historico-timeline" style={{ padding: '20px 0' }}>
+                            {historicoData.map((evento, index) => {
+                                const isRestauracao = evento.tipo === 'restauracao';
+                                const color = isRestauracao ? '#ff9800' : '#9c27b0';
+                                const icon = isRestauracao ? '⏪' : '⬆️';
+                                const bg = isRestauracao ? 'rgba(255, 152, 0, 0.1)' : 'rgba(156, 39, 176, 0.1)';
+                                
+                                return (
+                                    <div
+                                        key={evento.id}
+                                        className="historico-event"
+                                        style={{
+                                            marginBottom: '20px',
+                                            border: `2px solid ${color}`,
+                                            borderRadius: '8px',
+                                            padding: '15px',
+                                            background: bg,
+                                            position: 'relative',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                                            <div>
+                                                <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>
+                                                    {icon} <strong style={{ color: color }}>Nível {evento.nivel}</strong>
+                                                </div>
+                                                <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '4px' }}>
+                                                    {new Date(evento.criado_em).toLocaleString('pt-BR')}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRestaurarEvento(evento.id)}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    backgroundColor: '#ff9800',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.85rem'
+                                                }}
+                                                title="Restaurar ficha a este momento"
+                                            >
+                                                ⏪ Restaurar
+                                            </button>
+                                        </div>
+                                        
+                                        <div style={{ marginTop: '10px' }}>
+                                            {evento.resumo.map((linha, i) => (
+                                                <div key={i} style={{ fontSize: '0.9rem', color: '#ddd', marginBottom: '4px', paddingLeft: '10px', borderLeft: '2px solid ' + color + '44' }}>
+                                                    {linha}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        
+                                        {isRestauracao && evento.escolhas?.evento_origem && (
+                                            <div style={{ marginTop: '10px', fontSize: '0.8rem', color: '#888', fontStyle: 'italic' }}>
+                                                ↩️ Restaurado do evento {evento.escolhas.evento_origem.substring(0, 8)}...
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+     </div>
     );
 }
+
+        
 
 export default Ficha;
