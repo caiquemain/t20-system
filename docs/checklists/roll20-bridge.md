@@ -7,6 +7,7 @@ depois, monstros/NPCs também entram na mesa com 1 clique.
 Manifest V3 do Chrome carrega nativo no Edge; MESMO pacote serve os dois
 (sem build separado, diferente do Firefox que exigiria manifest próprio).
 **Inspiração:** github.com/pyanderson/roll20_tormenta20_grimoire
+**Decisão:** template alvo = Tormenta20 Game of the Year (JdA) — versão mais recente
 
 ## 💡 Conceito (NÃO é import!)
 A extensão do Roll20 não "importa" arquivo: ela injeta content scripts na
@@ -34,8 +35,8 @@ Fluxo alvo:
 - [ ] `popup.html/ts`: escolher ficha + botão enviar + status da transferência
 - [ ] `field-mapping.ts`: nossos campos → names dos inputs do Roll20
 - [ ] Inspecionar HTML da ficha no Roll20 (F12): listar `name=` de inputs/selects
-- [ ] **PERGUNTA ABERTA:** template "Tormenta20" ou "Tormenta20 Game of the Year"?
-      (os names dos campos MUDAM entre os dois templates)
+- [x] Template decidido: **Tormenta20 Game of the Year** (JdA, mais recente)
+      → field-mapping.ts mapeia SOMENTE os campos desse template
 - [ ] Decidir: criar ficha nova no Roll20 ou preencher ficha existente (ou ambos)
 - [ ] Teste manual: Edge → edge://extensions → carregar sem compactação
 
