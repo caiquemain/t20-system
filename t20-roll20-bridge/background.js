@@ -84,6 +84,61 @@ async function fillRoll20ViaModels(ficha) {
   setAttr('proficiencias', ficha.descricao?.anotacoes || '');
   setAttr('charnotes', ficha.descricao?.historia || '');
 
+  // ── Perícias: treino + atributo-chave + diff em "outros" ──
+  const SKILL_MAP = {
+    acrobacia: 'Acrobacia', adestramento: 'Adestramento', atletismo: 'Atletismo',
+    atuacao: 'Atuação', cavalgar: 'Cavalgar', conhecimento: 'Conhecimento',
+    cura: 'Cura', diplomacia: 'Diplomacia', enganacao: 'Enganação',
+    fortitude: 'Fortitude', furtividade: 'Furtividade', guerra: 'Guerra',
+    iniciativa: 'Iniciativa', intimidacao: 'Intimidação', intuicao: 'Intuição',
+    investigacao: 'Investigação', jogatina: 'Jogatina', ladinagem: 'Ladinagem',
+    luta: 'Luta', misticismo: 'Misticismo', nobreza: 'Nobreza',
+    percepcao: 'Percepção', pilotagem: 'Pilotagem', pontaria: 'Pontaria',
+    reflexos: 'Reflexos', religiao: 'Religião', sobrevivencia: 'Sobrevivência',
+    vontade: 'Vontade'
+  };
+  const DEFAULT_ATTR = {
+    acrobacia: 'destreza', adestramento: 'carisma', atletismo: 'forca',
+    atuacao: 'carisma', cavalgar: 'destreza', conhecimento: 'inteligencia',
+    cura: 'sabedoria', diplomacia: 'carisma', enganacao: 'carisma',
+    fortitude: 'constituicao', furtividade: 'destreza', guerra: 'inteligencia',
+    iniciativa: 'destreza', intimidacao: 'carisma', intuicao: 'sabedoria',
+    investigacao: 'inteligencia', jogatina: 'carisma', ladinagem: 'destreza',
+    luta: 'forca', misticismo: 'inteligencia', nobreza: 'inteligencia',
+    percepcao: 'sabedoria', pilotagem: 'destreza', pontaria: 'destreza',
+    reflexos: 'destreza', religiao: 'sabedoria', sobrevivencia: 'sabedoria',
+    vontade: 'sabedoria'
+  };
+  const ATTR_OPT = {
+    forca: '@{for_mod} + @{condicaoperfisico} + @{condicaocego}',
+    destreza: '@{des_mod} + @{condicaoperfisico} + @{condicaocego}',
+    constituicao: '@{con_mod} + @{condicaoperfisico}',
+    inteligencia: '@{int_mod} + @{condicaopermental}',
+    sabedoria: '@{sab_mod} + @{condicaopermental}',
+    carisma: '@{car_mod} + @{condicaopermental}'
+  };
+  const modsAttr = {
+    forca: a.forca ?? 0, destreza: a.destreza ?? 0, constituicao: a.constituicao ?? 0,
+    inteligencia: a.inteligencia ?? 0, sabedoria: a.sabedoria ?? 0, carisma: a.carisma ?? 0
+  };
+  const metadeNivel = Math.floor((ficha.classes?.[0]?.nivel || 1) / 2);
+  const periciasNosso = ficha.pericias || {};
+  let skillsSync = 0;
+  Object.entries(SKILL_MAP).forEach(([slug, nomeNosso]) => {
+    const p = periciasNosso[nomeNosso];
+    if (!p) return;
+    const treino = (p.treino ?? 0) > 0 ? 1 : 0;
+    const attrKey = p.atributo || DEFAULT_ATTR[slug];
+    setAttr(slug + '_treinada', treino ? '1' : '0');
+    setAttr(slug + 'atributo2', ATTR_OPT[attrKey] || ATTR_OPT[DEFAULT_ATTR[slug]]);
+    // diff: total da ficha Roll20 = total do nosso motor (regra de ouro)
+    const esperadoSheet = metadeNivel + (modsAttr[attrKey] ?? 0) + (treino ? 2 : 0);
+    const diff = (p.total ?? 0) - esperadoSheet;
+    setAttr(slug + 'outros', diff);
+    skillsSync++;
+  });
+  console.log('[bridge-main] perícias sincronizadas:', skillsSync);
+
   // ── Ataques (repeating_attacks) ──
   const PERICIA_ATQ = {
     'Luta': '@{lutatotal}+@{condicaomodataquecc}+@{condicaomodataque}',
