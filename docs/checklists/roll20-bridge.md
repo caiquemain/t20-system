@@ -54,3 +54,20 @@ Fluxo alvo:
 ## 🔗 Sinergias com features existentes
 - Export JSON = snapshot do histórico serializado (historico-nivel.md)
 - Rolagens nativas (rolagens.md) podem virar macros de roll no Roll20 depois
+
+## Sessão 2 — save via modelos internos (ENTREGUE)
+- [x] Save persistente via `window.Campaign.characters.get(id).attribs` (attr.save/create)
+- [x] Nome do personagem via `character.save({name})` (@{character_name} é referência reservada)
+- [x] Repeating sections via atributos com UUID Roll20: ataques, habilidades,
+      poderes, magias por círculo (repeating_spells1..5), equipamentos
+- [x] Background executa o fill no MAIN world (chrome.scripting.executeScript)
+- [x] Content script isolado só delega (storage pending + mensagens)
+- [x] Validado no Edge: persiste após fechar/reabrir; workers recalculam
+      defesa e totais de perícia a partir dos nossos atributos
+
+## Pendências da ponte (futuro)
+- [ ] Perícias: checkbox `_treinada` + select `atributo2` + diff em `outros` (Sessão 2b)
+- [ ] Dinheiro (attr_ts / attr_to) e espaços extras
+- [ ] Condições ativas (checkboxes attr_abalado etc.)
+- [ ] Modo "ficha nova": criar character no Roll20 direto da ponte
+- [ ] Fase 3: monstros/NPCs (cstype=1 + campos attr_menace_*)

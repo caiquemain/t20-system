@@ -1,4 +1,5 @@
 (function () {
+  console.log('[bridge:t20] content script carregado em', location.href);
   if (document.getElementById('t20-bridge-btn')) return;
 
   const btn = document.createElement('button');
@@ -13,18 +14,26 @@
 
   btn.onclick = async () => {
     const id = location.pathname.split('/').filter(Boolean).pop();
+    console.log('[bridge:t20] botão clicado, id =', id);
     if (!id) return alert('ID da ficha não encontrado na URL.');
     btn.textContent = '⏳ Buscando ficha...';
     try {
       const resp = await fetch(`http://localhost:8000/personagens/${id}`);
       if (!resp.ok) throw new Error('API respondeu ' + resp.status);
       const ficha = await resp.json();
-      chrome.runtime.sendMessage({ type: 'FICHA_PARA_ROLL20', ficha }, () => {
-        reset('✅ Enviada! Abra a ficha no Roll20', 4000);
+      console.log('[bridge:t20] ficha obtida:', ficha.cabecalho?.nome, '| nv', ficha.classes?.[0]?.nivel);
+      chrome.runtime.sendMessage({ type: 'FICHA_PARA_ROLL20', ficha }, (r) => {
+        if (chrome.runtime.lastError) {
+          console.error('[bridge:t20] erro sendMessage:', chrome.runtime.lastError.message);
+          return reset('❌ Extensão sem conexão', 4000);
+        }
+        console.log('[bridge:t20] resposta do background:', r);
+        if (r && r.ok === false) { alert('Bridge: ' + r.erro); return reset('❌ ' + r.erro, 5000); }
+        reset('✅ Enviada! Veja a aba do Roll20', 4000);
       });
     } catch (e) {
+      console.error('[bridge:t20] erro fetch:', e);
       reset('❌ Erro ao buscar', 3000);
-      alert('Erro ao buscar ficha: ' + e.message);
     }
   };
 })();

@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "T20 System → Roll20 Bridge",
-  "version": "0.1.0",
-  "description": "Envia a ficha do T20 System para a ficha oficial JdA do Roll20 (Tormenta20 Game of the Year).",
-  "permissions": ["storage", "tabs"],
+  "version": "0.2.0",
+  "description": "Envia a ficha do T20 System para a ficha oficial JdA do Roll20.",
+  "permissions": ["storage", "tabs", "scripting"],
   "host_permissions": [
     "http://localhost:5173/*",
     "http://localhost:8000/*",
