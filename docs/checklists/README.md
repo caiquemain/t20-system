@@ -10,6 +10,7 @@ Quando uma checklist for 100% concluída, mover o arquivo para
 | [rolagens.md](./rolagens.md) | Sistema de rolagens de dados | ❌ Não iniciada |
 | [racas-e2e.md](./racas-e2e.md) | Validação E2E das raças restantes | 🟡 Parcial (14/17) |
 | [historico-nivel.md](./historico-nivel.md) | Histórico da ficha / level-up com memória | ✅ MVP completo |
+| [roll20-bridge.md](./roll20-bridge.md) | Ponte Roll20: ficha (e monstros) com 1 clique | ❌ Feature futura |
 
 ## Como usar
 - Ao iniciar uma feature, abra a checklist correspondente
