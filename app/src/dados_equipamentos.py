@@ -103,3 +103,208 @@ DADOS_GERAIS = {
     "Instrumento musical (comum)": {"subcategoria": "Ferramenta", "preco": 15, "espacos": 2, "notas": "Usado em Atuação"},
     "Tinta (frasco)": {"subcategoria": "Ferramenta", "preco": 8, "espacos": 1, "notas": ""},
 }
+
+# ─────────────────────────────────────────────────────────────
+# NORMALIZAÇÃO & CORREÇÕES (pós-extração de PDF)
+# 1) remove espaços sobrando de chaves/valores string
+# 2) corrige valores contra a Tabela 3-6 do JdA
+# ─────────────────────────────────────────────────────────────
+def _strip_dict(d):
+    out = {}
+    for k, v in d.items():
+        nk = k.strip()
+        nv = {kk.strip(): (vv.strip() if isinstance(vv, str) else vv) for kk, vv in v.items()}
+        out[nk] = nv
+    return out
+
+DADOS_ARMAS = _strip_dict(DADOS_ARMAS)
+DADOS_ARMADURAS = _strip_dict(DADOS_ARMADURAS)
+DADOS_GERAIS = _strip_dict(DADOS_GERAIS)
+
+_RENOMEIA = {
+    "Corda (15m)": ("Corda (10m)", {"preco": 1}),
+    "Espelho de metal": ("Espelho", {"preco": 10}),
+    "Símbolo sagrado (madeira)": ("Símbolo sagrado", {}),
+}
+for velho, (novo, campos) in _RENOMEIA.items():
+    if velho in DADOS_GERAIS:
+        DADOS_GERAIS[novo] = DADOS_GERAIS.pop(velho)
+        DADOS_GERAIS[novo].update(campos)
+
+_CORRECOES_ARMAS = {
+    "Rede": {"critico": None},
+}
+_CORRECOES_GERAIS = {
+    "Mochila": {"espacos": 0, "notas": "Não ocupa espaço (regra p.141)"},
+    "Água benta (frasco)": {"preco": 10, "espacos": 0.5},
+    "Ácido (frasco)": {"espacos": 0.5},
+    "Óleo (frasco)": {"preco": 0.1, "espacos": 0.5},
+    "Tocha": {"preco": 0.1},
+    "Saco de dormir": {"preco": 1},
+    "Barraca (2 pessoas)": {"espacos": 1},
+    "Ração de viagem (dia)": {"preco": 0.5, "espacos": 0.5},
+    "Instrumento musical (comum)": {"preco": 35, "espacos": 1},
+    "Kit de medicamentos": {"espacos": 1},
+    "Alforje": {"subcategoria": "Animais", "preco": 30, "espacos": 0,
+                "notas": "Montaria carrega até 10 espaços para você"},
+    "Símbolo sagrado (prata)": {"notas": "Variante caseira — fora da tabela oficial JdA"},
+}
+for nome, campos in _CORRECOES_ARMAS.items():
+    if nome in DADOS_ARMAS:
+        DADOS_ARMAS[nome].update(campos)
+for nome, campos in _CORRECOES_GERAIS.items():
+    if nome in DADOS_GERAIS:
+        DADOS_GERAIS[nome].update(campos)
+
+
+# ─────────────────────────────────────────────────────────────
+# ITENS AUSENTES DA TABELA 3-6 (completude do catálogo JdA)
+# Valores conferidos no livro (preço T$ + espaços); notas = efeito mecânico curto.
+# ─────────────────────────────────────────────────────────────
+_ITENS_AUSENTES = {
+    # --- Equipamento de Aventura ---
+    "Algemas": {"subcategoria": "Aventura", "preco": 15, "espacos": 1, "notas": "Prender exige agarrar + teste; escapar CD 30 Acrobacia / 25 Força"},
+    "Arpéu": {"subcategoria": "Aventura", "preco": 5, "espacos": 1, "notas": "+5 Atletismo p/ subir com corda; fixar CD 15 Pontaria"},
+    "Bandoleira de poções": {"subcategoria": "Aventura", "preco": 20, "espacos": 1, "notas": "Vestido: sacar poções/alquímicos = ação livre"},
+    "Lampião": {"subcategoria": "Aventura", "preco": 7, "espacos": 1, "notas": "Luz 15m; acender/carregar = ação padrão; dura 1 cena"},
+    "Mochila de aventureiro": {"subcategoria": "Aventura", "preco": 50, "espacos": 0, "notas": "Vestido: +2 espaços de carga; não ocupa espaço"},
+    "Organizador de pergaminhos": {"subcategoria": "Aventura", "preco": 25, "espacos": 1, "notas": "Vestido: sacar pergaminhos = ação livre"},
+    "Pé de cabra": {"subcategoria": "Aventura", "preco": 2, "espacos": 1, "notas": "+5 Força p/ abrir; como arma usa stats de clava"},
+    "Vara de madeira (3m)": {"subcategoria": "Aventura", "preco": 0.2, "espacos": 1, "notas": "Alcançar pontos distantes; frágil demais p/ arma"},
+    # --- Ferramentas (nomes oficiais) ---
+    "Alaúde élfico": {"subcategoria": "Ferramenta", "preco": 300, "espacos": 1, "notas": "Inspiração = ação de movimento; conta como instrumento musical"},
+    "Coleção de livros": {"subcategoria": "Ferramenta", "preco": 75, "espacos": 1, "notas": "+1 em Conhecimento/Guerra/Misticismo/Nobreza/Religião (fixo na compra)"},
+    "Equipamento de viagem": {"subcategoria": "Ferramenta", "preco": 10, "espacos": 1, "notas": "Sem ele: –5 Sobrevivência p/ acampar"},
+    "Flauta mística": {"subcategoria": "Ferramenta", "preco": 150, "espacos": 1, "notas": "Bardo: +1 CD das magias; conta como instrumento musical"},
+    "Luneta": {"subcategoria": "Ferramenta", "preco": 100, "espacos": 1, "notas": "+5 Percepção p/ observar em alcance longo ou além"},
+    "Sela": {"subcategoria": "Ferramenta", "preco": 20, "espacos": 1, "notas": "Sem ela: –5 Cavalgar; no animal não ocupa espaço do personagem"},
+    "Tambor das profundezas": {"subcategoria": "Ferramenta", "preco": 80, "espacos": 1, "notas": "Dobra alcance de Inspiração/Músicas de Bardo; conta como instrumento"},
+    # --- Vestuário (todos precisam ser vestidos p/ funcionar) ---
+    "Andrajos de aldeão": {"subcategoria": "Vestuário", "preco": 1, "espacos": 1, "notas": "+2 Investigação p/ interrogar; –2 perícias Carisma sociais"},
+    "Bandana": {"subcategoria": "Vestuário", "preco": 5, "espacos": 1, "notas": "+1 Intimidação"},
+    "Botas reforçadas": {"subcategoria": "Vestuário", "preco": 20, "espacos": 1, "notas": "+1,5m desloc. em terreno difícil (após a redução)"},
+    "Camisa bufante": {"subcategoria": "Vestuário", "preco": 25, "espacos": 1, "notas": "+1 Atuação"},
+    "Capa esvoaçante": {"subcategoria": "Vestuário", "preco": 25, "espacos": 1, "notas": "+1 Enganação"},
+    "Capa pesada": {"subcategoria": "Vestuário", "preco": 15, "espacos": 1, "notas": "+1 Fortitude"},
+    "Casaco longo": {"subcategoria": "Vestuário", "preco": 20, "espacos": 1, "notas": "+5 Fortitude vs frio; penalidade de armadura –2"},
+    "Chapéu arcano": {"subcategoria": "Vestuário", "preco": 50, "espacos": 1, "notas": "+1 PM (apenas com Caminho do Arcanista)"},
+    "Enfeite de elmo": {"subcategoria": "Vestuário", "preco": 15, "espacos": 1, "notas": "Resistência a medo +2"},
+    "Farrapos de ermitão": {"subcategoria": "Vestuário", "preco": 1, "espacos": 1, "notas": "+2 Adestramento; –2 Diplomacia e Investigação p/ interrogar"},
+    "Gorro de ervas": {"subcategoria": "Vestuário", "preco": 75, "espacos": 1, "notas": "+1 Vontade"},
+    "Luva de pelica": {"subcategoria": "Vestuário", "preco": 5, "espacos": 1, "notas": "+1 Ladinagem"},
+    "Manopla": {"subcategoria": "Vestuário", "preco": 10, "espacos": 1, "notas": "Dano desarmado vira letal; conta como arma p/ melhorias"},
+    "Manto camuflado": {"subcategoria": "Vestuário", "preco": 12, "espacos": 1, "notas": "+2 Furtividade no terreno específico"},
+    "Manto eclesiástico": {"subcategoria": "Vestuário", "preco": 20, "espacos": 1, "notas": "+1 Religião"},
+    "Robe místico": {"subcategoria": "Vestuário", "preco": 50, "espacos": 1, "notas": "+1 Misticismo"},
+    "Sapatos de camurça": {"subcategoria": "Vestuário", "preco": 8, "espacos": 1, "notas": "+1 Acrobacia"},
+    "Tabardo": {"subcategoria": "Vestuário", "preco": 10, "espacos": 1, "notas": "+1 Diplomacia"},
+    "Traje da corte": {"subcategoria": "Vestuário", "preco": 100, "espacos": 1, "notas": "Sem ele: –5 perícias Carisma em ambientes nobres"},
+    "Traje de viajante": {"subcategoria": "Vestuário", "preco": 10, "espacos": 0, "notas": "Roupa padrão; sem bônus (não conta p/ limite de 4 vestidos)"},
+    "Veste de seda": {"subcategoria": "Vestuário", "preco": 25, "espacos": 1, "notas": "+1 Reflexos"},
+    # --- Esotéricos ---
+    "Bolsa de pó": {"subcategoria": "Esotérico", "preco": 300, "espacos": 1, "notas": "+2 PM p/ aprimoramentos de Encantamento/Ilusão"},
+    "Cajado arcano": {"subcategoria": "Esotérico", "preco": 1000, "espacos": 2, "notas": "+1 limite PM e +1 CD arcanas; 2 mãos; como arma = bordão"},
+    "Cetro elemental": {"subcategoria": "Esotérico", "preco": 750, "espacos": 1, "notas": "+1 dado de dano do tipo da gema (ácido/eletricidade/fogo/frio)"},
+    "Costela de lich": {"subcategoria": "Esotérico", "preco": 300, "espacos": 1, "notas": "+1d6 trevas nas magias; não recupera PV por cura mágica"},
+    "Dedo de ente": {"subcategoria": "Esotérico", "preco": 200, "espacos": 1, "notas": "Ao gastar ≥1 PM: role 1d4, com 4 recupera 1 PM"},
+    "Luva de ferro": {"subcategoria": "Esotérico", "preco": 150, "espacos": 1, "notas": "+1 em bônus de Defesa/resistência de magias pessoais"},
+    "Medalhão de prata": {"subcategoria": "Esotérico", "preco": 750, "espacos": 1, "notas": "–1 PM em magias de alcance pessoal"},
+    "Orbe cristalino": {"subcategoria": "Esotérico", "preco": 750, "espacos": 1, "notas": "+1 limite PM arcano"},
+    "Tomo hermético": {"subcategoria": "Esotérico", "preco": 1500, "espacos": 1, "notas": "+2 CD de magias arcanas de 1 escola específica"},
+    "Varinha arcana": {"subcategoria": "Esotérico", "preco": 100, "espacos": 1, "notas": "+1 CD de magias arcanas"},
+    # --- Alquímicos: Preparados ---
+    "Bálsamo restaurador": {"subcategoria": "Alquímico", "preco": 10, "espacos": 0.5, "notas": "Ação completa: cura 2d4 PV"},
+    "Bomba": {"subcategoria": "Alquímico", "preco": 50, "espacos": 0.5, "notas": "6d6 impacto em 3m (Ref Des metade); acender mov. + arremessar padrão"},
+    "Cosmético": {"subcategoria": "Alquímico", "preco": 30, "espacos": 0.5, "notas": "Ação completa: +2 perícias Carisma até fim da cena"},
+    "Elixir do amor": {"subcategoria": "Alquímico", "preco": 100, "espacos": 0.5, "notas": "Enfeitiçado pela 1ª criatura vista (Vontade Car anula); 1d3 dias"},
+    "Essência de mana": {"subcategoria": "Alquímico", "preco": 50, "espacos": 0.5, "notas": "Ação padrão: recupera 1d4 PM"},
+    "Fogo alquímico": {"subcategoria": "Alquímico", "preco": 10, "espacos": 0.5, "notas": "1d6 fogo + em chamas (Ref Des metade evita as chamas)"},
+    "Pó do desaparecimento": {"subcategoria": "Alquímico", "preco": 100, "espacos": 0.5, "notas": "Invisível por 2d6 rodadas (usuário não sabe quando termina)"},
+    # --- Alquímicos: Catalisadores ---
+    "Baga-de-fogo": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "+1d6 dano de fogo à magia"},
+    "Dente-de-dragão": {"subcategoria": "Catalisador", "preco": 45, "espacos": 0.5, "notas": "+1 dado de dano do mesmo tipo"},
+    "Essência abissal": {"subcategoria": "Catalisador", "preco": 150, "espacos": 0.5, "notas": "Aumenta categoria dos dados de dano de fogo (d4→d6→...→d12)"},
+    "Líquen lilás": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "+1d6 dano de frio"},
+    "Musgo púrpura": {"subcategoria": "Catalisador", "preco": 45, "espacos": 0.5, "notas": "+2 CD de magias de ilusão"},
+    "Ossos de monstro": {"subcategoria": "Catalisador", "preco": 45, "espacos": 0.5, "notas": "+2 CD de magias de necromancia"},
+    "Pó de cristal": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "–1 PM em magias de encantamento"},
+    "Pó de giz": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "–1 PM em magias de convocação"},
+    "Ramo verdejante": {"subcategoria": "Catalisador", "preco": 45, "espacos": 0.5, "notas": "+1 PV por dado de cura"},
+    "Saco de sal": {"subcategoria": "Catalisador", "preco": 45, "espacos": 0.5, "notas": "+2 CD de magias de abjuração"},
+    "Seixo de âmbar": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "–1 PM em magias de transmutação"},
+    "Terra de cemitério": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "+1d6 dano de trevas"},
+    # --- Alquímicos: Venenos ---
+    "Beladona": {"subcategoria": "Venenos", "preco": 1500, "espacos": 0.5, "notas": "Ingestão: lenta 3 rod.; CD fabricar/resistir +5"},
+    "Bruma sonolenta": {"subcategoria": "Venenos", "preco": 150, "espacos": 0.5, "notas": "Inalação: inconsciente (enjorado 1 rod. se passar)"},
+    "Cicuta": {"subcategoria": "Venenos", "preco": 60, "espacos": 0.5, "notas": "Ingestão: 1d12 PV/rod. por 3 rod."},
+    "Essência de sombra": {"subcategoria": "Venenos", "preco": 100, "espacos": 0.5, "notas": "Contato: debilitada (fraca se passar)"},
+    "Névoa tóxica": {"subcategoria": "Venenos", "preco": 30, "espacos": 0.5, "notas": "Inalação: 1d12 PV/rod. por 3 rod."},
+    "Peçonha comum": {"subcategoria": "Venenos", "preco": 15, "espacos": 0.5, "notas": "Contato: perde 1d12 PV"},
+    "Peçonha concentrada": {"subcategoria": "Venenos", "preco": 90, "espacos": 0.5, "notas": "Contato: 1d12 PV/rod. por 3 rod."},
+    "Peçonha potente": {"subcategoria": "Venenos", "preco": 600, "espacos": 0.5, "notas": "Contato: 2d12 PV/rod. por 3 rod."},
+    "Pó de lich": {"subcategoria": "Venenos", "preco": 3000, "espacos": 0.5, "notas": "Ingestão: 4d12 PV/rod. por 5 rod.; CD +5"},
+    "Riso de Nimb": {"subcategoria": "Venenos", "preco": 150, "espacos": 0.5, "notas": "Inalação: confusa (lenta 1 rod. se passar)"},
+    # --- Alimentação (pratos especiais: 1 bônus/dia) ---
+    "Batata valkariana": {"subcategoria": "Alimentação", "preco": 2, "espacos": 0.5, "notas": "+1d6 em 1 teste até fim do dia"},
+    "Gorad quente": {"subcategoria": "Alimentação", "preco": 18, "espacos": 0.5, "notas": "+2 PM temporários"},
+    "Macarrão de Yuvalin": {"subcategoria": "Alimentação", "preco": 6, "espacos": 0.5, "notas": "+5 PV temporários"},
+    "Prato do aventureiro": {"subcategoria": "Alimentação", "preco": 1, "espacos": 0.5, "notas": "+1 PV/nível na próxima noite de sono"},
+    "Refeição comum": {"subcategoria": "Alimentação", "preco": 0.3, "espacos": 0.5, "notas": "Sem efeito mecânico"},
+    "Sopa de peixe": {"subcategoria": "Alimentação", "preco": 1, "espacos": 0.5, "notas": "+1 PM/nível na próxima noite de sono"},
+    # --- Animais (parceiros/montarias; não ocupam espaço do personagem) ---
+    "Cão de caça": {"subcategoria": "Animal", "preco": 150, "espacos": 0, "notas": "Parceiro perseguidor (Adestramento) ou montaria p/ Pequenos/Minúsculos"},
+    "Cavalo": {"subcategoria": "Animal", "preco": 75, "espacos": 0, "notas": "Montaria; sem treinamento: Cavalgar CD 20/rod. em combate"},
+    "Cavalo de guerra": {"subcategoria": "Animal", "preco": 400, "espacos": 0, "notas": "Montaria treinada (dispensa teste em combate)"},
+    "Estábulo (por dia)": {"subcategoria": "Animal", "preco": 0.1, "espacos": 0, "notas": "Inclui alimentação do animal"},
+    "Pônei": {"subcategoria": "Animal", "preco": 5, "espacos": 0, "notas": "Montaria p/ raças Pequenas; sem treinamento: Cavalgar CD 20"},
+    "Pônei de guerra": {"subcategoria": "Animal", "preco": 30, "espacos": 0, "notas": "Montaria treinada p/ raças Pequenas"},
+    "Trobo": {"subcategoria": "Animal", "preco": 60, "espacos": 0, "notas": "Montaria/carga; ave dócil sem asas"},
+    # --- Veículos (stats próprias; não ocupam espaço) ---
+    "Balão goblin": {"subcategoria": "Veículo", "preco": 200, "espacos": 0, "notas": "Enorme, voo 12m, 100 PV, 8 criaturas Médias / 160 espaços"},
+    "Carroça": {"subcategoria": "Veículo", "preco": 150, "espacos": 0, "notas": "Grande, 9m, 50 PV, 4 criaturas / 80 espaços"},
+    "Carruagem": {"subcategoria": "Veículo", "preco": 500, "espacos": 0, "notas": "Como carroça + cobertura leve p/ passageiros"},
+    "Canoa": {"subcategoria": "Veículo", "preco": 70, "espacos": 0, "notas": "Como carroça, deslocamento de natação"},
+    "Veleiro": {"subcategoria": "Veículo", "preco": 10000, "espacos": 0, "notas": "Navio de viagem com 3 mastros"},
+}
+
+for _nome, _dados in _ITENS_AUSENTES.items():
+    DADOS_GERAIS[_nome] = _dados
+
+# Renomeia ferramentas caseiras p/ os nomes oficiais do livro
+_RENOMEIA_FERRAMENTAS = {
+    "Kit de ferramentas": "Instrumentos de <ofício>",
+    "Kit de disfarces": "Estojo de disfarces",
+    "Kit de ladrão": "Gazua",
+    "Kit de medicamentos": "Maleta de medicamentos",
+    "Instrumento musical (comum)": "Instrumento musical",
+}
+for _velho, _novo in _RENOMEIA_FERRAMENTAS.items():
+    if _velho in DADOS_GERAIS:
+        DADOS_GERAIS[_novo] = DADOS_GERAIS.pop(_velho)
+
+# Valores oficiais pós-renomeio
+DADOS_GERAIS["Instrumentos de <ofício>"].update({"preco": 30, "espacos": 1, "notas": "Sem eles: –5 na perícia de Ofício"})
+DADOS_GERAIS["Estojo de disfarces"].update({"preco": 50, "espacos": 1, "notas": "Sem ele: –5 Enganação p/ disfarce"})
+DADOS_GERAIS["Gazua"].update({"preco": 5, "espacos": 1, "notas": "Sem ela: –5 Ladinagem p/ abrir fechaduras"})
+DADOS_GERAIS["Maleta de medicamentos"].update({"preco": 50, "espacos": 1, "notas": "Sem ela: –5 Cura"})
+DADOS_GERAIS["Instrumento musical"].update({"preco": 35, "espacos": 1, "notas": "2 mãos p/ Músicas de Bardo; bardos podem usá-lo como esotérico"})
+
+# Alforje: categoria oficial é Animais
+if "Alforje" in DADOS_GERAIS:
+    DADOS_GERAIS["Alforje"].update({"subcategoria": "Animal", "preco": 30, "espacos": 0,
+                                    "notas": "Montaria carrega até 10 espaços para você"})
+
+# --- Serviços (não ocupam espaço; preços por uso) ---
+DADOS_SERVICOS = {
+    "Estadia comum (noite)": {"preco": 0.5, "unidade": "noite", "notas": "Recupera 1 PV e 1 PM por nível"},
+    "Estadia confortável (noite)": {"preco": 4, "unidade": "noite", "notas": "Recupera 2 PV e 2 PM por nível"},
+    "Estadia luxuosa (noite)": {"preco": 20, "unidade": "noite", "notas": "Recupera 3 PV e 3 PM por nível"},
+    "Condução terrestre (km)": {"preco": 0.5, "unidade": "km", "notas": ""},
+    "Condução marítima (km)": {"preco": 0.1, "unidade": "km", "notas": ""},
+    "Condução aérea (km)": {"preco": 10, "unidade": "km", "notas": "Balão goblin: 1/20 de queda a cada 100 km"},
+    "Curandeiro": {"preco": 5, "unidade": "consulta", "notas": "Tratamento prolongado de doença/veneno"},
+    "Magia 1º círculo": {"preco": 10, "unidade": "lançamento", "notas": ""},
+    "Magia 2º círculo": {"preco": 90, "unidade": "lançamento", "notas": ""},
+    "Magia 3º círculo": {"preco": 360, "unidade": "lançamento", "notas": ""},
+    "Mensageiro (km)": {"preco": 0.5, "unidade": "km", "notas": ""},
+}
