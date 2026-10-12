@@ -1,282 +1,162 @@
-# 🎮 Guia Completo para Rodar o Sistema T20 no Linux
+# 🐧 Como Rodar o Sistema T20 no Linux
 
-## ✅ Status: SISTEMA RODANDO COM SUCESSO!
-
-O sistema está **100% funcional** e rodando neste momento.
-
----
-
-## 🌐 ACESSAR AGORA:
-
-- **Frontend (Ficha de Personagem)**: http://localhost:5173
-- **API Documentation (Swagger)**: http://localhost:8000/docs
-- **API Endpoints Disponíveis**: 19 rotas ativas
-
-### ✅ Testes Realizados com Sucesso:
-- ✅ MongoDB conectado e operacional
-- ✅ API respondendo nas 19 rotas
-- ✅ Dados de raças, classes e origens carregados
-- ✅ Frontend React compilado e servindo
-- ✅ Backend FastAPI processando requisições
+Guia único e atualizado para subir o sistema. O caminho canônico é via
+**Docker Compose**; há também a opção de rodar localmente para desenvolvimento.
 
 ---
 
-## 📋 O QUE FOI FEITO NESTE AMBIENTE:
+## ✅ OPÇÃO 1: Docker Compose (recomendado)
 
-### 1. MongoDB Instalado e Rodando
+### Pré-requisitos
+- Docker + plugin Compose (`docker compose version`)
+- Portas livres: `5173` (web), `8000` (api), `27017` (db)
+
+### Subir tudo
+
 ```bash
-✅ MongoDB 7.0 instalado nativamente (sem Docker)
-✅ Banco rodando em: mongodb://localhost:27017/tormenta20
-✅ Dados persistidos em: /workspace/data/db
-✅ Processo PID: 2471
+# Na raiz do projeto (onde está o docker-compose.yml)
+docker compose up -d --build
 ```
 
-### 2. Backend Python/FastAPI Rodando
+| Serviço | Container | Acesso |
+|---|---|---|
+| Frontend (React + Vite) | `t20_web` | http://localhost:5173 |
+| Backend (FastAPI + Swagger) | `t20_api` | http://localhost:8000/docs |
+| MongoDB 7.0 | `t20_db` | `mongodb://localhost:27017/tormenta20` |
+
+Rotas do app: `/` home · `/wizard` criação · `/ficha/:id` ficha.
+
+### Comandos úteis
+
 ```bash
-✅ Dependências instaladas: fastapi, uvicorn, motor, pydantic
-✅ API rodando na porta 8000
-✅ Conectado ao MongoDB com sucesso
-✅ Processo PID: 2537
+docker compose ps                  # status dos 3 serviços
+docker compose logs -f [api|web]   # logs em tempo real
+docker compose restart             # reiniciar
+docker compose down                # parar (mantém dados em ./data/db)
+docker compose exec -T api python -m pytest tests/ -q   # rodar testes
 ```
 
-### 3. Frontend React/TypeScript Rodando
-```bash
-✅ Node.js 20.x já instalado
-✅ Dependências npm instaladas (52 pacotes)
-✅ Vite dev server rodando na porta 5173
-✅ Processo PID: 2605
-```
+> ⚠️ `docker compose down -v` **apaga o banco**. Sem `-v`, os dados persistem
+> no volume `./data/db`.
 
 ---
 
-## 🔄 COMO REINICIAR OS SERVIÇOS (se necessário):
+## 🔧 OPÇÃO 2: Rodar localmente (desenvolvimento)
 
-### Parar tudo:
+Útil para debug com reload direto no código. Você precisa do MongoDB
+acessível — via container Docker ou instalação nativa.
+
+### 1. MongoDB
+
 ```bash
-pkill -f "uvicorn src.main:app"
-pkill -f "npm run dev"
-pkill mongod
+# Via Docker (só o banco):
+docker run -d -p 27017:27017 --name t20_db mongo:7.0
+
+# OU nativo (Ubuntu/Debian):
+curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc \
+  | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] \
+  https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" \
+  | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+sudo apt update && sudo apt install -y mongodb-org
+sudo systemctl start mongod
 ```
 
-### Reiniciar MongoDB:
+### 2. Backend (terminal 1)
+
 ```bash
-mongod --dbpath /workspace/data/db --logpath /workspace/mongodb.log --fork --bind_ip 127.0.0.1
+cd app
+
+# Com Poetry (dependências do pyproject.toml):
+poetry install
+MONGO_URI=mongodb://localhost:27017/tormenta20 poetry run uvicorn src.main:app --reload --port 8000
+
+# OU com pip (sem Poetry):
+pip install fastapi uvicorn motor pydantic pypdf
+MONGO_URI=mongodb://localhost:27017/tormenta20 uvicorn src.main:app --reload --port 8000
 ```
 
-### Reiniciar Backend:
+> ⚠️ Localmente a URI usa `localhost`; dentro do Compose a API usa
+> `mongodb://db:27017/tormenta20` (nome do serviço). Esse é o erro mais comum
+> de "backend não conecta no banco".
+
+### 3. Frontend (terminal 2)
+
 ```bash
-cd /workspace/app
-MONGO_URI=mongodb://localhost:27017/tormenta20 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Reiniciar Frontend (outro terminal):
-```bash
-cd /workspace/frontend
-npm run dev
-```
-
----
-
-## 🛠️ INSTALAÇÃO DO ZERO (para outro PC Linux):
-
-### Passo 1: Instalar Node.js 20
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt-get install -y nodejs
-```
-
-### Passo 2: Instalar Python e pip (geralmente já vem)
-```bash
-apt-get update
-apt-get install -y python3 python3-pip
-```
-
-### Passo 3: Instalar MongoDB 7.0
-```bash
-# Adicionar repositório oficial
-curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
-echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] http://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-apt-get update
-apt-get install -y mongodb-org
-```
-
-### Passo 4: Iniciar MongoDB
-```bash
-mkdir -p /workspace/data/db
-mongod --dbpath /workspace/data/db --logpath /workspace/mongodb.log --fork --bind_ip 127.0.0.1
-```
-
-### Passo 5: Instalar dependências do Backend
-```bash
-cd /workspace/app
-pip install fastapi uvicorn motor pydantic python-dotenv
-```
-
-### Passo 6: Rodar Backend
-```bash
-MONGO_URI=mongodb://localhost:27017/tormenta20 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Passo 7: Instalar e rodar Frontend (outro terminal)
-```bash
-cd /workspace/frontend
+cd frontend
 npm install
-npm run dev
+npm run dev        # Vite em http://localhost:5173
 ```
+
+O frontend espera a API em `http://localhost:8000` (`VITE_API_URL`).
 
 ---
 
-## 🧪 TESTAR A API:
+## ✔️ Verificação de funcionamento
 
 ```bash
-# Listar raças disponíveis
-curl http://localhost:8000/dados/racas
+# Catálogos
+curl http://localhost:8000/dados/racas   | head -c 200
+curl http://localhost:8000/dados/classes | head -c 200
+curl http://localhost:8000/dados/magias  | head -c 200
 
-# Listar classes disponíveis
-curl http://localhost:8000/dados/classes
-
-# Listar origens disponíveis
-curl http://localhost:8000/dados/origens
-
-# Criar personagem de teste
-curl -X POST http://localhost:8000/personagens/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nome": "Valen",
-    "raca": "Humano",
-    "classe": "Guerreiro",
-    "origem": "Aprendiz",
-    "atributos": {"for": 12, "dex": 10, "con": 14, "int": 10, "sab": 10, "car": 10}
-  }'
-
-# Listar personagens
+# Listar personagens (vazio no início: [])
 curl http://localhost:8000/personagens/
 
-# Ver documentação Swagger
-curl http://localhost:8000/docs
+# Rotas disponíveis (JSON):
+curl -s http://localhost:8000/openapi.json \
+  | python3 -c "import sys,json; print('\n'.join(sorted(json.load(sys.stdin)['paths']))))"
 ```
+
+No navegador: crie um personagem em http://localhost:5173/wizard e abra a
+documentação interativa em http://localhost:8000/docs para testar os endpoints.
 
 ---
 
-## 📊 ARQUITETURA DO SISTEMA:
+## 🐛 Solução de problemas
 
-```
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
-│   Frontend      │────▶│   Backend        │────▶│   MongoDB    │
-│   React+Vite    │◀────│   FastAPI        │◀────│   Database   │
-│   Porta 5173    │     │   Porta 8000     │     │   Porta 27017│
-└─────────────────┘     └──────────────────┘     └──────────────┘
-```
-
-### Endpoints da API (19 rotas):
-```
-/racas              - CRUD de raças customizadas
-/dados/racas        - Dados das raças padrão
-/classes            - CRUD de classes customizadas
-/dados/classes      - Dados das classes padrão
-/origens            - CRUD de origens customizadas
-/dados/origens      - Dados das origens padrão
-/pericias           - Sistema de perícias
-/dados/habilidades  - Habilidades gerais
-/dados/habilidades-classe - Habilidades por classe
-/dados/magias       - Grimório de magias
-/dados/itens        - Lista de itens
-/deuses             - CRUD de deuses
-/dados/deuses       - Dados dos deuses padrão
-/dados/poderes-concedidos - Poderes divinos
-/poderes            - Sistema de poderes
-/dados/habilidades-raciais - Habilidades raciais
-/personagens/       - CRUD de personagens
-/personagens/{id}   - Gerenciar personagem específico
-/admin/limpar-tudo  - Limpar banco de dados
-```
-
----
-
-## 🎯 PRÓXIMOS PASSOS SUGERIDOS:
-
-1. **Testar criação de personagem** no frontend http://localhost:5173
-2. **Explorar a documentação Swagger** em http://localhost:8000/docs
-3. **Implementar inventário** de equipamentos
-4. **Adicionar sistema de combate**
-5. **Exportação em PDF** das fichas
-
----
-
-## ⚠️ SOLUÇÃO DE PROBLEMAS:
-
-### MongoDB não inicia:
+### Backend não conecta ao MongoDB
 ```bash
-# Verificar se há processo travado
-ps aux | grep mongod
-# Matar processo se necessário
-sudo killall mongod
-# Tentar iniciar novamente
-mongod --dbpath /workspace/data/db --logpath /workspace/mongodb.log --fork
+# Mongo está rodando?
+docker ps | grep t20_db          # via Docker
+sudo systemctl status mongod     # nativo
+
+# Confira a URI: 'localhost' fora do Compose, 'db' dentro do Compose.
 ```
 
-### Backend não conecta ao MongoDB:
+### Porta já em uso
 ```bash
-# Verificar se MongoDB está rodando
-pgrep mongod
-# Verificar logs
-tail -f /workspace/mongodb.log
-```
-
-### Frontend não carrega:
-```bash
-# Limpar cache do navegador (Ctrl+Shift+R)
-# Ou reinstalar dependências
-cd /workspace/frontend
-rm -rf node_modules package-lock.json
-npm install
-npm run dev
-```
-
-### Porta já em uso:
-```bash
-# Descobrir processo usando a porta
 lsof -i :8000
 lsof -i :5173
-# Matar processo
 kill -9 <PID>
 ```
 
----
-
-## 📝 COMANDOS ÚTEIS:
-
+### Frontend não carrega / tela branca
 ```bash
-# Ver logs do backend em tempo real
-tail -f /workspace/backend.log
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+npm run dev
+# + hard refresh no navegador (Ctrl+Shift+R)
+```
 
-# Ver logs do frontend em tempo real
-tail -f /workspace/frontend.log
+### Testes falham fora do Docker
+Os testes só rodam **dentro do container** (`pytest` não é instalado localmente):
+```bash
+docker compose exec -T api python -m pytest tests/ -q
+```
 
-# Ver logs do MongoDB
-tail -f /workspace/mongodb.log
-
-# Ver processos rodando
-ps aux | grep -E "(mongod|uvicorn|node)"
-
-# Testar conexão com MongoDB
-mongosh mongodb://localhost:27017/tormenta20 --eval "db.stats()"
-
-# Ver endpoints disponíveis
-curl http://localhost:8000/openapi.json | python3 -c "import sys,json; d=json.load(sys.stdin); print('\n'.join([p for p in d.get('paths',{}).keys()]))"
+### Resetar tudo (⚠️ apaga fichas)
+```bash
+docker compose down -v && docker compose up -d --build
+# OU só limpar o banco via API:
+curl -X DELETE http://localhost:8000/admin/limpar-tudo
 ```
 
 ---
 
-## 📁 ARQUIVOS DE LOG:
-
-- **Backend**: `/workspace/backend.log`
-- **Frontend**: `/workspace/frontend.log`
-- **MongoDB**: `/workspace/mongodb.log`
-- **Dados DB**: `/workspace/data/db/`
-
----
-
-**Sistema revisado, corrigido e rodando com sucesso! 🎉**
-
-Documentação completa salva em: `/workspace/COMO_RODAR_LINUX.md`
+## 📚 Links úteis
+- FastAPI: https://fastapi.tiangolo.com/
+- React: https://react.dev/
+- MongoDB: https://www.mongodb.com/docs/
+- Arquitetura e roadmap do projeto: ver `README.md`
