@@ -35,14 +35,25 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você recebe +3 pontos de vida no 1º nível e +1 por nível seguinte.",
         "fonte": "T20 JdA",
-        "efeitos": {"pv_max_ini": 3, "pv_max_nivel": 1}
+        "efeitos": {"pv_max_ini": 2, "pv_max_nivel": 1}
     },
     "Tradicao_Heredrimm_Anao": {
         "nome": "Tradição de Heredrimm",
         "tipo": "Racial",
         "descricao": "Você é perito nas armas tradicionais anãs. Para você, todos os machados, martelos, marretas e picaretas são armas simples. Você recebe +2 em ataques com essas armas.",
         "fonte": "T20 JdA",
-        "efeitos": {"proficiencia_simples": ["machado", "martelo", "marreta", "picareta"], "bonus_ataque_arma": {"machado": 2, "martelo": 2, "marreta": 2, "picareta": 2}}
+        "efeitos": {
+            "proficiencia_simples": [
+                "machadinha", "machado de batalha", "machado de guerra",
+                "machado anão", "machado táurico",
+                "martelo de guerra", "marreta", "picareta"
+            ],
+            "bonus_ataque_arma": {
+                "machadinha": 2, "machado de batalha": 2, "machado de guerra": 2,
+                "machado anão": 2, "machado táurico": 2,
+                "martelo de guerra": 2, "marreta": 2, "picareta": 2
+            }
+        }
     },
 
     # --- DAHLLAN ---
@@ -417,14 +428,20 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você pode lançar duas das magias a seguir: Amedrontar, Comando, Despedaçar, Enfeitiçar, Hipnotismo ou Sono (atributo-chave Carisma). Caso aprenda novamente uma dessas magias, seu custo diminui em –1 PM.",
         "fonte": "T20 JdA",
-        "efeitos": {"magia_adicional_escolha": {"quantidade": 2, "lista": ["Amedrontar", "Comando", "Despedaçar", "Enfeitiçar", "Hipnotismo", "Sono"], "atributo": "Car"}}
+        "efeitos": {
+            "magia_adicional_escolha": {"quantidade": 2, "lista": ["Amedrontar", "Comando", "Despedaçar", "Enfeitiçar", "Hipnotismo", "Sono"], "atributo": "Car"},
+            "reducao_custo_se_conhecida": 1
+        }
     },
     "Mestre_Tridente_Sereia": {
         "nome": "Mestre do Tridente",
         "tipo": "Racial",
         "descricao": "Para você, o tridente é uma arma simples. Além disso, você recebe +2 em rolagens de dano com azagaias, lanças e tridentes.",
         "fonte": "T20 JdA",
-        "efeitos": {"proficiencia_simples": ["tridente"], "bonus_dano_arma": {"azagaia": 2, "lança": 2, "tridente": 2}}
+        "efeitos": {
+            "proficiencia_simples": ["tridente"],
+            "bonus_dano_arma": {"azagaia": 2, "lança": 2, "lança montada": 2, "tridente": 2}
+        }
     },
     "Transf_Anfibia_Sereia": {
         "nome": "Transformação Anfíbia",
@@ -489,7 +506,10 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você pode lançar duas das magias a seguir (atributo-chave Carisma): Criar Ilusão, Enfeitiçar, Luz (como uma magia arcana) e Sono. Caso aprenda novamente uma dessas magias, seu custo diminui em –1 PM.",
         "fonte": "T20 JdA",
-        "efeitos": {"magia_adicional_escolha": {"quantidade": 2, "lista": ["Criar Ilusão", "Enfeitiçar", "Luz", "Sono"], "atributo": "Car"}}
+        "efeitos": {
+            "magia_adicional_escolha": {"quantidade": 2, "lista": ["Criar Ilusão", "Enfeitiçar", "Luz", "Sono"], "atributo": "Car"},
+            "reducao_custo_se_conhecida": 1
+        }
     },
 
     # --- SURAGGEL ---
