@@ -91,6 +91,16 @@ def calcular_custo_magia(ficha: Personagem, magia,
                 total -= int(valor)
                 calc.adicionar_bonus(f"{hab.nome} (−{int(valor)} PM, reaprendizado)", "Reaprendizado", -int(valor))
 
+    # Redução por tipo de dano (Linhagem Draconica Aprimorada: -1 PM em magias
+    # do tipo escolhido, ex.: fogo, frio, eletricidade, acido).
+    tipo_magia = (magia.tipo or "").strip().lower()
+    reducoes_tipo = getattr(ficha.combate, "reducao_pm_tipo", None) or {}
+    if tipo_magia and tipo_magia in reducoes_tipo:
+        red = reducoes_tipo[tipo_magia]
+        total -= red
+        calc.adicionar_bonus(
+            f"Linhagem Draconica ({tipo_magia}, -{red} PM)", "Reducao", -red)
+
     # Bônus por escola (Mestre em Escola: -1 PM na escola escolhida)
     escola = (magia.escola or "").strip()
     reducao_escola = (getattr(ficha.combate, "custo_por_escola", None) or {}).get(escola, 0)
