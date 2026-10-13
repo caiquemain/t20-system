@@ -381,6 +381,29 @@ def aplicar_poderes_arcanista(ficha: Personagem):
     linhagem_rubra = any(h.nome == "Linhagem Rubra" for h in ficha.habilidades)
     if linhagem_rubra:
         qtd_tormenta = sum(1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
+
+        # Aprimorada: para cada poder da Tormenta, escolha 1 magia que passa
+        # a custar -1 PM. Injetado como 'reducao_custo_magia' no card da
+        # Linhagem (padrao lido por custo_magia.py).
+        if heranca_aprimorada and qtd_tormenta > 0:
+            hab_aprim = next(
+                (h for h in ficha.habilidades if h.nome == "Herança Aprimorada"), None)
+            if hab_aprim is not None:
+                escolhas = hab_aprim.escolhas_aplicadas or {}
+                magias_escolhidas = escolhas.get("magia_por_poder") or []
+                if isinstance(magias_escolhidas, str):
+                    magias_escolhidas = [magias_escolhidas]
+                if magias_escolhidas:
+                    hab_rubra = next(
+                        (h for h in ficha.habilidades if h.nome == "Linhagem Rubra"), None)
+                    if hab_rubra is not None:
+                        if not isinstance(hab_rubra.efeitos, dict):
+                            hab_rubra.efeitos = {}
+                        hab_rubra.efeitos["reducao_custo_magia"] = {
+                            "nomes": list(magias_escolhidas),
+                            "valor": 1,
+                        }
+
         # Superior: +4 PM para cada poder da Tormenta
         if heranca_superior and qtd_tormenta > 0:
             if ficha.status.pm_calc is None:
