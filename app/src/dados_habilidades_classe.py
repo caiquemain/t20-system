@@ -79,14 +79,25 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Magia: Dissipar Magia"],
         "descricao": "1x/rodada: Pode fazer contramágica como reação.",
-        "efeitos": {}
+        "efeitos": {
+        "contramagica_como_reacao": True,
+        "gatilho": "inimigo_lanca_magia",
+        "custo_acao": "reacao",
+        "nota": "Acao de combate nao modelada pelo motor. Reservado p/ VTT."
+    }
     },
     "ARCANISTA_ENVOLTO_MISTERIO": {
         "nome": "Envolto em Mistério",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
         "descricao": "+5 em Enganação e Intimidação contra pessoas não treinadas em Conhecimento ou Misticismo.",
-        "efeitos": {}
+        "efeitos": {
+        "bonus_pericia_condicional": {
+            "pericias": ["Enganação", "Intimidação"],
+            "valor": 5,
+            "condicao": "vs nao treinados em Conhecimento ou Misticismo"
+        }
+    }
     },
     "ARCANISTA_ESCRIBA_ARCANO": {
         "nome": "Escriba Arcano",
@@ -94,7 +105,14 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Caminho: Mago", "Treinado em Ofício (escriba)"],
         "descricao": "Pode aprender magias copiando pergaminhos/grimórios (T$ 250/PM).",
-        "efeitos": {}
+        "efeitos": {
+        "aprender_magias_por_copia": {
+            "custo_tempo_dias_por_pm": 1,
+            "custo_material_por_pm": 250,
+            "requer": ["Mago", "Oficio (escriba)"]
+        },
+        "nota": "Mecanica de downtime; motor nao consome. Reservado p/ VTT."
+    }
     },
     "ARCANISTA_ESPECIALISTA_ESCOLA": {
         "nome": "Especialista em Escola",
@@ -117,7 +135,11 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Nível 10"],
         "descricao": "Pode manter dois efeitos sustentados com uma ação livre (pagando ambos).",
-        "efeitos": {}
+        "efeitos": {
+        "sustentados_simultaneos": 2,
+        "custo_acao_manutencao": "livre",
+        "nota": "Motor nao rastreia sustentados; reservado p/ VTT."
+    }
     },
     "ARCANISTA_FOCO_VITAL": {
         "nome": "Foco Vital",
@@ -125,7 +147,14 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Caminho: Bruxo"],
         "descricao": "Se sofrer dano letal segurando foco, fica com 1 PV e foco absorve o resto (pode quebrar).",
-        "efeitos": {}
+        "efeitos": {
+        "sobrevive_a_dano_letal": {
+            "preserva_pv_minimo": 1,
+            "absorve_dano_no_foco": True,
+            "foco_pode_ser_destruido": True
+        },
+        "nota": "Reacao a dano; motor nao tem pipeline. Reservado p/ VTT."
+    }
     },
     "ARCANISTA_FORTALECIMENTO_ARCANO": {
         "nome": "Fortalecimento Arcano",
@@ -141,7 +170,10 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Caminho: Feiticeiro", "Nível 6"],
         "descricao": "Recebe a herança aprimorada de sua linhagem.",
-        "efeitos": {}
+        "efeitos": {
+        "heranca_nivel": "aprimorada",
+        "nota": "Aplicada em poderes_arcanista.py por nome da Linhagem."
+    }
     },
     "ARCANISTA_HERANCA_SUPERIOR": {
         "nome": "Herança Superior",
@@ -149,14 +181,22 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Herança Aprimorada", "Nível 11"],
         "descricao": "Recebe a herança superior de sua linhagem.",
-        "efeitos": {}
+        "efeitos": {
+        "heranca_nivel": "superior",
+        "nota": "Aplicada em poderes_arcanista.py por nome da Linhagem."
+    }
     },
     "ARCANISTA_MAGIA_PUNGENTE": {
         "nome": "Magia Pungente",
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
         "descricao": "Ao lançar magia, pague +1 PM para aumentar a CD em +2.",
-        "efeitos": {}
+        "efeitos": {
+        "cd_ativavel": 2,
+        "custo_ativavel": 1,
+        "duracao": "proxima_magia",
+        "nota": "Buff temporario; motor le status.buffs com origem 'Magia Pungente'."
+    }
     },
     "ARCANISTA_MESTRE_ESCOLA": {
         "nome": "Mestre em Escola",
@@ -178,7 +218,16 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Arcanista",
         "classe": "Arcanista",
         "descricao": "Padrão: 1d8 essência (curto). +1d8 por círculo máximo. Reflexos metade.",
-        "efeitos": {}
+        "efeitos": {
+        "ataque_magico": {
+            "dano_base": "1d8",
+            "dano_por_circulo_acima_1": "1d8",
+            "alcance": "curto",
+            "resistencia": "Reflexos",
+            "tipo_dano": "essencia"
+        },
+        "nota": "Recriado em sincronizar_ataques_magicos; efeito serve de catalogo."
+    }
     },
     "ARCANISTA_RAIO_ELEMENTAL": {
         "nome": "Raio Elemental",
@@ -186,7 +235,12 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Raio Arcano"],
         "descricao": "+1 PM: Raio causa dano elemental (ácido/fogo/frio/eletricidade/trevas) e inflige condição na falha.",
-        "efeitos": {}
+        "efeitos": {
+        "raio_elemental": True,
+        "custo_ativavel": 1,
+        "tipos": ["acido", "eletricidade", "fogo", "frio", "trevas"],
+        "nota": "Aplicado em sincronizar_ataques_magicos por nome."
+    }
     },
     "ARCANISTA_RAIO_PODEROSO": {
         "nome": "Raio Poderoso",
@@ -194,7 +248,12 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Raio Arcano"],
         "descricao": "Dado do Raio aumenta para d12 e alcance para médio.",
-        "efeitos": {}
+        "efeitos": {
+        "raio_poderoso": True,
+        "dado": "1d12",
+        "alcance": "medio",
+        "nota": "Aplicado em sincronizar_ataques_magicos por nome."
+    }
     },
     "ARCANISTA_TINTA_MAGO": {
         "nome": "Tinta do Mago",
@@ -202,7 +261,11 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "requisitos": ["Caminho: Mago", "Treinado em Ofício (escriba)"],
         "descricao": "Pode criar pergaminhos (como Escrever Pergaminho). Se tiver ambos, custo é metade.",
-        "efeitos": {"escrever_pergaminho": True}
+        "efeitos": {
+            "fabricar_pergaminho": True,
+            "reducao_custo_com_escrever_pergaminho": 0.5,
+            "nota": "Downtime; motor nao consome. Reservado p/ VTT."
+        }
     },
 
     # ==========================================================================
