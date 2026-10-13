@@ -60,11 +60,12 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     # 6. Estatísticas Derivadas
     # Penalidade de armadura calculada ANTES de perícias (elas a consomem)
     ficha.status.penalidade_armadura = calcular_penalidade_armadura(ficha)
-    inicializar_pericias(ficha)
     calcular_pv_pm(ficha)
     calcular_defesa_e_deslocamento(ficha)
-    # [LOTE 1] Poderes de Arcanista aplicam DEPOIS de PV/PM (para não serem sobrescritos)
+    # [LOTE 1] Poderes de Arcanista injetam efeitos de Familiar (bonus_pericia,
+    # pericia_atributo_opcao) que precisam ser lidos por inicializar_pericias.
     aplicar_poderes_arcanista(ficha)
+    inicializar_pericias(ficha)
 
     # 3. ATUALIZADO: Chamada da nova função
     calcular_proficiencias_e_extras(ficha)

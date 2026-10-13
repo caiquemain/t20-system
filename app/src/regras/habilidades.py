@@ -87,6 +87,9 @@ def limpar_habilidades_fixas(ficha: Personagem) -> Dict[str, Dict]:
     ficha.habilidades = habilidades_mantidas
     ficha.proficiencias = []
     ficha.status.rd = []
+    # Reset tambem das listas derivadas para evitar duplicacao em reprocessamentos
+    ficha.status.imunidades = []
+    ficha.status.sentidos = []
 
     return memoria_escolhas
 
