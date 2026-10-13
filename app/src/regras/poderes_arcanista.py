@@ -237,9 +237,28 @@ def aplicar_poderes_arcanista(ficha: Personagem):
     if classe_arcanista.nivel >= 20:
         ficha.combate.custo_arcano_metade = True
 
-    # ── CD de magias: PILHA transparente (base 10 + Fortalecimento + Pungente) ──
+    # ── CD de magias: PILHA transparente (T20 p.173) ──
+    # Fórmula: 10 + metade do nível do personagem + atributo-chave + bônus.
+    import math as _math
     from ..models import StatCalculado as _SCcd
     cd_calc = _SCcd(base=10, total=10)
+    nivel_pers = int(ficha.cabecalho.nivel_total or 1)
+    metade_nivel = _math.floor(nivel_pers / 2)
+    if metade_nivel:
+        cd_calc.adicionar_bonus(
+            fonte=f"Nível ({metade_nivel})", categoria="Nível",
+            valor=metade_nivel)
+    # Atributo-chave: Feiticeiro usa CAR, Bruxo/Mago usam INT
+    mapa_attr = {
+        "forca": "forca", "destreza": "destreza", "constituicao": "constituicao",
+        "inteligencia": "inteligencia", "sabedoria": "sabedoria", "carisma": "carisma",
+    }
+    attr_chave_nome = "carisma" if subclasse == "Feiticeiro" else "inteligencia"
+    mod_attr = calcular_modificador(getattr(ficha.atributos, attr_chave_nome, 0))
+    if mod_attr:
+        cd_calc.adicionar_bonus(
+            fonte=f"Atributo: {attr_chave_nome.upper()}", categoria="Atributo",
+            valor=mod_attr)
     if any(h.nome == "Fortalecimento Arcano" for h in ficha.habilidades):
         cd_calc.adicionar_bonus(
             fonte="Poder: Fortalecimento Arcano", categoria="Poder",

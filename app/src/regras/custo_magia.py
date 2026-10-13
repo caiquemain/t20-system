@@ -28,13 +28,21 @@ def _circulo_int(magia) -> int:
 
 
 def calcular_cd_magia(ficha: Personagem, magia) -> int:
-    """CD = 10 + metade do nível + modificador do atributo-chave."""
+    """CD = 10 + metade do nível + modificador do atributo-chave + bônus de escola.
+
+    Se a magia tiver 'escola' preenchida, soma o bônus específico dessa escola
+    (ex.: Especialista em Escola +2). Bônus por resistência (Familiar) NÃO entra
+    aqui — vai nos testes de resistência, não na CD da magia.
+    """
     from .utils import calcular_modificador
     attr = (magia.atributo_chave or "").lower()
     mapa = {'for': 'forca', 'des': 'destreza', 'con': 'constituicao',
             'int': 'inteligencia', 'sab': 'sabedoria', 'car': 'carisma'}
     val = getattr(ficha.atributos, mapa.get(attr, ''), 0) or 0
-    return 10 + math.floor((ficha.cabecalho.nivel_total or 1) / 2) + calcular_modificador(val)
+    cd_base = 10 + math.floor((ficha.cabecalho.nivel_total or 1) / 2) + calcular_modificador(val)
+    escola = (magia.escola or "").strip()
+    cd_escola = (getattr(ficha.combate, "cd_por_escola", None) or {}).get(escola, 0)
+    return cd_base + cd_escola
 
 
 def calcular_custo_magia(ficha: Personagem, magia,
@@ -82,6 +90,14 @@ def calcular_custo_magia(ficha: Personagem, magia,
             if isinstance(valor, (int, float)) and valor and _ja_conhecida_de_outra_fonte(ficha, magia, f"Racial: {hab.nome}"):
                 total -= int(valor)
                 calc.adicionar_bonus(f"{hab.nome} (−{int(valor)} PM, reaprendizado)", "Reaprendizado", -int(valor))
+
+    # Bônus por escola (Mestre em Escola: -1 PM na escola escolhida)
+    escola = (magia.escola or "").strip()
+    reducao_escola = (getattr(ficha.combate, "custo_por_escola", None) or {}).get(escola, 0)
+    if reducao_escola:
+        total += reducao_escola  # valores negativos em custo_por_escola
+        calc.adicionar_bonus(
+            f"Poder: Mestre em Escola ({escola})", "Poder", reducao_escola)
 
     # Mínimo 1 PM (regra confirmada); limite de gasto por magia = nível
     total = max(1, total)
