@@ -61,8 +61,19 @@ def inicializar_pericias(ficha: Personagem):
     bonus_condicional: Dict[str, List[Dict[str, Any]]] = {}
 
     tamanho = getattr(ficha.descricao, "tamanho", TamanhoEnum.MEDIO)
-    penalidade_tamanho_furt = -2 if tamanho == TamanhoEnum.GRANDE else (
-        -5 if tamanho == TamanhoEnum.ENORME else 0)
+    # T20 JdA p.106, Tabela 1-4: modificador de Furtividade por categoria
+    # de tamanho. Minusculo +5, Pequeno +2, Medio 0, Grande -2, Enorme -5,
+    # Colossal -10. O nome da variavel mantem 'penalidade' por compatibilidade
+    # com o bloco abaixo, mas valores positivos aqui sao bonus.
+    _MOD_FURT_TAMANHO = {
+        TamanhoEnum.MINUSCULO: 5,
+        TamanhoEnum.PEQUENO: 2,
+        TamanhoEnum.MEDIO: 0,
+        TamanhoEnum.GRANDE: -2,
+        TamanhoEnum.ENORME: -5,
+        TamanhoEnum.COLOSSAL: -10,
+    }
+    penalidade_tamanho_furt = _MOD_FURT_TAMANHO.get(tamanho, 0)
     # Penalidade de armadura/escudo/sobrecarga já calculada pelo motor de equipamento
     # Status guarda magnitude positiva; aqui precisa ser NEGATIVA (subtrai do total)
     penalidade_armadura = -abs(getattr(ficha.status, "penalidade_armadura", 0) or 0)
