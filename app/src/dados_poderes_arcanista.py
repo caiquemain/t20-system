@@ -36,9 +36,11 @@ PODERES_ARCANISTA = {
         "nome": "Envolto em Mistério", "tipo": "Poder de Arcanista", "classe": "Arcanista",
         "descricao": "+5 em Enganação e Intimidação contra pessoas não treinadas em Conhecimento ou Misticismo.",
         "requisitos": [],
-        "efeitos": {"bonus_pericia_condicional": {
-            "pericias": ["Enganação", "Intimidação"], "valor": 5,
-            "condicao": "vs não treinados em Conhecimento/Misticismo"}},
+        "efeitos": {
+            "bonus_pericia_condicional": {"Enganação": 5, "Intimidação": 5},
+            "condicao_bonus_pericia": "vs alvos nao treinados em Conhecimento ou Misticismo",
+            "nota": "Bonus condicional por alvo; motor exibe como situacional."
+        },
     },
     "Escriba Arcano": {
         "nome": "Escriba Arcano", "tipo": "Poder de Arcanista", "classe": "Arcanista",

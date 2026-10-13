@@ -142,6 +142,26 @@ def calcular_pv_pm(ficha: Personagem):
             valor=impares * v
         )
 
+    # Totem Espiritual (T20 p.42): soma SAB no total de PM
+    mapa_attr_pm = {
+        "for": "forca", "des": "destreza", "con": "constituicao",
+        "int": "inteligencia", "sab": "sabedoria", "car": "carisma"
+    }
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+        attr_pm = efeitos.get("pm_soma_atributo")
+        if attr_pm:
+            full = mapa_attr_pm.get(str(attr_pm).lower()[:3], str(attr_pm))
+            val = getattr(ficha.atributos, full, 0)
+            if val != 0:
+                pm_calc.adicionar_bonus(
+                    fonte=f"Poder: {hab.nome} (PM)",
+                    categoria="Poder",
+                    valor=val
+                )
+
     ficha.status.pm_calc = pm_calc
     ficha.status.pv_calc = pv_calc
     ficha.status.pv.maximo = pv_calc.total
@@ -194,6 +214,11 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
     qtd_tormenta = sum(
         1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
 
+    # Pele de Aço substitui Pele de Ferro (T20 p.42)
+    tem_pele_aco = any(
+        (h.nome == "Pele de Aço") for h in ficha.habilidades
+    )
+
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
@@ -201,11 +226,18 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
 
         val_fixo = efeitos.get("defesa_bonus", 0)
         if val_fixo != 0:
-            defesa_calc.adicionar_bonus(
-                fonte=f"Poder: {hab.nome}",
-                categoria="Poder",
-                valor=val_fixo
-            )
+            # Pele de Ferro/Aço so valem sem armadura pesada (T20 p.42)
+            aplicar_defesa = True
+            if hab.nome == "Pele de Ferro" and (usa_pesada or tem_pele_aco):
+                aplicar_defesa = False
+            elif hab.nome == "Pele de Aço" and usa_pesada:
+                aplicar_defesa = False
+            if aplicar_defesa:
+                defesa_calc.adicionar_bonus(
+                    fonte=f"Poder: {hab.nome}",
+                    categoria="Poder",
+                    valor=val_fixo
+                )
 
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(
@@ -253,6 +285,14 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 valor=novo_val, descricao="Define o deslocamento"
             ))
             deslocamento_calc.total = novo_val
+        if "deslocamento_bonus" in efeitos:
+            bonus_desl = int(efeitos["deslocamento_bonus"])
+            desl += bonus_desl
+            deslocamento_calc.adicionar_bonus(
+                fonte=f"Poder: {hab.nome}",
+                categoria="Poder",
+                valor=bonus_desl
+            )
 
     # Armadura pesada vestida: -3m deslocamento (respeita imunidade)
     if usa_pesada:
@@ -392,6 +432,7 @@ def calcular_reducoes_dano(ficha: Personagem):
     lista_rd = []
     bonus_dano_geral = 0
     nivel_total = int(ficha.cabecalho.nivel_total or 1)
+    ficha.status.resistencia_magia = 0  # reset idempotente
 
     qtd_tormenta = sum(
         1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
@@ -400,6 +441,10 @@ def calcular_reducoes_dano(ficha: Personagem):
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
+
+        rmag = efeitos.get("resistencia_magia_bonus", 0)
+        if rmag:
+            ficha.status.resistencia_magia += int(rmag)
 
         if "resistencia_rd" in efeitos:
             for t, v in efeitos["resistencia_rd"].items():

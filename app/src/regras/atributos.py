@@ -103,6 +103,39 @@ def calcular_atributos_finais(ficha: Personagem):
             except ValueError:
                 pass
 
+    # Aumento de Atributo por escolha. Duas entradas validas:
+    #  (a) efeitos traz "atributo_bonus_escolha": valor do catalogo;
+    #  (b) teste/motor so passa escolhas_aplicadas = {"atributo": "forca"},
+    #      caso em que assumimos +1 se o nome for "Aumento de Atributo".
+    # Arcanista tem tratamento proprio em poderes_arcanista.py — pular.
+    for hab in ficha.habilidades:
+        efeitos = (hab.efeitos or {}).copy()
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
+
+        tipo = hab.tipo or ""
+        if "Arcanista" in tipo:
+            continue
+
+        attr_escolhido = efeitos.get("atributo")
+        if not attr_escolhido:
+            continue
+
+        valor = efeitos.get("atributo_bonus_escolha")
+        if valor is None:
+            if hab.nome == "Aumento de Atributo":
+                valor = 1
+            else:
+                continue
+
+        attr_full = MAPA_ATRIBUTOS.get(str(attr_escolhido).lower()[:3], attr_escolhido)
+        if attr_full in ficha.atributos_calc:
+            ficha.atributos_calc[attr_full].adicionar_bonus(
+                fonte=f"Poder: {hab.nome}",
+                categoria="Poder",
+                valor=int(valor)
+            )
+
     # --- SINCRONIZAÇÃO FINAL (Compatibilidade com Frontend) ---
     # Copia os totais calculados para o objeto 'atributos' que o frontend já lê
     for attr_full, stat in ficha.atributos_calc.items():
