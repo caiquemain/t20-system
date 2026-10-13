@@ -134,7 +134,9 @@ def test_sereia_bonus_dano_arma_agregado(personagem_base):
     f = _ficha("Sereia/Tritão")
     garantir_habilidades_iniciais(f)
     sincronizar_ataques(f)
-    assert f.combate.bonus_dano_arma == {"azagaia": 2, "lança": 2, "tridente": 2}
+    assert f.combate.bonus_dano_arma == {
+        "azagaia": 2, "lança": 2, "lança montada": 2, "tridente": 2
+    }
 
 
 def test_hynne_passo_dano_arremesso(personagem_base):
