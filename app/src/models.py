@@ -162,6 +162,7 @@ class Status(BaseModel):
     imunidades: List[str] = []
     sentidos: List[str] = []
     vulnerabilidades: List[str] = []      # R5: Ossos Frágeis, Sangue Frio, etc.
+    resistencia_magia: int = 0            # Bônus em testes de resistência contra magias (T20 p.42)
     DADOS_CLASSES: Optional[Any] = None   # 🆕 auto-audit
 # --- PERÍCIAS E COMBATE ---
 
@@ -251,6 +252,9 @@ class Combate(BaseModel):
     # Cálculo do bônus ativo de Fúria (Bárbaro): {"bonus": int, "custo": int}.
     # Bônus sobe +1 a cada 5 níveis; Fúria Titânica (20º) dobra.
     furia_calc: Optional[Dict[str, int]] = None
+    # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
+    # em armas corpo a corpo e de arremesso.
+    multiplicador_critico_bonus: int = 0
 
     cd_magias_calc: Optional[Any] = None   # 🆕 auto-audit
     cd_por_escola: Optional[Dict[str, int]] = None

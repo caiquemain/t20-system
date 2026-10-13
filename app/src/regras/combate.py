@@ -35,7 +35,8 @@ def calcular_proficiencias_e_sentidos(ficha: Personagem):
 
 def sincronizar_ataques(ficha: Personagem):
     logger.info("--- [5.3] Ataques Naturais ---")
-    
+    ficha.combate.multiplicador_critico_bonus = 0  # reset idempotente
+
     # 🧹 Remove ataques derivados ANTES de recriar (evita órfãos em troca de raça)
     if ficha.combate and ficha.combate.ataques:
         ficha.combate.ataques = [
@@ -48,6 +49,10 @@ def sincronizar_ataques(ficha: Personagem):
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
+
+        mult_bonus = efeitos.get("multiplicador_critico_bonus", 0)
+        if mult_bonus:
+            ficha.combate.multiplicador_critico_bonus += int(mult_bonus)
 
         raw = efeitos.get("arma_natural")
         if raw:
