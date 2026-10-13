@@ -13,6 +13,7 @@ logger = logging.getLogger("RegrasT20")
 CONDICOES_BONUS_PERICIA = {
     "Conhecimento das Rochas": "no subterrâneo",
     "Reptiliano": "sem armadura ou roupas pesadas",
+    "Envolto em Mistério": "vs alvos não treinados em Conhecimento ou Misticismo",
 }
 # Condições situacionais ativáveis pelo jogador (aba Efeitos & Condições)
 CONDICAO_POR_HABILIDADE = {
