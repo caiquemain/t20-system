@@ -310,7 +310,10 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Bárbaro",
         "nivel": 20,
         "descricao": "O bônus de ataque e dano da Fúria é dobrado.",
-        "efeitos": {}
+        "efeitos": {
+            "furia_titanica": {"dobra_bonus_furia": True, "nivel": 20},
+            "nota": "No 20º nível, o bônus de Fúria é dobrado (T20 p.41).",
+        }
     },
 
     # Poderes de Bárbaro
@@ -319,7 +322,10 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "Ao entrar em Fúria, ganha PV temporários iguais a Nível + Força.",
-        "efeitos": {}
+        "efeitos": {
+            "pv_temp_em_furia": {"nivel": True, "atributo": "forca"},
+            "nota": "Ao entrar em Fúria, ganha PV temporários = nível + Força (T20 p.41).",
+        }
     },
     "BARBARO_AUMENTO_ATRIBUTO": {
         "nome": "Aumento de Atributo",
@@ -334,7 +340,14 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Bárbaro",
         "requisitos": ["Treinado em Intimidação"],
         "descricao": "1 PM (Movimento): Berro feroz deixa inimigos em alcance curto vulneráveis (fim da cena).",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1, "acao": "movimento", "alcance": "curto",
+                "alvos": "inimigos", "efeito": "vulneravel",
+                "duracao": "cena", "tipo_efeito": "medo",
+                "pre_requisito": "treinado em Intimidação",
+            },
+        }
     },
     "BARBARO_CRITICO_BRUTAL": {
         "nome": "Crítico Brutal",
@@ -350,7 +363,13 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Bárbaro",
         "requisitos": ["For 1"],
         "descricao": "Ao causar dano com arma de duas mãos corpo a corpo, rerola 1 ou 2 no dano.",
-        "efeitos": {}
+        "efeitos": {
+            "rerola_dado_dano": {
+                "valores": [1, 2], "arma": "duas_maos_corpo_a_corpo",
+            },
+            "pre_requisito": "For 1",
+            "nota": "Rola novamente qualquer 1 ou 2 nas rolagens de dano (T20 p.41).",
+        }
     },
     "BARBARO_ESPIRITO_INQUEBRAVEL": {
         "nome": "Espírito Inquebrável",
@@ -358,7 +377,13 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Bárbaro",
         "requisitos": ["Alma de Bronze"],
         "descricao": "Em fúria, não fica inconsciente com 0 PV (morre apenas com negativo = metade PV máx).",
-        "efeitos": {}
+        "efeitos": {
+            "em_furia": {
+                "nao_inconsciente_em_0pv": True,
+                "morte_em_negativo": "metade_pv_max",
+            },
+            "pre_requisito": "Alma de Bronze",
+        }
     },
     "BARBARO_ESQUIVA_SOBRENATURAL": {
         "nome": "Esquiva Sobrenatural",
@@ -372,14 +397,27 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "1 PM: Soma nível em teste de Força ou Atletismo (pode usar após rolar).",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1, "acao": "livre", "efeito": "soma_nivel_teste",
+                "pericias": ["Força", "Atletismo"],
+                "gatilho": "apos_rolar_dado_antes_do_mestre_responder",
+            },
+        }
     },
     "BARBARO_FRENESI": {
         "nome": "Frenesi",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "Em Fúria, ao agredir, gaste 2 PM para fazer um ataque extra.",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 2, "acao": "reacao",
+                "gatilho": "acao_agredir_em_furia",
+                "efeito": "ataque_adicional",
+                "limite": "uma_vez_por_rodada",
+            },
+        }
     },
     "BARBARO_FURIA_SAVANA": {
         "nome": "Fúria da Savana",
@@ -393,28 +431,54 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "1 PM: Mantém a fúria ativa na rodada mesmo se não atacar/ser atacado.",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1, "acao": "livre",
+                "gatilho": "furia_terminaria_por_inatividade",
+                "efeito": "estender_furia_1_rodada",
+            },
+        }
     },
     "BARBARO_GOLPE_PODEROSO": {
         "nome": "Golpe Poderoso",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "Ao acertar ataque, 1 PM: Causa um dado extra de dano do mesmo tipo.",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1, "acao": "livre",
+                "gatilho": "acerto_corpo_a_corpo_ou_arremesso",
+                "efeito": "dado_extra_dano",
+                "dado_extra": 1,
+            },
+        }
     },
     "BARBARO_IMPETO": {
         "nome": "Ímpeto",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "1 PM: Aumenta deslocamento em +6m por uma rodada.",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1, "acao": "livre",
+                "efeito": "deslocamento_bonus_temporario",
+                "valor": 6, "duracao": "rodada",
+            },
+        }
     },
     "BARBARO_INVESTIDA_IMPRUDENTE": {
         "nome": "Investida Imprudente",
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "Na investida, pode aceitar -5 Defesa para ganhar +1d12 dano.",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 0, "acao": "livre",
+                "gatilho": "investida",
+                "efeito": "trocar_defesa_por_dano",
+                "penalidade_defesa": -5, "dano_extra": "1d12",
+            },
+        }
     },
     "BARBARO_PELE_ACO": {
         "nome": "Pele de Aço",
@@ -436,7 +500,14 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "Em fúria, ao criticar ou zerar PV inimigo: ganha +1 ataque/dano cumulativo (máx nível) pela cena.",
-        "efeitos": {}
+        "efeitos": {
+            "em_furia": {
+                "bonus_cumulativo": {
+                    "valor": 1, "limite": "nivel", "duracao": "cena",
+                    "gatilhos": ["acerto_critico", "reduzir_a_0_pv"],
+                },
+            },
+        }
     },
     "BARBARO_SUPERSTICAO": {
         "nome": "Superstição",
@@ -458,7 +529,13 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "Movimento: Gaste PM (limite Constituição). Recupera 1d12 PV por PM gasto.",
-        "efeitos": {}
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": "variavel", "acao": "movimento",
+                "efeito": "cura", "por_pm": "1d12",
+                "limite_pm": "constituicao",
+            },
+        }
     },
 
     # ==========================================================================
