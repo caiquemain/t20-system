@@ -443,7 +443,8 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
             valor = vuln.get("valor", 1)
             vulnerabilidades.append(f"{tipo.capitalize()} +{valor}/dado")
 
-    ficha.status.proficiencias = sorted(list(proficiencias))
-    ficha.status.imunidades = sorted(list(imunidades))
-    ficha.status.sentidos = sorted(list(sentidos))
+    # Append (nao overwrite): preserva valores de outras fontes (ex.: familiares)
+    ficha.status.proficiencias = sorted(set(ficha.status.proficiencias + list(proficiencias)))
+    ficha.status.imunidades = sorted(set(ficha.status.imunidades + list(imunidades)))
+    ficha.status.sentidos = sorted(set(ficha.status.sentidos + list(sentidos)))
     ficha.status.vulnerabilidades = sorted(list(set(vulnerabilidades)))

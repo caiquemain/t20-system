@@ -132,7 +132,21 @@ def aplicar_poderes_arcanista(ficha: Personagem):
                 elif familiar_escolhido == "Gato":
                     if "Visão no Escuro" not in ficha.status.sentidos:
                         ficha.status.sentidos.append("Visão no Escuro")
-                
+                    # +2 Furtividade injetado no card (lido por inicializar_pericias).
+                    # Overwrite (nao acumula) para ser idempotente em recalc.
+                    if not isinstance(hab.efeitos, dict):
+                        hab.efeitos = {}
+                    bpe = hab.efeitos.setdefault("bonus_pericia", {})
+                    bpe["Furtividade"] = 2
+
+                # Rato: usa atributo-chave em Fortitude no lugar de Constituição
+                elif familiar_escolhido == "Rato":
+                    if not isinstance(hab.efeitos, dict):
+                        hab.efeitos = {}
+                    chave_attr = "car" if subclasse == "Feiticeiro" else "int"
+                    pao = hab.efeitos.setdefault("pericia_atributo_opcao", {})
+                    pao["Fortitude"] = chave_attr
+
                 # Falcão: Imunidades
                 elif familiar_escolhido == "Falcão":
                     if "Não pode ser surpreendido" not in ficha.status.imunidades:
