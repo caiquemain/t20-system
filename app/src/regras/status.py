@@ -1,6 +1,7 @@
 from .inventario import catalogo_do_item, calcular_penalidade_armadura
 import math
 import logging
+from typing import Optional, Dict, Any, List
 from ..models import Personagem, StatCalculado, FonteBonus
 from ..dados_classes import DADOS_CLASSES
 from .utils import calcular_modificador
@@ -325,6 +326,53 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
         setattr(ficha.status.defesa, "detalhes", detalhes_defesa)
     except AttributeError:
         pass
+
+
+def calcular_furia(ficha: Personagem) -> Optional[Dict[str, int]]:
+    """Calcula o bônus/custo ativo de Fúria do Bárbaro.
+
+    Livro (T20 p.41):
+        Fúria (1º): 2 PM para +2 ataque/dano corpo a corpo.
+        A cada 5 níveis, pode gastar +1 PM para aumentar o bônus em +1.
+        Fúria Titânica (20º): o bônus é dobrado.
+
+    Retorna None se o personagem não tem a habilidade Fúria.
+    """
+    furia = next(
+        (h for h in ficha.habilidades if (h.nome or "") == "Fúria"), None)
+    if furia is None:
+        return None
+    efeitos = furia.efeitos or {}
+    ativavel = efeitos.get("acao_ativavel") or efeitos.get("habilidade_ativavel")
+    if not isinstance(ativavel, dict):
+        return None
+
+    bonus_base = int(ativavel.get("ataque_bonus", 0) or 0)
+    custo_base = int(ativavel.get("custo_pm", 0) or 0)
+    escala = ativavel.get("escala_nivel") or {}
+    cada = int(escala.get("cada", 0) or 0)
+    passo = int(escala.get("bonus", 0) or 0)
+
+    # Nível de classe do Bárbaro (habilidade é de classe)
+    nivel_classe = 1
+    if ficha.classes:
+        c = ficha.classes[0]
+        if (c.nome or "") == "Bárbaro":
+            nivel_classe = int(c.nivel or 1)
+
+    if cada > 0 and nivel_classe >= 1:
+        passos = (nivel_classe - 1) // cada
+        bonus = bonus_base + passos * passo
+        custo = custo_base + passos * passo
+    else:
+        bonus = bonus_base
+        custo = custo_base
+
+    # Fúria Titânica (20º): dobra o bônus
+    if any((h.nome or "") == "Fúria Titânica" for h in ficha.habilidades):
+        bonus *= 2
+
+    return {"bonus": bonus, "custo": custo}
 
 
 def _nivel_inicio_da_habilidade(hab) -> int:
