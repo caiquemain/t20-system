@@ -327,6 +327,19 @@ def aplicar_poderes_arcanista(ficha: Personagem):
                 ficha.combate.reducao_pm_tipo[tipo_dano] = ficha.combate.reducao_pm_tipo.get(tipo_dano, 0) + 1
                 ficha.combate.bonus_dano_dado_tipo[tipo_dano] = ficha.combate.bonus_dano_dado_tipo.get(tipo_dano, 0) + 1
             
+            # Superior: dobra o bonus de Car nos PV (adicional +Car)
+            if heranca_superior and mod_car > 0:
+                if ficha.status.pv_calc is None:
+                    calcular_pv_pm(ficha)
+                ficha.status.pv_calc.adicionar_bonus(
+                    fonte="Linhagem Dracônica (superior: dobra Car)",
+                    categoria="Poder",
+                    valor=mod_car)
+                ficha.status.pv.maximo = ficha.status.pv_calc.total
+                if ficha.status.pv.atual > 0:
+                    ficha.status.pv.atual = min(
+                        ficha.status.pv.atual + mod_car, ficha.status.pv.maximo)
+
             # Superior: imunidade ao tipo
             if heranca_superior and tipo_dano:
                 imunidade_str = f"Imune a {tipo_dano}"
@@ -338,12 +351,14 @@ def aplicar_poderes_arcanista(ficha: Personagem):
             # Básica: +1 magia de 1º círculo
             if ficha.combate.magias_calc:
                 ficha.combate.limite_magias = (ficha.combate.limite_magias or 3) + 1
-            # Básica: torna-se treinado em Enganação
-            info_eng = ficha.pericias.get("Enganação")
-            if info_eng is not None and (info_eng.treino or 0) < 1:
-                info_eng.treino = 1
-                if "Treinada por Linhagem Feérica (básica)" not in info_eng.fontes_bonus:
-                    info_eng.fontes_bonus.append("Treinada por Linhagem Feérica (básica)")
+            # Básica: treinado em Enganação. Injeta no card da Linhagem (padrão
+            # Familiar); inicializar_pericias le 'pericia_treino' e marca treino.
+            hab_feerica = next(
+                (h for h in ficha.habilidades if h.nome == "Linhagem Feérica"), None)
+            if hab_feerica is not None:
+                if not isinstance(hab_feerica.efeitos, dict):
+                    hab_feerica.efeitos = {}
+                hab_feerica.efeitos["pericia_treino"] = ["Enganação"]
             
             # Aprimorada: +2 CD Encantamento/Ilusão, -1 PM
             if heranca_aprimorada:

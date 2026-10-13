@@ -225,6 +225,16 @@ def inicializar_pericias(ficha: Personagem):
                 if chave_base in DADOS_PERICIAS:
                     pericias_extras.append(e)
 
+    # pericias_treino: lista de pericias que uma habilidade forca como treinadas
+    # (ex.: Linhagem Feerica Basica -> Enganacao). Padrao injetado pelo motor.
+    for hab in ficha.habilidades:
+        efeitos = hab.efeitos or {}
+        if hab.escolhas_aplicadas:
+            efeitos = {**efeitos, **hab.escolhas_aplicadas}
+        for p in (efeitos.get("pericia_treino") or []):
+            if isinstance(p, str) and p:
+                pericias_extras.append(p)
+
     fixas_classe: List[str] = []
     selecao_fixa: List[str] = []
     if ficha.classes:

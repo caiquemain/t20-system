@@ -357,7 +357,8 @@ def calcular_reducoes_dano(ficha: Personagem):
             for elem in elementos:
                 lista_rd.append(f"{elem} {total}")
 
-    ficha.status.rd = lista_rd
+    # Append (nao overwrite): preserva RD vinda de outras fontes (linhagens)
+    ficha.status.rd = sorted(set(ficha.status.rd + lista_rd))
 
 
 def calcular_proficiencias_e_extras(ficha: Personagem):
