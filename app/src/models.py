@@ -248,6 +248,9 @@ class Combate(BaseModel):
     # Bônus de dano que se aplicam a QUALQUER ataque (ex.: Instinto Selvagem
     # do Bárbaro, Fúria ativa). O frontend exibe como "+X dano geral".
     bonus_dano_geral: Optional[int] = None
+    # Cálculo do bônus ativo de Fúria (Bárbaro): {"bonus": int, "custo": int}.
+    # Bônus sobe +1 a cada 5 níveis; Fúria Titânica (20º) dobra.
+    furia_calc: Optional[Dict[str, int]] = None
 
     cd_magias_calc: Optional[Any] = None   # 🆕 auto-audit
     cd_por_escola: Optional[Dict[str, int]] = None
