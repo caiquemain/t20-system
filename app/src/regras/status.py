@@ -327,9 +327,23 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
         pass
 
 
+def _nivel_inicio_da_habilidade(hab) -> int:
+    """Extrai o nível de início de uma habilidade de classe a partir da
+    fonte. Ex.: 'Bárbaro (5)' -> 5; 'Bárbaro' -> 1."""
+    fonte = hab.fonte or ""
+    if "(" in fonte and fonte.endswith(")"):
+        try:
+            return int(fonte.rsplit("(", 1)[1].rstrip(")"))
+        except ValueError:
+            pass
+    return 1
+
+
 def calcular_reducoes_dano(ficha: Personagem):
     logger.info("--- [7] Calculando RD e Resistências ---")
     lista_rd = []
+    bonus_dano_geral = 0
+    nivel_total = int(ficha.cabecalho.nivel_total or 1)
 
     qtd_tormenta = sum(
         1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
@@ -357,8 +371,39 @@ def calcular_reducoes_dano(ficha: Personagem):
             for elem in elementos:
                 lista_rd.append(f"{elem} {total}")
 
+        # ── RD FIXA ESCALÁVEL (Bárbaro, Cavaleiro, Lutador) ──
+        # Ex.: {"rd_fixa": 2, "escala_nivel": {"cada": 3, "bonus": 2}}
+        # Bárbaro nv 5 = RD 2; nv 8 = RD 4; nv 17 = RD 10.
+        if "rd_fixa" in efeitos:
+            rd_base = int(efeitos["rd_fixa"])
+            escala = efeitos.get("escala_nivel") or {}
+            cada = int(escala.get("cada", 0) or 0)
+            passo = int(escala.get("bonus", 0) or 0)
+            rd_max = efeitos.get("rd_max")
+            nivel_inicio = _nivel_inicio_da_habilidade(hab)
+            if nivel_total >= nivel_inicio and cada > 0:
+                extra = (nivel_total - nivel_inicio) // cada
+                rd_total = rd_base + extra * passo
+                if isinstance(rd_max, (int, float)) and rd_total > rd_max:
+                    rd_total = int(rd_max)
+                lista_rd.append(f"geral {rd_total}")
+
+        # ── BÔNUS DE DANO GERAL (Instinto Selvagem do Bárbaro) ──
+        # Ex.: {"dano_bonus": 1, "escala_nivel": {"cada": 6, "bonus": 1}}
+        if "dano_bonus" in efeitos:
+            dano_base = int(efeitos["dano_bonus"])
+            escala = efeitos.get("escala_nivel") or {}
+            cada = int(escala.get("cada", 0) or 0)
+            passo = int(escala.get("bonus", 0) or 0)
+            nivel_inicio = _nivel_inicio_da_habilidade(hab)
+            if nivel_total >= nivel_inicio and cada > 0:
+                extra = (nivel_total - nivel_inicio) // cada
+                bonus_dano_geral += dano_base + extra * passo
+
     # Append (nao overwrite): preserva RD vinda de outras fontes (linhagens)
     ficha.status.rd = sorted(set(ficha.status.rd + lista_rd))
+    if bonus_dano_geral > 0:
+        ficha.combate.bonus_dano_geral = bonus_dano_geral
 
 
 def calcular_proficiencias_e_extras(ficha: Personagem):

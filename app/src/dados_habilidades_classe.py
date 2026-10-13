@@ -92,12 +92,10 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Arcanista",
         "descricao": "+5 em Enganação e Intimidação contra pessoas não treinadas em Conhecimento ou Misticismo.",
         "efeitos": {
-        "bonus_pericia_condicional": {
-            "pericias": ["Enganação", "Intimidação"],
-            "valor": 5,
-            "condicao": "vs nao treinados em Conhecimento ou Misticismo"
+            "bonus_pericia_condicional": {"Enganação": 5, "Intimidação": 5},
+            "condicao_bonus_pericia": "vs alvos nao treinados em Conhecimento ou Misticismo",
+            "nota": "Bonus condicional por alvo; motor exibe como situacional."
         }
-    }
     },
     "ARCANISTA_ESCRIBA_ARCANO": {
         "nome": "Escriba Arcano",
@@ -302,7 +300,8 @@ DADOS_HABILIDADES_CLASSE = {
         "descricao": "Recebe RD 2. Aumenta em +2 a cada 3 níveis.",
         "efeitos": {
             "rd_fixa": 2,
-            "escala_nivel": {"cada": 3, "bonus": 2}
+            "escala_nivel": {"cada": 3, "bonus": 2},
+            "rd_max": 10
         }
     },
     "BARBARO_FURIA_TITANICA": {

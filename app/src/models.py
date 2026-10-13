@@ -245,6 +245,9 @@ class Combate(BaseModel):
     bonus_dano_dado_tipo: Optional[Dict[str, int]] = None
 
     bonus_dano_magias: Optional[int] = None
+    # Bônus de dano que se aplicam a QUALQUER ataque (ex.: Instinto Selvagem
+    # do Bárbaro, Fúria ativa). O frontend exibe como "+X dano geral".
+    bonus_dano_geral: Optional[int] = None
 
     cd_magias_calc: Optional[Any] = None   # 🆕 auto-audit
     cd_por_escola: Optional[Dict[str, int]] = None
