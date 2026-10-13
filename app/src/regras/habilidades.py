@@ -120,6 +120,15 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
 
                     escolhas_finais = {
                         **dados_hab.get("efeitos", {}), **escolhas_anteriores}
+
+                    # REGRA T20 (Versatil, p.19): no maximo 2 beneficios.
+                    # Habilidades com 'pericia_ou_poder_escolha' permitem trocar
+                    # 1 pericia por 1 poder geral. Quando o poder e escolhido,
+                    # o slot de pericia flexivel (pericia_2) precisa ser descartado
+                    # para nao somar 3 beneficios ao personagem.
+                    if dados_hab.get("efeitos", {}).get("pericia_ou_poder_escolha"):
+                        if escolhas_finais.get("poder_geral"):
+                            escolhas_finais.pop("pericia_2", None)
                     # Resumo das escolhas aparece no card da habilidade
                     rotulos = {
                         "resistencia_rd_escolha": "Ascendência",
