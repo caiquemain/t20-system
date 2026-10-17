@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from src.routers import dados, personagens, admin, pdf, historico
+from src.routers import dados, personagens, ameacas, admin, pdf, historico
 
 MONGO_URL = os.getenv("MONGO_URI", "mongodb://db:27017/tormenta20")
 
@@ -36,6 +36,7 @@ app.add_middleware(
 
 app.include_router(dados.router)
 app.include_router(personagens.router)
+app.include_router(ameacas.router)
 app.include_router(admin.router)
 app.include_router(pdf.router)
 app.include_router(historico.router)
