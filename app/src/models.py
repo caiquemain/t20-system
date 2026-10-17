@@ -377,3 +377,129 @@ class EventoFicha(BaseModel):
         return str(v)
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+# =====================================================================
+# AMEAÇAS (monstros, NPCs, perigos) — Ameaças de Arton
+# =====================================================================
+
+class PapelAmeacaEnum(str, Enum):
+    SOLO = "solo"
+    LACAI0 = "lacaio"
+    ESPECIAL = "especial"
+
+
+class ModalidadeAtaqueEnum(str, Enum):
+    CORPO_A_CORPO = "corpo a corpo"
+    DISTANCIA = "à distância"
+
+
+class TipoAcaoEnum(str, Enum):
+    PASSIVA = "passiva"
+    LIVRE = "livre"
+    MOVIMENTO = "movimento"
+    REACAO = "reação"
+    PADRAO = "padrão"
+    COMPLETA = "completa"
+    SUSTENTADA = "sustentada"
+    AUTOMATICA = "automática"
+
+
+class PericiaAtaqueEnum(str, Enum):
+    LUTA = "Luta"
+    PONTARIA = "Pontaria"
+    ATUACAO = "Atuação"
+
+
+class AtaqueAmeaca(BaseModel):
+    nome: str
+    modalidade: ModalidadeAtaqueEnum = ModalidadeAtaqueEnum.CORPO_A_CORPO
+
+    bonus_ataque: int = 0
+    dano: str = ""
+    dano_extra: Optional[str] = None
+    dado_extra: Optional[str] = None
+    margem_critico: int = 20
+    multiplicador_critico: int = 2
+    dano_critico: Optional[str] = None
+    tipo_dano: str = ""
+    pericia: PericiaAtaqueEnum = PericiaAtaqueEnum.LUTA
+    mod_atributo_dano: Optional[str] = None
+    alcance: Optional[str] = None
+    descricao: Optional[str] = None
+
+    critico_display: Optional[str] = None
+
+
+class HabilidadeAmeaca(BaseModel):
+    nome: str
+    tipo_acao: TipoAcaoEnum = TipoAcaoEnum.PASSIVA
+    custo_pm: Optional[int] = None
+    recarga: Optional[str] = None
+    duracao: Optional[str] = None
+    descricao: str = ""
+    rolls: List[str] = Field(default_factory=list)
+
+
+class DefesasEspeciaisAmeaca(BaseModel):
+    reducao_dano: List[str] = Field(default_factory=list)
+    imunidades: List[str] = Field(default_factory=list)
+    resistencias: List[str] = Field(default_factory=list)
+    vulnerabilidades: List[str] = Field(default_factory=list)
+    cura_acelerada: Optional[str] = None
+
+
+class PericiaAmeaca(BaseModel):
+    nome: str
+    bonus: int
+    observacao: Optional[str] = None
+
+
+class Ameaca(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
+
+    nome: str
+    nd: str = "1"
+    tipo: str = "Monstro"
+    subtipo: Optional[str] = None
+    tamanho: TamanhoEnum = TamanhoEnum.MEDIO
+    papel: PapelAmeacaEnum = PapelAmeacaEnum.SOLO
+
+    iniciativa: int = 0
+    percepcao: int = 0
+    sentidos: List[str] = Field(default_factory=list)
+
+    defesa: int = 10
+    fortitude: int = 0
+    reflexos: int = 0
+    vontade: int = 0
+    defesas_especiais: DefesasEspeciaisAmeaca = Field(default_factory=DefesasEspeciaisAmeaca)
+    pontos_de_vida: int = 0
+    pontos_de_mana: Optional[int] = None
+    deslocamento: str = "9m (6q)"
+
+    ataques: List[AtaqueAmeaca] = Field(default_factory=list)
+    habilidades: List[HabilidadeAmeaca] = Field(default_factory=list)
+    magias: List[Magia] = Field(default_factory=list)
+    cd_magias: Optional[int] = None
+    nivel_conjurador: Optional[str] = None
+
+    atributos: Atributos = Field(default_factory=Atributos)
+    pericias: List[PericiaAmeaca] = Field(default_factory=list)
+
+    equipamento: Optional[str] = None
+    tesouro: Optional[str] = None
+    parceiro: Optional[str] = None
+    reforcos: List[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
+
+    fonte: Optional[Dict[str, Any]] = None
+
+    @field_validator('id', mode='before')
+    @classmethod
+    def converter_objectid(cls, v):
+        if v is None:
+            return None
+        return str(v)
+
+    model_config = ConfigDict(populate_by_name=True)
