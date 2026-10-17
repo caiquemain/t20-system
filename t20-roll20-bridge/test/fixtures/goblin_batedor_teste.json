@@ -1,0 +1,93 @@
+{
+  "id": "test_goblin_batedor",
+  "nome": "Test Goblin Batedor",
+  "nd": "1/2",
+  "tipo": "Humanoide",
+  "subtipo": "goblin",
+  "tamanho": "Pequeno",
+  "papel": "lacaio",
+
+  "iniciativa": 5,
+  "percepcao": 2,
+  "sentidos": ["visão no escuro"],
+
+  "defesa": 15,
+  "fortitude": 5,
+  "reflexos": 7,
+  "vontade": 1,
+  "defesas_especiais": {
+    "reducao_dano": [],
+    "imunidades": [],
+    "resistencias": [],
+    "vulnerabilidades": [],
+    "cura_acelerada": null
+  },
+  "pontos_de_vida": 12,
+  "pontos_de_mana": null,
+  "deslocamento": "9m (6q), escalada 9m (6q)",
+
+  "ataques": [
+    {
+      "nome": "Adaga",
+      "modalidade": "corpo a corpo",
+      "bonus_ataque": 9,
+      "dano": "1d4+3",
+      "tipo_dano": "perfuracao",
+      "margem_critico": 19,
+      "multiplicador_critico": 2,
+      "pericia": "Luta",
+      "descricao": "Ataque furtivo +1d6 quando flanqueando"
+    },
+    {
+      "nome": "Funda",
+      "modalidade": "à distância",
+      "bonus_ataque": 9,
+      "dano": "1d4+2",
+      "tipo_dano": "impacto",
+      "margem_critico": 20,
+      "multiplicador_critico": 2,
+      "pericia": "Pontaria",
+      "alcance": "Curto",
+      "descricao": "Pedras x20"
+    }
+  ],
+
+  "habilidades": [
+    {
+      "nome": "Ataque Furtivo",
+      "tipo_acao": "livre",
+      "descricao": "1x/rodada, contra alvo desprevenido ou flanqueado.",
+      "rolls": ["1d6"]
+    },
+    {
+      "nome": "Fuga Ardilosa",
+      "tipo_acao": "movimento",
+      "descricao": "Move-se sem sofrer ataque de oportunidade.",
+      "rolls": []
+    },
+    {
+      "nome": "Bomba Fumígena",
+      "tipo_acao": "padrão",
+      "recarga": "movimento",
+      "descricao": "Nuvem de 3m de raio, duração em rodadas abaixo. Fort CD 15 evita enjoo.",
+      "rolls": ["1d4"]
+    }
+  ],
+
+  "magias": [],
+  "cd_magias": null,
+  "nivel_conjurador": null,
+
+  "atributos": { "forca": -1, "destreza": 3, "constituicao": 1, "inteligencia": 0, "sabedoria": 0, "carisma": 0 },
+  "pericias": [
+    { "nome": "Furtividade", "bonus": 8 },
+    { "nome": "Atletismo", "bonus": 4 }
+  ],
+
+  "equipamento": "Adaga, funda, pedras x20, couro batido",
+  "tesouro": "Metade",
+  "parceiro": null,
+  "reforcos": [],
+  "tags": ["teste", "goblin"],
+  "fonte": { "livro": "Teste", "pagina": 1 }
+}
