@@ -7,9 +7,10 @@ interface SpellDetailsModalProps {
     onClose: () => void;
     onRemove: () => void;
     ficha?: any;
+    hideRemove?: boolean;
 }
 
-export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onClose, onRemove, ficha }) => {
+export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onClose, onRemove, ficha, hideRemove }) => {
     if (!magia) return null;
 
     const typeColor = getTypeColor(magia.tipo);
@@ -98,7 +99,9 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
                 </div>
 
                 <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
-                    <button className="btn-delete" onClick={() => { if (window.confirm(`Tem certeza que deseja esquecer a magia "${magia.nome}"?`)) { onRemove(); onClose(); } }}>🗑️ Esquecer Magia</button>
+                    {!hideRemove && (
+                        <button className="btn-delete" onClick={() => { if (window.confirm(`Tem certeza que deseja esquecer a magia "${magia.nome}"?`)) { onRemove(); onClose(); } }}>🗑️ Esquecer Magia</button>
+                    )}
                     <button className="btn-cancel" onClick={onClose}>Fechar</button>
                 </div>
             </div>
