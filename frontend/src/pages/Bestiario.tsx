@@ -40,8 +40,9 @@ const Bestiario: React.FC = () => {
     const tiposUnicos = Array.from(new Set(ameacas.map(a => a.tipo))).sort();
 
     return (
-        <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        // Aumentamos o maxWidth para 1600px para caber mais colunas
+        <div className="container" style={{ maxWidth: '1600px', width: '100%', padding: '0 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', marginTop: '40px' }}>
                 <h1 style={{ color: 'var(--accent-color)', margin: 0 }}>📖 Bestiário de Arton</h1>
                 <Link to="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', padding: '10px', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
                     ⬅ Voltar para Home
@@ -73,11 +74,18 @@ const Bestiario: React.FC = () => {
             </div>
 
             {loading ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Invocando criaturas...</p>
+                <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '50px' }}>Invocando criaturas...</p>
             ) : ameacasFiltradas.length === 0 ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Nenhum monstro encontrado com esses filtros.</p>
+                <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '50px' }}>Nenhum monstro encontrado com esses filtros.</p>
             ) : (
-                <div className="char-grid">
+                // Aqui está a mágica: minmax(280px) permite até 5 colunas em telas grandes, 
+                // e quebra para 3, 2 ou 1 automaticamente em telas menores.
+                <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+                    gap: '20px', 
+                    paddingBottom: '40px' 
+                }}>
                     {ameacasFiltradas.map(a => (
                         <MonsterCard key={a._id} ameaca={a} />
                     ))}
