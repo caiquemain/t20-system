@@ -96,12 +96,12 @@ class Cabecalho(BaseModel):
         return data
 
 class Atributos(BaseModel):
-    forca: int = 0
-    destreza: int = 0
-    constituicao: int = 0
-    inteligencia: int = 0
-    sabedoria: int = 0
-    carisma: int = 0
+    forca: Optional[int] = 0
+    destreza: Optional[int] = 0
+    constituicao: Optional[int] = 0
+    inteligencia: Optional[int] = 0
+    sabedoria: Optional[int] = 0
+    carisma: Optional[int] = 0
 
 class Descricao(BaseModel):
     tamanho: TamanhoEnum = TamanhoEnum.MEDIO
