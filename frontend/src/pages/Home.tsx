@@ -23,7 +23,6 @@ const Home = () => {
         carregarPersonagens();
     }, []);
 
-    // Criação rápida (método antigo)
     const handleNovoPersonagem = async () => {
         const novaFicha = {
             cabecalho: { nome: "Novo Aventureiro", raca: "Humano", origem: "Acólito", nivel_total: 1 },
@@ -66,7 +65,7 @@ const Home = () => {
                     border: '2px solid #ffd700',
                     borderRadius: '12px',
                     padding: '25px',
-                    marginBottom: '30px',
+                    marginBottom: '20px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -105,6 +104,55 @@ const Home = () => {
                     </p>
                 </div>
                 <div style={{ color: '#ffd700', fontSize: '2rem' }}>→</div>
+            </div>
+
+            {/* --- CARD DO BESTIÁRIO --- */}
+            <div
+                onClick={() => navigate('/bestiario')}
+                style={{
+                    background: 'linear-gradient(135deg, #2e1a1a 0%, #3e1616 100%)',
+                    border: '2px solid #d32f2f',
+                    borderRadius: '12px',
+                    padding: '25px',
+                    marginBottom: '30px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '20px',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 20px rgba(211, 47, 47, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(211, 47, 47, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(211, 47, 47, 0.2)';
+                }}
+            >
+                <div style={{
+                    fontSize: '3rem',
+                    background: 'rgba(211, 47, 47, 0.1)',
+                    borderRadius: '12px',
+                    width: '70px',
+                    height: '70px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                }}>
+                    📖
+                </div>
+                <div style={{ flex: 1 }}>
+                    <h2 style={{ color: '#d32f2f', margin: '0 0 5px 0', fontSize: '1.4rem' }}>
+                        Bestiário de Arton
+                    </h2>
+                    <p style={{ color: '#aaa', margin: 0, fontSize: '0.95rem' }}>
+                        Consulte monstros, ameaças e envie fichas direto para o Roll20
+                    </p>
+                </div>
+                <div style={{ color: '#d32f2f', fontSize: '2rem' }}>→</div>
             </div>
 
             {/* Lista de personagens */}

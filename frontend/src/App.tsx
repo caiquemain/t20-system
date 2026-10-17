@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Ficha from './pages/Ficha';
 import Wizard from './pages/Wizard';
 import Bestiario from './pages/Bestiario';
+import AmeacaDetail from './pages/AmeacaDetail';
 
 function App() {
     return (
@@ -15,8 +16,8 @@ function App() {
                 <Route path="/wizard" element={<Wizard />} />
                 <Route path="/wizard/:id" element={<Wizard />} />
                 
-                {/* Rota Nova do Bestiário */}
                 <Route path="/bestiario" element={<Bestiario />} />
+                <Route path="/ameaca/:id" element={<AmeacaDetail />} />
 
                 <Route path="/ficha" element={<Navigate to="/" replace />} />
                 <Route path="/ficha/" element={<Navigate to="/" replace />} />

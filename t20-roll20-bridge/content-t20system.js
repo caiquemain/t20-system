@@ -37,3 +37,18 @@
     }
   };
 })();
+
+// --- PONTE REACT <-> EXTENSÃO ---
+// O React roda no "main world" e não tem acesso ao chrome.runtime.
+// Ele envia uma window.postMessage, e nós repassamos para o background.
+window.addEventListener('message', (event) => {
+  if (event.source !== window) return;
+  
+  if (event.data && event.data.type === 'T20_ENVIAR_AMEACA_ROLL20') {
+    const ameaca = event.data.ameaca;
+    chrome.runtime.sendMessage({ type: 'AMEACA_PARA_ROLL20', ameaca }, (resp) => {
+      // Devolve a resposta para o React
+      window.postMessage({ type: 'T20_RESPOSTA_ROLL20', ok: resp?.ok, err: resp?.err }, '*');
+    });
+  }
+});
