@@ -31,7 +31,7 @@ async def listar_ameacas(
     nd: Optional[str] = Query(None, description="Filtra por ND exato (ex: '3', '1/2', 'S+')"),
     tipo: Optional[str] = Query(None, description="Filtra por tipo (ex: 'Monstro', 'Morto-vivo')"),
     papel: Optional[str] = Query(None, description="solo | lacaio | especial"),
-    limite: int = Query(100, ge=1, le=500),
+    limite: int = Query(500, ge=1, le=1000),
 ):
     db = get_db(request)
     filtro: dict = {}

@@ -40,5 +40,5 @@ export default api;
 export const fetchDadosEquipamentos = () => api.get('/dados/equipamentos');
 
 // --- AMEAÇAS (BESTIÁRIO) ---
-export const fetchAmeacas = () => api.get('/ameacas/');
+export const fetchAmeacas = () => api.get('/ameacas/?limite=500');
 export const fetchAmeaca = (id: string) => api.get(`/ameacas/${id}`);
