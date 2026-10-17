@@ -3,7 +3,7 @@ import type { Personagem } from '../types';
 export async function gerarPDF(ficha: Personagem, idDaUrl?: string): Promise<void> {
   try {
     // Pega o ID da URL (useParams) ou do objeto ficha
-    const id = idDaUrl || ficha.id;
+    const id = idDaUrl || ficha._id;
     
     if (!id) {
       throw new Error("Ficha sem ID. Salve a ficha primeiro.");

@@ -263,7 +263,7 @@ function Ficha() {
                 body: '{}'
             });
             if (!resp.ok) throw new Error(await resp.text());
-            const data = await resp.json();
+            await resp.json();
 
             // Recarrega a ficha do servidor (novo nível + ganhos)
             window.location.reload();
@@ -464,6 +464,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 pmAtual={ficha.status.pm.atual}
                 pmMaximo={ficha.status.pm.maximo}
                 circuloMaximo={ficha.combate?.circulo_maximo ?? 0}
+                limiteMagias={ficha.combate?.limite_magias ?? null}
                             />
 
             <FullGrimorioModal
@@ -679,7 +680,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                                 {ficha.habilidades.map((hab, i) => (
                                     <AbilityCard
                                         key={`${hab.nome}-${i}`}
-                                        habilidade={{ ...hab, _ficha_habilidades: ficha.habilidades }}
+                                        habilidade={{ ...hab, _ficha_habilidades: ficha.habilidades } as any}
                                         pmAtual={ficha.status.pm.atual}
                                         onAtivar={handleAtivarHabilidade}
                                         updateFicha={updateFicha}
@@ -852,7 +853,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         </div>
                     ) : (
                         <div className="historico-timeline" style={{ padding: '20px 0' }}>
-                            {historicoData.map((evento, index) => {
+                            {historicoData.map((evento, _index) => {
                                 const isRestauracao = evento.tipo === 'restauracao';
                                 const color = isRestauracao ? '#ff9800' : '#9c27b0';
                                 const icon = isRestauracao ? '⏪' : '⬆️';
@@ -900,7 +901,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                                         </div>
                                         
                                         <div style={{ marginTop: '10px' }}>
-                                            {evento.resumo.map((linha, i) => (
+                                            {evento.resumo.map((linha: string, i: number) => (
                                                 <div key={i} style={{ fontSize: '0.9rem', color: '#ddd', marginBottom: '4px', paddingLeft: '10px', borderLeft: '2px solid ' + color + '44' }}>
                                                     {linha}
                                                 </div>

@@ -6,6 +6,7 @@ import Ficha from './pages/Ficha';
 import Wizard from './pages/Wizard';
 import Bestiario from './pages/Bestiario';
 import AmeacaDetail from './pages/AmeacaDetail';
+import Grimorio from './pages/Grimorio';
 
 function App() {
     return (
@@ -18,6 +19,8 @@ function App() {
                 
                 <Route path="/bestiario" element={<Bestiario />} />
                 <Route path="/ameaca/:id" element={<AmeacaDetail />} />
+
+                <Route path="/grimorio" element={<Grimorio />} />
 
                 <Route path="/ficha" element={<Navigate to="/" replace />} />
                 <Route path="/ficha/" element={<Navigate to="/" replace />} />

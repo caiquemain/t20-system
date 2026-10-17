@@ -155,6 +155,55 @@ const Home = () => {
                 <div style={{ color: '#d32f2f', fontSize: '2rem' }}>→</div>
             </div>
 
+            {/* --- CARD DO GRIMÓRIO --- */}
+            <div
+                onClick={() => navigate('/grimorio')}
+                style={{
+                    background: 'linear-gradient(135deg, #2e1a2e 0%, #3e163e 100%)',
+                    border: '2px solid #9c27b0',
+                    borderRadius: '12px',
+                    padding: '25px',
+                    marginBottom: '30px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '20px',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 20px rgba(156, 39, 176, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(156, 39, 176, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(156, 39, 176, 0.2)';
+                }}
+            >
+                <div style={{
+                    fontSize: '3rem',
+                    background: 'rgba(156, 39, 176, 0.1)',
+                    borderRadius: '12px',
+                    width: '70px',
+                    height: '70px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                }}>
+                    📜
+                </div>
+                <div style={{ flex: 1 }}>
+                    <h2 style={{ color: '#ce93d8', margin: '0 0 5px 0', fontSize: '1.4rem' }}>
+                        Grimório de Magias
+                    </h2>
+                    <p style={{ color: '#aaa', margin: 0, fontSize: '0.95rem' }}>
+                        Consulte todas as magias do livro básico por escola, círculo e tipo
+                    </p>
+                </div>
+                <div style={{ color: '#ce93d8', fontSize: '2rem' }}>→</div>
+            </div>
+
             {/* Lista de personagens */}
             <h2 style={{ color: '#ccc', marginBottom: '15px', fontSize: '1.1rem', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
                 📚 Meus Personagens

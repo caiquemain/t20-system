@@ -18,7 +18,7 @@ interface RacialRowProps {
 }
 
 export const RacialAbilityRow: React.FC<RacialRowProps> = ({
-    hab, index, dadosHabilidadesRaciais, listaPoderesGerais, dadosMagias, dadosOrigens, magiasConhecidas = [],
+    hab, index, dadosHabilidadesRaciais, listaPoderesGerais, dadosMagias, dadosOrigens, magiasConhecidas: _ = [],
     abrirSeletor, updateRacialChoice, updateRacialChoiceMulti, getBlacklistGlobal, getNomeHabilidade, poderesDoDeus,
     listaPericias
 }) => {

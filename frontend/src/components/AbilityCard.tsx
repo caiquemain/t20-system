@@ -54,7 +54,7 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
         // gatilho é numérico (quantidade) e o valor salvo é string
         // (escolha real), ex.: poder_escolha=1 + "Lobo Solitário"
         if (chave.endsWith('_escolha')) {
-            const vEfeito = (efeitos as any)[chave];
+            void (efeitos as any)[chave];
             const vEscolha = escolhas[chave];
             // Gatilho pode ser number (quantidade) OU string (nome já escolhido)
             if (!(typeof vEscolha === 'string' && vEscolha)) return false;
