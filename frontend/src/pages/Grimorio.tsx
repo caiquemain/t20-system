@@ -64,27 +64,27 @@ const Grimorio: React.FC = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    minHeight: '110px'
+                    minHeight: '100px'
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = '#2a2a2a'}
                 onMouseLeave={e => e.currentTarget.style.background = '#1e1e1e'}
             >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                        <span style={{ fontWeight: 'bold', color: '#e0e0e0', fontSize: '1rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ fontWeight: 'bold', color: '#e0e0e0', fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={magia.nome}>
                             {magia.nome}
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '0.7rem', color: schoolColor, textTransform: 'uppercase', fontWeight: 'bold' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.65rem', color: schoolColor, textTransform: 'uppercase', fontWeight: 'bold' }}>
                                 {magia.escola}
                             </span>
                             <span style={{
-                                fontSize: '0.65rem',
+                                fontSize: '0.6rem',
                                 textTransform: 'uppercase',
                                 fontWeight: 'bold',
                                 color: typeColor,
                                 border: `1px solid ${typeColor}60`,
-                                padding: '1px 5px',
+                                padding: '1px 4px',
                                 borderRadius: '3px',
                                 lineHeight: 1
                             }}>
@@ -93,11 +93,11 @@ const Grimorio: React.FC = () => {
                         </div>
                     </div>
                     <span style={{
-                        fontSize: '0.85rem',
+                        fontSize: '0.75rem',
                         color: '#ce93d8',
                         fontWeight: 'bold',
                         background: 'rgba(156, 39, 176, 0.15)',
-                        padding: '3px 8px',
+                        padding: '2px 6px',
                         borderRadius: '4px',
                         border: '1px solid rgba(156, 39, 176, 0.3)',
                         whiteSpace: 'nowrap'
@@ -114,7 +114,7 @@ const Grimorio: React.FC = () => {
     };
 
     return (
-        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ maxWidth: '1800px', margin: '0 auto', padding: '0 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', marginTop: '40px' }}>
                 <h1 style={{ color: '#ce93d8', margin: 0 }}>📜 Grimório de Arton</h1>
                 <Link to="/" style={{ color: '#aaa', textDecoration: 'none', padding: '10px', border: '1px solid #444', borderRadius: '8px' }}>
@@ -122,23 +122,34 @@ const Grimorio: React.FC = () => {
                 </Link>
             </div>
 
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', padding: '15px 20px', background: '#1a1a1a', borderRadius: '8px', border: '1px solid #333', flexWrap: 'wrap' }}>
+            {/* Filtros corrigidos com minWidth para não cortar o texto */}
+            <div style={{ 
+                display: 'flex', 
+                gap: '15px', 
+                marginBottom: '30px', 
+                padding: '15px 20px', 
+                background: '#1a1a1a', 
+                borderRadius: '8px', 
+                border: '1px solid #333', 
+                flexWrap: 'wrap', 
+                alignItems: 'center' 
+            }}>
                 <input
                     type="text"
                     placeholder="Buscar magia pelo nome..."
                     value={busca}
                     onChange={e => setBusca(e.target.value)}
-                    style={{ flex: 2, minWidth: '200px', padding: '10px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px' }}
+                    style={{ flex: '2 1 250px', minWidth: '250px', padding: '12px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px', outline: 'none', boxSizing: 'border-box' }}
                 />
-                <select value={filtroCirculo} onChange={e => setFiltroCirculo(e.target.value)} style={{ flex: 1, minWidth: '120px', padding: '10px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px' }}>
+                <select value={filtroCirculo} onChange={e => setFiltroCirculo(e.target.value)} style={{ flex: '1 1 180px', minWidth: '180px', padding: '12px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px', cursor: 'pointer', outline: 'none', boxSizing: 'border-box' }}>
                     <option value="">Todos os Círculos</option>
                     {[1, 2, 3, 4, 5].map(c => <option key={c} value={c}>{c}º Círculo</option>)}
                 </select>
-                <select value={filtroEscola} onChange={e => setFiltroEscola(e.target.value)} style={{ flex: 1, minWidth: '140px', padding: '10px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px' }}>
+                <select value={filtroEscola} onChange={e => setFiltroEscola(e.target.value)} style={{ flex: '1 1 200px', minWidth: '200px', padding: '12px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px', cursor: 'pointer', outline: 'none', boxSizing: 'border-box' }}>
                     <option value="">Todas as Escolas</option>
                     {escolasUnicas.map(e => <option key={e} value={e}>{e}</option>)}
                 </select>
-                <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={{ flex: 1, minWidth: '120px', padding: '10px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px' }}>
+                <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={{ flex: '1 1 180px', minWidth: '180px', padding: '12px', background: '#252525', border: '1px solid #444', color: '#fff', borderRadius: '6px', cursor: 'pointer', outline: 'none', boxSizing: 'border-box' }}>
                     <option value="">Todos os Tipos</option>
                     <option value="Arcana">Arcana</option>
                     <option value="Divina">Divina</option>
@@ -157,7 +168,7 @@ const Grimorio: React.FC = () => {
                     </p>
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
                         gap: '15px',
                         paddingBottom: '40px'
                     }}>
