@@ -12,7 +12,7 @@
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
-      "matches": ["http://localhost:5173/ficha/*"],
+      "matches": ["http://localhost:5173/*"],
       "js": ["content-t20system.js"],
       "run_at": "document_idle"
     },
