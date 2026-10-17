@@ -308,3 +308,58 @@ export interface DadosHabilidade {
     requisitos?: string[];
     efeitos?: any;
 }
+// --- TIPOS DE AMEAÇA (BESTIÁRIO) ---
+
+export interface AtaqueAmeaca {
+    nome: string;
+    modalidade: "corpo a corpo" | "à distância";
+    bonus_ataque: number;
+    dano: string;
+    tipo_dano: string;
+    margem_critico: number;
+    multiplicador_critico: number;
+    pericia: string;
+    descricao?: string | null;
+}
+
+export interface HabilidadeAmeaca {
+    nome: string;
+    tipo_acao: string;
+    descricao: string;
+    rolls?: string[];
+    custo_pm?: number | null;
+}
+
+export interface Ameaca {
+    _id?: string;
+    nome: string;
+    nd: string;
+    tipo: string;
+    subtipo?: string | null;
+    tamanho: TamanhoEnum;
+    papel: "solo" | "lacaio" | "especial";
+    iniciativa: number;
+    percepcao: number;
+    sentidos: string[];
+    defesa: number;
+    fortitude: number;
+    reflexos: number;
+    vontade: number;
+    pontos_de_vida: number;
+    pontos_de_mana?: number | null;
+    deslocamento: string;
+    atributos: {
+        forca: number | null;
+        destreza: number | null;
+        constituicao: number | null;
+        inteligencia: number | null;
+        sabedoria: number | null;
+        carisma: number | null;
+    };
+    ataques: AtaqueAmeaca[];
+    habilidades: HabilidadeAmeaca[];
+    magias: Magia[];
+    pericias: { nome: string; bonus: number; observacao?: string }[];
+    tesouro?: string | null;
+    fonte?: { livro: string; pagina: number };
+}
