@@ -6,16 +6,28 @@ interface MonsterCardProps {
     ameaca: Ameaca;
 }
 
+const TYPE_COLORS: Record<string, string> = {
+    'Morto-vivo': '#ba68c8', 'Dragão': '#e57373', 'Monstro': '#ffb74d',
+    'Aberração': '#26c6da', 'Animal': '#81c784', 'Construto': '#9e9e9e',
+    'Elemental': '#4fc3f7', 'Fada': '#f06292', 'Gigante': '#a1887f',
+    'Humanoide': '#fff176', 'Espírito': '#9575cd', 'Lefou': '#a5d6a7',
+};
+
+const getTypeColor = (tipo?: string) => {
+    if (!tipo) return '#d32f2f';
+    const key = Object.keys(TYPE_COLORS).find(k => tipo.toLowerCase().includes(k.toLowerCase()));
+    return key ? TYPE_COLORS[key] : '#d32f2f';
+};
+
 export const MonsterCard: React.FC<MonsterCardProps> = ({ ameaca }) => {
+    const typeColor = getTypeColor(ameaca.tipo);
 
     const enviarParaRoll20 = (e: React.MouseEvent) => {
-        e.preventDefault(); 
-        e.stopPropagation(); 
+        e.preventDefault();
+        e.stopPropagation();
 
-        // Envia a mensagem para o content script
         window.postMessage({ type: 'T20_ENVIAR_AMEACA_ROLL20', ameaca }, '*');
 
-        // Escuta a resposta
         const handleResposta = (event: MessageEvent) => {
             if (event.source !== window) return;
             if (event.data && event.data.type === 'T20_RESPOSTA_ROLL20') {
@@ -28,105 +40,122 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({ ameaca }) => {
             }
         };
         window.addEventListener('message', handleResposta);
-
-        setTimeout(() => {
-            window.removeEventListener('message', handleResposta);
-        }, 5000);
+        setTimeout(() => window.removeEventListener('message', handleResposta), 5000);
     };
 
     return (
         <Link to={`/ameaca/${ameaca._id}`} style={{ textDecoration: 'none', color: 'inherit', height: '100%' }}>
-            <div 
-                className="char-card" 
-                style={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'space-between',
-                    padding: '20px',
+            <div
+                className="spell-card"
+                style={{
+                    background: '#1e1e1e',
+                    borderLeft: `4px solid ${typeColor}`,
+                    borderTop: '1px solid #333',
+                    borderRight: '1px solid #333',
+                    borderBottom: '1px solid #333',
+                    borderRadius: '6px',
+                    padding: '14px 16px',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    border: '1px solid #333'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    height: '100%',
+                    minHeight: '140px'
                 }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--accent-color)';
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#333';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#2a2a2a'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#1e1e1e'}
             >
                 <div>
-                    {/* Cabeçalho: Nome e ND */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
-                        <h2 style={{ 
-                            margin: 0, 
-                            color: '#e0e0e0', 
-                            fontSize: '1.3rem', 
-                            whiteSpace: 'normal', // Permite quebra de linha para nomes longos
-                            lineHeight: '1.2',
-                            wordBreak: 'break-word'
-                        }}>
-                            {ameaca.nome}
-                        </h2>
-                        <div style={{ 
-                            background: 'var(--accent-color)', 
-                            color: 'white', 
-                            padding: '4px 8px', 
-                            borderRadius: '6px', 
-                            fontWeight: 'bold', 
-                            fontSize: '0.8rem',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0
+                    {/* Cabeçalho: Nome na esquerda, ND na direita */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{
+                                fontWeight: 'bold',
+                                color: '#e0e0e0',
+                                fontSize: '1.05rem',
+                                lineHeight: '1.2',
+                                display: 'block'
+                            }} title={ameaca.nome}>
+                                {ameaca.nome}
+                            </span>
+                        </div>
+                        <span style={{
+                            fontSize: '0.75rem',
+                            color: '#ff8a80',
+                            fontWeight: 'bold',
+                            background: 'rgba(211, 47, 47, 0.15)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(211, 47, 47, 0.4)',
+                            whiteSpace: 'nowrap'
                         }}>
                             ND {ameaca.nd}
-                        </div>
+                        </span>
                     </div>
 
-                    {/* Subtítulo: Tipo, Subtipo e Tamanho */}
-                    <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>
-                        {ameaca.tipo} {ameaca.subtipo ? `(${ameaca.subtipo})` : ''} • {ameaca.tamanho}
+                    {/* Subtítulo: Tipo e Tamanho */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '0.75rem', color: typeColor, textTransform: 'uppercase', fontWeight: 'bold' }}>
+                            {ameaca.tipo}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', color: '#888', textTransform: 'uppercase', border: '1px solid #444', padding: '1px 4px', borderRadius: '3px' }}>
+                            {ameaca.tamanho}
+                        </span>
                     </div>
 
-                    {/* Stats Básicos */}
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <div style={{ flex: 1, background: 'rgba(211, 47, 47, 0.1)', color: '#ef9a9a', padding: '6px', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', fontSize: '0.85rem', border: '1px solid #d32f2f' }}>
-                            PV: {ameaca.pontos_de_vida}
-                        </div>
-                        <div style={{ flex: 1, background: 'rgba(46, 125, 50, 0.1)', color: '#a5d6a7', padding: '6px', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', fontSize: '0.85rem', border: '1px solid #2e7d32' }}>
-                            Defesa: {ameaca.defesa}
-                        </div>
+                    {/* Stats Rápidos (Horizontal) */}
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '0.85rem', color: '#aaa', marginBottom: '8px' }}>
+                        <span>❤️ <strong style={{ color: '#ef9a9a' }}>{ameaca.pontos_de_vida}</strong></span>
+                        <span>🛡️ <strong style={{ color: '#a5d6a7' }}>{ameaca.defesa}</strong></span>
                     </div>
 
-                    {/* Atributos */}
-                    <div style={{ background: '#1a1a1a', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', color: '#aaa', textAlign: 'center', lineHeight: '1.4', border: '1px solid #2a2a2a' }}>
-                        <strong>FOR</strong> {ameaca.atributos.forca ?? '—'} &nbsp;•&nbsp; <strong>DES</strong> {ameaca.atributos.destreza ?? '—'} &nbsp;•&nbsp; <strong>CON</strong> {ameaca.atributos.constituicao ?? '—'}<br />
-                        <strong>INT</strong> {ameaca.atributos.inteligencia ?? '—'} &nbsp;•&nbsp; <strong>SAB</strong> {ameaca.atributos.sabedoria ?? '—'} &nbsp;•&nbsp; <strong>CAR</strong> {ameaca.atributos.carisma ?? '—'}
+                    {/* Atributos em linha única (igual ao rodapé do Grimório) */}
+                    <div style={{ 
+                        fontSize: '0.75rem', 
+                        color: '#888', 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '8px'
+                    }}>
+                        <span><strong style={{ color: '#bbb' }}>FOR</strong> {ameaca.atributos.forca ?? '—'}</span>
+                        <span><strong style={{ color: '#bbb' }}>DES</strong> {ameaca.atributos.destreza ?? '—'}</span>
+                        <span><strong style={{ color: '#bbb' }}>CON</strong> {ameaca.atributos.constituicao ?? '—'}</span>
+                        <span><strong style={{ color: '#bbb' }}>INT</strong> {ameaca.atributos.inteligencia ?? '—'}</span>
+                        <span><strong style={{ color: '#bbb' }}>SAB</strong> {ameaca.atributos.sabedoria ?? '—'}</span>
+                        <span><strong style={{ color: '#bbb' }}>CAR</strong> {ameaca.atributos.carisma ?? '—'}</span>
                     </div>
                 </div>
 
-                {/* Botão do Roll20 */}
-                <div style={{ marginTop: '20px' }}>
-                    <button 
+                {/* Botão do Roll20 bem discreto (estilo badge) */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                    <button
                         onClick={enviarParaRoll20}
-                        style={{ 
-                            width: '100%', 
-                            padding: '10px', 
-                            background: 'var(--accent-color)', // Vermelho Tormenta
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '6px', 
-                            cursor: 'pointer', 
-                            fontWeight: 'bold',
+                        title="Enviar para o Roll20"
+                        style={{
+                            padding: '4px 8px',
+                            background: 'transparent',
+                            color: '#888',
+                            border: '1px solid #444',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.65rem',
                             textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            fontSize: '0.85rem',
-                            transition: 'background 0.2s'
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--accent-hover)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'var(--accent-color)'}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#d32f2f';
+                            e.currentTarget.style.color = '#ff8a80';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#444';
+                            e.currentTarget.style.color = '#888';
+                        }}
                     >
-                        📤 Enviar pro Roll20
+                        📤 Roll20
                     </button>
                 </div>
             </div>
