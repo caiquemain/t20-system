@@ -4,6 +4,7 @@ import { fetchDadosMagias } from '../services/api';
 import type { Magia } from '../types';
 import { getSchoolColor, getTypeColor } from '../utils/magicUtils';
 import { SpellDetailsModal } from '../components/SpellDetailsModal';
+import { T20Icon } from '../components/T20Icon';
 
 const Grimorio: React.FC = () => {
     const [magias, setMagias] = useState<Magia[]>([]);
@@ -116,9 +117,11 @@ const Grimorio: React.FC = () => {
     return (
         <div style={{ maxWidth: '1800px', margin: '0 auto', padding: '0 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', marginTop: '40px' }}>
-                <h1 style={{ color: '#ce93d8', margin: 0 }}>📜 Grimório de Arton</h1>
-                <Link to="/" style={{ color: '#aaa', textDecoration: 'none', padding: '10px', border: '1px solid #444', borderRadius: '8px' }}>
-                    ⬅ Voltar para Home
+                <h1 style={{ color: '#ce93d8', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                    <T20Icon name="pergaminho" size={28} /> Grimório de Arton
+                </h1>
+                <Link to="/" style={{ color: '#aaa', textDecoration: 'none', padding: '10px', border: '1px solid #444', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <T20Icon name="voltar" size={16} /> Voltar para Home
                 </Link>
             </div>
 

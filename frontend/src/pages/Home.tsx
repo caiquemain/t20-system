@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchPersonagens, createPersonagem, deletePersonagem } from '../services/api';
+import { T20Icon } from '../components/T20Icon';
 import '../Ficha.css';
 
 const Home = () => {
@@ -93,7 +94,7 @@ const Home = () => {
                     justifyContent: 'center',
                     flexShrink: 0
                 }}>
-                    🧙‍♂️
+                    <T20Icon name="magia" size={34} color="#ffd700" />
                 </div>
                 <div style={{ flex: 1 }}>
                     <h2 style={{ color: '#ffd700', margin: '0 0 5px 0', fontSize: '1.4rem' }}>
@@ -103,7 +104,7 @@ const Home = () => {
                         Wizard passo a passo guiado, com transparência total dos bônus
                     </p>
                 </div>
-                <div style={{ color: '#ffd700', fontSize: '2rem' }}>→</div>
+                <div style={{ color: '#ffd700', display: 'flex', alignItems: 'center' }}><T20Icon name="avancar" size={24} /></div>
             </div>
 
             {/* --- CARD DO BESTIÁRIO --- */}
@@ -142,7 +143,7 @@ const Home = () => {
                     justifyContent: 'center',
                     flexShrink: 0
                 }}>
-                    📖
+                    <T20Icon name="bestiario" size={34} color="#ef5350" />
                 </div>
                 <div style={{ flex: 1 }}>
                     <h2 style={{ color: '#d32f2f', margin: '0 0 5px 0', fontSize: '1.4rem' }}>
@@ -152,7 +153,7 @@ const Home = () => {
                         Consulte monstros, ameaças e envie fichas direto para o Roll20
                     </p>
                 </div>
-                <div style={{ color: '#d32f2f', fontSize: '2rem' }}>→</div>
+                <div style={{ color: '#d32f2f', display: 'flex', alignItems: 'center' }}><T20Icon name="avancar" size={24} /></div>
             </div>
 
             {/* --- CARD DO GRIMÓRIO --- */}
@@ -191,7 +192,7 @@ const Home = () => {
                     justifyContent: 'center',
                     flexShrink: 0
                 }}>
-                    📜
+                    <T20Icon name="pergaminho" size={34} color="#ce93d8" />
                 </div>
                 <div style={{ flex: 1 }}>
                     <h2 style={{ color: '#ce93d8', margin: '0 0 5px 0', fontSize: '1.4rem' }}>
@@ -201,12 +202,12 @@ const Home = () => {
                         Consulte todas as magias do livro básico por escola, círculo e tipo
                     </p>
                 </div>
-                <div style={{ color: '#ce93d8', fontSize: '2rem' }}>→</div>
+                <div style={{ color: '#ce93d8', display: 'flex', alignItems: 'center' }}><T20Icon name="avancar" size={24} /></div>
             </div>
 
             {/* Lista de personagens */}
-            <h2 style={{ color: '#ccc', marginBottom: '15px', fontSize: '1.1rem', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                📚 Meus Personagens
+            <h2 style={{ color: '#ccc', marginBottom: '15px', fontSize: '1.1rem', borderBottom: '1px solid #333', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <T20Icon name="grimorio" size={18} /> Meus Personagens
             </h2>
 
             {loading ? (
@@ -258,10 +259,12 @@ const Home = () => {
                                             padding: '5px 10px',
                                             borderRadius: '4px',
                                             cursor: 'pointer',
-                                            fontSize: '0.85rem'
+                                            fontSize: '0.85rem',
+                                            display: 'inline-flex',
+                                            alignItems: 'center'
                                         }}
                                     >
-                                        🧙‍♂️
+                                        <T20Icon name="editar" size={15} />
                                     </button>
                                     <button
                                         onClick={(e) => handleDeletar(e, p._id)}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Personagem } from '../types';
 import { DADOS_PERICIAS_FRONTEND } from '../data/pericias';
+import { T20Icon } from './T20Icon';
 
 interface SkillListProps {
     ficha: Personagem;
@@ -197,8 +198,8 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                         {isObrigatoriaHighlight && <span style={{ color: '#ffc107', fontSize: '0.7em', marginLeft: 5 }}>★</span>}
                     </span>
                     <div className="icons-container">
-                        {meta.treino_apenas && <span title="Somente Treinada" className="icon-badge star">✴️</span>}
-                        {meta.penalidade_armadura && <span title="Penalidade de Armadura" className="icon-badge shield">🛡️</span>}
+                        {meta.treino_apenas && <span title="Somente Treinada" className="icon-badge star"><T20Icon name="habilidade" size={12} color="#ffb74d" /></span>}
+                        {meta.penalidade_armadura && <span title="Penalidade de Armadura" className="icon-badge shield"><T20Icon name="armadura" size={12} color="#90a4ae" /></span>}
                         {isFixa && <span className="text-badge class">(C)</span>}
                         {isOrigem && <span className="text-badge origin">(O)</span>}
                         {podeAtivarEngenhosidade && (
@@ -206,13 +207,13 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                                 className={`icon-badge${engenhosidadeAtiva ? ' active' : ''}`}
                                 title={engenhosidadeAtiva ? 'Desativar Engenhosidade (devolve 2 PM)' : 'Ativar Engenhosidade (gasta 2 PM, soma INT no teste)'}
                                 onClick={(e) => { e.stopPropagation(); toggleEngenhosidade(chavePericia); }}
-                                style={{ cursor: 'pointer', color: engenhosidadeAtiva ? '#ffc107' : '#888', marginLeft: 2, textShadow: engenhosidadeAtiva ? '0 0 8px rgba(255,193,7,.6)' : 'none' }}
-                            >⚡</span>
+                                style={{ cursor: 'pointer', color: engenhosidadeAtiva ? '#ffc107' : '#888', marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}
+                            ><T20Icon name="energia" size={13} /></span>
                         )}
                         {chavePericia.startsWith("Ofício") && (
                             <span className="icon-badge" title="Remover Ofício"
                                 onClick={(e) => { e.stopPropagation(); removerOficio(chavePericia); }}
-                                style={{ cursor: 'pointer', color: '#ef5350', marginLeft: 2 }}>✕</span>
+                                style={{ cursor: 'pointer', color: '#ef5350', marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}><T20Icon name="fechar" size={12} /></span>
                         )}
                     </div>
                 </div>
@@ -234,7 +235,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                             .filter((f: any) => f.categoria === 'Penalidade')
                             .map((f: any, idx: number) => (
                                 <div key={`pen-${idx}`} className="tooltip-row" style={{ color: '#ff8a80', fontWeight: 'bold' }}>
-                                    <span>🛡️ {f.fonte}</span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><T20Icon name="armadura" size={12} /> {f.fonte}</span>
                                     <span>{f.valor >= 0 ? `+${f.valor}` : f.valor}</span>
                                 </div>
                             ))}
@@ -327,7 +328,9 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
 
             {!cumpriuRequisitoObrigatorio && periciasObrigatoriasSelecao.length > 0 && (
                 <div style={{ background: 'rgba(255, 193, 7, 0.15)', borderBottom: '1px solid #ffc107', padding: '10px', textAlign: 'center' }}>
-                    <p style={{ color: '#ffc107', margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ Requisito de Classe: Escolha Luta ou Pontaria</p>
+                    <p style={{ color: '#ffc107', margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <T20Icon name="alerta" size={14} /> Requisito de Classe: Escolha Luta ou Pontaria
+                    </p>
                     {isTravadoPelaObrigatoria && <p style={{ color: '#ff5252', fontSize: '0.75rem', marginTop: 4 }}>(Último slot reservado para obrigatória!)</p>}
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 8 }}>
                         {periciasObrigatoriasSelecao.map((p: string) => (

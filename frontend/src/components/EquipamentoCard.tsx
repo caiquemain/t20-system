@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { T20Icon, type IconName } from './T20Icon';
 
 interface Item {
     nome: string;
@@ -15,7 +16,7 @@ interface EquipamentoCardProps {
     onUpdateInventario: (novoInventario: any) => void;
 }
 
-const ICONE_GERAL: Record<string, string> = { Aventura: '🎒', Alquímico: '⚗️', Símbolo: '✨', Ferramenta: '🛠️' };
+const ICONE_GERAL: Record<string, IconName> = { Aventura: 'mochila', Alquímico: 'pocao', Símbolo: 'efeito', Ferramenta: 'ferramenta' };
 
 export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     inventario,
@@ -200,8 +201,8 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
     const tooltipDe = (tipoCat: string, d: any) =>
         tipoCat === 'arma' ? tooltipArma(d) : tipoCat === 'armadura' ? tooltipArmadura(d) : tooltipGeral(d);
 
-    const iconeDe = (tipoCat: string, d: any) =>
-        tipoCat === 'arma' ? '⚔️' : tipoCat === 'armadura' ? '🛡️' : (ICONE_GERAL[d.subcategoria] || '🎒');
+    const iconeDe = (tipoCat: string, d: any): IconName =>
+        tipoCat === 'arma' ? 'espada' : tipoCat === 'armadura' ? 'armadura' : (ICONE_GERAL[d.subcategoria] || 'mochila');
 
     const selectStyle = { padding: '6px 10px', borderRadius: 4, background: '#333', color: 'white', border: '1px solid #444', fontSize: '0.8rem' };
     const limpaConflitantes = (qual: 'arma' | 'armadura' | 'geral') => {
@@ -226,7 +227,9 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
 
             <div className="section-card" style={{ marginBottom: 20 }}>
                 <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    🎒 Equipamento
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <T20Icon name="mochila" size={18} /> Equipamento
+                    </span>
                     <button className="btn-action" onClick={() => setModalAberto(true)} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
                         + Adicionar Item
                     </button>
@@ -248,9 +251,9 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
 
                 {dinheiro && ((dinheiro.to ?? 0) > 0 || (dinheiro.tl ?? 0) > 0 || (dinheiro.tp ?? 0) > 0) && (
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '8px 12px', borderRadius: 4, marginBottom: 15, display: 'flex', gap: 15, fontSize: '0.85rem' }}>
-                        {(dinheiro.to ?? 0) > 0 && <span style={{ color: '#ffd700' }}>🪙 {dinheiro.to} TO</span>}
-                        {(dinheiro.tl ?? 0) > 0 && <span style={{ color: '#c0c0c0' }}>🪙 {dinheiro.tl} T$</span>}
-                        {(dinheiro.tp ?? 0) > 0 && <span style={{ color: '#cd7f32' }}>🪙 {dinheiro.tp} TC</span>}
+                        {(dinheiro.to ?? 0) > 0 && <span style={{ color: '#ffd700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><T20Icon name="moedas" size={14} /> {dinheiro.to} TO</span>}
+                        {(dinheiro.tl ?? 0) > 0 && <span style={{ color: '#c0c0c0', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><T20Icon name="moedas" size={14} /> {dinheiro.tl} T$</span>}
+                        {(dinheiro.tp ?? 0) > 0 && <span style={{ color: '#cd7f32', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><T20Icon name="moedas" size={14} /> {dinheiro.tp} TC</span>}
                     </div>
                 )}
 
@@ -262,12 +265,12 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                             const cat = armas[item.nome] || armaduras[item.nome] || gerais[item.nome];
                             const ehGeral = !!gerais[item.nome];
                             const badge = getBadgeEstado(item);
-                            const icon = ehGeral
-                                ? (ICONE_GERAL[cat?.subcategoria] || '🎒')
-                                : (armas[item.nome] ? '⚔️' : '🛡️');
+                            const iconName: IconName = ehGeral
+                                ? (ICONE_GERAL[cat?.subcategoria] || 'mochila')
+                                : (armas[item.nome] ? 'espada' : 'armadura');
                             return (
                                 <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <span style={{ fontSize: '1.2rem' }}>{icon}</span>
+                                    <T20Icon name={iconName} size={18} color="#ccc" />
                                     <div style={{ flex: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <strong style={{ fontSize: '0.95rem' }}>{item.nome}</strong>
@@ -292,7 +295,9 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                                             {item.equipado ? 'Guardar' : 'Equipar'}
                                         </button>
                                     )}
-                                    <button onClick={() => removerItem(i)} style={{ background: '#ff5252', border: 'none', color: 'white', width: 24, height: 24, borderRadius: 3, cursor: 'pointer' }}>🗑️</button>
+                                    <button onClick={() => removerItem(i)} title="Remover item" style={{ background: '#ff5252', border: 'none', color: 'white', width: 24, height: 24, borderRadius: 3, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <T20Icon name="excluir" size={13} />
+                                    </button>
                                 </div>
                             );
                         })
@@ -303,10 +308,12 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
             {modalAberto && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setModalAberto(false)}>
                     <div style={{ background: '#1e1e1e', borderRadius: 8, padding: 20, maxWidth: '90%', maxHeight: '90vh', width: '850px', display: 'flex', flexDirection: 'column', border: '1px solid #ffd700' }} onClick={(e) => e.stopPropagation()}>
-                        <h2 style={{ margin: '0 0 15px 0' }}>🎒 Adicionar Item</h2>
+                        <h2 style={{ margin: '0 0 15px 0', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <T20Icon name="mochila" size={20} color="#ffd700" /> Adicionar Item
+                        </h2>
 
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 15 }}>
-                            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="🔍 Buscar item..." className="input-dark" style={{ flex: 1, minWidth: 180 }} />
+                            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar item..." className="input-dark" style={{ flex: 1, minWidth: 180 }} />
                             <select value={filtroCategoria} onChange={(e) => { setFiltroCategoria(e.target.value); if (e.target.value !== 'todas') limpaConflitantes('arma'); }} style={selectStyle}>
                                 <option value="todas">Armas: todas</option>
                                 <option value="Simples">Simples</option>
@@ -343,7 +350,7 @@ export const EquipamentoCard: React.FC<EquipamentoCardProps> = ({
                                         onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ffd700'; mostrarTooltip(e, tooltipDe(tipoCat, d)); }}
                                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; esconderTooltip(); }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                            <span style={{ fontSize: '1.2rem' }}>{iconeDe(tipoCat, d)}</span>
+                                            <T20Icon name={iconeDe(tipoCat, d)} size={18} color="#ccc" />
                                             <strong style={{ fontSize: '0.9rem' }}>{nome}</strong>
                                         </div>
                                         <div style={{ fontSize: '0.8rem', color: '#80deea', marginBottom: 4 }}>

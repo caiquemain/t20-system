@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Ameaca } from '../types';
 import { Link } from 'react-router-dom';
+import { T20Icon } from './T20Icon';
 
 interface MonsterCardProps {
     ameaca: Ameaca;
@@ -33,9 +34,9 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({ ameaca }) => {
             if (event.data && event.data.type === 'T20_RESPOSTA_ROLL20') {
                 window.removeEventListener('message', handleResposta);
                 if (event.data.ok) {
-                    alert(`✅ ${ameaca.nome} enviado para o Roll20 com sucesso!`);
+                    alert(`${ameaca.nome} enviado para o Roll20 com sucesso!`);
                 } else {
-                    alert(`❌ Erro ao enviar: ${event.data.err || 'Verifique se uma ficha do Roll20 está aberta.'}`);
+                    alert(`Erro ao enviar: ${event.data.err || 'Verifique se uma ficha do Roll20 está aberta.'}`);
                 }
             }
         };
@@ -106,8 +107,12 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({ ameaca }) => {
 
                     {/* Stats Rápidos (Horizontal) */}
                     <div style={{ display: 'flex', gap: '12px', fontSize: '0.85rem', color: '#aaa', marginBottom: '8px' }}>
-                        <span>❤️ <strong style={{ color: '#ef9a9a' }}>{ameaca.pontos_de_vida}</strong></span>
-                        <span>🛡️ <strong style={{ color: '#a5d6a7' }}>{ameaca.defesa}</strong></span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <T20Icon name="hp" size={14} color="#ef5350" /> <strong style={{ color: '#ef9a9a' }}>{ameaca.pontos_de_vida}</strong>
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <T20Icon name="defesa" size={14} color="#66bb6a" /> <strong style={{ color: '#a5d6a7' }}>{ameaca.defesa}</strong>
+                        </span>
                     </div>
 
                     {/* Atributos em linha única (igual ao rodapé do Grimório) */}
@@ -155,7 +160,7 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({ ameaca }) => {
                             e.currentTarget.style.color = '#888';
                         }}
                     >
-                        📤 Roll20
+                        <T20Icon name="roll20" size={12} /> Roll20
                     </button>
                 </div>
             </div>

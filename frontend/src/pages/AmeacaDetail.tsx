@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchAmeaca } from '../services/api';
 import type { Ameaca } from '../types';
+import { T20Icon } from '../components/T20Icon';
 
 const AmeacaDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -34,9 +35,9 @@ const AmeacaDetail: React.FC = () => {
             if (event.data && event.data.type === 'T20_RESPOSTA_ROLL20') {
                 window.removeEventListener('message', handleResposta);
                 if (event.data.ok) {
-                    alert(`✅ ${ameaca.nome} enviado para o Roll20 com sucesso!`);
+                    alert(`${ameaca.nome} enviado para o Roll20 com sucesso!`);
                 } else {
-                    alert(`❌ Erro ao enviar: ${event.data.err || 'Verifique se uma ficha do Roll20 está aberta.'}`);
+                    alert(`Erro ao enviar: ${event.data.err || 'Verifique se uma ficha do Roll20 está aberta.'}`);
                 }
             }
         };
@@ -52,10 +53,12 @@ const AmeacaDetail: React.FC = () => {
 
     return (
         <div className="container" style={{ maxWidth: '900px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <Link to="/bestiario" style={{ color: 'var(--text-secondary)' }}>⬅ Voltar ao Bestiário</Link>
-                <button onClick={enviarParaRoll20} style={{ background: '#9c27b0', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    📤 Enviar pro Roll20
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <Link to="/bestiario" style={{ color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <T20Icon name="voltar" size={16} /> Voltar ao Bestiário
+                </Link>
+                <button onClick={enviarParaRoll20} style={{ background: '#9c27b0', color: '#fff', padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <T20Icon name="roll20" size={16} /> Enviar pro Roll20
                 </button>
             </div>
 
