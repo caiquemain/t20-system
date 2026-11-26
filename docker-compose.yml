@@ -5,7 +5,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ./data/db:/data/db
+      - mongo_data:/data/db
 
   api:
     build: ./app
@@ -29,3 +29,6 @@ services:
       - /app/node_modules  # <--- ESSA LINHA SALVA O SEU VITE!
     environment:
       - VITE_API_URL=http://localhost:8000
+
+volumes:
+  mongo_data:
