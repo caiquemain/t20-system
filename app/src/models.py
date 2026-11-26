@@ -251,7 +251,7 @@ class Combate(BaseModel):
     bonus_dano_geral: Optional[int] = None
     # Cálculo do bônus ativo de Fúria (Bárbaro): {"bonus": int, "custo": int}.
     # Bônus sobe +1 a cada 5 níveis; Fúria Titânica (20º) dobra.
-    furia_calc: Optional[Dict[str, int]] = None
+    furia_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0

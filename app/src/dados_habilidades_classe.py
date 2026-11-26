@@ -424,7 +424,7 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Poder de Bárbaro",
         "classe": "Bárbaro",
         "descricao": "Deslocamento +3m. Fúria aplica bônus também a armas de arremesso.",
-        "efeitos": {"deslocamento_bonus": 3}
+        "efeitos": {"deslocamento_bonus": 3, "furia_arremesso": True}
     },
     "BARBARO_FURIA_RAIVOSA": {
         "nome": "Fúria Raivosa",

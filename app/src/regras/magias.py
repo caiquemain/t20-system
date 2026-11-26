@@ -53,6 +53,23 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                     "requisito": efeitos.get("requisito_magia")
                 }
 
+        # 4. Totem Espiritual (Bárbaro, T20 JdA p.41-42): aprende magia do animal com atributo Sabedoria
+        if efeitos.get("escolha_totem"):
+            from ..dados_escolhas import ANIMAIS_TOTEMICOS_MAGIAS
+            animal = escolhas.get("totem")
+            if isinstance(animal, str) and animal in ANIMAIS_TOTEMICOS_MAGIAS:
+                nome_magia_totem = ANIMAIS_TOTEMICOS_MAGIAS[animal]
+                nota_totem = "Pode ser lançada mesmo em fúria."
+                if animal == "Urso":
+                    nota_totem += " Aprimoramentos liberados como um druida do mesmo nível."
+                magias_permitidas[nome_magia_totem] = {
+                    "hab_nome": f"{hab.nome} ({animal})",
+                    "attr": "sab",
+                    "reducao": 0,
+                    "requisito": None,
+                    "nota_extra": nota_totem,
+                }
+
     # Limpeza: Remove magias de habilidade que não deveriam estar mais lá e preserva as manuais
     # CORREÇÃO PYLANCE: (m.fonte or "") garante que não chamaremos startswith em None
     ficha.combate.magias = [
@@ -65,13 +82,19 @@ def sincronizar_magias_habilidades(ficha: Personagem):
 
     for nome_magia, info in magias_permitidas.items():
         if nome_magia not in nomes_conhecidos:
-            dados = DADOS_MAGIAS.get(nome_magia)
+            dados = DADOS_MAGIAS.get(nome_magia) or next(
+                (m for m in DADOS_MAGIAS.values() if m.get("nome") == nome_magia),
+                None,
+            )
             if dados:
                 # Modifica textos se houver requisitos ou atributos fixos
                 exec_txt = dados.get(
                     "execucao", "") + (f" (Req: {info['requisito']})" if info.get('requisito') else "")
                 res_txt = dados.get(
                     "resistencia", "") + (f" (CD {info['attr'].upper()})" if info.get('attr') else "")
+                desc_txt = dados.get("descricao", "") or dados.get("efeito", "")
+                if info.get("nota_extra"):
+                    desc_txt = f"{desc_txt}\n[{info['nota_extra']}]".strip()
 
                 nova = Magia(
                     nome=dados["nome"],
@@ -81,8 +104,7 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                     alcance=dados.get("alcance", ""),
                     duracao=dados.get("duracao", ""),
                     resistencia=res_txt,
-                    descricao=dados.get(
-                        "descricao", "") or dados.get("efeito", ""),
+                    descricao=desc_txt,
                     custo_pm=max(1, dados.get("custo", 1) - info["reducao"]),
                     atributo_chave=info["attr"],
                     fonte=f"Habilidade: {info['hab_nome']}",
