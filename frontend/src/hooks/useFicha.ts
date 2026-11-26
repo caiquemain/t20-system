@@ -210,12 +210,24 @@ export const useFicha = (id: string | undefined) => {
             .filter(h => h && h.precisaEscolha);
         setHabilidadesEmEdicao(habsParaConfigurar);
         setOrigemBeneficiosEmEdicao(ficha.escolhas_origem || []);
-        const poderesAtuais = ficha.habilidades.filter(h => h.tipo.includes('Poder de')).map(h => h.nome);
+        const ehPoderDeSlotClasse = (h: any): boolean => {
+            const tipo = (h?.tipo || '').toString();
+            const fonte = (h?.fonte || '').toString();
+            if (fonte.startsWith('Origem:') || fonte.startsWith('Habilidade:') || fonte.startsWith('Devoção:')) {
+                return false;
+            }
+            return (
+                tipo.includes('Poder de')
+                || tipo.includes('Poder Geral')
+                || tipo === 'Poder da Tormenta'
+            );
+        };
+        const poderesAtuais = ficha.habilidades.filter(ehPoderDeSlotClasse).map(h => h.nome);
         setClassPowersEmEdicao(poderesAtuais);
         // [LOTE 1-UI] Recarrega as escolhas secundárias dos poderes salvos
         const escolhasPoderes: Record<string, Record<string, any>> = {};
         ficha.habilidades
-            .filter(h => h.tipo.includes('Poder de') && h.escolhas_aplicadas && Object.keys(h.escolhas_aplicadas).length > 0)
+            .filter(h => ehPoderDeSlotClasse(h) && h.escolhas_aplicadas && Object.keys(h.escolhas_aplicadas).length > 0)
             .forEach(h => { escolhasPoderes[h.nome] = { ...h.escolhas_aplicadas }; });
         setPoderesEscolhasEmEdicao(escolhasPoderes);
         setSubclasseEmEdicao(ficha.classes[0]?.subclasse || "");
@@ -268,8 +280,20 @@ export const useFicha = (id: string | undefined) => {
         if (novaFicha.classes.length > 0) {
             novaFicha.classes[0] = { ...novaFicha.classes[0], subclasse: subclasseEmEdicao };
         }
+        const ehPoderDeSlotClasse = (h: any): boolean => {
+            const tipo = (h?.tipo || '').toString();
+            const fonte = (h?.fonte || '').toString();
+            if (fonte.startsWith('Origem:') || fonte.startsWith('Habilidade:') || fonte.startsWith('Devoção:')) {
+                return false;
+            }
+            return (
+                tipo.includes('Poder de')
+                || tipo.includes('Poder Geral')
+                || tipo === 'Poder da Tormenta'
+            );
+        };
         let habilidadesFinais = novaFicha.habilidades.filter(h =>
-            !h.tipo.includes('Poder de') && !h.tipo.includes('Poder Concedido') && h.tipo !== 'Classe'
+            !ehPoderDeSlotClasse(h) && !h.tipo.includes('Poder Concedido') && h.tipo !== 'Classe'
         );
         const buscarDef = (nome: string): any => {
             let d = (dadosHabilidades as any)[nome];
@@ -295,14 +319,14 @@ export const useFicha = (id: string | undefined) => {
             if (gatilhos.escolha_subclasse) escolhas.subclasse = subclasseEmEdicao;
             return { ...h, escolhas_aplicadas: escolhas };
         });
-        const novosPoderesClasse: Habilidade[] = classPowersEmEdicao.map(nome => {
+        const novosPoderesClasse: Habilidade[] = classPowersEmEdicao.filter(Boolean).map(nome => {
             let d = Object.values(dadosHabilidadesClasse).find((x: any) => x.nome === nome) as any;
             if (!d) d = Object.values(dadosHabilidades).find((x: any) => x.nome === nome);
             return {
                 nome: nome,
                 tipo: d?.tipo || 'Poder de Classe',
                 descricao: d?.descricao || 'Poder selecionado',
-                fonte: d?.classe || 'Classe',
+                fonte: d?.classe || novaFicha.classes[0]?.nome || 'Classe',
                 efeitos: d?.efeitos || {},
                 escolhas_aplicadas: poderesEscolhasEmEdicao[nome] || {}
             };
