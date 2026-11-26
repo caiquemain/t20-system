@@ -269,6 +269,8 @@ class Combate(BaseModel):
     ataque_especial_calc: Optional[Dict[str, Any]] = None
     # Cálculo de Inventor (T20 p.67-71): melhorias, item mágico, engenhocas e fórmulas.
     inventor_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Ataque Furtivo (Ladino, T20 p.72-74): 1d6..10d6, Assassinar, Especialista e Roubo de Mana.
+    ataque_furtivo_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0

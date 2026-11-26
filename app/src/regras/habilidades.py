@@ -564,6 +564,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append(f"Mestre Cuca: +{efeitos['mestre_cuca_bonus']} no bônus numérico das comidas cozinhadas")
         if efeitos.get("sintese_rapida_dobro_doses"):
             lista_efeitos.append("Síntese Rápida: fabrica o dobro de doses de alquímico/poção no mesmo tempo")
+        if efeitos.get("pessoa_certa_trabalho"):
+            lista_efeitos.append("A Pessoa Certa para o Trabalho: 5 PM para +10 em ataque furtivo ou perícia de ladino")
+        if efeitos.get("sombra_furtividade"):
+            lista_efeitos.append("Sombra: sem penalidade de Furtividade ao mover normal; -10 para ações chamativas")
+        if efeitos.get("gatuno_escalar"):
+            lista_efeitos.append("Gatuno: não fica desprevenido e escala com deslocamento normal")
+        if efeitos.get("escapista_bonus"):
+            lista_efeitos.append(f"Escapista: +{efeitos['escapista_bonus']} em Acrobacia para escapar/passar e contra efeitos de movimento")
+        if efeitos.get("saqueador_tumbas_bonus"):
+            lista_efeitos.append(f"Saqueador de Tumbas: +{efeitos['saqueador_tumbas_bonus']} contra armadilhas; desabilita com ação padrão")
+        if efeitos.get("veneno_duracao_ataques"):
+            lista_efeitos.append(f"Veneno Persistente: veneno aplicado dura {efeitos['veneno_duracao_ataques']} ataques")
+        if efeitos.get("mao_na_boca_agarrar"):
+            lista_efeitos.append(f"Mão na Boca: +{efeitos['mao_na_boca_agarrar']} em agarrar; agarrar ação livre após ataque furtivo em desprevenido")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 
