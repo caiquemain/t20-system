@@ -83,6 +83,13 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
+## ✅ Fase 6.6 — Capítulo 4: Regras Gerais de Magia (p.170–172) (Concluída)
+- [x] **Atributo-chave & CD de Magias (`custo_magia.py`, `regras/__init__.py`):** `calcular_cd_magias_ficha` conectado para **todas** as classes conjuradoras (Mago/Bruxo → INT, Clérigo/Druida → SAB, Bardo/Feiticeiro → CAR), com fórmula oficial `10 + metade do nível + atributo-chave + bônus`.
+- [x] **Regras de Conjuração (`custo_magia.py`, `magias.py`):** Tabela 4-1 (`1/3/6/10/15 PM`), 8 escolas de magia (`ESCOLAS_MAGIA`, efeitos *mental* e *trevas*), Concentração (`calcular_cd_concentracao`: dano / `15 + PM` / `20 + PM`), Armaduras e Magia Arcana (`verificar_armadura_magia_arcana`: Misticismo CD `20 + PM`, isenções para raça/poder/item e Bardo com armadura leve), pré-requisitos de círculo em aprimoramentos (`pode_usar_aprimoramento`), correção do delta de limite de PM e Contramágica (`pode_anular_magia`), cobertos por `app/tests/test_regras_magia_cap4.py`.
+- [ ] **Posterior — Revisão individual do catálogo de magias (Cap. 4):** auditar descrição e aprimoramentos de cada magia em `dados_magias.py` contra o Livro Básico em etapa futura.
+
+---
+
 ## 🎲 Fase 7 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
 - **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
 - **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).

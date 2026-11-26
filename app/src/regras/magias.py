@@ -108,7 +108,8 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                     custo_pm=max(1, dados.get("custo", 1) - info["reducao"]),
                     atributo_chave=info["attr"],
                     fonte=f"Habilidade: {info['hab_nome']}",
-                    aprimoramentos=dados.get("aprimoramentos", [])
+                    aprimoramentos=dados.get("aprimoramentos", []),
+                    isento_armadura=True,
                 )
                 novas_magias.append(nova)
             else:
@@ -121,7 +122,8 @@ def sincronizar_magias_habilidades(ficha: Personagem):
                     fonte=f"Habilidade: {info['hab_nome']}",
                     execucao=f"(Req: {info['requisito']})" if info.get(
                         'requisito') else "",
-                    aprimoramentos=[]
+                    aprimoramentos=[],
+                    isento_armadura=True,
                 ))
             nomes_conhecidos.add(nome_magia)
 

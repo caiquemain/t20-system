@@ -10,7 +10,15 @@ from .habilidades import (
     atualizar_efeitos_ativos
 )
 from .magias import sincronizar_magias_habilidades, validar_circulos_magias, validar_magias_conhecidas, sincronizar_magias_raciais
-from .custo_magia import calcular_custo_magia, calcular_cd_magia
+from .custo_magia import (
+    calcular_custo_magia,
+    calcular_cd_magia,
+    calcular_cd_magias_ficha,
+    calcular_cd_concentracao,
+    verificar_armadura_magia_arcana,
+    pode_usar_aprimoramento,
+    pode_anular_magia,
+)
 from .poderes_arcanista import aplicar_poderes_arcanista, sincronizar_ataques_magicos
 from .pericias import inicializar_pericias
 
@@ -77,6 +85,8 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     # [LOTE 1] Poderes de Arcanista injetam efeitos de Familiar (bonus_pericia,
     # pericia_atributo_opcao) que precisam ser lidos por inicializar_pericias.
     aplicar_poderes_arcanista(ficha)
+    # CD de magias (T20 JdA p.172) para todas as classes conjuradoras
+    calcular_cd_magias_ficha(ficha)
     # Proficiências calculadas ANTES de perícias para checagem de armadura/escudo
     calcular_proficiencias_e_extras(ficha)
     inicializar_pericias(ficha)
