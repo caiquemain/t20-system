@@ -20,6 +20,7 @@ import { EntitySelectorModal, type EntityItem } from '../components/EntitySelect
 import { AbilityCard } from '../components/AbilityCard';
 import { EquipamentoCard } from '../components/EquipamentoCard';
 import { AttackList } from '../components/AttackList';
+import { T20Icon, getEfeitoVisual } from '../components/T20Icon';
 
 // Tipos
 import type { Magia } from '../types';
@@ -500,11 +501,13 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
 
             {/* --- HEADER --- */}
             <header className="ficha-header">
-                <button className="btn-back" onClick={() => navigate('/')}>← Voltar</button> <button
+                <button className="btn-back" onClick={() => navigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <T20Icon name="voltar" size={15} /> Voltar
+                </button> <button
           onClick={() => gerarPDF(ficha, id)}
-          style={{ padding: "8px 16px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginLeft: "8px" }}
+          style={{ padding: "8px 16px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginLeft: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}
         >
-          📥 Baixar PDF
+          <T20Icon name="pdf" size={15} /> Baixar PDF
         </button>
                 <div className="header-inputs">
                     <input
@@ -518,39 +521,39 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         <button
                             className="select-header"
                             onClick={() => setSelectorAtivo('raca')}
-                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555' }}
+                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                             title="Clique para trocar de raça"
                         >
-                            🧬 {ficha.cabecalho.raca} ▾
+                            <T20Icon name="raca" size={14} /> {ficha.cabecalho.raca} ▾
                         </button>
                         <span>•</span>
                         <button
                             className="select-header"
                             onClick={() => !origemBloqueada && setSelectorAtivo('origem')}
                             disabled={origemBloqueada}
-                            style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f' } : { cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555' }}
+                            style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f', display: 'inline-flex', alignItems: 'center', gap: '5px' } : { cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                             title={origemBloqueada ? 'Raça bloqueia origem (Golem)' : 'Clique para trocar de origem'}
                         >
-                            📜 {origemBloqueada ? 'Sem Origem' : (ficha.cabecalho.origem || 'Selecionar...')} ▾
+                            <T20Icon name="origem" size={14} /> {origemBloqueada ? 'Sem Origem' : (ficha.cabecalho.origem || 'Selecionar...')} ▾
                         </button>
                         <span>•</span>
                         <button
                             className="select-header"
                             onClick={() => setSelectorAtivo('deus')}
-                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', color: '#ffd700' }}
+                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', color: '#ffd700', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                             title="Clique para trocar de devoção"
                         >
-                            ⛪ {ficha.cabecalho.deus || 'Sem Devoção'} ▾
+                            <T20Icon name="deus" size={14} /> {ficha.cabecalho.deus || 'Sem Devoção'} ▾
                         </button>
                         <span>•</span>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <button
                                 className="select-header"
                                 onClick={() => setSelectorAtivo('classe')}
-                                style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555' }}
+                                style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                 title="Clique para trocar de classe"
                             >
-                                ⚔️ {ficha.classes[0]?.nome || 'Selecionar...'} ▾
+                                <T20Icon name="classe" size={14} /> {ficha.classes[0]?.nome || 'Selecionar...'} ▾
                             </button>
                             {ficha.classes[0]?.subclasse && <span className="subclass-badge" title="Caminho / Subclasse">{ficha.classes[0].subclasse}</span>}
                         </div>
@@ -559,10 +562,10 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             <input className="input-nivel" type="number" min={1} max={20} value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
                             <button
                                 onClick={handleLevelUp}
-                                style={{ padding: "4px 10px", backgroundColor: "#9c27b0", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem" }}
+                                style={{ padding: "4px 10px", backgroundColor: "#9c27b0", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "5px" }}
                                 title="Sobe 1 nível e grava no histórico (level-up assistido)"
                             >
-                                ⬆️ Level Up
+                                <T20Icon name="xp" size={14} /> Level Up
                             </button>
                         </div>
 
@@ -599,9 +602,9 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 <button
                     className={`tab-btn ${showHistorico ? 'active' : ''}`}
                     onClick={handleMostrarHistorico}
-                    style={{ background: 'transparent', border: 'none', color: showHistorico ? '#9c27b0' : '#888', borderBottom: showHistorico ? '2px solid #9c27b0' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ background: 'transparent', border: 'none', color: showHistorico ? '#9c27b0' : '#888', borderBottom: showHistorico ? '2px solid #9c27b0' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                    📜 HISTÓRICO
+                    <T20Icon name="historico" size={15} /> HISTÓRICO
                 </button>
             </div>
 
@@ -616,7 +619,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             </div>
                             {qtdEscolhasRacial > 0 && (
                                 <button className={`btn-config-racial ${escolhasRaciais.length < qtdEscolhasRacial ? 'pendente' : ''}`} onClick={() => setShowRacialModal(true)}>
-                                    <span>🧬 Atributos Raciais ({racaNome})</span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><T20Icon name="raca" size={15} /> Atributos Raciais ({racaNome})</span>
                                     <span>{escolhasRaciais.length}/{qtdEscolhasRacial}</span>
                                 </button>
                             )}
@@ -661,7 +664,9 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         <div className="section-card" style={{ marginTop: '25px' }}>
                             <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 Habilidades
-                                <button className="btn-toggle-racial" style={{ width: 'auto', padding: '4px 10px', fontSize: '0.8rem', margin: 0 }} onClick={montarHabilidadesParaPanel}>⚙️ Configurar</button>
+                                <button className="btn-toggle-racial" style={{ width: 'auto', padding: '4px 10px', fontSize: '0.8rem', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '5px' }} onClick={montarHabilidadesParaPanel}>
+                                    <T20Icon name="config" size={13} /> Configurar
+                                </button>
                             </h3>
                             <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
                                 {ficha.habilidades.map((hab, i) => (
@@ -688,33 +693,24 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             {!showHistorico && activeTab === 'efeitos' && (
                 <div className="tab-content" style={{ padding: '0 20px 20px 20px' }}>
                     <div className="section-card">
-                        <h3 className="section-title" style={{ color: '#2196f3', borderBottomColor: '#2196f3' }}>✨ Efeitos Ativos & Condições</h3>
+                        <h3 className="section-title" style={{ color: '#2196f3', borderBottomColor: '#2196f3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <T20Icon name="efeito" size={18} /> Efeitos Ativos & Condições
+                        </h3>
 
                         <CondicoesRaciais ficha={ficha} updateFicha={updateFicha} />
                         {(!ficha.status.efeitos_ativos || ficha.status.efeitos_ativos.length === 0) ? (
                             <div style={{ padding: 40, textAlign: 'center', color: '#666', border: '1px dashed #444', borderRadius: 8, margin: 20 }}>
-                                <p style={{ fontSize: '1.2rem', marginBottom: 10 }}>🧘‍♂️ Nenhum efeito ativo</p>
+                                <p style={{ fontSize: '1.2rem', marginBottom: 10 }}>Nenhum efeito ativo</p>
                                 <p style={{ fontSize: '0.9rem' }}>Suas habilidades passivas, magias duradouras ou condições aparecerão aqui.</p>
                             </div>
                         ) : (
                             <div className="effects-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 15, padding: 15 }}>
                                 {ficha.status.efeitos_ativos.map((efeito: string, i: number) => {
-                                    let icon = '✨';
-                                    let color = '#2196f3';
-                                    let bg = 'rgba(33, 150, 243, 0.1)';
-
-                                    if (efeito.includes('Imune')) { icon = '🛡️'; color = '#4caf50'; bg = 'rgba(76, 175, 80, 0.1)'; }
-                                    else if (efeito.includes('Visão') || efeito.includes('Sentido') || efeito.includes('Faro')) { icon = '👁️'; color = '#00bcd4'; bg = 'rgba(0, 188, 212, 0.1)'; }
-                                    else if (efeito.includes('Tamanho')) { icon = '📏'; color = '#ffeb3b'; bg = 'rgba(255, 235, 59, 0.1)'; }
-
+                                    const { icon, color, bg } = getEfeitoVisual(efeito);
                                     const [titulo, desc] = efeito.includes(':') ? efeito.split(/:(.+)/) : [efeito, null];
-                                    const tituloLimpo = titulo.replace(/^(?:✨|🛡️|👁️|📏)\s*/u, '');
 
                                     return (
-                                        <div
-
-        
- key={i} className="effect-card" style={{
+                                        <div key={i} className="effect-card" style={{
                                             background: bg,
                                             border: `1px solid ${color}`,
                                             borderRadius: 8,
@@ -725,8 +721,8 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                                             boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: `1px solid ${color}44`, paddingBottom: 8, marginBottom: 5 }}>
-                                                <span style={{ fontSize: '1.4rem' }}>{icon}</span>
-                                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#fff' }}>{tituloLimpo}</span>
+                                                <T20Icon name={icon} size={20} color={color} />
+                                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#fff' }}>{titulo.trim()}</span>
                                             </div>
                                             {desc && <p style={{ margin: 0, fontSize: '0.9rem', color: '#ddd', lineHeight: '1.4' }}>{desc.trim()}</p>}
                                         </div>
@@ -739,7 +735,6 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             )}
 
             {/* --- SEÇÃO GRIMÓRIO (SEMPRE VISÍVEL) --- */}
-            {/* ✅ CORREÇÃO: Adicionado <div className="section-card"> envolvendo tudo */}
             <div className="section-card" style={{ marginTop: 20 }}>
                 <div className="section-header">
                     <h3>GRIMÓRIO</h3>
@@ -747,11 +742,11 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         <span style={{ fontSize: '0.8rem', color: '#aaa', marginRight: 10 }}>
                             PM: {ficha.status.pm.atual} / {ficha.status.pm.maximo}
                         </span>
-                        <span style={{ fontSize: '0.8rem', color: '#ce93d8', marginRight: 10 }}>
-                            🔮 Círculo máx: {ficha.combate?.circulo_maximo ?? 0}º
+                        <span style={{ fontSize: '0.8rem', color: '#ce93d8', marginRight: 10, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <T20Icon name="magia" size={14} /> Círculo máx: {ficha.combate?.circulo_maximo ?? 0}º
                         </span>
-                    <span style={{ fontSize: '0.8rem', color: limiteEstourado ? '#ff5252' : '#8bc34a', marginRight: 10 }}>
-                        📖 Magias: {magiasManuais.length} / {limiteMagias ?? '∞'}
+                    <span style={{ fontSize: '0.8rem', color: limiteEstourado ? '#ff5252' : '#8bc34a', marginRight: 10, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <T20Icon name="grimorio" size={14} /> Magias: {magiasManuais.length} / {limiteMagias ?? '∞'}
                     </span>
                         <button className="btn-small" onClick={() => setShowGrimorio(true)}>+ Adicionar</button>
                     </div>
@@ -824,8 +819,8 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
         {showHistorico && (
             <div className="tab-content" style={{ padding: '0 20px 20px 20px' }}>
                 <div className="section-card">
-                    <h3 className="section-title" style={{ color: '#9c27b0', borderBottomColor: '#9c27b0' }}>
-                        📜 Linha do Tempo do Personagem
+                    <h3 className="section-title" style={{ color: '#9c27b0', borderBottomColor: '#9c27b0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <T20Icon name="historico" size={18} /> Linha do Tempo do Personagem
                     </h3>
                     {loadingHistorico ? (
                         <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
@@ -833,9 +828,9 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         </div>
                     ) : historicoData.length === 0 ? (
                         <div style={{ padding: 40, textAlign: 'center', color: '#666', border: '1px dashed #444', borderRadius: 8, margin: 20 }}>
-                            <p style={{ fontSize: '1.2rem', marginBottom: 10 }}>📭 Nenhum evento no histórico</p>
+                            <p style={{ fontSize: '1.2rem', marginBottom: 10 }}>Nenhum evento no histórico</p>
                             <p style={{ fontSize: '0.9rem' }}>
-                                Use o botão <strong>⬆️ Level Up</strong> no header para subir de nível e gravar eventos aqui.
+                                Use o botão <strong>Level Up</strong> no header para subir de nível e gravar eventos aqui.
                             </p>
                         </div>
                     ) : (
@@ -843,7 +838,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             {historicoData.map((evento, _index) => {
                                 const isRestauracao = evento.tipo === 'restauracao';
                                 const color = isRestauracao ? '#ff9800' : '#9c27b0';
-                                const icon = isRestauracao ? '⏪' : '⬆️';
+                                const icon = <T20Icon name={isRestauracao ? 'refresh' : 'xp'} size={18} color={color} />;
                                 const bg = isRestauracao ? 'rgba(255, 152, 0, 0.1)' : 'rgba(156, 39, 176, 0.1)';
                                 
                                 return (

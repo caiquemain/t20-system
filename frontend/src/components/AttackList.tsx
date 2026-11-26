@@ -1,4 +1,5 @@
 import React from 'react';
+import { T20Icon } from './T20Icon';
 
 interface AtaqueView {
     nome: string; bonus_ataque: string; dano: string; critico: string;
@@ -36,13 +37,19 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
             }
         `}</style>
         <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <h3 className="section-title" style={{ margin: 0 }}>⚔️ Ataques</h3>
+            <h3 className="section-title" style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <T20Icon name="ataque" size={18} /> Ataques
+            </h3>
             <div style={{ display: 'flex', gap: 6 }}>
                 {fluxoDeMana && (
-                    <span style={{ fontSize: '0.7rem', color: '#80deea', background: 'rgba(0,188,212,0.1)', border: '1px solid rgba(0,188,212,0.4)', padding: '2px 8px', borderRadius: 4 }}>🌊 Fluxo de Mana</span>
+                    <span style={{ fontSize: '0.7rem', color: '#80deea', background: 'rgba(0,188,212,0.1)', border: '1px solid rgba(0,188,212,0.4)', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <T20Icon name="natacao" size={12} /> Fluxo de Mana
+                    </span>
                 )}
                 {focoVital && (
-                    <span style={{ fontSize: '0.7rem', color: '#ef9a9a', background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.4)', padding: '2px 8px', borderRadius: 4 }}>❤️ Foco Vital</span>
+                    <span style={{ fontSize: '0.7rem', color: '#ef9a9a', background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.4)', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <T20Icon name="hp" size={12} /> Foco Vital
+                    </span>
                 )}
             </div>
         </div>
@@ -65,10 +72,14 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                                 {a.especial && (
                                     <>
                                         <span
-                                            style={{ marginLeft: 6, fontSize: '0.7rem', cursor: 'help' }}
+                                            style={{ marginLeft: 6, cursor: 'help', display: 'inline-flex', alignItems: 'center' }}
                                             title={ehPenalidade(a.especial) ? 'Há penalidades neste ataque' : 'Efeitos especiais'}
                                         >
-                                            {ehPenalidade(a.especial) ? '⚠️' : '✨'}
+                                            <T20Icon
+                                                name={ehPenalidade(a.especial) ? 'alerta' : 'efeito'}
+                                                size={13}
+                                                color={ehPenalidade(a.especial) ? '#ffb74d' : '#80deea'}
+                                            />
                                         </span>
                                         <div className="ataque-tooltip">
                                             {a.especial.split('; ').map((t, idx) => (

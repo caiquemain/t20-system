@@ -410,40 +410,40 @@ def atualizar_efeitos_ativos(ficha: Personagem):
                     (m for m in DADOS_MAGIAS.values() if m.get("nome") == nome_magia), None)
                 if dados_magia:
                     desc = dados_magia.get("descricao", "").rstrip('.')
-                    lista_efeitos.append(f"✨ {nome_magia}: {desc}")
+                    lista_efeitos.append(f"{nome_magia}: {desc}")
                 else:
-                    lista_efeitos.append(f"✨ {nome_magia}")
+                    lista_efeitos.append(f"{nome_magia}")
 
         if "imunidade" in efeitos:
             for imune in efeitos["imunidade"]:
-                lista_efeitos.append(f"🚫 Imune a {imune.capitalize()}")
+                lista_efeitos.append(f"Imune a {imune.capitalize()}")
         if "sentidos" in efeitos:
             for sentido in efeitos["sentidos"]:
-                lista_efeitos.append(f"👁️ {sentido}")
+                lista_efeitos.append(f"{sentido}")
         rd_esc = efeitos.get("resistencia_rd_escolha")
         if isinstance(rd_esc, str) and rd_esc:
-            lista_efeitos.append(f"✨ RD 10 a {rd_esc} (ascendência)")
+            lista_efeitos.append(f"RD 10 a {rd_esc} (ascendência)")
         imn_esc = efeitos.get("imunidade_dano_escolha")
         if isinstance(imn_esc, str) and imn_esc:
-            lista_efeitos.append(f"🚫 Imune a {imn_esc} (fonte elemental)")
+            lista_efeitos.append(f"Imune a {imn_esc} (fonte elemental)")
         if efeitos.get("resistencia_tormenta"):
-            lista_efeitos.append(f"🎲 +{efeitos['resistencia_tormenta']} em resistências vs Tormenta/lefeu")
+            lista_efeitos.append(f"+{efeitos['resistencia_tormenta']} em resistências vs Tormenta/lefeu")
         if efeitos.get("resistencia_veneno"):
-            lista_efeitos.append(f"🎲 +{efeitos['resistencia_veneno']} em resistências contra veneno")
+            lista_efeitos.append(f"+{efeitos['resistencia_veneno']} em resistências contra veneno")
         if efeitos.get("deslocamento_escalada_igual"):
-            lista_efeitos.append(f"🧗 Deslocamento de escalada: {ficha.status.deslocamento}m")
+            lista_efeitos.append(f"Deslocamento de escalada: {ficha.status.deslocamento}m")
         if efeitos.get("tipo_criatura"):
-            lista_efeitos.append(f"🧬 Tipo de criatura: {efeitos['tipo_criatura']}")
+            lista_efeitos.append(f"Tipo de criatura: {efeitos['tipo_criatura']}")
         ba = efeitos.get("bonus_ataque_arma") or {}
         for vv in sorted(set(ba.values())):
             armas = ", ".join(k for k, v in ba.items() if v == vv)
-            lista_efeitos.append(f"⚔️ +{vv} ataque com: {armas}")
+            lista_efeitos.append(f"+{vv} ataque com: {armas}")
         bd = efeitos.get("bonus_dano_arma") or {}
         for vv in sorted(set(bd.values())):
             armas = ", ".join(k for k, v in bd.items() if v == vv)
-            lista_efeitos.append(f"💥 +{vv} dano com: {armas}")
+            lista_efeitos.append(f"+{vv} dano com: {armas}")
         if efeitos.get("dano_arma_base"):
-            lista_efeitos.append("💥 Dano de arremesso/funda aumentado em 1 passo")
+            lista_efeitos.append("Dano de arremesso/funda aumentado em 1 passo")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 

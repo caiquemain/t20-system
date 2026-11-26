@@ -27,16 +27,13 @@
 
 ---
 
-## 🎨 Fase 2 — Migração de Ícones (Fim dos Emojis Unicode Genéricos)
+## 🟢 Fase 2 — Migração de Ícones (Núcleo + Backend Concluídos)
 > Checklist detalhada: [`docs/checklists/icones-ui.md`](./checklists/icones-ui.md)
 
-Hoje existem **225 ocorrências de emojis Unicode em 37 arquivos do frontend** e **29 ocorrências em 7 arquivos do backend** (`app/src/regras/`). Emojis nativos variam entre Windows/Linux/macOS, não herdam cor/tema e misturam apresentação visual dentro de strings do motor de regras.
-
-### Stack recomendada (moderna, leve e temática para RPG)
-- **Principal — `lucide-react`:** ícones SVG modernos, traço uniforme, tree-shakeable, suporte nativo a React 19 + TypeScript, ótimo para UI geral (`Shield`, `Swords`, `Sparkles`, `Eye`, `Heart`, `Zap`, `ScrollText`, `BookOpen`, `Dices`, `Flame`, `Skull`, `Backpack`, `Coins`, `Compass`, `Download`, `Send`).
-- **Complemento temático (opcional) — `react-icons/gi` (Game Icons):** quando precisar de silhuetas bem RPG/fantasia que o Lucide não tem (ex.: dragão, elmo, poção, runa, chifres, asas, tridente).
-- **Componente central `<T20Icon name="..." />`:** encapsula o mapeamento semântico (`hp`, `pm`, `defesa`, `imunidade`, `sentido`, `magia`, `ataque`, etc.) para manter tamanho, `strokeWidth` e paleta consistentes em todo o app.
-- **Desacoplar o backend:** `efeitos_ativos` e `fontes_bonus` deixam de prefixar strings com `🚫`, `🧬`, `💥`, `🎲` e passam a usar texto limpo ou metadado de tipo (`categoria`/`icone`), deixando o frontend renderizar o ícone SVG correspondente.
+- [x] **`lucide-react` instalado** + componente central [`T20Icon.tsx`](../frontend/src/components/T20Icon.tsx) com mapa semântico tipado (`IconName`) e `getEfeitoVisual`.
+- [x] **Núcleo do frontend migrado:** `Ficha.tsx`, `StatusBars.tsx`, `EquipamentoCard.tsx`, `AttackList.tsx`, `SkillList.tsx`, `GrimorioModal.tsx`, `Home.tsx`, `Bestiario.tsx`, `MonsterCard.tsx`, `AmeacaDetail.tsx` e `Grimorio.tsx`.
+- [x] **Backend desacoplado:** emojis removidos de `efeitos_ativos` (`habilidades.py`) e `fontes_bonus` (`pericias.py`), eliminando a regex de emojis em `Ficha.tsx`.
+- [ ] **Opcional (baixa prioridade):** migrar `Wizard.tsx` e modais secundários (`AbilityCard`, `EntitySelectorModal`, `DesejosButton`).
 
 ---
 

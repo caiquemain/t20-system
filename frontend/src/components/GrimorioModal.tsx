@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Magia } from '../types';
 import { getSchoolColor, getCircleColor, getTypeColor } from '../utils/magicUtils';
+import { T20Icon } from './T20Icon';
 
 interface GrimorioModalProps {
     ficha?: any;
@@ -11,8 +12,8 @@ interface GrimorioModalProps {
     magiasConhecidas: Magia[];
     pmAtual: number;
     pmMaximo: number;
-    circuloMaximo: number;      // 🔒 trava de círculo (backend)
-    limiteMagias: number | null; // 📖 trava de quantidade (backend)
+    circuloMaximo: number;      // trava de círculo (backend)
+    limiteMagias: number | null; // trava de quantidade (backend)
 }
 
 export const GrimorioModal: React.FC<GrimorioModalProps> = ({
@@ -39,7 +40,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
 
     const circuloAtual = typeof circuloMaximo === 'number' ? circuloMaximo : 0;
 
-    // 📖 Magias escolhidas manualmente (as de habilidades não consomem slot)
+    // Magias escolhidas manualmente (as de habilidades não consomem slot)
     const magiasManuais = magiasConhecidas.filter(
         m => !String((m as any).fonte || '').startsWith('Habilidade:')
     );
@@ -62,11 +63,11 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
         if (!magiaSelecionada) return;
         const circulo = magiaSelecionada.circulo || 1;
         if (circulo > circuloAtual) {
-            alert(`🔒 ${magiaSelecionada.nome} é uma magia de ${circulo}º círculo.\nSeu círculo máximo atual é ${circuloAtual}º (definido pela sua classe e nível).`);
+            alert(`${magiaSelecionada.nome} é uma magia de ${circulo}º círculo.\nSeu círculo máximo atual é ${circuloAtual}º (definido pela sua classe e nível).`);
             return;
         }
         if (limiteAtingido) {
-            alert(`📖 Você já conhece o máximo de magias para o seu nível (${limiteMagias}).\nNovas magias vêm com subida de nível ou poderes como Conhecimento Mágico.`);
+            alert(`Você já conhece o máximo de magias para o seu nível (${limiteMagias}).\nNovas magias vêm com subida de nível ou poderes como Conhecimento Mágico.`);
             return;
         }
         onAddMagia(magiaSelecionada);
@@ -83,7 +84,9 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
             <div className="modal-content large" style={{ display: 'flex', flexDirection: 'column', height: '85vh' }}>
 
                 <div className="modal-header">
-                    <h3>📖 Estudo Arcano</h3>
+                    <h3 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                        <T20Icon name="grimorio" size={18} /> Estudo Arcano
+                    </h3>
                     <button className="close-btn" onClick={onClose}>&times;</button>
                 </div>
 
@@ -170,8 +173,8 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                         }}
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontWeight: 'bold', color: isSelected ? (travadaCirculo ? '#888' : '#fff') : (travadaCirculo ? '#777' : '#ccc') }}>
-                                                {travadaCirculo && '🔒 '}{m.nome}
+                                            <span style={{ fontWeight: 'bold', color: isSelected ? (travadaCirculo ? '#888' : '#fff') : (travadaCirculo ? '#777' : '#ccc'), display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                                {travadaCirculo && <T20Icon name="cadeado" size={13} color="#ff5252" />}{m.nome}
                                             </span>
                                             <span style={{ fontSize: '0.75rem', color: getCircleColor(m.circulo), fontWeight: 'bold' }}>{m.circulo}º</span>
                                         </div>
@@ -208,7 +211,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                         marginBottom: 16, color: '#ff8a80',
                                         display: 'flex', alignItems: 'center', gap: 10
                                     }}>
-                                        <span style={{ fontSize: '1.5rem' }}>🔒</span>
+                                        <T20Icon name="cadeado" size={22} color="#ff5252" />
                                         <div>
                                             <strong style={{ display: 'block', color: '#ff5252' }}>
                                                 Magia de {magiaSelecionada.circulo}º círculo indisponível
@@ -228,7 +231,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                         marginBottom: 16, color: '#ffcc80',
                                         display: 'flex', alignItems: 'center', gap: 10
                                     }}>
-                                        <span style={{ fontSize: '1.5rem' }}>📖</span>
+                                        <T20Icon name="grimorio" size={22} color="#ff9800" />
                                         <div>
                                             <strong style={{ display: 'block', color: '#ff9800' }}>
                                                 Limite de magias conhecidas atingido ({limiteMagias})
@@ -241,8 +244,8 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                 )}
 
                                 <div style={{ marginBottom: '20px' }}>
-                                    <h2 style={{ margin: '0 0 10px 0', color: magiaEhIlegal ? '#888' : '#fff', fontSize: '1.5rem' }}>
-                                        {magiaEhIlegal && '🔒 '}{magiaSelecionada.nome}
+                                    <h2 style={{ margin: '0 0 10px 0', color: magiaEhIlegal ? '#888' : '#fff', fontSize: '1.5rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                        {magiaEhIlegal && <T20Icon name="cadeado" size={20} color="#ff5252" />}{magiaSelecionada.nome}
                                     </h2>
                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                         <span style={{ background: `${selectedTypeColor}15`, color: selectedTypeColor, border: `1px solid ${selectedTypeColor}60`, padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{magiaSelecionada.tipo || 'Universal'}</span>
@@ -278,8 +281,8 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                 )}
                             </div>
                         ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#555', flexDirection: 'column' }}>
-                                <span style={{ fontSize: '4rem', marginBottom: '15px', opacity: 0.5 }}>🔮</span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#555', flexDirection: 'column', gap: '12px' }}>
+                                <T20Icon name="magia" size={52} color="#666" />
                                 <p style={{ fontSize: '1.1rem' }}>Selecione uma magia para ver os detalhes.</p>
                             </div>
                         )}
@@ -287,10 +290,12 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                 </div>
 
                 <div className="modal-footer" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.9rem', color: '#888' }}>
-                        PM: <strong style={{ color: '#ce93d8' }}>{pmAtual}</strong> / {pmMaximo}
-                        &nbsp;•&nbsp; 🔮 Círculo máx: <strong style={{ color: '#ffd700' }}>{circuloAtual}º</strong>
-                        &nbsp;•&nbsp; 📖 Magias: <strong style={{ color: limiteAtingido ? '#ff5252' : '#8bc34a' }}>{magiasManuais.length}</strong> / {limiteMagias ?? '∞'}
+                    <span style={{ fontSize: '0.9rem', color: '#888', display: 'inline-flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <span>PM: <strong style={{ color: '#ce93d8' }}>{pmAtual}</strong> / {pmMaximo}</span>
+                        <span>•</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><T20Icon name="magia" size={14} color="#ffd700" /> Círculo máx: <strong style={{ color: '#ffd700' }}>{circuloAtual}º</strong></span>
+                        <span>•</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><T20Icon name="grimorio" size={14} /> Magias: <strong style={{ color: limiteAtingido ? '#ff5252' : '#8bc34a' }}>{magiasManuais.length}</strong> / {limiteMagias ?? '∞'}</span>
                     </span>
                     <div>
                         <button className="btn-cancel" onClick={onClose} style={{ marginRight: '10px' }}>Cancelar</button>
@@ -302,12 +307,19 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                 opacity: botaoBloqueado ? 0.5 : 1,
                                 background: botaoBloqueado ? '#333' : '#4caf50',
                                 color: botaoBloqueado ? '#888' : 'white',
-                                cursor: botaoBloqueado ? 'not-allowed' : 'pointer'
+                                cursor: botaoBloqueado ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
                             }}
                         >
-                            {limiteAtingido
-                                ? '📖 Limite de magias atingido'
-                                : (magiaEhIlegal ? '🔒 Círculo Insuficiente' : '+ Adicionar ao Grimório')}
+                            {limiteAtingido ? (
+                                <><T20Icon name="grimorio" size={14} /> Limite de magias atingido</>
+                            ) : magiaEhIlegal ? (
+                                <><T20Icon name="cadeado" size={14} /> Círculo Insuficiente</>
+                            ) : (
+                                '+ Adicionar ao Grimório'
+                            )}
                         </button>
                     </div>
                 </div>

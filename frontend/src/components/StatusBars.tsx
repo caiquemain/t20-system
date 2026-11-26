@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Personagem } from '../types';
+import { T20Icon, type IconName } from './T20Icon';
 import '../Ficha.css';
 
 interface StatusBarsProps {
@@ -20,10 +21,10 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
     const { pv, pm, defesa, deslocamento, rd, proficiencias, imunidades, sentidos, vulnerabilidades} = ficha.status;
     const statusAny = ficha.status as any;
 
-    let iconeDeslocamento = '🦵';
+    let iconeDeslocamento: IconName = 'deslocamento';
     let labelDeslocamento = 'Deslocamento';
-    if (isFlying) { iconeDeslocamento = '🪽'; labelDeslocamento = 'Voo Ativo'; }
-    else if (isAquatic) { iconeDeslocamento = '🧜‍♀️'; labelDeslocamento = 'Natação'; }
+    if (isFlying) { iconeDeslocamento = 'voo'; labelDeslocamento = 'Voo Ativo'; }
+    else if (isAquatic) { iconeDeslocamento = 'natacao'; labelDeslocamento = 'Natação'; }
 
     const deslocamentoNatacao = (ficha.status as any).deslocamento_natacao;
     const valorDeslocamento = overrideDeslocamento !== undefined 
@@ -50,22 +51,22 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
         }
     };
 
-    const getIconeResistencia = (texto: string) => {
+    const getIconeResistencia = (texto: string): IconName => {
         const t = texto.toLowerCase();
-        if (t.includes('fogo')) return '🔥';
-        if (t.includes('frio') || t.includes('gelo')) return '❄️';
-        if (t.includes('eletricidade') || t.includes('elétrico')) return '⚡';
-        if (t.includes('ácido')) return '🧪';
-        if (t.includes('veneno')) return '☠️';
-        if (t.includes('luz')) return '🔆';
-        if (t.includes('trevas') || t.includes('sombra')) return '🌑';
-        if (t.includes('mental') || t.includes('psíquico')) return '🧠';
-        if (t.includes('corte') || t.includes('perfura') || t.includes('impacto')) return '⚔️';
-        if (t.includes('magia')) return '✨';
-        return '🛡️';
+        if (t.includes('fogo')) return 'fogo';
+        if (t.includes('frio') || t.includes('gelo')) return 'gelo';
+        if (t.includes('eletricidade') || t.includes('elétrico')) return 'raio';
+        if (t.includes('ácido')) return 'acido';
+        if (t.includes('veneno')) return 'veneno';
+        if (t.includes('luz')) return 'luz';
+        if (t.includes('trevas') || t.includes('sombra')) return 'trevas';
+        if (t.includes('mental') || t.includes('psíquico')) return 'magia';
+        if (t.includes('corte') || t.includes('perfura') || t.includes('impacto')) return 'espada';
+        if (t.includes('magia')) return 'efeito';
+        return 'defesa';
     };
 
-    // ✨ TOOLTIP GENÉRICO DA PILHA DE MODIFICADORES (funciona p/ PV, PM, Defesa e Deslocamento)
+    // TOOLTIP GENÉRICO DA PILHA DE MODIFICADORES (funciona p/ PV, PM, Defesa e Deslocamento)
     const renderTooltipPilha = (calc: any, total: number | string, unidade = '') => {
         if (!calc) return null;
         const fontes: any[] = calc.fontes || [];
@@ -92,7 +93,7 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
                 <h3 className="section-title" style={{ margin: 0 }}>Status Vitais</h3>
                 {onUpdate && (
                     <button onClick={handleDescansar} className="btn-descansar" title="Recuperar todo PV e PM">
-                        💤 Descansar
+                        <T20Icon name="descanso" size={14} /> Descansar
                     </button>
                 )}
             </div>
@@ -114,13 +115,15 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
             {/* DEFESA + DESLOCAMENTO */}
             <div className="stats-row-container">
                 <div className="stat-box tooltip-anchor">
-                    <span className="stat-value">🛡️ {defesa.total}</span>
+                    <span className="stat-value" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <T20Icon name="defesa" size={18} color="#90caf9" /> {defesa.total}
+                    </span>
                     <span className="stat-label">Defesa</span>
                     {renderTooltipPilha(statusAny.defesa_calc, defesa.total)}
                 </div>
                 <div className="stat-box tooltip-anchor">
-                    <span className="stat-value" style={{ color: (isFlying || isAquatic) ? '#42a5f5' : 'inherit' }}>
-                        {iconeDeslocamento} {valorDeslocamento}m
+                    <span className="stat-value" style={{ color: (isFlying || isAquatic) ? '#42a5f5' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <T20Icon name={iconeDeslocamento} size={18} /> {valorDeslocamento}m
                     </span>
                     <span className="stat-label">{labelDeslocamento}</span>
                     {renderTooltipPilha(statusAny.deslocamento_calc, valorDeslocamento, 'm')}
@@ -146,23 +149,23 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                         {elementoGolem && (
                             <span className="rd-tag" style={{ background: '#1b5e20', color: '#a5d6a7', borderColor: '#2e7d32' }}>
-                                🔋 Absorve: {elementoGolem}
+                                <T20Icon name="energia" size={13} /> Absorve: {elementoGolem}
                             </span>
                         )}
                         {rd?.map((item: string, idx: number) => (
                             <span key={`rd-${idx}`} className="rd-tag">
-                                <span style={{ fontSize: '1.1em', marginRight: '4px' }}>{getIconeResistencia(item)}</span>
+                                <T20Icon name={getIconeResistencia(item)} size={13} />
                                 {item}
                             </span>
                         ))}
                         {imunidades?.map((item: string, idx: number) => (
                             <span key={`imun-${idx}`} className="rd-tag" style={{ background: '#4a148c', color: '#e1bee7', borderColor: '#7b1fa2' }}>
-                                🚫 {item}
+                                <T20Icon name="imunidade" size={13} /> {item}
                             </span>
                         ))}
                         {sentidos?.map((item: string, idx: number) => (
                             <span key={`sens-${idx}`} className="rd-tag" style={{ background: '#01579b', color: '#b3e5fc', borderColor: '#0277bd' }}>
-                                👁️ {item}
+                                <T20Icon name="visao" size={13} /> {item}
                             </span>
                         ))}
                     </div>

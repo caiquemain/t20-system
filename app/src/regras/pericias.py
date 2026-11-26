@@ -357,7 +357,7 @@ def inicializar_pericias(ficha: Personagem):
             mod_int = modificadores.get("int", 0)
             engenhosidade_bonus = mod_int
             total_automatico += engenhosidade_bonus
-            fontes_bonus.append(f"⚡ Engenhosidade (+{mod_int} INT)")
+            fontes_bonus.append(f"Engenhosidade (+{mod_int} INT)")
 
         total_final = bonus_metade_nivel + mod_attr + bonus_treino + \
             info_antiga.outros + total_automatico + penalidade_aplicada + engenhosidade_bonus
@@ -368,7 +368,7 @@ def inicializar_pericias(ficha: Personagem):
                 continue
             sinal = "+" if item["valor"] >= 0 else ""
             fontes_bonus.append(
-                "⛰️ " + item["fonte"] + ": " + sinal + str(item["valor"]) +
+                item["fonte"] + ": " + sinal + str(item["valor"]) +
                 " se " + item["condicao"] +
                 " (não somado ao total base; total situacional: " +
                 str(total_final + item["valor"]) + ")")
@@ -393,7 +393,7 @@ def inicializar_pericias(ficha: Personagem):
         if penalidade_aplicada != 0:
             calc.adicionar_bonus("Penalidade (Armadura/Tamanho)", "Penalidade", penalidade_aplicada)
         if engenhosidade_bonus != 0:
-            calc.adicionar_bonus("⚡ Engenhosidade", "Poder", engenhosidade_bonus)
+            calc.adicionar_bonus("Engenhosidade", "Poder", engenhosidade_bonus)
         for item in itens_cond:
             if item.get("condicao_id") and item["condicao_id"] in condicoes_ativas:
                 calc.adicionar_bonus(item["fonte"], "Condicional", int(item["valor"]))
