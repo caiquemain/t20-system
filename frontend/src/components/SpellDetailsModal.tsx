@@ -1,6 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import type { Magia } from '../types';
-import { getSchoolColor, getCircleColor, getTypeColor, calcularCustoMagiaView } from '../utils/magicUtils';
+import {
+    getSchoolColor,
+    getCircleColor,
+    getTypeColor,
+    calcularCustoMagiaView,
+    calcularLimitePmMagiaView,
+} from '../utils/magicUtils';
 import {
     rolarExpressao,
     extrairFormulaDeTexto,
@@ -17,8 +23,16 @@ interface SpellDetailsModalProps {
     hideRemove?: boolean;
 }
 
+const METAMAGIAS_PODERES = [
+    { nome: 'Magia Ampliada', pm: 2, resumo: 'Aumenta alcance em 1 passo ou dobra área' },
+    { nome: 'Magia Discreta', pm: 2, resumo: 'Sem gestos/palavras nem teste de armadura' },
+    { nome: 'Magia Acelerada', pm: 4, resumo: 'Muda execução para ação livre (1x/rodada)' },
+];
+
 export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onClose, onRemove, ficha, hideRemove }) => {
     const [aprimoramentosQtd, setAprimoramentosQtd] = useState<Record<number, number>>({});
+    const [metamagiasAtivas, setMetamagiasAtivas] = useState<Record<string, boolean>>({});
+    const [comoRitual, setComoRitual] = useState(false);
     const [truqueAtivo, setTruqueAtivo] = useState(false);
     const [ultimoRoll, setUltimoRoll] = useState<{
         resultado: ResultadoExpressao;
@@ -27,6 +41,7 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
     } | null>(null);
 
     const custoBaseView = useMemo(() => (magia ? calcularCustoMagiaView(magia, ficha) : { total: 0, fontes: [] }), [magia, ficha]);
+    const limiteView = useMemo(() => calcularLimitePmMagiaView(ficha, comoRitual), [ficha, comoRitual]);
 
     if (!magia) return null;
 
@@ -34,10 +49,12 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
     const schoolColor = getSchoolColor(magia.escola);
     const circleColor = getCircleColor(magia.circulo);
     const cdMagia = ficha?.combate?.cd_magias ?? 10;
-    const nivelTotal = Math.max(1, Number(ficha?.cabecalho?.nivel_total || 1));
     const bonusDanoMagias = Number(ficha?.combate?.bonus_dano_magias || 0);
 
-    // Soma de PM dos aprimoramentos selecionados
+    const nomesHabs = new Set((ficha?.habilidades || []).map((h: any) => (h?.nome || '').trim()));
+    const metamagiasDisponiveis = METAMAGIAS_PODERES.filter(m => nomesHabs.has(m.nome));
+
+    // Soma de PM dos aprimoramentos + poderes de metamagia selecionados
     const pmAprimoramentos = truqueAtivo
         ? 0
         : (magia.aprimoramentos || []).reduce((acc, ap, idx) => {
@@ -47,8 +64,12 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
             return acc + parsed.pm * qtd;
         }, 0);
 
-    const custoTotalPm = truqueAtivo ? 0 : custoBaseView.total + pmAprimoramentos;
-    const acimaLimitePm = !truqueAtivo && custoTotalPm > nivelTotal;
+    const pmMetamagias = truqueAtivo
+        ? 0
+        : metamagiasDisponiveis.reduce((acc, m) => acc + (metamagiasAtivas[m.nome] ? m.pm : 0), 0);
+
+    const custoTotalPm = truqueAtivo ? 0 : custoBaseView.total + pmAprimoramentos + pmMetamagias;
+    const acimaLimitePm = !truqueAtivo && custoTotalPm > limiteView.limite;
 
     // Fórmula de rolagem: usa rolagem estruturada do motor ou fallback da descrição
     const formulaBase = magia.rolagem?.formula || extrairFormulaDeTexto(magia.descricao);
@@ -188,6 +209,33 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
                         </div>
                     )}
 
+                    {/* Poderes de Metamagia & Celebrar Ritual do personagem */}
+                    {(metamagiasDisponiveis.length > 0 || limiteView.temCelebrarRitual) && (
+                        <div style={{ marginBottom: '12px', background: '#16161d', border: '1px solid #2e2e42', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '0.78rem' }}>
+                            {metamagiasDisponiveis.map(m => (
+                                <label key={m.nome} title={m.resumo} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', color: metamagiasAtivas[m.nome] ? '#ce93d8' : '#bbb' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(metamagiasAtivas[m.nome])}
+                                        disabled={truqueAtivo}
+                                        onChange={() => setMetamagiasAtivas(prev => ({ ...prev, [m.nome]: !prev[m.nome] }))}
+                                    />
+                                    <span>{m.nome} (+{m.pm} PM)</span>
+                                </label>
+                            ))}
+                            {limiteView.temCelebrarRitual && (
+                                <label title="Dobra o limite de PM (execução 1h ou dobro, T$ 10/PM)" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', color: comoRitual ? '#80deea' : '#bbb' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={comoRitual}
+                                        onChange={() => setComoRitual(v => !v)}
+                                    />
+                                    <span>Celebrar Ritual (Limite ×2 → {limiteView.limiteRitual} PM)</span>
+                                </label>
+                            )}
+                        </div>
+                    )}
+
                     {/* Breakdown de Custo em PM */}
                     <div style={{ marginBottom: '14px', background: '#151515', border: '1px solid #333', borderRadius: '4px', padding: '6px 10px', fontSize: '0.72rem', color: '#aaa' }}>
                         {!truqueAtivo && custoBaseView.fontes.map((f: any, i: number) => (
@@ -202,6 +250,12 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
                                 <span style={{ color: '#ce93d8' }}>+{pmAprimoramentos} PM</span>
                             </div>
                         )}
+                        {!truqueAtivo && pmMetamagias > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span>Poderes de Magia ativos</span>
+                                <span style={{ color: '#ce93d8' }}>+{pmMetamagias} PM</span>
+                            </div>
+                        )}
                         {truqueAtivo && (
                             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#80deea' }}>
                                 <span>Truque ativo (versão simples)</span>
@@ -209,7 +263,7 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
                             </div>
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #444', marginTop: '4px', paddingTop: '4px', color: acimaLimitePm ? '#ff8a80' : '#ce93d8', fontWeight: 'bold' }}>
-                            <span>Total {acimaLimitePm ? `(acima do limite de ${nivelTotal} PM!)` : ''}</span>
+                            <span>Total {acimaLimitePm ? `(acima do limite de ${limiteView.limite} PM!)` : `(Limite: ${limiteView.limite} PM — ${limiteView.detalhe})`}</span>
                             <span>{custoTotalPm} PM</span>
                         </div>
                     </div>
