@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { T20Icon, type IconName } from './T20Icon';
 
 export interface EntityItem {
     nome: string;
     tooltip?: string;
-    icone?: string;
+    icone?: IconName;
     descricao?: string;
     bonus?: string;  // ex: "+2 FOR, +1 CON" ou "Benefícios: 2 escolhas"
     bloqueado?: boolean;  // ex: origem bloqueada pelo Golem
@@ -13,7 +14,7 @@ export interface EntityItem {
 interface EntitySelectorModalProps {
     aberto: boolean;
     titulo: string;
-    iconeTitulo?: string;
+    iconeTitulo?: IconName;
     itens: EntityItem[];
     selecionado?: string;
     onConfirm: (nome: string) => void;
@@ -75,27 +76,28 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     gap: 12, flexWrap: 'wrap'
                 }}>
-                    <h2 style={{ margin: 0, color: '#ffd700', fontSize: '1.3rem', fontFamily: 'Tormenta, serif' }}>
-                        {iconeTitulo && <span style={{ marginRight: 8 }}>{iconeTitulo}</span>}
+                    <h2 style={{ margin: 0, color: '#ffd700', fontSize: '1.3rem', fontFamily: 'Tormenta, serif', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        {iconeTitulo && <T20Icon name={iconeTitulo} size={20} color="#ffd700" />}
                         {titulo}
                     </h2>
                     <input
                         type="text"
                         value={busca}
                         onChange={e => setBusca(e.target.value)}
-                        placeholder="🔍 Buscar..."
+                        placeholder="Buscar..."
                         autoFocus
                         className="input-dark"
                         style={{ flex: 1, maxWidth: 300, minWidth: 180 }}
                     />
                     <button
                         onClick={onFechar}
+                        title="Fechar"
                         style={{
                             background: 'transparent', border: '1px solid #555',
-                            color: '#aaa', borderRadius: 6, padding: '6px 12px',
-                            cursor: 'pointer', fontSize: '1rem'
+                            color: '#aaa', borderRadius: 6, padding: '6px 10px',
+                            cursor: 'pointer', display: 'inline-flex', alignItems: 'center'
                         }}
-                    >✕</button>
+                    ><T20Icon name="fechar" size={16} /></button>
                 </div>
 
                 {/* Grid de cards */}
@@ -117,7 +119,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                         >
                             <span style={{ fontSize: '1.5rem' }}>—</span>
                             <span style={{ color: '#ccc', fontSize: '0.95rem' }}>{labelVazio}</span>
-                            {!selecionado && <span style={{ marginLeft: 'auto', color: '#ffd700' }}>✓</span>}
+                            {!selecionado && <span style={{ marginLeft: 'auto', color: '#ffd700' }}><T20Icon name="check" size={16} /></span>}
                         </div>
                     )}
                     {itensFiltrados.map(it => {
@@ -139,7 +141,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    {it.icone && <span style={{ fontSize: '1.4rem' }}>{it.icone}</span>}
+                                    {it.icone && <T20Icon name={it.icone} size={18} color={isSel ? '#ffd700' : '#bbb'} />}
                                     <span style={{
                                         color: isSel ? '#ffd700' : '#e0e0e0',
                                         fontWeight: 'bold', fontSize: '1.05rem',
@@ -147,7 +149,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                                     }}>
                                         {it.nome}
                                     </span>
-                                    {isSel && <span style={{ marginLeft: 'auto', color: '#ffd700' }}>✓</span>}
+                                    {isSel && <span style={{ marginLeft: 'auto', color: '#ffd700' }}><T20Icon name="check" size={16} /></span>}
                                 </div>
                                 {it.bonus && (
                                     <div style={{ color: '#8be9fd', fontSize: '0.8rem', marginTop: 2 }}>
@@ -160,8 +162,8 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                                     </div>
                                 )}
                                 {it.bloqueado && it.motivoBloqueio && (
-                                    <div style={{ color: '#ff5252', fontSize: '0.75rem', marginTop: 4 }}>
-                                        🚫 {it.motivoBloqueio}
+                                    <div style={{ color: '#ff5252', fontSize: '0.75rem', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                        <T20Icon name="imunidade" size={13} /> {it.motivoBloqueio}
                                     </div>
                                 )}
                             </div>

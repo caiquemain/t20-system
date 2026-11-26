@@ -1,6 +1,7 @@
 import React from 'react';
 import { SpellList } from './SpellList'; // Reutiliza o componente detalhado
 import type { Magia } from '../types';
+import { T20Icon } from './T20Icon';
 
 interface FullGrimorioModalProps {
     isOpen: boolean;
@@ -21,7 +22,9 @@ export const FullGrimorioModal: React.FC<FullGrimorioModalProps> = ({
             <div className="modal-content large" style={{ maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <h3>📖 Grimório Completo</h3>
+                        <h3 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                            <T20Icon name="grimorio" size={18} /> Grimório Completo
+                        </h3>
                         <span style={{ fontSize: '0.9rem', color: '#aaa', background: '#111', padding: '2px 8px', borderRadius: '4px', border: '1px solid #333' }}>
                             PM: <strong style={{ color: '#ce93d8' }}>{pmAtual}</strong> / {pmMaximo}
                         </span>

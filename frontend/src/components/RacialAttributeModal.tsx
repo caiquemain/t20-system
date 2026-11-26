@@ -1,4 +1,5 @@
 import React from 'react';
+import { T20Icon } from './T20Icon';
 import '../Ficha.css';
 
 interface RacialAttributeModalProps {
@@ -29,7 +30,9 @@ export const RacialAttributeModal: React.FC<RacialAttributeModalProps> = ({
         <div className="habilidades-panel-overlay">
             <div className="habilidades-panel-content" style={{ maxWidth: '500px' }}>
                 <div className="modal-header">
-                    <h3>🧬 Bônus Racial: {racaNome}</h3>
+                    <h3 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                        <T20Icon name="raca" size={18} color="#ffd700" /> Bônus Racial: {racaNome}
+                    </h3>
                     <button className="btn-close-panel" onClick={onClose}>X</button>
                 </div>
                 <hr />

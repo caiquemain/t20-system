@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { Magia } from '../types';
 import { getCircleColor } from '../utils/magicUtils'; // Importando cor do Círculo
+import { T20Icon } from './T20Icon';
 import './SpellSummary.css';
 
 interface SpellSummaryProps {
@@ -74,7 +75,7 @@ export const SpellSummary: React.FC<SpellSummaryProps> = ({ magias, onOpenDetalh
                                             title="Clique para ver detalhes"
                                         >
                                             {m.nome}
-                                            <span style={{ fontSize: '0.8rem', color: '#666' }}>ℹ️</span>
+                                            <T20Icon name="info" size={13} color="#666" />
                                         </div>
                                     ))}
                                 </div>
@@ -85,8 +86,8 @@ export const SpellSummary: React.FC<SpellSummaryProps> = ({ magias, onOpenDetalh
             )}
 
             <div className="summary-footer">
-                <button className="btn-view-all" onClick={onOpenDetalhes}>
-                    📖 Gerenciar Grimório Completo
+                <button className="btn-view-all" onClick={onOpenDetalhes} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <T20Icon name="grimorio" size={16} /> Gerenciar Grimório Completo
                 </button>
             </div>
         </div>

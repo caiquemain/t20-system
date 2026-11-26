@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import '../Ficha.css';
 import { RacialAbilityRow } from './RacialAbilityRow'; // Importação limpa
+import { T20Icon } from './T20Icon';
 
 interface AbilityConfigModalProps {
     isOpen: boolean;
@@ -160,7 +161,9 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
         <div className="habilidades-panel-overlay">
             <div className="habilidades-panel-content">
                 <button className="btn-close-panel" onClick={onClose}>X</button>
-                <h2>⚙️ Configuração de Personagem</h2>
+                <h2 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <T20Icon name="config" size={22} /> Configuração de Personagem
+                </h2>
                 <hr />
                 {/* 1. SUBCLASSE */}
                 {opcoesSubclasse.length > 0 && habilidadeComSubclasse && (
@@ -169,8 +172,8 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                             {opcoesSubclasse.map(opcao => (
                                 <div key={opcao} style={{ flex: 1, minWidth: 180 }}>
-                                    <button onClick={() => setSubclasseEmEdicao(opcao)} className={`btn-action ${subclasseEmEdicao === opcao ? 'selected' : ''}`} style={{ width: '100%', background: subclasseEmEdicao === opcao ? '#4caf50' : '#333', border: subclasseEmEdicao === opcao ? '1px solid #fff' : '1px solid #555', color: 'white' }}>
-                                        {subclasseEmEdicao === opcao ? '✅ ' : ''}{opcao}
+                                    <button onClick={() => setSubclasseEmEdicao(opcao)} className={`btn-action ${subclasseEmEdicao === opcao ? 'selected' : ''}`} style={{ width: '100%', background: subclasseEmEdicao === opcao ? '#4caf50' : '#333', border: subclasseEmEdicao === opcao ? '1px solid #fff' : '1px solid #555', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                        {subclasseEmEdicao === opcao && <T20Icon name="check" size={14} />}{opcao}
                                     </button>
                                     {(dadosEscolhas?.CAMINHOS_ARCANISTA_INFO || {})[opcao] && (
                                         <p style={{ margin: '6px 2px 0', fontSize: '0.72rem', color: subclasseEmEdicao === opcao ? '#a5d6a7' : '#90a4ae', lineHeight: 1.35 }}>
@@ -216,7 +219,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 {/* 3. ORIGEM */}
                 {(() => {
                     const bloqueioOrigem = habilidadesEmEdicao.find(h => h.efeitos && h.efeitos.sem_origem);
-                    if (bloqueioOrigem) return <div className="origem-box" style={{ border: '1px dashed #d32f2f', background: 'rgba(211, 47, 47, 0.1)', marginBottom: 20 }}><p style={{ color: '#ff8a80', margin: 0 }}>🚫 <strong>Origem Bloqueada:</strong> {bloqueioOrigem.nome}</p></div>;
+                    if (bloqueioOrigem) return <div className="origem-box" style={{ border: '1px dashed #d32f2f', background: 'rgba(211, 47, 47, 0.1)', marginBottom: 20 }}><p style={{ color: '#ff8a80', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}><T20Icon name="imunidade" size={15} /> <strong>Origem Bloqueada:</strong> {bloqueioOrigem.nome}</p></div>;
                     return (
                         <div className="origem-box">
                             <h3 className="section-subtitle">Benefícios de Origem ({origemNome})</h3>
@@ -305,7 +308,9 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         })}
                     </div>
                 ) : <p className="text-muted">Disponível no nível 2.</p>}
-                <button className="btn-apply-changes" onClick={onSave} style={{ marginTop: 30 }}>✅ Salvar Todas as Alterações</button>
+                <button className="btn-apply-changes" onClick={onSave} style={{ marginTop: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <T20Icon name="salvar" size={16} /> Salvar Todas as Alterações
+                </button>
             </div>
         </div>
     );
