@@ -26,6 +26,17 @@ from .recompensas import (
     calcular_fabricacao_item_permanente,
     calcular_estatisticas_item_magico,
 )
+from .jogando import (
+    avaliar_teste,
+    calcular_bonus_ajuda,
+    pode_escolher_zero,
+    calcular_cd_habilidade,
+    combinar_multiplicadores,
+    limitar_chance_falha,
+    calcular_dano_recebido,
+    calcular_limiar_morte,
+    calcular_pv_objeto,
+)
 from .pericias import inicializar_pericias
 
 # 1. ATUALIZADO: Importamos a nova função 'calcular_proficiencias_e_extras' daqui

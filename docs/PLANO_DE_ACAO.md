@@ -96,6 +96,12 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
+## ✅ Fase 6.8 — Capítulo 5: Jogando, Testes, Dano & Combate (p.220–239) (Concluída)
+- [x] **Regras Centrais & Tabelas (`regras/jogando.py`, `regras/__init__.py`):** catalogadas Tabelas 5-1 (*Dificuldades*), 5-2 (*Testes Estendidos*), 5-3 (*Situações Especiais*) e 5-4 (*Estatísticas de Objetos*), alcances padrão, 18 tipos de efeito, 11 tipos de dano e 5 manobras de combate.
+- [x] **Motor de Cálculo (`jogando.py`):** avaliação de testes (20/1 natural), *Ajudar* (CD 10 `+1` por 10 acima), *Escolher 0*, CD de habilidades (`10 + metade do nível + atributo`), ordem oficial de operações de dano (resistência → divisões/vulnerabilidade ×1,5 → RD; *Perda de Vida* ignora RD), multiplicadores combinados (`x2 + x2 = x3`), teto de chance de falha (`75%`), limiar de morte (`min(-10, -PV/2)`) e PV de objetos por tamanho, cobertos por `app/tests/test_jogando_cap5.py`.
+
+---
+
 ## 🎲 Fase 7 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
 - **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
 - **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).
