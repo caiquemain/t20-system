@@ -122,3 +122,93 @@ def test_gerar_pdf_ficha_completa():
     assert "essência de mana" in str(campos["Anotações"])
     assert "Carga Total" in str(campos["Observação"])
     assert "Duro como Pedra" in str(campos.get("HabRaçasOrigem", ""))
+
+
+def test_gerar_odg_ficha_completa():
+    import zipfile
+    import xml.etree.ElementTree as ET
+    from io import BytesIO
+    from src.routers.pdf import gerar_odg_bytes, _carregar_template_odg_layout
+
+    f = Personagem(
+        cabecalho=Cabecalho(
+            nome="Tordek Ferro",
+            jogador="Caique",
+            raca="Anão",
+            origem="Artesão",
+            deus="Khalmyr",
+            nivel_total=5,
+        ),
+        classes=[
+            ClasseInfo(nome="Guerreiro", nivel=3, primaria=True),
+            ClasseInfo(nome="Clérigo", nivel=2, primaria=False),
+        ],
+        atributos_base=Atributos(forca=3, destreza=1, constituicao=2, sabedoria=3),
+        inventario=Inventario(
+            dinheiro=Dinheiro(tp=450, to=12),
+            equipamentos=[
+                Item(nome="Cota de malha", equipado=True, espaco=5),
+                Item(nome="Escudo pesado", equipado=True, espaco=2),
+            ],
+        ),
+        descricao=Descricao(
+            aparencia="Barba trançada com anéis de ferro",
+            anotacoes="Lembrar de comprar essência de mana.",
+        ),
+    )
+    f.pericias["Luta"] = PericiaInfo(treino=1, total=0)
+    f.combate.magias.append(Magia(nome="Curar Ferimentos", circulo=1, tipo="Divina", escola="Evocação", custo_pm=1))
+    atualizar_ficha(f)
+
+    odg_bytes = gerar_odg_bytes(f)
+    assert len(odg_bytes) > 50_000
+    assert _carregar_template_odg_layout() is _carregar_template_odg_layout()
+
+    with zipfile.ZipFile(BytesIO(odg_bytes), "r") as zf:
+        infos = zf.infolist()
+        # Regra ODF 1.2: mimetype deve ser a primeira entrada e sem compressão
+        assert infos[0].filename == "mimetype"
+        assert infos[0].compress_type == zipfile.ZIP_STORED
+        assert zf.read("mimetype") == b"application/vnd.oasis.opendocument.graphics"
+
+        nomes = set(zf.namelist())
+        assert {
+            "META-INF/manifest.xml",
+            "meta.xml",
+            "styles.xml",
+            "content.xml",
+            "Pictures/page_1.png",
+            "Pictures/page_2.png",
+        }.issubset(nomes)
+        assert zf.read("Pictures/page_1.png").startswith(b"\x89PNG")
+        assert zf.read("Pictures/page_2.png").startswith(b"\x89PNG")
+
+        # Valida XML bem formado em todos os arquivos ODF
+        ET.fromstring(zf.read("META-INF/manifest.xml"))
+        ET.fromstring(zf.read("meta.xml"))
+        ET.fromstring(zf.read("styles.xml"))
+        content_root = ET.fromstring(zf.read("content.xml"))
+
+    ns = {
+        "draw": "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0",
+        "text": "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
+    }
+    pages = content_root.findall(".//draw:page", ns)
+    assert len(pages) == 2
+
+    frames_por_nome: dict[str, list[str]] = {}
+    for fr in content_root.findall(".//draw:frame", ns):
+        nome = fr.attrib.get(f"{{{ns['draw']}}}name", "")
+        textos = [p.text or "" for p in fr.findall(".//text:p", ns)]
+        frames_por_nome.setdefault(nome, []).append("\n".join(textos))
+
+    assert "Fundo_Pagina_1" in frames_por_nome
+    assert "Fundo_Pagina_2" in frames_por_nome
+    assert frames_por_nome["NOME DO PERSONAGEM"] == ["Tordek Ferro"]
+    assert frames_por_nome["CLASSE"] == ["Guerreiro 3 / Clérigo 2"]
+    assert frames_por_nome["Mar Trei luta"] == ["✕"]
+    assert "Curar Ferimentos" in frames_por_nome["Magias"][0]
+    assert "Barba trançada" in frames_por_nome["Descrição"][0]
+    # Anotações não deve ser duplicada mesmo aparecendo 2x no template PDF
+    assert len(frames_por_nome["Anotações"]) == 1
+    assert "essência de mana" in frames_por_nome["Anotações"][0]
