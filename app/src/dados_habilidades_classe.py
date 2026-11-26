@@ -3323,92 +3323,270 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # PALADINO
+    # PALADINO (T20 JdA p.81-84) — 7 habilidades fixas + 23 poderes
     # ==========================================================================
     "PALADINO_ABENCOADO": {
         "nome": "Abençoado",
         "tipo": "Habilidade de Classe",
         "classe": "Paladino",
         "nivel": 1,
-        "descricao": "Soma Carisma aos PM. Devoto ganha 2 poderes concedidos. ",
-        "efeitos": {"pm_soma_atributo": "car", "poderes_concedidos_bonus": 1}
+        "descricao": "Soma Carisma no total de PM no 1º nível (já computado pelo atributo-chave). Torna-se devoto de um deus disponível para paladinos (Azgher, Khalmyr, Lena, Lin-Wu, Marah, Tanna-Toh, Thyatis, Valkaria) e recebe 2 poderes concedidos em vez de 1. Alternativa: paladino do bem (sem poder concedido, sem O&R além do Código do Herói).",
+        "efeitos": {
+            "poderes_concedidos_bonus": 1,
+            "deuses_disponiveis": [
+                "Azgher", "Khalmyr", "Lena", "Lin-Wu",
+                "Marah", "Tanna-Toh", "Thyatis", "Valkaria",
+            ],
+            "alternativa_bem": True,
+        },
     },
     "PALADINO_CODIGO_HEROI": {
         "nome": "Código do Herói",
         "tipo": "Habilidade de Classe",
         "classe": "Paladino",
         "nivel": 1,
-        "descricao": "Deve manter palavra, proteger inocentes, não mentir/roubar. Violação perde PM. ",
-        "efeitos": {}
+        "descricao": "Deve sempre manter sua palavra e nunca pode recusar um pedido de ajuda de alguém inocente. Nunca pode mentir, trapacear ou roubar. Se violar o código, perde todos os seus PM e só pode recuperá-los a partir do próximo dia.",
+        "efeitos": {},
     },
     "PALADINO_GOLPE_DIVINO": {
         "nome": "Golpe Divino",
         "tipo": "Habilidade de Classe",
         "classe": "Paladino",
         "nivel": 1,
-        "descricao": "2 PM: Soma Car no ataque e +1d8 dano. Aumenta com nível. ",
-        "efeitos": {}
+        "descricao": "Mágico. Ao fazer um ataque corpo a corpo, gaste 2 PM para somar Carisma no teste de ataque e +1d8 na rolagem de dano. A cada quatro níveis (5º, 9º, 13º, 17º), pode gastar +1 PM para aumentar o dano em +1d8 (até +5d8).",
+        "efeitos": {
+            "golpe_divino": True,
+            "custo_pm": 2,
+            "magico": True,
+            "escala_nivel": {"inicio": 1, "cada": 4, "dado": "1d8", "custo_extra": 1},
+        },
     },
     "PALADINO_CURA_MAOS": {
         "nome": "Cura pelas Mãos",
         "tipo": "Habilidade de Classe",
         "classe": "Paladino",
         "nivel": 2,
-        "descricao": "Movimento (1 PM): Cura 1d8+1 PV (toque). Aumenta com nível. ",
-        "efeitos": {}
+        "descricao": "Mágico. Ação de movimento e 1 PM: cura 1d8+1 PV de luz em alvo em alcance corpo a corpo (incluindo você). A cada quatro níveis (6º, 10º, 14º, 18º), pode gastar +1 PM para +1d8+1 PV. Causa dano de luz a mortos-vivos (CD Car). A partir do 6º nível, pode gastar +1 PM para anular uma condição (abalado, apavorado, atordoado, cego, doente, exausto, fatigado ou surdo).",
+        "efeitos": {
+            "cura_pelas_maos": True,
+            "custo_pm": 1,
+            "magico": True,
+            "escala_nivel": {"inicio": 2, "cada": 4, "cura": "1d8+1", "custo_extra": 1},
+            "remove_condicoes_nivel": 6,
+        },
     },
     "PALADINO_AURA_SAGRADA": {
         "nome": "Aura Sagrada",
         "tipo": "Habilidade de Classe",
         "classe": "Paladino",
         "nivel": 3,
-        "descricao": "1 PM (Sustentada): +Carisma em testes de resistência para aliados em 9m. ",
-        "efeitos": {}
+        "descricao": "Mágico. Gaste 1 PM para gerar uma aura com 9m de raio e duração sustentada (luz dourada). Você e os aliados dentro da aura somam seu Carisma nos testes de resistência.",
+        "efeitos": {"aura_sagrada": True, "custo_pm": 1, "raio_m": 9, "magico": True},
     },
     "PALADINO_BENCAO_JUSTICA": {
         "nome": "Bênção da Justiça",
         "tipo": "Habilidade de Classe",
         "classe": "Paladino",
         "nivel": 5,
-        "descricao": "Escolha: Égide Sagrada (Bônus Defesa) ou Montaria Sagrada. ",
-        "efeitos": {"escolha_bencao": ["Égide Sagrada", "Montaria Sagrada"]}
+        "descricao": "Escolha permanente entre Égide Sagrada (movimento, 2 PM: você e aliados adjacentes somam Carisma na Defesa até fim da cena; 11º nível: 5 PM para rolar novamente resistência contra magia e revertê-la ao conjurador se passar e for único alvo) e Montaria Sagrada (movimento, 2 PM: invoca montaria parceiro veterano; mestre no 11º nível).",
+        "efeitos": {
+            "escolha_bencao": ["Égide Sagrada", "Montaria Sagrada"],
+            "magico": True,
+        },
     },
-    # --- PODERES DE PALADINO ---
+    "PALADINO_VINGADOR_SAGRADO": {
+        "nome": "Vingador Sagrado",
+        "tipo": "Habilidade de Classe",
+        "classe": "Paladino",
+        "nivel": 20,
+        "descricao": "Mágico. Ação completa e 10 PM: até o fim da cena, recebe deslocamento de voo 18m e RD 20. Além disso, seu Golpe Divino tem custo reduzido à metade e causa +2 dados de dano.",
+        "efeitos": {"vingador_sagrado": True, "custo_pm": 10, "magico": True},
+    },
+    # --- PODERES DE PALADINO (23 poderes) ---
     "PALADINO_ARMA_SAGRADA": {
         "nome": "Arma Sagrada",
         "tipo": "Poder de Paladino",
         "classe": "Paladino",
-        "descricao": "Golpe Divino com arma da divindade usa d12. ",
-        "efeitos": {}
+        "requisitos": ["Devoto de uma divindade (exceto Lena e Marah)"],
+        "descricao": "Mágico. Quando usa Golpe Divino para atacar com a arma preferida de sua divindade, o dado de dano rolado por Golpe Divino aumenta para d12.",
+        "efeitos": {"arma_sagrada": True, "magico": True},
+    },
+    "PALADINO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Recebe +1 em um atributo. Pode ser escolhido várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"aumento_atributo": 1, "multiplo": True},
+    },
+    "PALADINO_AURA_ANTIMAGIA": {
+        "nome": "Aura Antimagia",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "requisitos": ["14º nível de paladino"],
+        "descricao": "Mágico. Enquanto sua aura estiver ativa, você e os aliados dentro da aura podem rolar novamente qualquer teste de resistência contra magia recém realizado.",
+        "efeitos": {"aura_antimagia": True, "magico": True},
+    },
+    "PALADINO_AURA_ARDENTE": {
+        "nome": "Aura Ardente",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "requisitos": ["10º nível de paladino"],
+        "descricao": "Mágico. Enquanto sua aura estiver ativa, no início de cada um de seus turnos, espíritos e mortos-vivos a sua escolha dentro dela sofrem dano de luz igual a 5 + seu Carisma.",
+        "efeitos": {"aura_ardente": True, "magico": True},
     },
     "PALADINO_AURA_CURA": {
         "nome": "Aura de Cura",
         "tipo": "Poder de Paladino",
         "classe": "Paladino",
-        "requisitos": ["Nível 6"],
-        "descricao": "Aura cura 5 + Carisma no início do turno. ",
-        "efeitos": {}
+        "requisitos": ["6º nível de paladino"],
+        "descricao": "Mágico. Enquanto sua aura estiver ativa, no início de seus turnos, você e os aliados a sua escolha dentro dela curam um número de PV igual a 5 + seu Carisma.",
+        "efeitos": {"aura_cura": True, "magico": True},
+    },
+    "PALADINO_AURA_INVENCIBILIDADE": {
+        "nome": "Aura de Invencibilidade",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "requisitos": ["18º nível de paladino"],
+        "descricao": "Mágico. Enquanto sua aura estiver ativa, você e os aliados dentro da aura ignoram o primeiro dano que sofrerem na cena.",
+        "efeitos": {"aura_invencibilidade": True, "magico": True},
     },
     "PALADINO_AURA_PODEROSA": {
         "nome": "Aura Poderosa",
         "tipo": "Poder de Paladino",
         "classe": "Paladino",
-        "requisitos": ["Nível 6"],
-        "descricao": "Raio da aura aumenta para 30m. ",
-        "efeitos": {}
+        "requisitos": ["6º nível de paladino"],
+        "descricao": "Mágico. O raio da sua aura aumenta para 30m.",
+        "efeitos": {"aura_poderosa": True, "magico": True},
+    },
+    "PALADINO_FULGOR_DIVINO": {
+        "nome": "Fulgor Divino",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Mágico. Quando usa Golpe Divino, todos os inimigos em alcance curto ficam ofuscados até o início do seu próximo turno.",
+        "efeitos": {"fulgor_divino": True, "magico": True},
+    },
+    "PALADINO_JULGAMENTO_ARREPENDIMENTO": {
+        "nome": "Julgamento Divino: Arrependimento",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Ação de movimento e 2 PM: marca um inimigo em alcance curto. Na próxima vez que acertar um ataque em você ou aliado, faz Vontade (CD Car) ou fica atordoado no próximo turno dele (1x por cena).",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 2},
+    },
+    "PALADINO_JULGAMENTO_AUTORIDADE": {
+        "nome": "Julgamento Divino: Autoridade",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Mental. Ação de movimento e 1 PM: comanda criatura em alcance curto (Diplomacia oposto a Vontade). Se vencer, ela obedece a um comando simples como 'pare' ou 'largue a arma' (1x por cena).",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 1, "mental": True},
+    },
+    "PALADINO_JULGAMENTO_CORAGEM": {
+        "nome": "Julgamento Divino: Coragem",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Ação de movimento e 2 PM: inspira coragem em uma criatura em alcance curto (incluindo você). Fica imune a efeitos de medo e recebe +2 em testes de ataque contra o inimigo com maior ND na cena.",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 2},
+    },
+    "PALADINO_JULGAMENTO_ILUMINACAO": {
+        "nome": "Julgamento Divino: Iluminação",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Ação de movimento: marca um inimigo em alcance curto. Quando acerta um ataque corpo a corpo nesse inimigo, recebe 2 PM temporários (1x por cena).",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 0},
+    },
+    "PALADINO_JULGAMENTO_JUSTICA": {
+        "nome": "Julgamento Divino: Justiça",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Ação de movimento e 2 PM: marca um inimigo em alcance curto. Na próxima vez que causar dano em você ou aliado, faz Vontade (CD Car) ou sofre dano de luz igual à metade do dano que causou.",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 2},
+    },
+    "PALADINO_JULGAMENTO_LIBERTACAO": {
+        "nome": "Julgamento Divino: Libertação",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Ação de movimento e 5 PM: cancela uma condição negativa qualquer (como abalado, paralisado etc.) que esteja afetando uma criatura em alcance curto.",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 5},
+    },
+    "PALADINO_JULGAMENTO_SALVACAO": {
+        "nome": "Julgamento Divino: Salvação",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Ação de movimento e 2 PM: marca um inimigo em alcance curto. Até o fim da cena, quando acerta um ataque corpo a corpo nesse inimigo, recupera 5 PV.",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 2},
     },
     "PALADINO_JULGAMENTO_VINDICACAO": {
-        "nome": "Julgamento: Vindicação",
+        "nome": "Julgamento Divino: Vindicação",
         "tipo": "Poder de Paladino",
         "classe": "Paladino",
-        "descricao": "2 PM: Marca inimigo. +1 ataque / +1d8 dano contra ele. ",
-        "efeitos": {}
+        "descricao": "Ação de movimento e 2 PM: marca um inimigo que causou dano a você ou aliados na cena. Recebe +1 em ataque e +1d8 em dano contra ele, mas sofre -5 em ataque contra outros alvos. No 5º nível e a cada 5 níveis seguintes, pode pagar +1 PM para +1 ataque e +1d8 dano. Termina se o alvo ficar inconsciente.",
+        "efeitos": {
+            "julgamento_divino": True,
+            "julgamento_vindicacao": True,
+            "custo_pm": 2,
+        },
+    },
+    "PALADINO_JULGAMENTO_ZELO": {
+        "nome": "Julgamento Divino: Zelo",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Ação de movimento e 1 PM: marca um alvo em alcance longo. Pelo restante da cena, sempre que se mover na direção desse alvo, move-se com o dobro de seu deslocamento.",
+        "efeitos": {"julgamento_divino": True, "custo_pm": 1},
+    },
+    "PALADINO_ORAR": {
+        "nome": "Orar",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Mágico. Aprende e pode lançar uma magia divina de 1º círculo a sua escolha (atributo-chave Sabedoria). Pode escolher este poder quantas vezes quiser.",
+        "efeitos": {
+            "orar_magia": True,
+            "magico": True,
+            "multiplo": True,
+            "atributo_chave": "sab",
+        },
+    },
+    "PALADINO_VIRTUDE_CARIDADE": {
+        "nome": "Virtude Paladinesca: Caridade",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "O custo de suas habilidades de paladino que tenham um aliado como alvo é reduzido em -1 PM. Conta para o bônus progressivo de PM das Virtudes Paladinescas (+1/+3/+6/+10/+15 PM).",
+        "efeitos": {
+            "virtude_paladinesca": True,
+            "virtude_caridade": True,
+            "reducao_pm_aliado": 1,
+        },
+    },
+    "PALADINO_VIRTUDE_CASTIDADE": {
+        "nome": "Virtude Paladinesca: Castidade",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Torna-se imune a efeitos de encantamento e recebe +5 em testes de Intuição para perceber blefes. Conta para o bônus progressivo de PM das Virtudes Paladinescas (+1/+3/+6/+10/+15 PM).",
+        "efeitos": {
+            "virtude_paladinesca": True,
+            "imunidade": ["Encantamento"],
+            "bonus_pericia_situacional": {
+                "Intuição": {"valor": 5, "condicao": "perceber blefes"},
+            },
+        },
+    },
+    "PALADINO_VIRTUDE_COMPAIXAO": {
+        "nome": "Virtude Paladinesca: Compaixão",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Pode usar Cura pelas Mãos em alcance curto e, para cada PM gasto, cura 2d6+1 (em vez de 1d8+1). Conta para o bônus progressivo de PM das Virtudes Paladinescas (+1/+3/+6/+10/+15 PM).",
+        "efeitos": {"virtude_paladinesca": True, "virtude_compaixao": True},
+    },
+    "PALADINO_VIRTUDE_HUMILDADE": {
+        "nome": "Virtude Paladinesca: Humildade",
+        "tipo": "Poder de Paladino",
+        "classe": "Paladino",
+        "descricao": "Na primeira rodada de um combate, pode gastar uma ação completa para rezar e receber PM temporários iguais ao seu Carisma (duram até o fim da cena). Conta para o bônus progressivo de PM das Virtudes Paladinescas (+1/+3/+6/+10/+15 PM).",
+        "efeitos": {"virtude_paladinesca": True, "virtude_humildade": True},
     },
     "PALADINO_VIRTUDE_TEMPERANCA": {
-        "nome": "Virtude: Temperança",
+        "nome": "Virtude Paladinesca: Temperança",
         "tipo": "Poder de Paladino",
         "classe": "Paladino",
-        "descricao": "Itens consumíveis (poções/comida) rendem o dobro. +PM passivo. ",
-        "efeitos": {"pm_bonus_virtude": True}
-    }
+        "descricao": "Quando ingere um alimento, item alquímico ou poção, consome apenas metade do item (cada item rende duas doses). Conta para o bônus progressivo de PM das Virtudes Paladinescas (+1/+3/+6/+10/+15 PM).",
+        "efeitos": {"virtude_paladinesca": True, "virtude_temperanca": True},
+    },
 }

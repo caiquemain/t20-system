@@ -23,6 +23,7 @@ PODERES_QUE_DAO_MAGIAS = {
     "Aspecto do Outono": 1,
     "Aspecto da Primavera": 1,
     "Aspecto do Verão": 1,
+    "Orar": 1,
 }
 
 
