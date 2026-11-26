@@ -49,12 +49,12 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
-## 📜 Fase 4 — Revisão das 35 Origens do Livro Básico
+## ✅ Fase 4 — Revisão das 35 Origens do Livro Básico (Concluída)
 > Checklist detalhada: [`docs/checklists/origens-livro-basico.md`](./checklists/origens-livro-basico.md)
 
-- **Auditoria de dados (`dados_origens.py`):** conferir itens iniciais, perícias, lista de poderes e regras especiais (ex.: *Amnésico*) das 35 origens contra o texto oficial do T20 JdA.
-- **Poderes exclusivos (`dados_poderes_origem.py`):** hoje apenas `9/35` possuem `efeitos` declarativos (`26/35` vazios); modelar todos os efeitos mecânicos e conectá-los ao motor (`app/src/regras/`).
-- **Testes dedicados:** criar suíte `app/tests/test_origens*.py` cobrindo seleção de benefícios, itens e efeitos mecânicos de todas as 35 origens.
+- [x] **Auditoria de dados (`dados_origens.py`):** todas as 35 origens conferidas contra T20 JdA p.85–95; corrigidos `pericias_fixas` indevidas (*Amigo dos Animais*, *Assistente de Laboratório*, *Minerador*), especificações de *Ofício*, capitalização de *Quebra-Galho* e regra especial de *Amnésico*.
+- [x] **Poderes exclusivos (`dados_poderes_origem.py`):** `35/35` poderes com efeitos declarativos e descrições corrigidas; conectados ao motor *Coração Heroico* (`+3/+6/+9/+12 PM` por patamar), *Mochileiro* (`+5` carga máxima), *Escavador* (Picareta +1 dano), *Amigo Especial* (`+5 Adestramento` e `+2` parceiro), *Vida Rústica* (imunidade) e preservação de `memoria_escolhas` em poderes de origem.
+- [x] **Testes dedicados:** criada suíte `app/tests/test_origens.py` (`819 testes passando`).
 
 ---
 

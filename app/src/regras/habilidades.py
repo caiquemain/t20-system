@@ -212,22 +212,41 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
                                 existente.fonte = f"{existente.fonte} + {fonte_classe}" if existente.fonte else fonte_classe
 
     # C. ORIGEM
+    origem_nome = (ficha.cabecalho.origem or "").strip()
+    if origem_nome == "Amnésico" and "Lembranças Graduais" not in nomes_existentes:
+        dados_lg = next(
+            (v for k, v in HABILIDADES_GERAIS.items() if v["nome"] == "Lembranças Graduais"),
+            None,
+        )
+        efeitos_lg = dict(dados_lg.get("efeitos", {})) if dados_lg else {}
+        novas_habs.append(Habilidade(
+            nome="Lembranças Graduais",
+            tipo="Origem",
+            descricao=dados_lg.get("descricao", "Benefício de Origem") if dados_lg else "Benefício único.",
+            fonte="Origem: Amnésico",
+            escolhas_aplicadas=efeitos_lg,
+            efeitos=efeitos_lg,
+        ))
+        nomes_existentes.add("Lembranças Graduais")
+
     if ficha.escolhas_origem:
-        origem_nome = ficha.cabecalho.origem
         for escolha in ficha.escolhas_origem:
             if escolha in DADOS_PERICIAS or escolha.startswith("Ofício"):
                 continue
             if escolha not in nomes_existentes:
                 dados_poder = next(
                     (v for k, v in HABILIDADES_GERAIS.items() if v["nome"] == escolha), None)
-                efeitos_origem = dados_poder.get(
-                    "efeitos", {}) if dados_poder else {}
+                efeitos_origem = dict(dados_poder.get(
+                    "efeitos", {})) if dados_poder else {}
+                escolhas_salvas = dict(efeitos_origem)
+                if memoria_global and escolha in memoria_global:
+                    escolhas_salvas.update(memoria_global[escolha])
                 novas_habs.append(Habilidade(
                     nome=escolha, tipo="Origem",
                     descricao=dados_poder.get(
                         "descricao", "Benefício de Origem") if dados_poder else "Benefício único.",
                     fonte=f"Origem: {origem_nome}",
-                    escolhas_aplicadas=efeitos_origem,
+                    escolhas_aplicadas=escolhas_salvas,
                     efeitos=efeitos_origem
                 ))
                 nomes_existentes.add(escolha)

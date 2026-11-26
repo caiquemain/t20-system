@@ -1,7 +1,8 @@
-# --- ESTRUTURA PARA DADOS DE ORIGENS (T20 JdA) ---
-# itens: String com a descrição dos itens iniciais.
+# -*- coding: utf-8 -*-
+# --- ESTRUTURA PARA DADOS DE ORIGENS (T20 JdA p.85-95) ---
+# itens: String com a descrição dos itens iniciais recebidos sem custo.
 # beneficios_lista: Lista de todos os benefícios (perícias e poderes) que o jogador PODE escolher.
-# pericias_fixas: Lista de perícias que a origem concede e são consideradas como 'escolhidas'.
+# pericias_fixas: Lista de perícias fixas concedidas pela origem (vazia no T20 JdA).
 # qtd_escolhas: Quantidade de benefícios totais que o jogador escolhe (padrão é 2).
 
 DADOS_ORIGENS = {
@@ -16,14 +17,16 @@ DADOS_ORIGENS = {
         "descricao": "Desde criança você tem facilidade em lidar com animais, sempre conversou com eles e sentiu ser capaz de compreendê-los.",
         "itens": "Cão de caça, cavalo, pônei ou trobo (escolha um).",
         "qtd_escolhas": 2,
-        "pericias_fixas": ["Adestramento", "Cavalgar"],
-        "beneficios_lista": ["Amigo Especial"],
+        "pericias_fixas": [],
+        "beneficios_lista": ["Adestramento", "Cavalgar", "Amigo Especial"],
     },
     "Amnésico": {
         "descricao": "Você perdeu a maior parte da memória. Tem apenas uma intuição sobre aquilo que consegue fazer. Seus atuais companheiros são a única família que conhece.",
         "itens": "Um ou mais itens (somando até T$ 500), aprovados pelo mestre, que podem ser uma pista misteriosa do seu passado.",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
+        "poder_fixo": "Lembranças Graduais",
+        "regra_especial": "amnesico",
         "beneficios_lista": ["Lembranças Graduais"],
     },
     "Aristocrata": {
@@ -41,18 +44,18 @@ DADOS_ORIGENS = {
         "beneficios_lista": ["Ofício", "Vontade", "Frutos do Trabalho", "Sortudo"],
     },
     "Artista": {
-        "descricao": "Você possui talento e produz entretenimento. Talvez saiba entoar belas canções ou seja um ator/dançarino formado.",
+        "descricao": "Você possui talento e produz entretenimento. Talvez saiba entoar belas canções ou seja um ator ou dançarino formado.",
         "itens": "Estojo de disfarces ou um instrumento musical a sua escolha.",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Atuação", "Enganação", "Atraente", "Dom Artístico", "Sortudo", "Torcida"],
     },
     "Assistente de Laboratório": {
-        "descricao": "Você atuou como ajudante para um alquimista, inventor ou mago, exposto a experimentos perigosos.",
+        "descricao": "Você atuou como ajudante para um alquimista, inventor ou mago, exposto a substâncias e experimentos perigosos.",
         "itens": "Instrumentos de Ofício (alquimista).",
         "qtd_escolhas": 2,
-        "pericias_fixas": ["Ofício", "Misticismo"],
-        "beneficios_lista": ["Esse Cheiro...", "Venefício", "Poder da Tormenta (Escolha)"],
+        "pericias_fixas": [],
+        "beneficios_lista": ["Ofício (alquimista)", "Misticismo", "Esse Cheiro...", "Venefício", "Poder da Tormenta (Escolha)"],
     },
     "Batedor": {
         "descricao": "Você aprendeu a achar caminhos e dirigir outros com segurança, seja conduzindo caravanas ou rastreando inimigos.",
@@ -70,7 +73,7 @@ DADOS_ORIGENS = {
     },
     "Charlatão": {
         "descricao": "Você sempre teve talento para resolver problemas com conversa, usando palavras para vencer obstáculos.",
-        "itens": "Estojo de disfarces, joia falsificada (valor aparente de T$ 100).",
+        "itens": "Estojo de disfarces, joia falsificada (valor aparente de T$ 100, sem valor real).",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Enganação", "Jogatina", "Alpinista Social", "Aparência Inofensiva", "Sortudo"],
@@ -90,7 +93,7 @@ DADOS_ORIGENS = {
         "beneficios_lista": ["Enganação", "Furtividade", "Ladinagem", "Punguista", "Venefício"],
     },
     "Curandeiro": {
-        "descricao": "Você é treinado em curar com remédios e tratamentos naturais, sendo um ajudante de curandeiro ou tendo estudo formal.",
+        "descricao": "Você é treinado em curar com remédios e tratamentos naturais, sendo ajudante de curandeiro ou com estudo formal.",
         "itens": "Bálsamo restaurador x2, maleta de medicamentos.",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
@@ -105,28 +108,28 @@ DADOS_ORIGENS = {
     },
     "Escravo": {
         "descricao": "Você já nasceu escravo ou foi capturado, mas encontrou uma chance de escapar ou foi libertado.",
-        "itens": "Algemas, uma ferramenta pesada (maça).",
+        "itens": "Algemas, uma ferramenta pesada (mesmas estatísticas de uma maça).",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Atletismo", "Fortitude", "Furtividade", "Desejo de Liberdade", "Vitalidade"],
     },
     "Estudioso": {
         "descricao": "Longos anos de sua vida foram gastos em meio a livros e pergaminhos, em busca de desvendar segredos.",
-        "itens": "Coleção de livros (+1 em Conhecimento, Guerra, Misticismo ou Nobreza, à sua escolha).",
+        "itens": "Coleção de livros (+1 em Conhecimento, Guerra, Misticismo ou Nobreza, a sua escolha).",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Conhecimento", "Guerra", "Misticismo", "Aparência Inofensiva", "Palpite Fundamentado"],
     },
     "Fazendeiro": {
         "descricao": "Você trabalhou duro em campos e fazendas, cultivando a terra ou criando animais, vivendo em contato com a natureza.",
-        "itens": "Carroça, uma ferramenta agrícola (lança), 10 rações de viagem, um animal não combativo.",
+        "itens": "Carroça, uma ferramenta agrícola (mesmas estatísticas de uma lança), 10 rações de viagem, um animal não combativo (como uma galinha, porco ou ovelha).",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
-        "beneficios_lista": ["Adestramento", "Cavalgar", "Ofício", "Sobrevivência", "Água no Feijão", "Ginete"],
+        "beneficios_lista": ["Adestramento", "Cavalgar", "Ofício (fazendeiro)", "Sobrevivência", "Água no Feijão", "Ginete"],
     },
     "Forasteiro": {
         "descricao": "Você veio de longe e sua cultura nativa é quase ou totalmente desconhecida no Reinado, tornando-o uma figura exótica.",
-        "itens": "Equipamento de viagem, instrumento musical exótico, traje estrangeiro.",
+        "itens": "Equipamento de viagem, instrumento musical exótico (+1 em uma perícia de Carisma aprovada pelo mestre), traje estrangeiro.",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Cavalgar", "Pilotagem", "Sobrevivência", "Cultura Exótica", "Lobo Solitário"],
@@ -174,7 +177,7 @@ DADOS_ORIGENS = {
         "beneficios_lista": ["Atletismo", "Furtividade", "Sobrevivência", "Lobo Solitário", "Sentidos Aguçados", "Vendedor de Carcaças"],
     },
     "Membro de Guilda": {
-        "descricao": "Você foi membro atuante em uma grande guilda, que forneceu treinamento e equipamento necessário.",
+        "descricao": "Você foi membro atuante em uma grande guilda, que forneceu treinamento e equipamento necessários.",
         "itens": "Gazua ou instrumentos de ofício.",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
@@ -191,8 +194,8 @@ DADOS_ORIGENS = {
         "descricao": "Você mergulhou nas profundezas da terra atrás de metais e riquezas, adquirindo informação sobre túneis e masmorras.",
         "itens": "Gemas preciosas no valor de T$ 100, picareta.",
         "qtd_escolhas": 2,
-        "pericias_fixas": ["Atletismo", "Fortitude", "Ofício"],
-        "beneficios_lista": ["Ataque Poderoso", "Escavador", "Sentidos Aguçados"],
+        "pericias_fixas": [],
+        "beneficios_lista": ["Atletismo", "Fortitude", "Ofício (minerador)", "Ataque Poderoso", "Escavador", "Sentidos Aguçados"],
     },
     "Nômade": {
         "descricao": "Você nunca pertenceu a um só lugar, habituado às estradas e sem laços com nenhuma terra.",
@@ -202,8 +205,8 @@ DADOS_ORIGENS = {
         "beneficios_lista": ["Cavalgar", "Pilotagem", "Sobrevivência", "Lobo Solitário", "Mochileiro", "Sentidos Aguçados"],
     },
     "Pivete": {
-        "descricao": "Você era uma criança de rua, que aprendeu cedo a sobreviver em grandes cidades roubando ou cumprindo pequenas tarefas para bandidos.",
-        "itens": "Gazua, traje de plebeu, um animal urbano.",
+        "descricao": "Você era uma criança de rua, que aprendeu cedo a sobreviver em grandes cidades roubando ou cumprindo pequenas tarefas.",
+        "itens": "Gazua, traje de plebeu, um animal urbano (como um cão, gato, rato ou pombo).",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Furtividade", "Iniciativa", "Ladinagem", "Acrobático", "Aparência Inofensiva", "Quebra-Galho"],
@@ -224,7 +227,7 @@ DADOS_ORIGENS = {
     },
     "Selvagem": {
         "descricao": "Você nasceu em uma tribo de bárbaros incultos ou foi criado por animais, sem contato com a civilização.",
-        "itens": "Uma arma simples, um pequeno animal de estimação.",
+        "itens": "Uma arma simples, um pequeno animal de estimação como um pássaro ou esquilo.",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Percepção", "Reflexos", "Sobrevivência", "Lobo Solitário", "Vida Rústica", "Vitalidade"],
@@ -238,18 +241,16 @@ DADOS_ORIGENS = {
     },
     "Taverneiro": {
         "descricao": "Você foi dono, filho do dono ou empregado em algum lugar frequentado por aventureiros, ouvindo todas as grandes histórias.",
-        "itens": "Rolo de macarrão ou martelo de carne (clava), uma panela, um avental, uma caneca e um pano sujo.",
+        "itens": "Rolo de macarrão ou martelo de carne (mesmas estatísticas de uma clava), uma panela, um avental, uma caneca e um pano sujo.",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
-        "beneficios_lista": ["Diplomacia", "Jogatina", "Ofício", "Gororoba", "Proficiência", "Vitalidade"],
+        "beneficios_lista": ["Diplomacia", "Jogatina", "Ofício (cozinheiro)", "Gororoba", "Proficiência", "Vitalidade"],
     },
     "Trabalhador": {
         "descricao": "Você trabalhou braçalmente, transportando pedras ou pilhando cargas, tornando-se forte de corpo.",
-        "itens": "Uma ferramenta pesada (maça ou lança, à sua escolha).",
+        "itens": "Uma ferramenta pesada (mesmas estatísticas de uma maça ou lança, a sua escolha).",
         "qtd_escolhas": 2,
         "pericias_fixas": [],
         "beneficios_lista": ["Atletismo", "Fortitude", "Atlético", "Esforçado"],
     },
 }
-
-# --- FIM DO DADOS_ORIGENS.PY ---

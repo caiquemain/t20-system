@@ -160,6 +160,13 @@ def inicializar_pericias(ficha: Personagem):
                         detalhamento_bonus[p_nome].append(
                             {"fonte": hab.nome, "valor": val_final})
 
+        # 1a-extra. Amigo Especial (Origem: Amigo dos Animais, T20 p.85): +2 em perícia escolhida (exceto Luta/Pontaria)
+        p_amigo = efeitos.get("pericia_amigo_especial")
+        if isinstance(p_amigo, str) and p_amigo and p_amigo not in ("Luta", "Pontaria"):
+            detalhamento_bonus.setdefault(p_amigo, []).append(
+                {"fonte": f"{hab.nome} (parceiro)", "valor": 2}
+            )
+
         # 1b. Soma de Atributo Extra na Perícia (ex.: Presença Paralisante: +Car em Iniciativa)
         if "pericia_soma_atributo" in efeitos and isinstance(efeitos["pericia_soma_atributo"], dict):
             _mapa_attr = {
