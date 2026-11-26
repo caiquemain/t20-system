@@ -162,6 +162,18 @@ def calcular_pv_pm(ficha: Personagem):
                     valor=val
                 )
 
+        # Sarado (Lutador, T20 p.77): soma Força no total de PV
+        attr_pv = efeitos.get("pv_soma_atributo")
+        if attr_pv:
+            full = mapa_attr_pm.get(str(attr_pv).lower()[:3], str(attr_pv))
+            val = getattr(ficha.atributos, full, 0)
+            if val != 0:
+                pv_calc.adicionar_bonus(
+                    fonte=f"Poder: {hab.nome} (PV)",
+                    categoria="Poder",
+                    valor=val
+                )
+
         # Bravata Audaz (Bucaneiro, T20 p.47): se cumprida, +2 PM por nível de bucaneiro
         pm_bravata = efeitos.get("pm_por_nivel_se_cumprida")
         if pm_bravata and "bravata_audaz" in (getattr(ficha, "condicoes_ativas", None) or []):
@@ -196,6 +208,11 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
     usa_pesada = any(
         item.equipado and 
         (catalogo_do_item(item.nome) or {}).get("tipo_armadura") == "Pesada"
+        for item in ficha.inventario.equipamentos
+    )
+    usa_qualquer_armadura = any(
+        item.equipado and
+        (catalogo_do_item(item.nome) or {}).get("tipo_armadura") in ("Leve", "Pesada")
         for item in ficha.inventario.equipamentos
     )
     condicoes_ativas = getattr(ficha, "condicoes_ativas", None) or []
@@ -279,18 +296,27 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                     valor=val_final
                 )
 
-        # Soma de atributo na Defesa (ex.: Insolência do Bucaneiro = Car, limitado pelo nível)
+        # Soma de atributo na Defesa (Insolência, Casca Grossa, Braços Calejados)
         dsa = efeitos.get("defesa_soma_atributo")
         if dsa:
             if isinstance(dsa, dict):
                 attr_cod = str(dsa.get("atributo", "")).lower()[:3]
                 limite_nivel = bool(dsa.get("limite_por_nivel"))
                 exige_lib_dsa = bool(dsa.get("exige_liberdade_movimento", exige_lib))
+                sem_armadura = bool(dsa.get("sem_armadura"))
+                sem_pesada = bool(dsa.get("sem_armadura_pesada"))
             else:
                 attr_cod = str(dsa).lower()[:3]
                 limite_nivel = False
                 exige_lib_dsa = exige_lib
-            if not exige_lib_dsa or tem_liberdade_mov:
+                sem_armadura = False
+                sem_pesada = False
+            bloqueado = (
+                (exige_lib_dsa and not tem_liberdade_mov)
+                or (sem_armadura and usa_qualquer_armadura)
+                or (sem_pesada and usa_pesada)
+            )
+            if not bloqueado:
                 campo = mapa_attr_def.get(attr_cod)
                 if campo:
                     mod_val = calcular_modificador(getattr(ficha.atributos, campo, 0))
@@ -302,6 +328,24 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                             categoria="Poder",
                             valor=mod_val
                         )
+
+        # Casca Grossa (Lutador, T20 p.77): +1 Defesa no 7º e a cada 4 níveis (sem armadura pesada)
+        cg_esc = efeitos.get("casca_grossa_escala")
+        if isinstance(cg_esc, dict) and not usa_pesada:
+            inicio = int(cg_esc.get("inicio", 7) or 7)
+            cada = int(cg_esc.get("cada", 4) or 4)
+            passo = int(cg_esc.get("bonus", 1) or 1)
+            nivel_lut = next(
+                (int(c.nivel or 0) for c in (ficha.classes or []) if (c.nome or "") == "Lutador"),
+                nivel_total,
+            )
+            if nivel_lut >= inicio and cada > 0:
+                val_cg = passo + ((nivel_lut - inicio) // cada) * passo
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Casca Grossa (escala)",
+                    categoria="Poder",
+                    valor=val_cg
+                )
 
         # En Garde (Bucaneiro, T20 p.48): +2 Defesa quando postura ativa
         if (hab.nome or "") == "En Garde" and "en_garde" in condicoes_ativas:
@@ -974,6 +1018,43 @@ def calcular_ataque_furtivo(ficha: Personagem) -> Optional[Dict[str, Any]]:
         "assassinar_formula": f"{dados * 2}d6" if tem_assassinar else None,
         "especialista_slots": max(1, mod_int),
         "roubo_mana_pm": dados if tem_roubo else 0,
+    }
+
+
+def calcular_briga(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula parâmetros de Briga do Lutador (T20 JdA p.75-77)."""
+    briga = next((h for h in ficha.habilidades if (h.nome or "") == "Briga"), None)
+    if briga is None:
+        return None
+
+    nivel_lut = 1
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Lutador":
+            nivel_lut = int(c.nivel or 1)
+            break
+
+    dono = any((h.efeitos or {}).get("dono_da_rua") or (h.nome or "") == "Dono da Rua" for h in ficha.habilidades)
+    if dono:
+        dado = "2d10"
+    else:
+        prog = ["1d6", "1d8", "1d10", "2d6", "2d8"]
+        degrau = min(len(prog) - 1, max(0, (nivel_lut - 1) // 4))
+        dado = prog[degrau]
+
+    margem = 20 - sum(int((h.efeitos or {}).get("desarmado_margem_ameaca", 0) or 0) for h in ficha.habilidades)
+    mult = 2 + sum(int((h.efeitos or {}).get("desarmado_multiplicador_critico", 0) or 0) for h in ficha.habilidades)
+    trincado = any((h.efeitos or {}).get("desarmado_soma_con_dano") or (h.nome or "") == "Trincado" for h in ficha.habilidades)
+    ignora_rd = max(
+        [int((h.efeitos or {}).get("desarmado_ignora_rd", 0) or 0) for h in ficha.habilidades] or [0]
+    )
+
+    return {
+        "dado": dado,
+        "margem_ameaca": margem,
+        "multiplicador": mult,
+        "dano_con_trincado": calcular_modificador(ficha.atributos.constituicao) if trincado else 0,
+        "ignora_rd": ignora_rd,
+        "dono_da_rua": dono,
     }
 
 

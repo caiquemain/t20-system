@@ -271,6 +271,8 @@ class Combate(BaseModel):
     inventor_calc: Optional[Dict[str, Any]] = None
     # Cálculo de Ataque Furtivo (Ladino, T20 p.72-74): 1d6..10d6, Assassinar, Especialista e Roubo de Mana.
     ataque_furtivo_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Briga (Lutador, T20 p.75-77): 1d6..2d10, Golpe Cruel/Violento, Trincado, Punhos de Adamante e Dono da Rua.
+    briga_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0

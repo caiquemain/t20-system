@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 11/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo, Druida, Guerreiro, Inventor e Ladino)  
+**Status:** 🟡 12/14 classes completas (faltam apenas Nobre e Paladino)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -21,7 +21,7 @@
 | **Guerreiro** | 23 (4 fixas + 19 poderes) | 23 (100%) | 2 arquivos (`test_guerreiro_*`) | ✅ Completa |
 | **Inventor** | 38 (8 fixas + 30 poderes) | 38 (100%) | 2 arquivos (`test_inventor_*`) | ✅ Completa |
 | **Ladino** | 27 (7 fixas + 20 poderes) | 27 (100%) | 2 arquivos (`test_ladino_*`) | ✅ Completa |
-| **Lutador** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
+| **Lutador** | 29 (6 fixas + 23 poderes) | 29 (100%) | 2 arquivos (`test_lutador_*`) | ✅ Completa |
 | **Paladino** | 11 (6 fixas + 5 poderes) | 3 (27%) | — | 🟡 Parcial |
 | **Nobre** | 9 (4 fixas + 5 poderes) | 2 (22%) | — | 🟡 Parcial |
 
@@ -31,7 +31,7 @@
 
 ### Lote 1 — Marciais
 - [x] **Guerreiro** (Ataque Especial, Durão, Ataque Extra, Campeão + 19 poderes + testes)
-- [ ] **Lutador** (Briga, Golpe Relâmpago, Casca Grossa + poderes + testes)
+- [x] **Lutador** (Briga, Golpe Relâmpago, Casca Grossa, Golpe Cruel, Golpe Violento, Dono da Rua + 23 poderes + testes)
 - [x] **Cavaleiro** (Código de Honra, Baluarte, Duelo, Caminho do Cavaleiro, Resoluto, Bravura Final + 20 poderes + testes)
 
 ### Lote 2 — Especialistas
