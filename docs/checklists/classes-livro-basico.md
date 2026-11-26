@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 10/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo, Druida, Guerreiro e Inventor)  
+**Status:** 🟡 11/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo, Druida, Guerreiro, Inventor e Ladino)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -20,7 +20,7 @@
 | **Druida** | 27 (5 fixas + 22 poderes) | 27 (100%) | 2 arquivos (`test_druida_*`) | ✅ Completa |
 | **Guerreiro** | 23 (4 fixas + 19 poderes) | 23 (100%) | 2 arquivos (`test_guerreiro_*`) | ✅ Completa |
 | **Inventor** | 38 (8 fixas + 30 poderes) | 38 (100%) | 2 arquivos (`test_inventor_*`) | ✅ Completa |
-| **Ladino** | 11 (4 fixas + 7 poderes) | 7 (64%) | — | 🟡 Parcial |
+| **Ladino** | 27 (7 fixas + 20 poderes) | 27 (100%) | 2 arquivos (`test_ladino_*`) | ✅ Completa |
 | **Lutador** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
 | **Paladino** | 11 (6 fixas + 5 poderes) | 3 (27%) | — | 🟡 Parcial |
 | **Nobre** | 9 (4 fixas + 5 poderes) | 2 (22%) | — | 🟡 Parcial |
@@ -35,7 +35,7 @@
 - [x] **Cavaleiro** (Código de Honra, Baluarte, Duelo, Caminho do Cavaleiro, Resoluto, Bravura Final + 20 poderes + testes)
 
 ### Lote 2 — Especialistas
-- [ ] **Ladino** (Ataque Furtivo, Especialista, Evasão + poderes + testes)
+- [x] **Ladino** (Ataque Furtivo, Especialista, Evasão, Esquiva Sobrenatural, Olhos nas Costas, Evasão Aprimorada, A Pessoa Certa para o Trabalho + 20 poderes + testes)
 - [x] **Caçador** (Marca da Presa, Rastreador, Explorador, Caminho do Explorador, Mestre Caçador + 23 poderes + testes)
 - [x] **Bucaneiro** (Audácia, Insolência, Evasão, Esquiva Sagaz, Panache, Evasão Aprimorada, Sorte de Nimb + 19 poderes + testes)
 

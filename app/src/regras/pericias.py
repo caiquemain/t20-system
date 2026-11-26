@@ -242,6 +242,13 @@ def inicializar_pericias(ficha: Personagem):
                     {"fonte": "Missa: Escudo Divino", "valor": 1 * mult_m}
                 )
 
+        # 1h. Fuga Formidável (Ladino, T20 p.73): +5 Acrobacia e Atletismo
+        if efeitos.get("fuga_formidavel") and "fuga_formidavel" in (getattr(ficha, "condicoes_ativas", None) or []):
+            for p_ff in ("Acrobacia", "Atletismo"):
+                detalhamento_bonus.setdefault(p_ff, []).append(
+                    {"fonte": "Fuga Formidável", "valor": 5}
+                )
+
         # 2. Bônus Genéricos por Atributo
         if "bonus_pericia_atributo" in efeitos and isinstance(efeitos["bonus_pericia_atributo"], dict):
             for attr_chave, v_bonus in efeitos["bonus_pericia_atributo"].items():

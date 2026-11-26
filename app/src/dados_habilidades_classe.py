@@ -2674,96 +2674,219 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # LADINO
+    # LADINO (T20 JdA, p. 72-74)
     # ==========================================================================
     "LADINO_ATAQUE_FURTIVO": {
         "nome": "Ataque Furtivo",
         "tipo": "Habilidade de Classe",
         "classe": "Ladino",
         "nivel": 1,
-        "descricao": "+1d6 dano em desprevenidos/flanqueados (1/rodada). Aumenta a cada 2 níveis. ",
-        "efeitos": {"dano_furtivo_base": "1d6"}
+        "descricao": "1x/rodada, ao atingir criatura desprevenida (corpo a corpo ou alcance curto) ou flanqueada, causa +1d6 de dano extra (+1d6 a cada 2 níveis: 2d6 no 3º até 10d6 no 19º). Criaturas imunes a críticos são imunes.",
+        "efeitos": {"dano_furtivo_base": "1d6", "escala_nivel": {"cada": 2, "dados": 1}}
     },
     "LADINO_ESPECIALISTA": {
         "nome": "Especialista",
         "tipo": "Habilidade de Classe",
         "classe": "Ladino",
         "nivel": 1,
-        "descricao": "1 PM: Dobra bônus de treino em perícias escolhidas (Qtd = Int). ",
-        "efeitos": {"especialista_slots": "int"}
+        "descricao": "Escolha um número de perícias treinadas igual à sua Inteligência (mínimo 1). Pode gastar 1 PM para dobrar seu bônus de treinamento nesse teste (exceto ataque).",
+        "efeitos": {"especialista_slots": "int", "custo_pm": 1}
     },
     "LADINO_EVASAO": {
         "nome": "Evasão",
         "tipo": "Habilidade de Classe",
         "classe": "Ladino",
         "nivel": 2,
-        "descricao": "Não sofre dano se passar em Reflexos contra área. ",
-        "efeitos": {"evasao": True}
+        "descricao": "Quando sofre efeito com Reflexos para reduzir dano à metade, não sofre dano algum se passar. Exige liberdade de movimentos.",
+        "efeitos": {"evasao": True, "exige_liberdade_movimento": True}
     },
     "LADINO_ESQUIVA_SOBRENATURAL": {
         "nome": "Esquiva Sobrenatural",
         "tipo": "Habilidade de Classe",
         "classe": "Ladino",
         "nivel": 4,
-        "descricao": "Nunca fica surpreendido. ",
+        "descricao": "Você nunca fica surpreendido.",
         "efeitos": {"imunidade": ["surpreendido"]}
     },
-    # --- PODERES DE LADINO ---
+    "LADINO_OLHOS_COSTAS": {
+        "nome": "Olhos nas Costas",
+        "tipo": "Habilidade de Classe",
+        "classe": "Ladino",
+        "nivel": 8,
+        "descricao": "Você não pode ser flanqueado.",
+        "efeitos": {"imunidade": ["flanqueado"]}
+    },
+    "LADINO_EVASAO_APRIMORADA": {
+        "nome": "Evasão Aprimorada",
+        "tipo": "Habilidade de Classe",
+        "classe": "Ladino",
+        "nivel": 10,
+        "descricao": "Quando sofre efeito com Reflexos para reduzir dano à metade, não sofre dano se passar e sofre apenas metade se falhar. Exige liberdade de movimentos.",
+        "efeitos": {"evasao_aprimorada": True, "exige_liberdade_movimento": True}
+    },
+    "LADINO_PESSOA_CERTA": {
+        "nome": "A Pessoa Certa para o Trabalho",
+        "tipo": "Habilidade de Classe",
+        "classe": "Ladino",
+        "nivel": 20,
+        "descricao": "Ao fazer um ataque furtivo ou usar uma perícia da lista de ladino, pode gastar 5 PM para receber +10 no teste.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 5, "bonus_teste": 10}, "pessoa_certa_trabalho": True}
+    },
+    # --- PODERES DE LADINO (20 poderes oficiais, T20 JdA p. 73-74) ---
     "LADINO_ASSASSINAR": {
         "nome": "Assassinar",
         "tipo": "Poder de Ladino",
         "classe": "Ladino",
         "requisitos": ["Nível 5"],
-        "descricao": "3 PM: Analisa alvo. Dobra dados de ataque furtivo. ",
-        "efeitos": {}
+        "descricao": "Ação de movimento, 3 PM, alcance curto: analisa criatura; até fim do próximo turno, dobra os dados de dano extra do primeiro Ataque Furtivo que causar dano a ela.",
+        "efeitos": {"acao_ativavel": {"acao": "movimento", "custo_pm": 3, "alcance": "curto", "efeito": "dobrar_ataque_furtivo"}, "assassinar": True}
+    },
+    "LADINO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
+    },
+    "LADINO_CONTATOS_SUBMUNDO": {
+        "nome": "Contatos no Submundo",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "descricao": "Em comunidade vila ou maior, 2 PM + Car CD 10: +5 Investigação (interrogar), 20% desconto em mundanos/poções/pergaminhos e acesso a itens/serviços proibidos.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "cd": 10, "desconto_pct": 20, "bonus_interrogar": 5}}
     },
     "LADINO_EMBOSCAR": {
         "nome": "Emboscar",
         "tipo": "Poder de Ladino",
         "classe": "Ladino",
         "requisitos": ["Treinado em Furtividade"],
-        "descricao": "2 PM: Ação padrão extra na primeira rodada. ",
-        "efeitos": {}
+        "descricao": "Na primeira rodada de cada combate, pode gastar 2 PM para executar uma ação padrão adicional em seu turno.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "gatilho": "primeira_rodada_combate", "efeito": "acao_padrao_adicional"}}
+    },
+    "LADINO_ESCAPISTA": {
+        "nome": "Escapista",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "descricao": "Recebe +5 em Acrobacia para escapar, passar por espaço apertado e passar por inimigo, e em testes para resistir a efeitos de movimento.",
+        "efeitos": {"escapista_bonus": 5}
+    },
+    "LADINO_FUGA_FORMIDAVEL": {
+        "nome": "Fuga Formidável",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Int 1"],
+        "descricao": "Ação completa, 1 PM, cena: +3m deslocamento, +5 Acrobacia e Atletismo e ignora terreno difícil (perde se fizer ação não relacionada a fugir).",
+        "efeitos": {"fuga_formidavel": {"deslocamento_bonus": 3, "bonus_pericia": {"Acrobacia": 5, "Atletismo": 5}}, "acao_ativavel": {"acao": "completa", "custo_pm": 1}}
+    },
+    "LADINO_GATUNO": {
+        "nome": "Gatuno",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "descricao": "Recebe +2 em Atletismo. Quando escala, não fica desprevenido e avança seu deslocamento normal.",
+        "efeitos": {"bonus_pericia": {"Atletismo": 2}, "gatuno_escalar": True}
+    },
+    "LADINO_LADRAO_ARCANO": {
+        "nome": "Ladrão Arcano",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Roubo de Mana", "Nível 13"],
+        "descricao": "Ao causar dano com ataque furtivo em conjurador, paga 1 PM/círculo (até 4º) para roubar magia já vista e lançá-la até fim da cena (atributo-chave Inteligência).",
+        "efeitos": {"ladrao_arcano_circulo_max": 4, "atributo_chave": "int"}
+    },
+    "LADINO_MAO_NA_BOCA": {
+        "nome": "Mão na Boca",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Treinado em Luta"],
+        "descricao": "Recebe +2 em testes de agarrar. Ao acertar ataque furtivo contra desprevenido, faz teste de agarrar como ação livre (alvo agarrado não pode falar).",
+        "efeitos": {"mao_na_boca_agarrar": 2}
+    },
+    "LADINO_MAOS_RAPIDAS": {
+        "nome": "Mãos Rápidas",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Des 2", "Treinado em Ladinagem"],
+        "descricao": "1x/rodada, ao fazer teste de Ladinagem para abrir fechaduras, ocultar item, punga ou sabotar, paga 1 PM para fazê-lo como ação livre.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 1, "frequencia": "1x_por_rodada", "efeito": "ladinagem_acao_livre"}}
     },
     "LADINO_MENTE_CRIMINOSA": {
         "nome": "Mente Criminosa",
         "tipo": "Poder de Ladino",
         "classe": "Ladino",
         "requisitos": ["Int 1"],
-        "descricao": "Soma Inteligência em Ladinagem e Furtividade. ",
+        "descricao": "Soma sua Inteligência em Ladinagem e Furtividade.",
         "efeitos": {"pericia_soma_atributo": {"Ladinagem": "int", "Furtividade": "int"}}
+    },
+    "LADINO_OPORTUNISMO": {
+        "nome": "Oportunismo",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Nível 6"],
+        "descricao": "1x/rodada, quando inimigo adjacente sofre dano de aliado, pode gastar 2 PM para fazer ataque corpo a corpo contra esse inimigo.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "frequencia": "1x_por_rodada", "efeito": "ataque_oportunismo"}}
     },
     "LADINO_ROLAMENTO_DEFENSIVO": {
         "nome": "Rolamento Defensivo",
         "tipo": "Poder de Ladino",
         "classe": "Ladino",
         "requisitos": ["Treinado em Reflexos"],
-        "descricao": "Reação (2 PM): Reduz dano à metade. Fica caído. ",
-        "efeitos": {}
+        "descricao": "Sempre que sofre dano, pode gastar 2 PM para reduzir esse dano à metade (fica caído).",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "efeito": "reduzir_dano_metade_caido"}, "rolamento_defensivo": True}
+    },
+    "LADINO_ROUBO_MANA": {
+        "nome": "Roubo de Mana",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Truque Mágico", "Nível 7"],
+        "descricao": "Ao causar dano com ataque furtivo, recebe 1 PM temporário por 1d6 de ataque furtivo e a criatura perde 1 PM por dado (1x/cena por criatura).",
+        "efeitos": {"roubo_de_mana": True}
+    },
+    "LADINO_SAQUEADOR_TUMBAS": {
+        "nome": "Saqueador de Tumbas",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "descricao": "Recebe +5 em Investigação para encontrar armadilhas e em testes de resistência contra elas; desabilita mecanismos com ação padrão (em vez de 1d4 rodadas).",
+        "efeitos": {"saqueador_tumbas_bonus": 5}
     },
     "LADINO_SOMBRA": {
         "nome": "Sombra",
         "tipo": "Poder de Ladino",
         "classe": "Ladino",
         "requisitos": ["Treinado em Furtividade"],
-        "descricao": "+2 Furtividade. Sem penalidade por mover. ",
-        "efeitos": {"bonus_pericia": {"Furtividade": 2}}
+        "descricao": "Recebe +2 em Furtividade, sem penalidade por mover no deslocamento normal e reduz penalidade de atacar/ações chamativas para -10.",
+        "efeitos": {"bonus_pericia": {"Furtividade": 2}, "sombra_furtividade": True}
     },
     "LADINO_TRUQUE_MAGICO": {
         "nome": "Truque Mágico",
         "tipo": "Poder de Ladino",
         "classe": "Ladino",
         "requisitos": ["Int 1"],
-        "descricao": "Aprende uma magia arcana de 1º círculo (Int). ",
-        "efeitos": {"magia_adicional_arcana": 1}
+        "descricao": "Aprende e pode lançar uma magia arcana de 1º círculo à escolha (atributo-chave Inteligência). Pode escolher quantas vezes quiser.",
+        "efeitos": {"magia_adicional_arcana": 1, "atributo_chave": "int", "multipla_escolha": True}
     },
     "LADINO_VELOCIDADE_LADINA": {
         "nome": "Velocidade Ladina",
         "tipo": "Poder de Ladino",
         "classe": "Ladino",
         "requisitos": ["Des 2", "Treinado em Iniciativa"],
-        "descricao": "2 PM: Ação de movimento extra. ",
-        "efeitos": {}
+        "descricao": "1x/rodada, pode gastar 2 PM para realizar uma ação de movimento adicional em seu turno.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "frequencia": "1x_por_rodada", "efeito": "acao_movimento_adicional"}}
+    },
+    "LADINO_VENENO_PERSISTENTE": {
+        "nome": "Veneno Persistente",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Veneno Potente", "Nível 8"],
+        "descricao": "Veneno aplicado a uma arma dura por três ataques (em vez de apenas um).",
+        "efeitos": {"veneno_duracao_ataques": 3}
+    },
+    "LADINO_VENENO_POTENTE": {
+        "nome": "Veneno Potente",
+        "tipo": "Poder de Ladino",
+        "classe": "Ladino",
+        "requisitos": ["Treinado em Ofício (alquimista)"],
+        "descricao": "A CD para resistir aos venenos que você usa aumenta em +5.",
+        "efeitos": {"veneno_cd_bonus": 5}
     },
 
     # ==========================================================================

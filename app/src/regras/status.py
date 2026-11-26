@@ -479,6 +479,16 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
         desl = 3
         deslocamento_calc.total = 3
 
+    # Fuga Formidável (Ladino, T20 p.73): +3m deslocamento sob condição ativa
+    if "fuga_formidavel" in condicoes_ativas and any(
+        (h.efeitos or {}).get("fuga_formidavel") or (h.nome or "") == "Fuga Formidável"
+        for h in ficha.habilidades
+    ):
+        desl += 3
+        deslocamento_calc.adicionar_bonus(
+            fonte="Poder: Fuga Formidável", categoria="Poder", valor=3
+        )
+
     # Armadura pesada vestida: -3m deslocamento (respeita imunidade)
     if usa_pesada:
         # Verificar imunidade
@@ -938,6 +948,32 @@ def calcular_inventor(ficha: Personagem) -> Optional[Dict[str, Any]]:
         "circulo_engenhoca": circulo_eng,
         "circulo_pocao": circulo_pocao,
         "formulas_total": formulas_total,
+    }
+
+
+def calcular_ataque_furtivo(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula Ataque Furtivo (1d6..10d6), Assassinar, Especialista e Roubo de Mana (T20 JdA p.72-74)."""
+    af = next((h for h in ficha.habilidades if (h.nome or "") == "Ataque Furtivo"), None)
+    if af is None:
+        return None
+
+    nivel_lad = 1
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Ladino":
+            nivel_lad = int(c.nivel or 1)
+            break
+
+    dados = min(10, 1 + max(0, nivel_lad - 1) // 2)
+    tem_assassinar = any((h.efeitos or {}).get("assassinar") or (h.nome or "") == "Assassinar" for h in ficha.habilidades)
+    tem_roubo = any((h.efeitos or {}).get("roubo_de_mana") or (h.nome or "") == "Roubo de Mana" for h in ficha.habilidades)
+    mod_int = calcular_modificador(ficha.atributos.inteligencia)
+
+    return {
+        "dados": dados,
+        "formula": f"{dados}d6",
+        "assassinar_formula": f"{dados * 2}d6" if tem_assassinar else None,
+        "especialista_slots": max(1, mod_int),
+        "roubo_mana_pm": dados if tem_roubo else 0,
     }
 
 
