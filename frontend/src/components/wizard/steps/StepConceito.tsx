@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SelectionModal } from '../SelectionModal';
 import { T20Icon } from '../../T20Icon';
+import { formatarTooltipDeus } from '../../../utils/deusTooltip';
 import type { WizardStepProps } from '../../../types/wizard';
 
 type ModalAberto = 'raca' | 'origem' | 'deus' | null;
@@ -22,9 +23,10 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
         });
     };
 
-    const CardSelecao = ({ rotulo, valor, placeholder, onOpen, cor }: any) => (
+    const CardSelecao = ({ rotulo, valor, placeholder, onOpen, cor, tooltip }: any) => (
         <div
             onClick={onOpen}
+            title={tooltip}
             style={{
                 background: '#1a1a1a', border: `1px solid ${valor ? '#444' : '#5a4a1a'}`,
                 borderRadius: 10, padding: '16px 20px', cursor: 'pointer',
@@ -64,7 +66,14 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
 
                 <CardSelecao rotulo="RAÇA" valor={ficha.cabecalho.raca} placeholder="Escolher raça..." onOpen={() => setModal('raca')} />
                 <CardSelecao rotulo="ORIGEM" valor={ficha.cabecalho.origem} placeholder="Escolher origem..." onOpen={() => setModal('origem')} />
-                <CardSelecao rotulo="DIVINDADE (OPCIONAL)" valor={ficha.cabecalho.deus} placeholder="Sem devoção" onOpen={() => setModal('deus')} cor="#ffd700" />
+                <CardSelecao
+                    rotulo="DIVINDADE (OPCIONAL)"
+                    valor={ficha.cabecalho.deus}
+                    placeholder="Sem devoção"
+                    onOpen={() => setModal('deus')}
+                    cor="#ffd700"
+                    tooltip={ficha.cabecalho.deus ? formatarTooltipDeus(ficha.cabecalho.deus, dadosDeuses[ficha.cabecalho.deus]) : undefined}
+                />
             </div>
 
             <SelectionModal
@@ -95,7 +104,22 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 title="Escolha sua Divindade"
                 icon="deus"
                 selected={ficha.cabecalho.deus}
-                items={[{ nome: '', descricao: 'Remover devoção' }, ...getDeusesPermitidos().map(d => ({ nome: d, descricao: dadosDeuses[d]?.descricao }))]}
+                items={[
+                    { nome: '', descricao: 'Remover devoção' },
+                    ...getDeusesPermitidos().map(d => {
+                        const info = dadosDeuses[d];
+                        const tags: string[] = [];
+                        if (info?.titulo) tags.push(info.titulo);
+                        if (info?.energia) tags.push(`Energia: ${info.energia}`);
+                        tags.push(`Arma: ${info?.arma || 'Nenhuma'}`);
+                        return {
+                            nome: d,
+                            tags,
+                            descricao: info?.crencas || info?.descricao,
+                            tooltip: formatarTooltipDeus(d, info),
+                        };
+                    })
+                ]}
                 onSelect={nome => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: nome } }, true)}
             />
         </div>

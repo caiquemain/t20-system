@@ -21,6 +21,7 @@ import { AbilityCard } from '../components/AbilityCard';
 import { EquipamentoCard } from '../components/EquipamentoCard';
 import { AttackList } from '../components/AttackList';
 import { T20Icon, getEfeitoVisual } from '../components/T20Icon';
+import { formatarResumoDeus, formatarTooltipDeus } from '../utils/deusTooltip';
 
 // Tipos
 import type { Magia } from '../types';
@@ -541,7 +542,11 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             className="select-header"
                             onClick={() => setSelectorAtivo('deus')}
                             style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', color: '#ffd700', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                            title="Clique para trocar de devoção"
+                            title={
+                                ficha.cabecalho.deus
+                                    ? formatarTooltipDeus(ficha.cabecalho.deus, (dadosDeuses as any)?.[ficha.cabecalho.deus]) || 'Clique para trocar de devoção'
+                                    : 'Clique para escolher uma devoção'
+                            }
                         >
                             <T20Icon name="deus" size={14} /> {ficha.cabecalho.deus || 'Sem Devoção'} ▾
                         </button>
@@ -795,7 +800,16 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 selecionado={ficha.cabecalho.deus || ''}
                 permitirVazio={true}
                 labelVazio="Sem Devoção"
-                itens={deusesDisponiveis.map((d): EntityItem => ({ nome: d, icone: 'deus' }))}
+                itens={deusesDisponiveis.map((d): EntityItem => {
+                    const info = (dadosDeuses as any)?.[d];
+                    return {
+                        nome: d,
+                        icone: 'deus',
+                        bonus: formatarResumoDeus(info),
+                        descricao: info?.crencas || info?.descricao,
+                        tooltip: formatarTooltipDeus(d, info),
+                    };
+                })}
                 onConfirm={(nome) => handleSelecionarEntidade('deus', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />

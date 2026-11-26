@@ -58,13 +58,22 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
-## ✨ Fase 5 — Poderes Concedidos & Poderes Gerais
+## ✅ Fase 5 — Revisão dos 20 Deuses do Panteão & Tooltips (Concluída)
+> Checklist detalhada: [`docs/checklists/deuses-panteao.md`](./checklists/deuses-panteao.md)
+
+- [x] **Auditoria de dados (`dados_deuses.py`):** todos os 20 deuses do T20 JdA p.96–105 atualizados com `titulo`, `crencas` completas, `simbolo`, `energia`, `arma` (incluindo Nimb `"Qualquer"` e Lena/Marah `None`), `devotos`, `poderes` (4 por deus) e `obrigacoes` (Obrigações & Restrições completas).
+- [x] **Motor de regras (`pericias.py`):** penalidade de `–5` em perícias baseadas em Carisma para devotos de *Nimb* (T20 JdA p.102) conectada e testada (`app/tests/test_deuses.py`, `822 testes passando`).
+- [x] **Tooltips na seleção de divindade (Frontend):** criados `deusTooltip.ts` e painel de detalhes/tooltip no hover em `EntitySelectorModal` (Ficha) e `SelectionModal` (Wizard `StepConceito`), exibindo Título, Energia, Arma Preferida, Símbolo Sagrado, Poderes Concedidos, Crenças e Obrigações & Restrições.
+
+---
+
+## ✨ Fase 6 — Poderes Concedidos & Poderes Gerais
 - **Poderes Concedidos (`dados_poderes_concedidos.py`):** modelar `efeitos` nos 20 poderes concedidos (hoje `0/20` têm efeitos mecânicos).
 - **Poderes Gerais (`dados_habilidades.py`):** revisar os 68 poderes gerais (de 202) que ainda estão sem `efeitos` declarativos, priorizando os do Livro Básico (Combate, Destino, Magia, Tormenta).
 
 ---
 
-## 🎲 Fase 6 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
+## 🎲 Fase 7 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
 - **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
 - **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).
 - **Ponte Roll20** ([`roll20-bridge.md`](./checklists/roll20-bridge.md)): modo "ficha nova" direto da ponte e consolidar envio de monstros/NPCs.
