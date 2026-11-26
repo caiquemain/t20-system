@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { T20Icon, type IconName } from '../T20Icon';
 
 export interface SelectionItem {
     nome: string;
@@ -11,7 +12,7 @@ interface SelectionModalProps {
     onClose: () => void;
     onSelect: (nome: string) => void;
     title: string;
-    icon?: string;
+    icon?: IconName;
     items: SelectionItem[];
     selected?: string;
 }
@@ -19,7 +20,7 @@ interface SelectionModalProps {
 const normalizar = (s: string) =>
     s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-export function SelectionModal({ isOpen, onClose, onSelect, title, icon = '🎯', items, selected }: SelectionModalProps) {
+export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco', items, selected }: SelectionModalProps) {
     const [busca, setBusca] = useState('');
 
     const filtrados = useMemo(() => {
@@ -50,8 +51,12 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = '🎯'
             >
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', borderBottom: '1px solid #333' }}>
-                    <h2 style={{ margin: 0, color: '#ffd700', fontSize: '1.3rem' }}>{icon} {title}</h2>
-                    <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
+                    <h2 style={{ margin: 0, color: '#ffd700', fontSize: '1.3rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <T20Icon name={icon} size={20} color="#ffd700" /> {title}
+                    </h2>
+                    <button onClick={onClose} title="Fechar" style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
+                        <T20Icon name="fechar" size={20} />
+                    </button>
                 </div>
 
                 {/* Busca */}
@@ -59,7 +64,7 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = '🎯'
                     <input
                         autoFocus
                         type="text"
-                        placeholder="🔍 Buscar..."
+                        placeholder="Buscar..."
                         value={busca}
                         onChange={e => setBusca(e.target.value)}
                         style={{
@@ -88,7 +93,7 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = '🎯'
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                     <strong style={{ color: isSel ? '#ffd700' : '#eee', fontSize: '1.05rem' }}>{item.nome}</strong>
-                                    {isSel && <span style={{ color: '#ffd700' }}>✓</span>}
+                                    {isSel && <span style={{ color: '#ffd700' }}><T20Icon name="check" size={16} /></span>}
                                 </div>
                                 {item.tags && item.tags.length > 0 && (
                                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>

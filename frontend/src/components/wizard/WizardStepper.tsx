@@ -1,7 +1,9 @@
+import { T20Icon, type IconName } from '../T20Icon';
+
 interface Step {
   id: string;
   label: string;
-  icon: string;
+  icon: IconName;
 }
 
 interface WizardStepperProps {
@@ -40,13 +42,13 @@ export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.5rem',
                 background: isActive ? '#ffd700' : isCompleted ? '#4caf50' : '#444',
+                color: isActive ? '#111' : '#fff',
                 border: `3px solid ${isActive ? '#ffd700' : isCompleted ? '#4caf50' : '#555'}`,
                 transition: 'all 0.3s ease',
                 boxShadow: isActive ? '0 0 20px rgba(255, 215, 0, 0.5)' : 'none'
               }}>
-                {isCompleted ? '✓' : step.icon}
+                <T20Icon name={isCompleted ? 'check' : step.icon} size={22} />
               </div>
               <span style={{
                 fontSize: '0.85rem',

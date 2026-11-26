@@ -1,6 +1,6 @@
 # 🎨 Migração de Ícones — Unicode → Biblioteca SVG Moderna
 
-**Status:** 🟡 Núcleo migrado (Core da Ficha + Home + Bestiário + Grimório + Backend desacoplado)  
+**Status:** ✅ 100% Concluída (Core da Ficha + Modais + Wizard + Backend desacoplado)  
 **Biblioteca instalada:** `lucide-react` (`frontend/src/components/T20Icon.tsx`)  
 **Atualizado em:** 2026-11-26
 
@@ -33,5 +33,5 @@
 ### 3. Modais & Componentes Secundários (Concluído)
 - [x] `EntitySelectorModal.tsx`, `AbilityCard.tsx`, `AbilityConfigModal.tsx`, `CondicoesRaciais.tsx`, `DesejosButton.tsx`, `FullGrimorioModal.tsx`, `PowerListItem.tsx`, `PowerSelectorModal.tsx`, `RacialAbilityRow.tsx`, `RacialAttributeModal.tsx`, `SpellDetailsModal.tsx`, `SpellSummary.tsx`
 
-### 4. Wizard (Opcional — baixa prioridade)
-- [ ] `frontend/src/pages/Wizard.tsx` e `frontend/src/components/wizard/steps/*`
+### 4. Wizard (Concluído)
+- [x] `Wizard.tsx`, `WizardStepper.tsx`, `SelectionModal.tsx` e todos os 7 passos em `wizard/steps/*`

@@ -27,13 +27,12 @@
 
 ---
 
-## 🟢 Fase 2 — Migração de Ícones (Núcleo + Backend Concluídos)
+## ✅ Fase 2 — Migração de Ícones (Concluída)
 > Checklist detalhada: [`docs/checklists/icones-ui.md`](./checklists/icones-ui.md)
 
 - [x] **`lucide-react` instalado** + componente central [`T20Icon.tsx`](../frontend/src/components/T20Icon.tsx) com mapa semântico tipado (`IconName`) e `getEfeitoVisual`.
-- [x] **Núcleo + modais secundários migrados:** `Ficha.tsx`, `StatusBars.tsx`, `EquipamentoCard.tsx`, `AttackList.tsx`, `SkillList.tsx`, `GrimorioModal.tsx`, `EntitySelectorModal.tsx`, `AbilityCard.tsx`, `AbilityConfigModal.tsx`, `CondicoesRaciais.tsx`, `DesejosButton.tsx`, `FullGrimorioModal.tsx`, `PowerListItem.tsx`, `PowerSelectorModal.tsx`, `RacialAbilityRow.tsx`, `RacialAttributeModal.tsx`, `SpellDetailsModal.tsx`, `SpellSummary.tsx`, `Home.tsx`, `Bestiario.tsx`, `MonsterCard.tsx`, `AmeacaDetail.tsx` e `Grimorio.tsx`.
+- [x] **100% do frontend migrado:** Ficha, StatusBars, EquipamentoCard, AttackList, SkillList, GrimorioModal, todos os 12 modais secundários, Home, Bestiário, Grimório e todo o fluxo do Wizard (`Wizard.tsx`, `WizardStepper`, `SelectionModal` e os 7 passos).
 - [x] **Backend desacoplado:** emojis removidos de `efeitos_ativos` (`habilidades.py`) e `fontes_bonus` (`pericias.py`), eliminando a regex de emojis em `Ficha.tsx`.
-- [ ] **Opcional (baixa prioridade):** migrar `Wizard.tsx` e `wizard/steps/*`.
 
 ---
 

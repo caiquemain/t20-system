@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SelectionModal } from '../SelectionModal';
+import { T20Icon } from '../../T20Icon';
 import type { WizardStepProps } from '../../../types/wizard';
 
 export function StepClasse({ ficha, updateFicha, listaClasses, dadosClasses }: WizardStepProps) {
@@ -10,7 +11,9 @@ export function StepClasse({ ficha, updateFicha, listaClasses, dadosClasses }: W
 
     return (
         <div>
-            <h2 style={{ color: '#ffd700', marginBottom: '20px' }}>⚔️ Passo 3: Classe</h2>
+            <h2 style={{ color: '#ffd700', marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <T20Icon name="classe" size={22} /> Passo 3: Classe
+            </h2>
             <p style={{ color: '#aaa', marginBottom: '30px' }}>
                 Escolha sua classe e o nível inicial do personagem.
             </p>
@@ -74,7 +77,7 @@ export function StepClasse({ ficha, updateFicha, listaClasses, dadosClasses }: W
                 isOpen={modalAberto}
                 onClose={() => setModalAberto(false)}
                 title="Escolha sua Classe"
-                icon="⚔️"
+                icon="classe"
                 selected={classeNome}
                 items={listaClasses.map(c => ({
                     nome: c,
