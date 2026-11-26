@@ -322,6 +322,8 @@ def calcular_penalidade_armadura(ficha: Personagem) -> int:
         tipo_arm = cat.get("tipo_armadura")
         if tipo_arm in ["Leve", "Pesada", "Escudo"]:
             pen += abs(cat.get("penalidade_armadura", 0))
+        elif (item.nome or "").strip().lower() == "casaco longo":
+            pen += 2
     # Sobrecarga: -5 (regra p.141: "penalidade de armadura -5")
     if ficha.inventario.sobrecargado:
         pen += 5

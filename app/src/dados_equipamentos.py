@@ -234,8 +234,8 @@ _ITENS_AUSENTES = {
     "Seixo de âmbar": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "–1 PM em magias de transmutação"},
     "Terra de cemitério": {"subcategoria": "Catalisador", "preco": 30, "espacos": 0.5, "notas": "+1d6 dano de trevas"},
     # --- Alquímicos: Venenos ---
-    "Beladona": {"subcategoria": "Venenos", "preco": 1500, "espacos": 0.5, "notas": "Ingestão: lenta 3 rod.; CD fabricar/resistir +5"},
-    "Bruma sonolenta": {"subcategoria": "Venenos", "preco": 150, "espacos": 0.5, "notas": "Inalação: inconsciente (enjorado 1 rod. se passar)"},
+    "Beladona": {"subcategoria": "Venenos", "preco": 1500, "espacos": 0.5, "notas": "Ingestão: paralisada (lenta se passar) por 3 rod.; CD fabricar/resistir +5"},
+    "Bruma sonolenta": {"subcategoria": "Venenos", "preco": 150, "espacos": 0.5, "notas": "Inalação: inconsciente (enjoada 1 rod. se passar)"},
     "Cicuta": {"subcategoria": "Venenos", "preco": 60, "espacos": 0.5, "notas": "Ingestão: 1d12 PV/rod. por 3 rod."},
     "Essência de sombra": {"subcategoria": "Venenos", "preco": 100, "espacos": 0.5, "notas": "Contato: debilitada (fraca se passar)"},
     "Névoa tóxica": {"subcategoria": "Venenos", "preco": 30, "espacos": 0.5, "notas": "Inalação: 1d12 PV/rod. por 3 rod."},
@@ -360,4 +360,104 @@ def ajustar_passo_dano(dado: str, passos: int) -> str:
     idx = escala.index(chave)
     novo_idx = max(0, min(len(escala) - 1, idx + int(passos)))
     return escala[novo_idx]
+
+
+# --- TABELA 3-7: PREÇO DE MELHORIAS (T20 JdA p.164) ---
+PRECO_MELHORIAS = {
+    1: {"aumento_preco": 300, "aumento_cd": 5},
+    2: {"aumento_preco": 3000, "aumento_cd": 10},
+    3: {"aumento_preco": 9000, "aumento_cd": 15},
+    4: {"aumento_preco": 18000, "aumento_cd": 20},
+}
+
+# --- TABELA 3-8: MELHORIAS DE ITENS SUPERIORES (T20 JdA p.164-166) ---
+DADOS_MELHORIAS = {
+    # Armas
+    "Certeira": {"categorias": ["Arma"], "efeito": "+1 nos testes de ataque", "requisitos": []},
+    "Pungente": {"categorias": ["Arma"], "efeito": "+2 nos testes de ataque", "requisitos": ["Certeira"]},
+    "Cruel": {"categorias": ["Arma"], "efeito": "+1 nas rolagens de dano", "requisitos": []},
+    "Atroz": {"categorias": ["Arma"], "efeito": "+2 nas rolagens de dano", "requisitos": ["Cruel"]},
+    "Equilibrada": {"categorias": ["Arma"], "efeito": "+2 em testes de manobras", "requisitos": []},
+    "Harmonizada": {"categorias": ["Arma"], "efeito": "Custo de uma habilidade de ataque diminui em –1 PM", "requisitos": ["Outra melhoria"]},
+    "Injeção alquímica": {"categorias": ["Arma"], "efeito": "Libera preparado ou água benta ao acertar (2 doses)", "requisitos": []},
+    "Maciça": {"categorias": ["Arma"], "efeito": "+1 no multiplicador de crítico (incompatível com Precisa)", "requisitos": []},
+    "Mira telescópica": {"categorias": ["Arma"], "efeito": "Aumenta alcance em 1 passo e Ataque Furtivo p/ médio (disparo, exceto funda)", "requisitos": []},
+    "Precisa": {"categorias": ["Arma"], "efeito": "+1 na margem de ameaça (incompatível com Maciça)", "requisitos": []},
+    # Armaduras e Escudos
+    "Ajustada": {"categorias": ["Armadura", "Escudo"], "efeito": "–1 na penalidade de armadura", "requisitos": []},
+    "Sob medida": {"categorias": ["Armadura", "Escudo"], "efeito": "–2 na penalidade de armadura para o usuário específico", "requisitos": ["Ajustada"]},
+    "Delicada": {"categorias": ["Armadura Pesada"], "efeito": "Permite aplicar 1 ponto de Destreza na Defesa (incompatível com Reforçada)", "requisitos": []},
+    "Espinhosa (armadura)": {"categorias": ["Armadura"], "efeito": "Causa dano de perfuração igual à Força ao agarrar/ser agarrado", "requisitos": []},
+    "Espinhoso (escudo)": {"categorias": ["Escudo"], "efeito": "Aumenta o dano de ataque com escudo em 1 passo", "requisitos": []},
+    "Polida": {"categorias": ["Armadura", "Escudo"], "efeito": "+5 na Defesa na 1ª rodada em ambientes iluminados", "requisitos": []},
+    "Reforçada": {"categorias": ["Armadura", "Escudo"], "efeito": "+1 na Defesa e +1 na penalidade de armadura (incompatível com Delicada)", "requisitos": []},
+    "Selada": {"categorias": ["Armadura Pesada"], "efeito": "+1 nos testes de resistência", "requisitos": []},
+    # Esotéricos
+    "Canalizador": {"categorias": ["Esotérico"], "efeito": "+1 no limite de PM por magia", "requisitos": []},
+    "Energético": {"categorias": ["Esotérico"], "efeito": "+1d6 no dano de magias", "requisitos": []},
+    "Harmonizado": {"categorias": ["Esotérico"], "efeito": "–1 PM no custo de uma magia escolhida", "requisitos": []},
+    "Poderoso": {"categorias": ["Esotérico"], "efeito": "+1 na CD de suas magias", "requisitos": []},
+    "Vigilante": {"categorias": ["Esotérico"], "efeito": "+2 na Defesa", "requisitos": []},
+    # Ferramentas e Vestuário
+    "Aprimorado": {"categorias": ["Ferramenta", "Vestuário"], "efeito": "+1 em testes da perícia modificada pelo item", "requisitos": []},
+    # Qualquer categoria
+    "Material especial": {"categorias": ["Arma", "Armadura", "Escudo", "Esotérico"], "efeito": "Item feito de material especial (paga preço adicional da Tabela 3-9)", "requisitos": []},
+    "Banhado a ouro": {"categorias": ["Arma", "Armadura", "Escudo", "Esotérico", "Ferramenta", "Vestuário"], "efeito": "+2 em Diplomacia", "requisitos": []},
+    "Cravejado de gemas": {"categorias": ["Arma", "Armadura", "Escudo", "Esotérico", "Ferramenta", "Vestuário"], "efeito": "+2 em Enganação", "requisitos": []},
+    "Discreto": {"categorias": ["Arma", "Armadura", "Escudo", "Esotérico", "Ferramenta", "Vestuário"], "efeito": "–1 espaço (mín 1) e +5 em Ladinagem para ocultar", "requisitos": []},
+    "Macabro": {"categorias": ["Arma", "Armadura", "Escudo", "Esotérico", "Ferramenta", "Vestuário"], "efeito": "+2 em Intimidação, –2 em Diplomacia", "requisitos": []},
+}
+
+# --- TABELA 3-9: MATERIAIS ESPECIAIS (T20 JdA p.166-167) ---
+DADOS_MATERIAIS_ESPECIAIS = {
+    "Aço-Rubi": {
+        "precos": {"Arma": 6000, "Armadura Leve": 3000, "Armadura Pesada": 6000, "Escudo": 3000, "Esotérico": 6000},
+        "efeitos": {
+            "Arma": "Ignora 10 de RD e imunidade a crítico de lefeu.",
+            "Armadura/Escudo": "Ignora dano extra de crítico/furtivo: 25% leve/escudo, 50% pesada (cumulativas).",
+            "Esotérico": "Magias de dano ignoram 10 de RD e imunidades a dano de lefeu.",
+        },
+    },
+    "Adamante": {
+        "precos": {"Arma": 3000, "Armadura Leve": 6000, "Armadura Pesada": 18000, "Escudo": 6000, "Esotérico": 3000},
+        "efeitos": {
+            "Arma": "Aumenta o dano em 1 passo.",
+            "Armadura/Escudo": "RD 2 (leve/escudo) ou RD 5 (pesada).",
+            "Esotérico": "+1 PM para rerolar resultados 1 no dano de magias.",
+        },
+    },
+    "Gelo Eterno": {
+        "precos": {"Arma": 600, "Armadura Leve": 1500, "Armadura Pesada": 3000, "Escudo": 1500, "Esotérico": 3000},
+        "efeitos": {
+            "Arma": "+2 de dano de frio.",
+            "Armadura/Escudo": "Redução de fogo 5 (leve/escudo) ou 10 (pesada).",
+            "Esotérico": "Rerola resultados 1 no dano de magias de frio.",
+        },
+    },
+    "Madeira Tollon": {
+        "precos": {"Arma": 1500, "Armadura Leve": None, "Armadura Pesada": None, "Escudo": 1500, "Esotérico": 1500},
+        "efeitos": {
+            "Arma": "Conta como mágica p/ vencer RD; habilidades de ataque/agredir custam –1 PM (apenas armas de madeira).",
+            "Armadura/Escudo": "Resistência a magia +2 (apenas escudo leve).",
+            "Esotérico": "Resistência a magia +2.",
+        },
+    },
+    "Matéria Vermelha": {
+        "precos": {"Arma": 1500, "Armadura Leve": 6000, "Armadura Pesada": 18000, "Escudo": 6000, "Esotérico": 1500},
+        "efeitos": {
+            "Arma": "+1d6 dano extra (perde 1 PV ao acertar; lefou/lefeu imunes). –2 perícias de Carisma (exceto Intimidação).",
+            "Armadura/Escudo": "Chance de falha 10% (leve/escudo) ou 25% (pesada), cumulativas. –2 perícias de Carisma (exceto Intimidação).",
+            "Esotérico": "Você e inimigos em alcance curto sofrem –2 em resistências contra magia.",
+        },
+    },
+    "Mitral": {
+        "precos": {"Arma": 1500, "Armadura Leve": 3000, "Armadura Pesada": 12000, "Escudo": 1500, "Esotérico": 3000},
+        "efeitos": {
+            "Arma": "–1 espaço (mín 1) e +1 na margem de ameaça.",
+            "Armadura/Escudo": "–1 espaço (mín 1), –2 penalidade de armadura; pesada permite até +2 Des na Defesa.",
+            "Esotérico": "–1 espaço (mín 1); +2 PM para aumentar CD da magia em +2.",
+        },
+    },
+}
+
 

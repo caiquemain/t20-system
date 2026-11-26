@@ -76,6 +76,13 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
+## ✅ Fase 6.5 — Capítulo 3: Equipamento (Armas, Armaduras, Itens Gerais, Melhorias & Materiais) (Concluída)
+- [x] **Armas, Riqueza & Carga (`dados_equipamentos.py`, `inventario.py`, `combate.py`):** revisadas Tabelas 3-1, 3-2 e 3-3 (T20 JdA p.140–151), corrigido `alcance: "Curto"` em Adaga/Lança/Machadinha/Tridente, adicionados `DINHEIRO_INICIAL_POR_NIVEL` e `ajustar_passo_dano`, conectadas moedas (1.000 = 1 espaço), *Mochila de aventureiro* (`+2` espaços) e *Inventário Organizado* (`0,5 → 0,25`).
+- [x] **Armaduras, Escudos & Itens Gerais (`dados_equipamentos.py`, `pericias.py`, `inventario.py`, `status.py`):** conferidas Tabelas 3-5 (12 armaduras/escudos) e 3-6 (117 itens gerais + serviços), corrigidos typos em *Beladona* e *Bruma sonolenta*, e conectados bônus passivos de *Armadura acolchoada* (`+2 Fortitude`), *Símbolo sagrado* (`+1` resistências para devotos), 12 itens de *Vestuário* (respeitando limite de 4 itens ou 5 com *Costas Largas*), *Chapéu arcano* (`+1 PM` para Arcanista) e *Casaco longo* (penalidade de armadura 2).
+- [x] **Itens Superiores & Materiais Especiais (`dados_equipamentos.py`):** catalogadas Tabelas 3-7 (`PRECO_MELHORIAS`), 3-8 (`DADOS_MELHORIAS`, 29 melhorias) e 3-9 (`DADOS_MATERIAIS_ESPECIAIS`, 6 materiais especiais), cobertos por `app/tests/test_equipamentos_armas.py` (`860 testes passando`).
+
+---
+
 ## 🎲 Fase 7 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
 - **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
 - **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).
