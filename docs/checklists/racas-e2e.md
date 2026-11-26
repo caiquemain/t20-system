@@ -1,12 +1,12 @@
 # Checklist E2E — Raças (T20 JdA)
 
-Estado da validação das raças do **livro base** em `2026-10-12`.
+Estado da validação das **17 raças do livro base** (18 entradas com Suraggel Aggelus/Sulfure) em `2026-11-25`: **17/17 implementadas e testadas no motor de regras**.
 
 ## Cobertura por teste
 
 | Aspecto | Teste |
 |---|---|
-| Modificadores de atributo (17 raças) | `test_racas.py` |
+| Modificadores de atributo e regras base (17 raças, incl. Hynne) | `test_racas.py` |
 | Humano/Versátil (2 perícias ou 1+1 poder) | `test_humano_versatil.py` |
 | Anão — Duro como Pedra + Heredrimm | `test_raca_anao.py` |
 | Sereia — Tridente + Canção dos Mares | `test_raca_sereia.py` |
@@ -16,6 +16,10 @@ Estado da validação das raças do **livro base** em `2026-10-12`.
 | Estrutura de habilidades ativáveis | `test_raca_habilidades_ativaveis.py` |
 
 ## Débitos conhecidos (não bloqueiam o livro base)
+
+### Efeitos declarados ainda não exibidos em `status` / `efeitos_ativos`
+- **Medusa — Natureza Venenosa** (`resistencia_veneno`): +5 em testes contra veneno declarado em `dados_habilidades_raciais.py`, mas ainda não exibido em `efeitos_ativos` / tooltip de Fortitude.
+- **Goblin — Espelunqueiro** (`deslocamento_escalada_igual`): deslocamento de escalada igual ao normal declarado, mas ainda não refletido em `status` / `efeitos_ativos`.
 
 ### Comportamentos em combate não modelados
 
@@ -28,6 +32,7 @@ Estado da validação das raças do **livro base** em `2026-10-12`.
   Ofício (artesão) pode ser usada no lugar dela" não é enforçado.
 - **Osteon — Preço da Não Vida**: efeitos vazios (`{}`). O sistema não
   modela "descanso sob estrelas ou sofre fome". Débito explícito.
+- **Hynne — Sorte Salvadora**: reroll depende do sistema de rolagens (`docs/checklists/rolagens.md`).
 
 ### Habilidades de reaprendizado (duplicata)
 
@@ -52,7 +57,7 @@ Ameaças de Arton, materiais antigos), misturadas com as 17 do livro:
   Velocis, Voracis, Yidishan, Elfo-do-Mar, Nagah (M/F), Finntroll
 
 **Problema**: aparecem no dropdown de criação sem distinção de fonte.
-O endpoint `/racas` retorna todas. Ver débito no README.
+O endpoint `/racas` retorna todas.
 
 - **Duende — 8 habilidades ativáveis sem `efeito`**: quebram o tooltip do
   card. Coberto por `test_todas_habilidades_ativaveis_do_livro_base_*`
@@ -62,6 +67,7 @@ O endpoint `/racas` retorna todas. Ver débito no README.
 
 1. Separar raças de suplemento em `DADOS_RACAS_SUPLEMENTOS` (ou filtrar
    `/racas` por `fonte == "T20 JdA"`)
-2. Preencher `efeito` das 8 habilidades ativáveis do Duende
-3. Modelar hooks de dano/cura para Golem e Osteon (projeto de combate)
-4. Implementar reaprendizado genérico de habilidades raciais
+2. Conectar `resistencia_veneno` (Medusa) e `deslocamento_escalada_igual` (Goblin) em `regras/`
+3. Implementar reaprendizado genérico de habilidades raciais + teste Kliren/Inventor
+4. Preencher `efeito` das 8 habilidades ativáveis do Duende (quando retomar suplementos)
+5. Modelar hooks de dano/cura para Golem e Osteon (projeto de combate)
