@@ -826,3 +826,35 @@ async def gerar_odg(personagem_id: str, db=Depends(get_db)):
     except Exception as e:
         logger.error(f"Erro ao gerar ODG: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Erro ao gerar ODG: {str(e)}")
+
+
+@router.get("/{personagem_id}/odt")
+async def gerar_odt(personagem_id: str, db=Depends(get_db)):
+    """Gera ficha editável no formato LibreOffice Writer (.odt)."""
+    from ..odt_export import ODT_MIMETYPE, gerar_odt_bytes
+
+    try:
+        try:
+            oid = ObjectId(personagem_id)
+        except Exception:
+            raise HTTPException(status_code=404, detail="ID inválido")
+
+        personagem_doc = await db.personagens.find_one({"_id": oid})
+        if not personagem_doc:
+            raise HTTPException(status_code=404, detail="Personagem não encontrado")
+
+        personagem = Personagem(**personagem_doc)
+        odt_bytes = gerar_odt_bytes(personagem)
+        nome_slug = _sanitizar_nome_arquivo(personagem.cabecalho.nome)
+
+        return Response(
+            content=odt_bytes,
+            media_type=ODT_MIMETYPE,
+            headers={"Content-Disposition": f"attachment; filename=ficha-{nome_slug}.odt"},
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao gerar ODT: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar ODT: {str(e)}")

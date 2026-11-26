@@ -2,7 +2,7 @@ import type { Personagem } from '../types';
 
 async function baixarFichaFormato(
   ficha: Personagem,
-  formato: 'pdf' | 'odg',
+  formato: 'pdf' | 'odg' | 'odt',
   idDaUrl?: string,
 ): Promise<void> {
   const label = formato.toUpperCase();
@@ -43,4 +43,8 @@ export async function gerarPDF(ficha: Personagem, idDaUrl?: string): Promise<voi
 
 export async function gerarODG(ficha: Personagem, idDaUrl?: string): Promise<void> {
   return baixarFichaFormato(ficha, 'odg', idDaUrl);
+}
+
+export async function gerarODT(ficha: Personagem, idDaUrl?: string): Promise<void> {
+  return baixarFichaFormato(ficha, 'odt', idDaUrl);
 }
