@@ -20,6 +20,12 @@ from .custo_magia import (
     pode_anular_magia,
 )
 from .poderes_arcanista import aplicar_poderes_arcanista, sincronizar_ataques_magicos
+from .recompensas import (
+    calcular_xp_desafio,
+    calcular_fabricacao_consumivel,
+    calcular_fabricacao_item_permanente,
+    calcular_estatisticas_item_magico,
+)
 from .pericias import inicializar_pericias
 
 # 1. ATUALIZADO: Importamos a nova função 'calcular_proficiencias_e_extras' daqui

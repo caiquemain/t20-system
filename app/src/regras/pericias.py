@@ -384,12 +384,44 @@ def inicializar_pericias(ficha: Personagem):
                     detalhamento_bonus.setdefault(p_res, []).append(
                         {"fonte": "Símbolo sagrado", "valor": 1}
                     )
+        elif nome_low == "símbolo abençoado" and not simbolo_aplicado:
+            if (getattr(ficha.cabecalho, "deus", "") or "").strip():
+                simbolo_aplicado = True
+                for p_res in ("Fortitude", "Reflexos", "Vontade"):
+                    detalhamento_bonus.setdefault(p_res, []).append(
+                        {"fonte": "Símbolo abençoado", "valor": 1}
+                    )
         elif nome_low in _VESTUARIO_PERICIAS and vestidos_usados < limite_vestidos:
             vestidos_usados += 1
             for p_v, val_v in _VESTUARIO_PERICIAS[nome_low].items():
                 detalhamento_bonus.setdefault(p_v, []).append(
                     {"fonte": it.nome, "valor": val_v}
                 )
+
+    # Acessórios mágicos de resistências e Furtividade (T20 JdA p.342–345)
+    equipados_mag_low = {
+        (it.nome or "").strip().lower()
+        for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+        if it.equipado
+    }
+    res_mag_melhor = None
+    if "manto da resistência" in equipados_mag_low:
+        res_mag_melhor = ("Manto da resistência", 2)
+    eh_conjurador_arcano = any((c.nome or "") in ("Arcanista", "Bardo") for c in (ficha.classes or []))
+    if eh_conjurador_arcano and "robe do arquimago" in equipados_mag_low:
+        bonus_robe_res = (5 + max(1, int(ficha.combate.circulo_maximo or 1))) // 2
+        if res_mag_melhor is None or bonus_robe_res > res_mag_melhor[1]:
+            res_mag_melhor = ("Robe do arquimago", bonus_robe_res)
+    if res_mag_melhor:
+        for p_res in ("Fortitude", "Reflexos", "Vontade"):
+            detalhamento_bonus.setdefault(p_res, []).append(
+                {"fonte": f"Item Mágico: {res_mag_melhor[0]}", "valor": res_mag_melhor[1]}
+            )
+    if "manto élfico" in equipados_mag_low or "manto do morcego" in equipados_mag_low:
+        fonte_manto = "Manto do morcego" if "manto do morcego" in equipados_mag_low else "Manto élfico"
+        detalhamento_bonus.setdefault("Furtividade", []).append(
+            {"fonte": f"Item Mágico: {fonte_manto}", "valor": 5}
+        )
 
     # 3. Lista de Perícias Treinadas/Extras
     pericias_extras: List[str] = []

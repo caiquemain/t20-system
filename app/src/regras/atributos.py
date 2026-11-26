@@ -192,6 +192,30 @@ def calcular_atributos_finais(ficha: Personagem):
             valor=-perda_car,
         )
 
+    # --- ACESSÓRIOS MÁGICOS DE ATRIBUTO (T20 JdA p.333, 342–345) ---
+    # Bônus de itens na mesma característica não se acumulam — usa apenas o maior.
+    from ..dados_recompensas import ACESSORIOS_MAGICOS
+    _acess_lower = {k.lower(): (k, v) for k, v in ACESSORIOS_MAGICOS.items()}
+    melhor_attr_item = {}
+    for it in (getattr(ficha.inventario, "equipamentos", None) or []):
+        if not it.equipado:
+            continue
+        par = _acess_lower.get((it.nome or "").strip().lower())
+        if not par:
+            continue
+        nome_canon, dados_ac = par
+        for attr_full, val_ac in (dados_ac.get("efeitos", {}).get("bonus_atributo") or {}).items():
+            prev = melhor_attr_item.get(attr_full)
+            if prev is None or val_ac > prev[1]:
+                melhor_attr_item[attr_full] = (nome_canon, int(val_ac))
+    for attr_full, (nome_canon, val_ac) in melhor_attr_item.items():
+        if attr_full in ficha.atributos_calc and val_ac:
+            ficha.atributos_calc[attr_full].adicionar_bonus(
+                fonte=f"Item Mágico: {nome_canon}",
+                categoria="Item",
+                valor=val_ac,
+            )
+
     # --- SINCRONIZAÇÃO FINAL (Compatibilidade com Frontend) ---
     # Copia os totais calculados para o objeto 'atributos' que o frontend já lê
     for attr_full, stat in ficha.atributos_calc.items():

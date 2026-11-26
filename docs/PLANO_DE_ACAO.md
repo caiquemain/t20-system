@@ -90,6 +90,12 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
+## ✅ Fase 6.7 — Capítulo 8: Recompensas, XP & Itens Mágicos (p.326–348) (Concluída)
+- [x] **Catálogo (`dados_recompensas.py`):** Tabelas 8-6 (*Tesouro Médio por Cena*), 8-7 (*Preço de Encantos*), 8-8 (28 encantos de armas), 8-9 (18 armas específicas), 8-10 (25 encantos de armaduras/escudos), 8-11 (13 armaduras/escudos específicos), 8-12 (38 poções/óleos/granadas), 8-13/8-14/8-15 (65 acessórios mágicos), 4 *Artefatos* (*A Espada-Deus*, *A Joia da Alma*, *O Baralho do Caos* com 22 cartas, *O Olho de Sszzaas*).
+- [x] **Motor de Regras (`recompensas.py`, `atributos.py`, `status.py`, `pericias.py`, `inventario.py`):** cálculo de XP por desafio (ND × 1.000 / nº personagens, desafios irrelevantes e XP parcial), fabricação de consumíveis e itens permanentes (melhorias + encantos + sacrifício de PM), estatísticas de destruição de itens mágicos e bônus passivos de acessórios equipados (*Mochila de carga*, acessórios de atributo sem acúmulo, *Anel da vitalidade/energia*, *Braceletes de bronze/ouro*, *Anel da proteção*, *Colar guardião*, *Robe do arquimago*, *Manto da resistência*, *Símbolo abençoado*, *Botas velozes*, *Manto élfico/morcego*), cobertos por `app/tests/test_recompensas_cap8.py`.
+
+---
+
 ## 🎲 Fase 7 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
 - **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
 - **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).
