@@ -156,3 +156,47 @@ def test_aprimoramentos_limite_pm_truque_prerequisitos_e_contramagica():
     res_disp = pode_anular_magia(dissipar, desejo)
     assert res_disp["pode_anular"] is True
     assert res_disp["exige_teste_oposto"] is True
+
+
+def test_catalogo_198_magias_tabela_4_1_e_ataques_magicos():
+    from src.dados_magias import DADOS_MAGIAS
+    assert len(DADOS_MAGIAS) == 198
+    for nome, m in DADOS_MAGIAS.items():
+        assert m["custo_pm"] == CUSTO_POR_CIRCULO[m["circulo"]], f"{nome}: custo_pm inválido"
+    com_rolagem = [k for k, m in DADOS_MAGIAS.items() if m.get("rolagem")]
+    assert len(com_rolagem) == 46
+
+    # Magias de dano entram automaticamente em combate.ataques; cura/utilidade não
+    mago = Personagem(
+        cabecalho=Cabecalho(nome="Mago", raca="Humano"),
+        classes=[ClasseInfo(nome="Arcanista", nivel=5, primaria=True, subclasse="Mago")],
+        atributos_base=Atributos(inteligencia=4),
+    )
+    mago.combate.magias.extend([
+        Magia(nome="Bola de Fogo", circulo=2, tipo="Arcana", escola="Evocação", alcance="Médio", resistencia="Reflexos reduz à metade"),
+        Magia(nome="Seta Infalível de Talude", circulo=1, tipo="Arcana", escola="Evocação", alcance="Médio", resistencia=""),
+        Magia(nome="Curar Ferimentos", circulo=1, tipo="Divina", escola="Evocação", alcance="Toque", resistencia=""),
+    ])
+    mago = atualizar_ficha(mago)
+
+    nomes_atq = {a.nome: a for a in mago.combate.ataques}
+    assert "Bola de Fogo" in nomes_atq
+    assert nomes_atq["Bola de Fogo"].dano == "6d6"
+    assert nomes_atq["Bola de Fogo"].tipo == "Fogo"
+    assert nomes_atq["Bola de Fogo"].bonus_ataque == f"CD {mago.combate.cd_magias}"
+    assert nomes_atq["Bola de Fogo"].teste == "Reflexos"
+
+    assert "Seta Infalível de Talude" in nomes_atq
+    assert nomes_atq["Seta Infalível de Talude"].bonus_ataque == "Auto"
+    assert nomes_atq["Seta Infalível de Talude"].dano == "2d4+2"
+
+    # Curar Ferimentos não entra em ataques, mas recebe rolagem para rolar no modal
+    assert "Curar Ferimentos" not in nomes_atq
+    cura = next(m for m in mago.combate.magias if m.nome == "Curar Ferimentos")
+    assert cura.rolagem == {"formula": "2d8+2", "tipo": "cura", "tipo_dano": "Luz"}
+
+    # Idempotência ao esquecer a magia
+    mago.combate.magias = [m for m in mago.combate.magias if m.nome != "Bola de Fogo"]
+    mago = atualizar_ficha(mago)
+    assert all(a.nome != "Bola de Fogo" for a in mago.combate.ataques)
+

@@ -176,6 +176,7 @@ export interface Magia {
     fonte_origem?: string;
   isento_armadura?: boolean;
   aprimoramentos?: Aprimoramento[];
+  rolagem?: { formula: string; tipo: 'dano' | 'cura' | 'pv_temp' | string; tipo_dano?: string };
 }
 
 export interface Combate {

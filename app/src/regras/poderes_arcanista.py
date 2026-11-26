@@ -447,22 +447,68 @@ def aplicar_poderes_arcanista(ficha: Personagem):
     return ficha
 
 
+def _extrair_teste_resistencia(resistencia: str) -> str:
+    res = (resistencia or "").strip()
+    if not res:
+        return "Automático"
+    for per in ("Reflexos", "Fortitude", "Vontade"):
+        if per.lower() in res.lower():
+            return per
+    return res.split()[0]
+
+
 def sincronizar_ataques_magicos(ficha: Personagem):
-    """Reconstrói o ataque Raio Arcano de forma idempotente.
-    Remove qualquer ataque 'Raio Arcano' existente e recria com base
-    nos poderes atuais (Raio Arcano / Poderoso / Elemental) e no
-    círculo máximo do personagem."""
+    """Reconstrói ataques mágicos de forma idempotente:
+    1) Raio Arcano (Arcanista, com Raio Poderoso / Raio Elemental)
+    2) Todas as magias de dano do Grimório (ficha.combate.magias) com CD, custo em PM
+       e bônus de dano mágico (ex.: Arcano de Batalha).
+    """
     from ..models import Ataque
+    from ..dados_magias import DADOS_MAGIAS
     from ..dados_progressao_magias import MAPA_SUBCLASSE_PARA_CLASSE
+    from .custo_magia import calcular_custo_magia, calcular_cd_magia
 
-    # 1) Remove ataques antigos (idempotência)
-    ficha.combate.ataques = [a for a in ficha.combate.ataques if a.nome != "Raio Arcano"]
+    # 1) Remove ataques mágicos antigos (idempotência)
+    ficha.combate.ataques = [
+        a for a in ficha.combate.ataques
+        if a.nome != "Raio Arcano" and not str(a.especial or "").startswith("Magia •")
+    ]
 
-    # 2) Só continua se tiver o poder
+    # 2) Sincroniza metadados de rolagem e adiciona magias de dano em combate.ataques
+    bonus_dano_mag = int(ficha.combate.bonus_dano_magias or 0)
+    for m in (ficha.combate.magias or []):
+        dados_m = DADOS_MAGIAS.get(m.nome) or {}
+        if not m.rolagem and dados_m.get("rolagem"):
+            m.rolagem = dict(dados_m["rolagem"])
+        rol = m.rolagem or dados_m.get("rolagem")
+        if not isinstance(rol, dict) or rol.get("tipo") != "dano":
+            continue
+
+        formula_base = str(rol.get("formula") or "").strip()
+        if not formula_base:
+            continue
+        dano_final = f"{formula_base}+{bonus_dano_mag}" if bonus_dano_mag > 0 else formula_base
+        tipo_dano = str(rol.get("tipo_dano") or "Essência")
+        res_txt = (m.resistencia or dados_m.get("resistencia") or "").strip()
+        teste = _extrair_teste_resistencia(res_txt)
+        cd = calcular_cd_magia(ficha, m) if (m.atributo_chave or "").strip() else int(ficha.combate.cd_magias or 10)
+        custo_pm = calcular_custo_magia(ficha, m).total
+
+        ficha.combate.ataques.append(Ataque(
+            nome=m.nome,
+            bonus_ataque="Auto" if teste == "Automático" else f"CD {cd}",
+            dano=dano_final,
+            critico="-",
+            tipo=tipo_dano,
+            alcance=m.alcance or dados_m.get("alcance") or "Curto",
+            teste=teste,
+            especial=f"Magia • {m.circulo}º Círculo ({custo_pm} PM) • {res_txt or 'Sem resistência'}",
+        ))
+
+    # 3) Raio Arcano (apenas se possuir o poder)
     if not any(h.nome == "Raio Arcano" for h in ficha.habilidades):
         return ficha
 
-    # 3) Localiza a classe Arcanista (ou subclasse mapeada) e o atributo-chave
     classe_arcanista = None
     for c in ficha.classes:
         nome_base = MAPA_SUBCLASSE_PARA_CLASSE.get(c.nome or "", c.nome or "")
@@ -478,14 +524,12 @@ def sincronizar_ataques_magicos(ficha: Personagem):
     else:
         mod_attr = calcular_modificador(ficha.atributos.inteligencia)
 
-    # 4) Escala de dano e variantes
     circulo = ficha.combate.circulo_maximo or 0
     poderoso = any(h.nome == "Raio Poderoso" for h in ficha.habilidades)
     elemental = any(h.nome == "Raio Elemental" for h in ficha.habilidades)
 
     tipo_dado = "d12" if poderoso else "d8"
     alcance = "Médio" if poderoso else "Curto"
-    extra = max(0, circulo - 1)
     qtd_dados = max(1, circulo)
     dano = f"{qtd_dados}{tipo_dado}"
 
@@ -493,7 +537,6 @@ def sincronizar_ataques_magicos(ficha: Personagem):
     if elemental:
         especial += " • +1 PM: dano elemental (ácido/eletricidade/fogo/frio/trevas) + condição"
 
-    # 5) Recria o ataque
     ficha.combate.ataques.append(Ataque(
         nome="Raio Arcano",
         bonus_ataque=f"+{mod_attr}",
@@ -505,3 +548,4 @@ def sincronizar_ataques_magicos(ficha: Personagem):
         especial=especial,
     ))
     return ficha
+
