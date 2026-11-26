@@ -264,6 +264,9 @@ class Combate(BaseModel):
     # Cálculo de Clérigo (T20 p.56-58): Missas (pessoas/benefícios + Mestre Celebrante)
     # e Canalizar Energia (alcance Curto/Médio).
     clerigo_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Ataque Especial (Guerreiro, T20 p.64-66): +4..+20 (1..5 PM),
+    # Romper Resistências e Campeão.
+    ataque_especial_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0

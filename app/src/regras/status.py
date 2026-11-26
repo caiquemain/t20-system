@@ -809,6 +809,50 @@ def calcular_clerigo(ficha: Personagem) -> Optional[Dict[str, Any]]:
     }
 
 
+def calcular_ataque_especial(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula parâmetros de Ataque Especial, Romper Resistências e Campeão (T20 JdA p.64-66).
+
+    Tabela 1-13:
+        1º-4º: +4 (1 PM)
+        5º-8º: +8 (2 PM)
+        9º-12º: +12 (3 PM)
+        13º-16º: +16 (4 PM)
+        17º-20º: +20 (5 PM)
+    """
+    ae = next(
+        (h for h in ficha.habilidades if (h.nome or "") == "Ataque Especial"), None
+    )
+    if ae is None:
+        return None
+
+    nivel_classe = 1
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Guerreiro":
+            nivel_classe = int(c.nivel or 1)
+            break
+
+    passos = min(4, max(0, (nivel_classe - 1) // 4))
+    bonus = 4 + passos * 4
+    custo = 1 + passos
+
+    romper = any(
+        (h.efeitos or {}).get("romper_resistencias_rd") or (h.nome or "") == "Romper Resistências"
+        for h in ficha.habilidades
+    )
+    campeao = any(
+        (h.efeitos or {}).get("campeao") or (h.nome or "") == "Campeão"
+        for h in ficha.habilidades
+    )
+
+    return {
+        "bonus": bonus,
+        "custo": custo,
+        "romper_resistencias": romper,
+        "campeao_recupera_metade": campeao,
+        "campeao_passo_dano": campeao,
+    }
+
+
 def _nivel_inicio_da_habilidade(hab) -> int:
     """Extrai o nível de início de uma habilidade de classe a partir da
     fonte. Ex.: 'Bárbaro (5)' -> 5; 'Bárbaro' -> 1."""

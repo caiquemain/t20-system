@@ -2143,78 +2143,212 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # GUERREIRO
+    # GUERREIRO (T20 JdA, p. 64-66)
     # ==========================================================================
     "GUERREIRO_ATAQUE_ESPECIAL": {
         "nome": "Ataque Especial",
         "tipo": "Habilidade de Classe",
         "classe": "Guerreiro",
         "nivel": 1,
-        "descricao": "1 PM: +4 ataque ou dano. Escala a cada 4 níveis. ",
-        "efeitos": {}
+        "descricao": "Ao fazer um ataque, gasta 1 PM para receber +4 no teste de ataque ou na rolagem de dano (+4/+1 PM a cada 4 níveis: +8 no 5º, +12 no 9º, +16 no 13º, +20 no 17º). Pode dividir os bônus igualmente.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "bonus_ataque_ou_dano": 4,
+                "escala_nivel": {"cada": 4, "bonus": 4, "custo_pm_extra": 1},
+            }
+        }
     },
     "GUERREIRO_DURAO": {
         "nome": "Durão",
         "tipo": "Habilidade de Classe",
         "classe": "Guerreiro",
         "nivel": 3,
-        "descricao": "Ao sofrer dano, gaste 3 PM para reduzir à metade. ",
-        "efeitos": {}
+        "descricao": "Sempre que sofre dano, pode gastar 3 PM para reduzir esse dano à metade.",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 3, "efeito": "reduzir_dano_metade"},
+            "durao": True,
+        }
     },
     "GUERREIRO_ATAQUE_EXTRA": {
         "nome": "Ataque Extra",
         "tipo": "Habilidade de Classe",
         "classe": "Guerreiro",
         "nivel": 6,
-        "descricao": "Ao agredir, gaste 2 PM para ataque extra. ",
-        "efeitos": {}
+        "descricao": "Quando usa a ação agredir, pode gastar 2 PM para realizar um ataque adicional (uma vez por rodada).",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 2, "frequencia": "1x_por_rodada", "efeito": "ataque_adicional"},
+            "ataque_extra": True,
+        }
     },
-    # --- PODERES DE GUERREIRO ---
+    "GUERREIRO_CAMPEAO": {
+        "nome": "Campeão",
+        "tipo": "Habilidade de Classe",
+        "classe": "Guerreiro",
+        "nivel": 20,
+        "descricao": "O dano de todos os seus ataques aumenta em um passo. Além disso, sempre que acerta um Ataque Especial ou Golpe Pessoal, recupera metade dos PM gastos nele.",
+        "efeitos": {"campeao": True, "passo_dano_global": 1, "recupera_metade_pm_especial": True}
+    },
+    # --- PODERES DE GUERREIRO (19 poderes oficiais, T20 JdA p. 65-66) ---
     "GUERREIRO_AMBIDESTRIA": {
         "nome": "Ambidestria",
         "tipo": "Poder de Guerreiro",
         "classe": "Guerreiro",
         "requisitos": ["Des 2"],
-        "descricao": "Ataca com duas armas com -2 de penalidade. ",
-        "efeitos": {}
+        "descricao": "Empunhando duas armas (ao menos uma leve) na ação agredir, pode fazer dois ataques (um com cada arma), sofrendo -2 em todos os testes de ataque até seu próximo turno.",
+        "efeitos": {"ambidestria": True, "penalidade_ataque": -2}
     },
     "GUERREIRO_ARQUEIRO": {
         "nome": "Arqueiro",
         "tipo": "Poder de Guerreiro",
         "classe": "Guerreiro",
         "requisitos": ["Sab 1"],
-        "descricao": "Soma Sabedoria no dano à distância. ",
-        "efeitos": {"dano_distancia_soma_atributo": "sab"}
+        "descricao": "Usando arma de ataque à distância, soma sua Sabedoria em rolagens de dano (limitado pelo seu nível).",
+        "efeitos": {"dano_distancia_soma_atributo": {"atributo": "sab", "limite_por_nivel": True}}
+    },
+    "GUERREIRO_ATAQUE_REFLEXO": {
+        "nome": "Ataque Reflexo",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "requisitos": ["Des 1"],
+        "descricao": "Se um alvo em alcance corpo a corpo ficar desprevenido ou sair voluntariamente do alcance, pode gastar 1 PM para fazer um ataque corpo a corpo contra ele (1x por alvo por rodada).",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 1, "frequencia": "1x_por_alvo_rodada", "efeito": "ataque_oportunidade"}
+        }
+    },
+    "GUERREIRO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
     },
     "GUERREIRO_BATER_CORRER": {
         "nome": "Bater e Correr",
         "tipo": "Poder de Guerreiro",
         "classe": "Guerreiro",
-        "descricao": "Move após investida. 2 PM: investida em terreno difícil sem penalidade defesa. ",
-        "efeitos": {}
+        "descricao": "Quando faz investida, pode continuar se movendo após o ataque até o limite de deslocamento. 2 PM: investida sobre terreno difícil e sem penalidade de Defesa.",
+        "efeitos": {"bater_e_correr": True, "acao_ativavel": {"custo_pm": 2, "efeito": "investida_sem_penalidade"}}
+    },
+    "GUERREIRO_DESTRUIDOR": {
+        "nome": "Destruidor",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "requisitos": ["For 1"],
+        "descricao": "Quando causa dano com arma corpo a corpo de duas mãos, pode rolar novamente qualquer resultado 1 ou 2 na rolagem de dano da arma.",
+        "efeitos": {"destruidor_rerrolar_1_2": True}
     },
     "GUERREIRO_ESGRIMISTA": {
         "nome": "Esgrimista",
         "tipo": "Poder de Guerreiro",
         "classe": "Guerreiro",
         "requisitos": ["Int 1"],
-        "descricao": "Soma Inteligência no dano com armas leves/ágeis. ",
-        "efeitos": {"dano_soma_atributo_extra": {"atributo": "int", "tipo_arma": ["leve", "ágil"]}}
+        "descricao": "Quando usa arma corpo a corpo leve ou ágil, soma sua Inteligência em rolagens de dano (limitado pelo seu nível).",
+        "efeitos": {
+            "dano_soma_atributo_extra": {"atributo": "int", "tipo_arma": ["leve", "ágil"], "limite_por_nivel": True}
+        }
+    },
+    "GUERREIRO_ESPECIALIZACAO_ARMA": {
+        "nome": "Especialização em Arma",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "descricao": "Escolha uma arma. Recebe +2 em rolagens de dano com essa arma. Pode escolher outras vezes para armas diferentes.",
+        "efeitos": {"especializacao_arma_dano": 2, "multipla_escolha": True}
+    },
+    "GUERREIRO_ESPECIALIZACAO_ARMADURA": {
+        "nome": "Especialização em Armadura",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "requisitos": ["Nível 12"],
+        "descricao": "Recebe redução de dano 5 se estiver usando uma armadura pesada.",
+        "efeitos": {"rd_armadura_pesada": 5}
+    },
+    "GUERREIRO_GOLPE_RASPAO": {
+        "nome": "Golpe de Raspão",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "descricao": "Uma vez por rodada, quando erra um ataque, pode gastar 2 PM para causar metade do dano que causaria (ignorando efeitos de acerto).",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 2, "frequencia": "1x_por_rodada", "efeito": "metade_dano_ao_errar"},
+            "golpe_de_raspao": True,
+        }
+    },
+    "GUERREIRO_GOLPE_DEMOLIDOR": {
+        "nome": "Golpe Demolidor",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "descricao": "Quando usa manobra quebrar ou ataca objeto, pode gastar 2 PM para ignorar a redução de dano dele.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "efeito": "ignorar_rd_objeto"}}
     },
     "GUERREIRO_GOLPE_PESSOAL": {
         "nome": "Golpe Pessoal",
         "tipo": "Poder de Guerreiro",
         "classe": "Guerreiro",
         "requisitos": ["Nível 5"],
-        "descricao": "Cria ataque especial com efeitos variados (Impactante, Brutal, Elemental, etc). ",
-        "efeitos": {"golpe_pessoal_slot": 1}
+        "descricao": "Constrói uma técnica única com arma específica combinando efeitos (mínimo 1 PM): Amplo (+3), Atordoante (+2), Brutal (+1), Conjurador (Custo+1), Destruidor (+2), Distante (+1), Elemental (+2), Impactante (+1), Letal (+2), Penetrante (+1), Preciso (+1), Qualquer Arma (+1), Ricocheteante (+1), Teleguiado (+1), Lento (-2), Perto da Morte (-2), Sacrifício (-2). Pode escolher várias vezes.",
+        "efeitos": {
+            "golpe_pessoal_slot": 1,
+            "multipla_escolha": True,
+            "efeitos_disponiveis": {
+                "Amplo": 3, "Atordoante": 2, "Brutal": 1, "Conjurador": "custo+1",
+                "Destruidor": 2, "Distante": 1, "Elemental": 2, "Impactante": 1,
+                "Letal": 2, "Penetrante": 1, "Preciso": 1, "Qualquer Arma": 1,
+                "Ricocheteante": 1, "Teleguiado": 1, "Lento": -2,
+                "Perto da Morte": -2, "Sacrifício": -2,
+            },
+        }
+    },
+    "GUERREIRO_IMPETO": {
+        "nome": "Ímpeto",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "descricao": "Pode gastar 1 PM para aumentar seu deslocamento em +6m por uma rodada.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 1, "deslocamento_bonus": 6, "duracao": "1 rodada"}}
+    },
+    "GUERREIRO_MESTRE_ARMA": {
+        "nome": "Mestre em Arma",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "requisitos": ["Especialização em Arma", "Nível 12"],
+        "descricao": "Escolha uma arma com Especialização em Arma: dano aumenta em um passo e pode gastar 2 PM para rolar novamente um teste de ataque com ela.",
+        "efeitos": {"mestre_arma_passo_dano": 1, "custo_rerrolar_ataque": 2}
+    },
+    "GUERREIRO_PLANEJAMENTO_MARCIAL": {
+        "nome": "Planejamento Marcial",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "requisitos": ["Treinado em Guerra", "Nível 10"],
+        "descricao": "1x/dia, 1 hora e 3 PM: escolhe um poder de guerreiro ou de combate cujos pré-requisitos cumpra e recebe seus benefícios até o próximo dia.",
+        "efeitos": {"acao_ativavel": {"tempo": "1 hora", "custo_pm": 3, "frequencia": "1x_por_dia"}}
+    },
+    "GUERREIRO_ROMPER_RESISTENCIAS": {
+        "nome": "Romper Resistências",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "descricao": "Quando faz um Ataque Especial, pode gastar 1 PM adicional para ignorar 10 pontos de redução de dano.",
+        "efeitos": {"romper_resistencias_rd": 10, "custo_pm_extra": 1}
+    },
+    "GUERREIRO_SOLIDEZ": {
+        "nome": "Solidez",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "descricao": "Se estiver usando um escudo, aplica o bônus na Defesa recebido pelo escudo em testes de resistência.",
+        "efeitos": {"solidez_escudo_resistencias": True}
+    },
+    "GUERREIRO_TORNADO_DOR": {
+        "nome": "Tornado de Dor",
+        "tipo": "Poder de Guerreiro",
+        "classe": "Guerreiro",
+        "requisitos": ["Nível 6"],
+        "descricao": "Ação padrão, 2 PM: ataque corpo a corpo contra cada inimigo em alcance natural; rolagem de dano com bônus cumulativo de +2 para cada acerto.",
+        "efeitos": {"acao_ativavel": {"acao": "padrão", "custo_pm": 2, "bonus_dano_por_acerto": 2}}
     },
     "GUERREIRO_VALENTAO": {
         "nome": "Valentão",
         "tipo": "Poder de Guerreiro",
         "classe": "Guerreiro",
-        "descricao": "+2 ataque/dano contra caídos, desprevenidos, flanqueados. ",
-        "efeitos": {}
+        "descricao": "Recebe +2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
+        "efeitos": {"valentao_bonus": 2}
     },
 
     # ==========================================================================

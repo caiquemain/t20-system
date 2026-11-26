@@ -75,8 +75,8 @@ DADOS_CLASSES = {
         "pm_inicial": 3, "pm_nivel": 3,
         "pericias_iniciais": ["Fortitude"],
         "pericias_fixas_selecao": ["Luta", "Pontaria"],
-        "pericias_escolha": 3,
-        "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Guerra", "Iniciativa", "Intimidação", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos", "Vontade"],
+        "pericias_escolha": 2,
+        "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Guerra", "Iniciativa", "Intimidação", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos"],
         "proficiencias": ["Armas Marciais", "Armaduras Pesadas", "Escudos"]
     },
     "Inventor": {

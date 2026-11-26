@@ -532,6 +532,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append(f"Presas Afiadas: +{efeitos['armas_naturais_margem_ameaca']} margem de ameaça em armas naturais")
         if efeitos.get("forma_primal"):
             lista_efeitos.append("Forma Primal: combina benefícios de dois tipos de animais na Forma Selvagem")
+        if efeitos.get("durao"):
+            lista_efeitos.append("Durão: 3 PM ao sofrer dano para reduzir à metade")
+        if efeitos.get("ataque_extra"):
+            lista_efeitos.append("Ataque Extra: 2 PM ao agredir para 1 ataque adicional (1x/rodada)")
+        if efeitos.get("campeao"):
+            lista_efeitos.append("Campeão: +1 passo de dano em todos os ataques; recupera metade dos PM em Ataque Especial/Golpe Pessoal")
+        if efeitos.get("destruidor_rerrolar_1_2"):
+            lista_efeitos.append("Destruidor: rola novamente 1 ou 2 no dano com armas corpo a corpo de duas mãos")
+        if efeitos.get("valentao_bonus"):
+            lista_efeitos.append(f"Valentão: +{efeitos['valentao_bonus']} ataque e dano contra caídos, desprevenidos, flanqueados ou indefesos")
+        if efeitos.get("romper_resistencias_rd"):
+            lista_efeitos.append(f"Romper Resistências: +1 PM no Ataque Especial para ignorar {efeitos['romper_resistencias_rd']} de RD")
+        if efeitos.get("golpe_de_raspao"):
+            lista_efeitos.append("Golpe de Raspão: 2 PM ao errar ataque para causar metade do dano (1x/rodada)")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 

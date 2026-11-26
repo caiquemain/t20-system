@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 8/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo e Druida)  
+**Status:** 🟡 9/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo, Druida e Guerreiro)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -18,9 +18,9 @@
 | **Cavaleiro** | 26 (6 fixas + 20 poderes) | 26 (100%) | 2 arquivos (`test_cavaleiro_*`) | ✅ Completa |
 | **Clérigo** | 21 (3 fixas + 18 poderes) | 21 (100%) | 2 arquivos (`test_clerigo_*`) | ✅ Completa |
 | **Druida** | 27 (5 fixas + 22 poderes) | 27 (100%) | 2 arquivos (`test_druida_*`) | ✅ Completa |
+| **Guerreiro** | 23 (4 fixas + 19 poderes) | 23 (100%) | 2 arquivos (`test_guerreiro_*`) | ✅ Completa |
 | **Ladino** | 11 (4 fixas + 7 poderes) | 7 (64%) | — | 🟡 Parcial |
 | **Inventor** | 8 (2 fixas + 6 poderes) | 5 (63%) | — | 🟡 Parcial |
-| **Guerreiro** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
 | **Lutador** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
 | **Paladino** | 11 (6 fixas + 5 poderes) | 3 (27%) | — | 🟡 Parcial |
 | **Nobre** | 9 (4 fixas + 5 poderes) | 2 (22%) | — | 🟡 Parcial |
@@ -30,7 +30,7 @@
 ## 📋 Lotes de Execução
 
 ### Lote 1 — Marciais
-- [ ] **Guerreiro** (Ataque Especial, Durão, Golpe Pessoal + todos os poderes do JdA + testes)
+- [x] **Guerreiro** (Ataque Especial, Durão, Ataque Extra, Campeão + 19 poderes + testes)
 - [ ] **Lutador** (Briga, Golpe Relâmpago, Casca Grossa + poderes + testes)
 - [x] **Cavaleiro** (Código de Honra, Baluarte, Duelo, Caminho do Cavaleiro, Resoluto, Bravura Final + 20 poderes + testes)
 

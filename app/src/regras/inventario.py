@@ -232,6 +232,20 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
                 elif any((h.efeitos or {}).get("escaramuca") or (h.nome or "") == "Escaramuça" for h in ficha.habilidades):
                     especial.append("Escaramuça (+1d8 dano)")
 
+        # Especialização em Arma / Mestre em Arma / Campeão (Guerreiro, T20 p.65-66)
+        nome_arma_low = item.nome.strip().lower()
+        for hab in ficha.habilidades:
+            ef_h = hab.efeitos or {}
+            arma_esc = str((hab.escolhas_aplicadas or {}).get("arma", "")).strip().lower()
+            if ef_h.get("especializacao_arma_dano") and arma_esc == nome_arma_low:
+                v_esp = int(ef_h["especializacao_arma_dano"])
+                bonus_dano_arma += v_esp
+                especial.append(f"Especialização em Arma (+{v_esp} dano)")
+            if ef_h.get("mestre_arma_passo_dano") and arma_esc == nome_arma_low:
+                especial.append("Mestre em Arma (+1 passo de dano)")
+            if ef_h.get("passo_dano_global"):
+                especial.append("Campeão (+1 passo de dano)")
+
         if not proficiente:
             especial.append("-5 ataque (não proficiente)")
         ataques.append(Ataque(
