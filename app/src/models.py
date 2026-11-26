@@ -267,6 +267,8 @@ class Combate(BaseModel):
     # Cálculo de Ataque Especial (Guerreiro, T20 p.64-66): +4..+20 (1..5 PM),
     # Romper Resistências e Campeão.
     ataque_especial_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Inventor (T20 p.67-71): melhorias, item mágico, engenhocas e fórmulas.
+    inventor_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0

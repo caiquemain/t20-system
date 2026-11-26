@@ -2352,14 +2352,14 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # INVENTOR
+    # INVENTOR (T20 JdA, p. 67-71)
     # ==========================================================================
     "INVENTOR_ENGENHOSIDADE": {
         "nome": "Engenhosidade",
         "tipo": "Habilidade de Classe",
         "classe": "Inventor",
         "nivel": 1,
-        "descricao": "2 PM: Soma Inteligência em teste de perícia (exceto ataque). ",
+        "descricao": "Quando faz um teste de perícia, pode gastar 2 PM para somar sua Inteligência no teste (exceto testes de ataque).",
         "efeitos": {
             "habilidade_ativavel": {
                 "custo": 2,
@@ -2380,56 +2380,297 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Inventor",
         "nivel": 1,
-        "descricao": "Começa com item superior ou alquímicos (T$ 500). ",
-        "efeitos": {}
+        "descricao": "Começa o jogo com 1 item superior ou 10 itens alquímicos com preço total de até T$ 500.",
+        "efeitos": {"prototipo_valor_max": 500}
     },
-    # --- PODERES DE INVENTOR ---
+    "INVENTOR_FABRICAR_ITEM_SUPERIOR": {
+        "nome": "Fabricar Item Superior",
+        "tipo": "Habilidade de Classe",
+        "classe": "Inventor",
+        "nivel": 2,
+        "descricao": "Recebe 1 item superior de até T$ 2.000 e passa a fabricar itens superiores com 1 melhoria (2 melhorias no 5º nível, 3 no 8º, 4 no 11º).",
+        "efeitos": {"fabricar_item_superior": True}
+    },
+    "INVENTOR_COMERCIANTE": {
+        "nome": "Comerciante",
+        "tipo": "Habilidade de Classe",
+        "classe": "Inventor",
+        "nivel": 3,
+        "descricao": "Pode vender itens 10% mais caro (não cumulativo com barganha).",
+        "efeitos": {"comerciante_venda_pct": 10}
+    },
+    "INVENTOR_ENCONTRAR_FRAQUEZA": {
+        "nome": "Encontrar Fraqueza",
+        "tipo": "Habilidade de Classe",
+        "classe": "Inventor",
+        "nivel": 7,
+        "descricao": "Ação de movimento, 2 PM, alcance curto, cena: ignora RD de um objeto ou recebe +2 em ataques contra inimigo de armadura ou construto.",
+        "efeitos": {
+            "acao_ativavel": {"acao": "movimento", "custo_pm": 2, "alcance": "curto", "duracao": "cena"},
+            "encontrar_fraqueza": True,
+        }
+    },
+    "INVENTOR_FABRICAR_ITEM_MAGICO": {
+        "nome": "Fabricar Item Mágico",
+        "tipo": "Habilidade de Classe",
+        "classe": "Inventor",
+        "nivel": 9,
+        "descricao": "Recebe e passa a fabricar itens mágicos menores (médios no 13º nível, maiores no 17º).",
+        "efeitos": {"fabricar_item_magico": True}
+    },
+    "INVENTOR_OLHO_DRAGAO": {
+        "nome": "Olho do Dragão",
+        "tipo": "Habilidade de Classe",
+        "classe": "Inventor",
+        "nivel": 10,
+        "descricao": "Ação completa: analisa um item e descobre automaticamente se é mágico, suas propriedades e como utilizá-las.",
+        "efeitos": {"olho_do_dragao": True}
+    },
+    "INVENTOR_OBRA_PRIMA": {
+        "nome": "Obra-Prima",
+        "tipo": "Habilidade de Classe",
+        "classe": "Inventor",
+        "nivel": 20,
+        "descricao": "Fabrica sua obra-prima (equivalente a item com 5 melhorias e 4 encantos, aprovado pelo mestre) sem gastar dinheiro, tempo ou PM.",
+        "efeitos": {"obra_prima": True}
+    },
+    # --- PODERES DE INVENTOR (30 poderes oficiais, T20 JdA p. 68-70) ---
     "INVENTOR_AGITE_ANTES": {
         "nome": "Agite Antes de Usar",
         "tipo": "Poder de Inventor",
         "classe": "Inventor",
         "requisitos": ["Treinado em Ofício (alquimista)"],
-        "descricao": "Gaste PM para aumentar dano de alquímicos (+1d/PM). ",
-        "efeitos": {}
+        "descricao": "Ao usar preparado alquímico de dano, gasta até Int PM para causar +1 dado extra de dano do mesmo tipo por PM.",
+        "efeitos": {"acao_ativavel": {"custo_pm": "variavel", "limite_pm": "inteligencia", "efeito": "dado_extra_alquimico"}}
+    },
+    "INVENTOR_AJUSTE_MIRA": {
+        "nome": "Ajuste de Mira",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Balística"],
+        "descricao": "Ação padrão + até Int PM: aprimora arma à distância recebendo +1 dano por PM até o final da cena.",
+        "efeitos": {"acao_ativavel": {"acao": "padrão", "custo_pm": "variavel", "limite_pm": "inteligencia", "duracao": "cena"}}
+    },
+    "INVENTOR_ALQUIMISTA_BATALHA": {
+        "nome": "Alquimista de Batalha",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Alquimista Iniciado"],
+        "descricao": "Soma sua Inteligência na rolagem de dano de preparados alquímicos ou poções que causem dano.",
+        "efeitos": {"alquimista_batalha_soma_int": True}
     },
     "INVENTOR_ALQUIMISTA_INICIADO": {
         "nome": "Alquimista Iniciado",
         "tipo": "Poder de Inventor",
         "classe": "Inventor",
         "requisitos": ["Int 1", "Sab 1", "Treinado em Ofício (alquimista)"],
-        "descricao": "Recebe livro de fórmulas, faz poções (1º e 2º círculo). ",
-        "efeitos": {"fabricar_pocao": True}
+        "descricao": "Recebe livro de fórmulas (3 de 1º círculo + 1/nível; 2º círculo no 6º nível; atributo-chave Int) e fabrica poções de 1º e 2º círculos.",
+        "efeitos": {"fabricar_pocao": True, "circulo_pocao_max": 2}
     },
     "INVENTOR_ARMEIRO": {
         "nome": "Armeiro",
         "tipo": "Poder de Inventor",
         "classe": "Inventor",
         "requisitos": ["Treinado em Luta", "Treinado em Ofício (armeiro)"],
-        "descricao": "Proficiência armas marciais corpo a corpo. Usa Int no ataque/dano. ",
-        "efeitos": {"proficiencia_adicional": ["marciais"], "ataque_atributo_troca": "int"}
+        "descricao": "Recebe proficiência com armas marciais corpo a corpo e pode usar Inteligência em vez de Força nos ataques e dano corpo a corpo.",
+        "efeitos": {"proficiencia_adicional": ["Armas Marciais (Corpo a Corpo)"], "armeiro_int_corpo_a_corpo": True}
+    },
+    "INVENTOR_ATIVACAO_RAPIDA": {
+        "nome": "Ativação Rápida",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Engenhoqueiro", "Nível 7"],
+        "descricao": "Ao ativar engenhoca com ação padrão, pode pagar 2 PM para ativá-la como ação de movimento.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "efeito": "ativar_engenhoca_movimento"}}
+    },
+    "INVENTOR_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
+    },
+    "INVENTOR_AUTOMATO": {
+        "nome": "Autômato",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Engenhoqueiro"],
+        "descricao": "Fabrica um autômato construto (parceiro iniciante; veterano no 7º nível, mestre no 15º) de tipo ajudante, assassino, atirador, combatente, guardião, montaria ou vigilante.",
+        "efeitos": {"parceiro_adicional": 1, "automato": True}
+    },
+    "INVENTOR_AUTOMATO_PROTOTIPADO": {
+        "nome": "Autômato Prototipado",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Autômato"],
+        "descricao": "Ação padrão, 2 PM: melhoria experimental no autômato (1d6: 2-6 sobe 1 passo até mestre ou ganha habilidade iniciante de outro tipo pela cena; 1 enguiça).",
+        "efeitos": {"acao_ativavel": {"acao": "padrão", "custo_pm": 2, "efeito": "melhoria_automato"}}
     },
     "INVENTOR_BALISTICA": {
         "nome": "Balística",
         "tipo": "Poder de Inventor",
         "classe": "Inventor",
         "requisitos": ["Treinado em Pontaria", "Treinado em Ofício (armeiro)"],
-        "descricao": "Proficiência armas marciais distância/fogo. Usa Int no ataque. ",
-        "efeitos": {"proficiencia_adicional": ["marciais distância", "fogo"], "ataque_atributo_troca": "int"}
+        "descricao": "Proficiência com armas marciais à distância ou armas de fogo. Usa Inteligência em vez de Destreza em ataques à distância (e no dano se possuir Estilo de Disparo).",
+        "efeitos": {"proficiencia_adicional": ["Armas Marciais (Distância)", "Armas de Fogo"], "balistica_int_distancia": True}
+    },
+    "INVENTOR_BLINDAGEM": {
+        "nome": "Blindagem",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Couraceiro", "Nível 8"],
+        "descricao": "Pode usar sua Inteligência na Defesa quando usa armadura pesada (sem somar Destreza).",
+        "efeitos": {"blindagem_int_pesada": True}
+    },
+    "INVENTOR_CANO_RAIADO": {
+        "nome": "Cano Raiado",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Balística", "Nível 5"],
+        "descricao": "Quando usa uma arma de disparo feita por você mesmo, ela recebe +1 na margem de ameaça.",
+        "efeitos": {"cano_raiado_margem": 1}
+    },
+    "INVENTOR_CATALISADOR_INSTAVEL": {
+        "nome": "Catalisador Instável",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Alquimista Iniciado"],
+        "descricao": "Ação completa, 3 PM: fabrica preparado alquímico ou poção conhecida instantaneamente pela metade do custo (sem teste; dura até fim da cena).",
+        "efeitos": {"acao_ativavel": {"acao": "completa", "custo_pm": 3, "efeito": "fabricar_alquimico_instantaneo"}}
+    },
+    "INVENTOR_CHUTES_PALAVROES": {
+        "nome": "Chutes e Palavrões",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Engenhoqueiro"],
+        "descricao": "1x/rodada, 1 PM: rola novamente teste de Ofício (engenhoqueiro) para ativar engenhoca.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 1, "frequencia": "1x_por_rodada", "efeito": "rerrolar_engenhoca"}}
+    },
+    "INVENTOR_CONHECIMENTO_FORMULAS": {
+        "nome": "Conhecimento de Fórmulas",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Alquimista Iniciado"],
+        "descricao": "Aprende três fórmulas de quaisquer círculos que possa aprender. Pode escolher este poder quantas vezes quiser.",
+        "efeitos": {"formulas_adicionais": 3, "multipla_escolha": True}
+    },
+    "INVENTOR_COURACEIRO": {
+        "nome": "Couraceiro",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Treinado em Ofício (armeiro)"],
+        "descricao": "Proficiência com armaduras pesadas e escudos. Usando armadura, pode usar Inteligência em vez de Destreza na Defesa (não soma atributo com armadura pesada).",
+        "efeitos": {"proficiencia_adicional": ["Armaduras Pesadas", "Escudos"], "couraceiro_int_defesa": True}
     },
     "INVENTOR_ENGENHOQUEIRO": {
         "nome": "Engenhoqueiro",
         "tipo": "Poder de Inventor",
         "classe": "Inventor",
         "requisitos": ["Int 3", "Treinado em Ofício (engenhoqueiro)"],
-        "descricao": "Pode fabricar engenhocas que simulam magias. ",
+        "descricao": "Pode fabricar engenhocas que simulam magias (1º círculo; +1 círculo no 6º, 10º, 14º, 18º; limite de engenhocas igual à Inteligência).",
         "efeitos": {"fabricar_engenhoca": True}
+    },
+    "INVENTOR_FARMACEUTICO": {
+        "nome": "Farmacêutico",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Sab 1", "Treinado em Ofício (alquimista)"],
+        "descricao": "Ao usar item alquímico que cure PV, gasta até Int PM para curar +1 dado extra do mesmo tipo por PM.",
+        "efeitos": {"acao_ativavel": {"custo_pm": "variavel", "limite_pm": "inteligencia", "efeito": "dado_extra_cura_alquimico"}}
+    },
+    "INVENTOR_FERREIRO": {
+        "nome": "Ferreiro",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Armeiro", "Nível 5"],
+        "descricao": "Quando usa uma arma corpo a corpo feita por você mesmo, o dano dela aumenta em um passo.",
+        "efeitos": {"ferreiro_passo_dano": 1}
+    },
+    "INVENTOR_GRANADEIRO": {
+        "nome": "Granadeiro",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Alquimista de Batalha"],
+        "descricao": "Arremessa itens alquímicos e poções em alcance médio e usa Inteligência em vez de Destreza na CD deles.",
+        "efeitos": {"granadeiro_alcance_medio": True, "granadeiro_cd_int": True}
+    },
+    "INVENTOR_HOMUNCULO": {
+        "nome": "Homúnculo",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Alquimista Iniciado"],
+        "descricao": "Parceiro ajudante iniciante (telepatia alcance longo). Pode perder 1d6 PV para torná-lo também guardião iniciante até o fim da cena.",
+        "efeitos": {"parceiro_adicional": 1, "homunculo": True}
+    },
+    "INVENTOR_INVENCAO_POTENTE": {
+        "nome": "Invenção Potente",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "descricao": "Ao usar item ou engenhoca fabricado por você mesmo, pode pagar 1 PM para aumentar em +2 a CD para resistir a ele.",
+        "efeitos": {"invencao_potente_cd": 2, "custo_pm": 1}
     },
     "INVENTOR_MAESTRIA_PERICIA": {
         "nome": "Maestria em Perícia",
         "tipo": "Poder de Inventor",
         "classe": "Inventor",
-        "descricao": "Escolha perícias igual Int. Pode gastar 1 PM para escolher 10 nelas. ",
-        "efeitos": {"maestria_escolhas": "int"}
+        "descricao": "Escolha um número de perícias treinadas igual à sua Inteligência (sem bônus temporários); pode gastar 1 PM para escolher 10 em qualquer situação (exceto ataque).",
+        "efeitos": {"maestria_escolhas": "int", "custo_pm": 1}
+    },
+    "INVENTOR_MANUTENCAO_EFICIENTE": {
+        "nome": "Manutenção Eficiente",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Engenhoqueiro", "Nível 5"],
+        "descricao": "Limite de engenhocas aumenta em +3 e cada engenhoca passa a ocupar meio espaço.",
+        "efeitos": {"limite_engenhocas_bonus": 3, "engenhoca_espaco": 0.5}
+    },
+    "INVENTOR_MESTRE_ALQUIMISTA": {
+        "nome": "Mestre Alquimista",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Int 3", "Sab 3", "Alquimista Iniciado", "Nível 10"],
+        "descricao": "Pode fabricar poções com fórmulas que conheça de qualquer círculo (3º no 10º, 4º no 14º, 5º no 18º).",
+        "efeitos": {"mestre_alquimista": True}
+    },
+    "INVENTOR_MESTRE_CUCA": {
+        "nome": "Mestre Cuca",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Treinado em Ofício (cozinheiro)"],
+        "descricao": "Todas as comidas que você cozinha têm seu bônus numérico aumentado em +1.",
+        "efeitos": {"mestre_cuca_bonus": 1}
+    },
+    "INVENTOR_MISTURA_FERVILHANTE": {
+        "nome": "Mistura Fervilhante",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Alquimista Iniciado", "Nível 5"],
+        "descricao": "Ao usar item alquímico ou poção, pode gastar 2 PM para dobrar sua área de efeito.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "efeito": "dobrar_area_alquimico"}}
+    },
+    "INVENTOR_OFICINA_CAMPO": {
+        "nome": "Oficina de Campo",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Treinado em Ofício (armeiro)"],
+        "descricao": "1 hora e 2 PM: faz manutenção no equipamento do grupo (+1 ataque em arma ou +1 Defesa em armadura/escudo por membro, dura 1 dia).",
+        "efeitos": {"acao_ativavel": {"tempo": "1 hora", "custo_pm": 2, "duracao": "1 dia"}}
+    },
+    "INVENTOR_PEDRA_AMOLAR": {
+        "nome": "Pedra de Amolar",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Armeiro"],
+        "descricao": "Ação de movimento + até Int PM: aprimora arma corpo a corpo empunhada recebendo +1 dano por PM até o final da cena.",
+        "efeitos": {"acao_ativavel": {"acao": "movimento", "custo_pm": "variavel", "limite_pm": "inteligencia", "duracao": "cena"}}
+    },
+    "INVENTOR_SINTESE_RAPIDA": {
+        "nome": "Síntese Rápida",
+        "tipo": "Poder de Inventor",
+        "classe": "Inventor",
+        "requisitos": ["Alquimista Iniciado"],
+        "descricao": "Ao fabricar item alquímico ou poção, pode fabricar o dobro de doses no mesmo tempo (pagando a matéria-prima de cada uma).",
+        "efeitos": {"sintese_rapida_dobro_doses": True}
     },
 
     # ==========================================================================
