@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Magia } from '../types';
 import { getSchoolColor, getCircleColor, getTypeColor, calcularCustoMagiaView } from '../utils/magicUtils'; // <--- IMPORT
+import { T20Icon } from './T20Icon';
 
 interface SpellDetailsModalProps {
     magia: Magia | null;
@@ -86,10 +87,14 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
                                         <div style={{ color: ap.custo === 'Truque' ? '#80deea' : '#ce93d8', fontWeight: 'bold', fontSize: '0.85rem', whiteSpace: 'nowrap', minWidth: '50px' }}>{ap.custo === 'Truque' ? 'Truque · 0 PM' : ap.custo}</div>
                                         <div style={{ color: '#ccc', fontSize: '0.9rem', lineHeight: '1.4' }}>{ap.descricao}</div>
                                             {ap.custo === 'Truque' && (
-                                                <div style={{ color: '#80deea', fontSize: '0.7rem', minWidth: '100%' }}>💡 Truque: custo 0 PM — não combina com outros aprimoramentos</div>
+                                                <div style={{ color: '#80deea', fontSize: '0.7rem', minWidth: '100%', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                    <T20Icon name="info" size={12} /> Truque: custo 0 PM — não combina com outros aprimoramentos
+                                                </div>
                                             )}
                                             {/Requer \dº círculo/.test(ap.descricao) && (magia.fonte_origem || '').startsWith('Racial') && (
-                                                <div style={{ color: '#ff8a80', fontSize: '0.7rem', minWidth: '100%' }}>🔒 Pré-requisito de círculo: magias raciais não podem cumpri-lo</div>
+                                                <div style={{ color: '#ff8a80', fontSize: '0.7rem', minWidth: '100%', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                    <T20Icon name="cadeado" size={12} /> Pré-requisito de círculo: magias raciais não podem cumpri-lo
+                                                </div>
                                             )}
                                     </div>
                                 ))}
@@ -100,7 +105,9 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
 
                 <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
                     {!hideRemove && (
-                        <button className="btn-delete" onClick={() => { if (window.confirm(`Tem certeza que deseja esquecer a magia "${magia.nome}"?`)) { onRemove(); onClose(); } }}>🗑️ Esquecer Magia</button>
+                        <button className="btn-delete" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }} onClick={() => { if (window.confirm(`Tem certeza que deseja esquecer a magia "${magia.nome}"?`)) { onRemove(); onClose(); } }}>
+                            <T20Icon name="excluir" size={14} /> Esquecer Magia
+                        </button>
                     )}
                     <button className="btn-cancel" onClick={onClose}>Fechar</button>
                 </div>

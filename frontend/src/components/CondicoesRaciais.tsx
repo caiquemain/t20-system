@@ -1,13 +1,14 @@
 import React from 'react';
+import { T20Icon, type IconName } from './T20Icon';
 
 // Espelha o registro do backend (pericias.py)
 const CONDICAO_POR_HABILIDADE: Record<string, string> = {
     'Conhecimento das Rochas': 'subterraneo',
     'Reptiliano': 'sem_armadura',
 };
-const CONDICOES: Record<string, { label: string; icone: string; desc: string }> = {
-    subterraneo: { label: 'No subterrâneo', icone: '⛰️', desc: '+2 Percepção/Sobrevivência (Conhecimento das Rochas)' },
-    sem_armadura: { label: 'Sem armadura ou roupas pesadas', icone: '🪽', desc: '+5 Furtividade (Reptiliano)' },
+const CONDICOES: Record<string, { label: string; icone: IconName; desc: string }> = {
+    subterraneo: { label: 'No subterrâneo', icone: 'escalada', desc: '+2 Percepção/Sobrevivência (Conhecimento das Rochas)' },
+    sem_armadura: { label: 'Sem armadura ou roupas pesadas', icone: 'voo', desc: '+5 Furtividade (Reptiliano)' },
 };
 
 interface Props { ficha: any; updateFicha: (d: any) => void; }
@@ -23,10 +24,12 @@ export const CondicoesRaciais: React.FC<Props> = ({ ficha, updateFicha }) => {
     };
     return (
         <div className="section-card" style={{ padding: 12, marginBottom: 15 }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#fff' }}>🎚️ Condições Situacionais</h3>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <T20Icon name="filtro" size={16} color="#2196f3" /> Condições Situacionais
+            </h3>
             {relevantes.map(([hab, id]) => {
                 const ativa = ativas.includes(id);
-                const meta = CONDICOES[id] || { label: id, icone: '❓', desc: '' };
+                const meta = CONDICOES[id] || { label: id, icone: 'info' as IconName, desc: '' };
                 return (
                     <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #333' }}>
                         <button onClick={() => toggle(id)} style={{
@@ -34,7 +37,9 @@ export const CondicoesRaciais: React.FC<Props> = ({ ficha, updateFicha }) => {
                             background: ativa ? '#4caf50' : '#333', color: ativa ? '#000' : '#888', fontWeight: 'bold'
                         }}>{ativa ? 'ON' : 'OFF'}</button>
                         <div>
-                            <div style={{ color: ativa ? '#a5d6a7' : '#ccc', fontSize: '0.85rem' }}>{meta.icone} {meta.label}</div>
+                            <div style={{ color: ativa ? '#a5d6a7' : '#ccc', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <T20Icon name={meta.icone} size={14} /> {meta.label}
+                            </div>
                             <div style={{ color: '#777', fontSize: '0.7rem' }}>{hab}: {meta.desc}</div>
                         </div>
                     </div>

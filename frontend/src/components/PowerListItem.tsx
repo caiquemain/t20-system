@@ -1,4 +1,5 @@
 import React from 'react';
+import { T20Icon } from './T20Icon';
 
 interface PowerListItemProps {
     item: any;
@@ -37,8 +38,8 @@ export const PowerListItem: React.FC<PowerListItemProps> = ({ item, isBlocked, b
 
             {/* Mensagem de Bloqueio (Requisitos) */}
             {isBlocked && blockReason && blockReason.length > 0 && (
-                <div className="power-block-reason">
-                    🛑 {blockReason.join(', ')}
+                <div className="power-block-reason" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <T20Icon name="imunidade" size={13} /> {blockReason.join(', ')}
                 </div>
             )}
         </button>

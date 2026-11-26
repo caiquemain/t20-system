@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { T20Icon } from './T20Icon';
 
 interface RacialRowProps {
     hab: any;
@@ -212,11 +213,12 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                                             background: !isPowerMode ? '#00bcd4' : '#333',
                                             color: !isPowerMode ? '#000' : '#888',
                                             border: 'none', borderRadius: 3, cursor: 'pointer',
-                                            opacity: (!podeTrocarAgora && isPowerMode) ? 0.4 : 1
+                                            opacity: (!podeTrocarAgora && isPowerMode) ? 0.4 : 1,
+                                            display: 'inline-flex', alignItems: 'center', gap: '4px'
                                         }}
                                         title="Bônus de +2 em perícia"
                                     >
-                                        🎯 Perícia (+2)
+                                        <T20Icon name="arco" size={12} /> Perícia (+2)
                                     </button>
                                     <button
                                         onClick={() => switchMode('poder')}
@@ -226,11 +228,12 @@ export const RacialAbilityRow: React.FC<RacialRowProps> = ({
                                             background: isPowerMode ? '#9c27b0' : '#333',
                                             color: isPowerMode ? '#fff' : '#888',
                                             border: 'none', borderRadius: 3, cursor: 'pointer',
-                                            opacity: (!podeTrocarAgora && !isPowerMode) ? 0.4 : 1
+                                            opacity: (!podeTrocarAgora && !isPowerMode) ? 0.4 : 1,
+                                            display: 'inline-flex', alignItems: 'center', gap: '4px'
                                         }}
                                         title="Poder da Tormenta (máx 1)"
                                     >
-                                        🌀 Poder da Tormenta
+                                        <T20Icon name="poder" size={12} /> Poder da Tormenta
                                     </button>
                                 </div>
                             )}

@@ -269,7 +269,7 @@ export const PowerSelectorModal: React.FC<PowerSelectorModalProps> = ({
                     <button onClick={onClose} className="btn-close-panel">X</button>
                 </div>
                 <div className="modal-controls">
-                    <input type="text" placeholder="🔍 Filtrar..." value={filtro}
+                    <input type="text" placeholder="Filtrar..." value={filtro}
                         onChange={(e) => setFiltro(e.target.value)} className="modal-search-input" autoFocus />
                     {!categoriaFixa && categoriasDisponiveis.length > 2 && (
                         <select value={categoriaFiltro} onChange={(e) => setCategoriaFiltro(e.target.value)} className="modal-category-select">

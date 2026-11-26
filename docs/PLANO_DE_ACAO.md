@@ -31,9 +31,9 @@
 > Checklist detalhada: [`docs/checklists/icones-ui.md`](./checklists/icones-ui.md)
 
 - [x] **`lucide-react` instalado** + componente central [`T20Icon.tsx`](../frontend/src/components/T20Icon.tsx) com mapa semântico tipado (`IconName`) e `getEfeitoVisual`.
-- [x] **Núcleo do frontend migrado:** `Ficha.tsx`, `StatusBars.tsx`, `EquipamentoCard.tsx`, `AttackList.tsx`, `SkillList.tsx`, `GrimorioModal.tsx`, `Home.tsx`, `Bestiario.tsx`, `MonsterCard.tsx`, `AmeacaDetail.tsx` e `Grimorio.tsx`.
+- [x] **Núcleo + modais secundários migrados:** `Ficha.tsx`, `StatusBars.tsx`, `EquipamentoCard.tsx`, `AttackList.tsx`, `SkillList.tsx`, `GrimorioModal.tsx`, `EntitySelectorModal.tsx`, `AbilityCard.tsx`, `AbilityConfigModal.tsx`, `CondicoesRaciais.tsx`, `DesejosButton.tsx`, `FullGrimorioModal.tsx`, `PowerListItem.tsx`, `PowerSelectorModal.tsx`, `RacialAbilityRow.tsx`, `RacialAttributeModal.tsx`, `SpellDetailsModal.tsx`, `SpellSummary.tsx`, `Home.tsx`, `Bestiario.tsx`, `MonsterCard.tsx`, `AmeacaDetail.tsx` e `Grimorio.tsx`.
 - [x] **Backend desacoplado:** emojis removidos de `efeitos_ativos` (`habilidades.py`) e `fontes_bonus` (`pericias.py`), eliminando a regex de emojis em `Ficha.tsx`.
-- [ ] **Opcional (baixa prioridade):** migrar `Wizard.tsx` e modais secundários (`AbilityCard`, `EntitySelectorModal`, `DesejosButton`).
+- [ ] **Opcional (baixa prioridade):** migrar `Wizard.tsx` e `wizard/steps/*`.
 
 ---
 

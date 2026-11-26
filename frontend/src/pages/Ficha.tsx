@@ -763,7 +763,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             <EntitySelectorModal
                 aberto={selectorAtivo === 'raca'}
                 titulo="Escolha sua Raça"
-                iconeTitulo="🧬"
+                iconeTitulo="raca"
                 selecionado={ficha.cabecalho.raca}
                 itens={listaRacas.map((r): EntityItem => {
                     const meta: any = (dadosRacas as any)?.[r] || (RACAS_METADATA as any)?.[r] || {};
@@ -772,13 +772,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         .filter(([, v]: any) => v !== 0)
                         .map(([k, v]: any) => `${v > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
                         .join(', ');
-                    const ICONES: Record<string, string> = {
-                        Humano: '👤', Elfo: '🧝', 'Anão': '⛏️', Goblin: '👹', Kliren: '🔧',
-                        Qareen: '🧞', Golem: '🤖', Osteon: '💀', Sereia: '🧜', 'Sílfide': '🧚',
-                        Suraggel: '👼', Trog: '🦎', Medusa: '🐍', Minotauro: '🐂',
-                        Dahllan: '🌿', Lefou: '🌀', Hynne: '🍀'
-                    };
-                    return { nome: r, icone: ICONES[r] || '⚔️', bonus: bonus || undefined };
+                    return { nome: r, icone: 'raca', bonus: bonus || undefined };
                 })}
                 onConfirm={(nome) => handleSelecionarEntidade('raca', nome)}
                 onFechar={() => setSelectorAtivo(null)}
@@ -787,9 +781,9 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             <EntitySelectorModal
                 aberto={selectorAtivo === 'origem'}
                 titulo="Escolha sua Origem"
-                iconeTitulo="📜"
+                iconeTitulo="origem"
                 selecionado={ficha.cabecalho.origem}
-                itens={listaOrigens.map((o): EntityItem => ({ nome: o, icone: '🎭' }))}
+                itens={listaOrigens.map((o): EntityItem => ({ nome: o, icone: 'origem' }))}
                 onConfirm={(nome) => handleSelecionarEntidade('origem', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
@@ -797,11 +791,11 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             <EntitySelectorModal
                 aberto={selectorAtivo === 'deus'}
                 titulo="Escolha sua Devoção"
-                iconeTitulo="⛪"
+                iconeTitulo="deus"
                 selecionado={ficha.cabecalho.deus || ''}
                 permitirVazio={true}
                 labelVazio="Sem Devoção"
-                itens={deusesDisponiveis.map((d): EntityItem => ({ nome: d, icone: '✨' }))}
+                itens={deusesDisponiveis.map((d): EntityItem => ({ nome: d, icone: 'deus' }))}
                 onConfirm={(nome) => handleSelecionarEntidade('deus', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
@@ -809,9 +803,9 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             <EntitySelectorModal
                 aberto={selectorAtivo === 'classe'}
                 titulo="Escolha sua Classe"
-                iconeTitulo="⚔️"
+                iconeTitulo="classe"
                 selecionado={ficha.classes[0]?.nome}
-                itens={listaClasses.map((c): EntityItem => ({ nome: c, icone: '🗡️' }))}
+                itens={listaClasses.map((c): EntityItem => ({ nome: c, icone: 'classe' }))}
                 onConfirm={(nome) => handleSelecionarEntidade('classe', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />

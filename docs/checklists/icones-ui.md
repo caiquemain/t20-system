@@ -30,6 +30,8 @@
 - [x] Removidos emojis de `fontes_bonus` / `StatCalculado` em `app/src/regras/pericias.py`
 - [x] Removida regex de limpeza de emoji em `Ficha.tsx`
 
-### 3. Componentes Secundários & Wizard (Pendente — baixa prioridade)
+### 3. Modais & Componentes Secundários (Concluído)
+- [x] `EntitySelectorModal.tsx`, `AbilityCard.tsx`, `AbilityConfigModal.tsx`, `CondicoesRaciais.tsx`, `DesejosButton.tsx`, `FullGrimorioModal.tsx`, `PowerListItem.tsx`, `PowerSelectorModal.tsx`, `RacialAbilityRow.tsx`, `RacialAttributeModal.tsx`, `SpellDetailsModal.tsx`, `SpellSummary.tsx`
+
+### 4. Wizard (Opcional — baixa prioridade)
 - [ ] `frontend/src/pages/Wizard.tsx` e `frontend/src/components/wizard/steps/*`
-- [ ] `EntitySelectorModal.tsx`, `AbilityCard.tsx`, `RacialAbilityRow.tsx`, `DesejosButton.tsx`, `PowerSelectorModal.tsx`, `FullGrimorioModal.tsx`, `SpellDetailsModal.tsx`

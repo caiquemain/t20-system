@@ -1,12 +1,13 @@
 import React from 'react';
 import { DesejosButton } from './DesejosButton';
+import { T20Icon, type IconName } from './T20Icon';
+import type { Habilidade } from '../types';
 
 // Condições situacionais ativáveis direto no card da habilidade
-const CONDICOES_TOGGLE: Record<string, { id: string; label: string; icone: string }> = {
-    "Reptiliano": { id: "sem_armadura", label: "Sem armadura ou roupas pesadas", icone: "🦎" },
-    "Conhecimento das Rochas": { id: "subterraneo", label: "No subterrâneo", icone: "⛰️" },
+const CONDICOES_TOGGLE: Record<string, { id: string; label: string; icone: IconName }> = {
+    "Reptiliano": { id: "sem_armadura", label: "Sem armadura ou roupas pesadas", icone: "voo" },
+    "Conhecimento das Rochas": { id: "subterraneo", label: "No subterrâneo", icone: "escalada" },
 };
-import type { Habilidade } from '../types';
 
 interface AbilityCardProps {
     habilidade: Habilidade;
@@ -30,7 +31,7 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
         return '#666';
     };
 
-    // ✨ Chips de ESCOLHAS REAIS
+    // Chips de ESCOLHAS REAIS
     const efeitos = habilidade.efeitos || {};
     const escolhas = habilidade.escolhas_aplicadas || {};
     const ROTULOS_ESCOLHA: Record<string, string> = {
@@ -112,9 +113,10 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                                         fontSize: '0.75rem', color: '#80deea',
                                         background: 'rgba(0, 188, 212, 0.1)',
                                         padding: '2px 8px', borderRadius: '4px',
-                                        border: '1px solid rgba(0, 188, 212, 0.4)'
+                                        border: '1px solid rgba(0, 188, 212, 0.4)',
+                                        display: 'inline-flex', alignItems: 'center', gap: '4px'
                                     }}>
-                                        ✨ {rotulo}: <strong>{String(v)}</strong>
+                                        <T20Icon name="efeito" size={12} /> {rotulo}: <strong>{String(v)}</strong>
                                     </span>
                                 ));
                             })}
@@ -142,7 +144,7 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                                     border: `1px solid ${ativa ? '#4caf50' : '#555'}`,
                                     color: ativa ? '#4caf50' : '#888',
                                     fontWeight: 'bold', fontSize: '0.8rem', padding: '6px 12px',
-                                    display: 'block', width: '100%', textAlign: 'left'
+                                    display: 'flex', alignItems: 'center', gap: '6px', width: '100%', textAlign: 'left'
                                 }}
                                 title={ativa ? 'Desativar condição (remove o bônus)' : 'Ativar condição (aplica o bônus)'}
                                 onClick={() => {
@@ -152,7 +154,7 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                                     updateFicha({ condicoes_ativas: novas } as any);
                                 }}
                             >
-                                {cfg.icone} {ativa ? 'ATIVO:' : 'Ativar:'} {cfg.label} ({bonusTxt})
+                                <T20Icon name={cfg.icone} size={14} /> {ativa ? 'ATIVO:' : 'Ativar:'} {cfg.label} ({bonusTxt})
                             </button>
                         </div>
                     );
@@ -192,7 +194,7 @@ export const AbilityCard: React.FC<AbilityCardProps> = ({ habilidade, pmAtual, o
                         onMouseOver={(e) => { if (podePagar) { e.currentTarget.style.background = getActionColor(ativavel.acao); e.currentTarget.style.color = '#111'; } }}
                         onMouseOut={(e) => { if (podePagar) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = getActionColor(ativavel.acao); } }}
                     >
-                        <span>⚡ {ativavel.custo} PM</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><T20Icon name="energia" size={14} /> {ativavel.custo} PM</span>
                         <span style={{ borderLeft: `1px solid ${podePagar ? 'currentColor' : '#444'}`, paddingLeft: '8px', opacity: 0.8 }}>
                             {ativavel.acao || 'Livre'}
                         </span>
