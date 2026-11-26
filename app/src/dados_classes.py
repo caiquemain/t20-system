@@ -107,7 +107,8 @@ DADOS_CLASSES = {
         "pv_inicial": 16, "pv_nivel": 4,
         "pm_inicial": 4, "pm_nivel": 4, 
         "pericias_iniciais": ["Vontade"],
-        "pericias_escolha": 5,
+        "pericias_fixas_selecao": ["Diplomacia", "Intimidação"],
+        "pericias_escolha": 4,
         "pericias_lista": ["Adestramento", "Atuação", "Cavalgar", "Conhecimento", "Diplomacia", "Enganação", "Fortitude", "Guerra", "Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Luta", "Nobreza", "Ofício", "Percepção", "Pontaria"],
         "proficiencias": ["Armas Marciais", "Armaduras Pesadas", "Escudos"]
     },

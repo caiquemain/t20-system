@@ -590,6 +590,16 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append("Trincado: soma Constituição nas rolagens de dano desarmado")
         if efeitos.get("ate_acertar_bonus"):
             lista_efeitos.append(f"Até Acertar: +{efeitos['ate_acertar_bonus']} cumulativo em ataque/dano desarmado ao errar")
+        if efeitos.get("realeza"):
+            lista_efeitos.append("Realeza: +5 CD Presença Aristocrática; inimigos reduzidos a 0 PV por Palavras Afiadas lutam ao seu lado")
+        if efeitos.get("voz_poderosa_alcance"):
+            lista_efeitos.append("Voz Poderosa: habilidades de nobre de alcance curto passam para alcance médio")
+        if efeitos.get("presenca_majestosa"):
+            lista_efeitos.append("Presença Majestosa: Presença Aristocrática afeta qualquer criatura com Int e mais de 1x/cena")
+        if efeitos.get("lingua_rapida_penalidade"):
+            lista_efeitos.append("Língua Rápida: mudar atitude como ação completa sofre -5 em vez de -10")
+        if efeitos.get("general_pm_temp"):
+            lista_efeitos.append(f"General: aliados direcionados por Estrategista recebem {efeitos['general_pm_temp']} PM temporários")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 
