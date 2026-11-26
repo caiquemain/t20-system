@@ -238,18 +238,25 @@ def calcular_pv_pm(ficha: Personagem):
         )
 
     # Chapéu arcano (T20 JdA p.159): +1 PM se possuir Caminho do Arcanista
+    equipados_low = {
+        (it.nome or "").strip().lower()
+        for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+        if it.equipado
+    }
     tem_caminho_arc = any((c.nome or "") == "Arcanista" for c in (ficha.classes or [])) or any(
         (h.nome or "") == "Caminho do Arcanista" for h in (ficha.habilidades or [])
     )
-    if tem_caminho_arc and any(
-        it.equipado and (it.nome or "").strip().lower() == "chapéu arcano"
-        for it in (getattr(ficha.inventario, "equipamentos", None) or [])
-    ):
+    if tem_caminho_arc and "chapéu arcano" in equipados_low:
         pm_calc.adicionar_bonus(
             fonte="Item: Chapéu arcano",
             categoria="Item",
             valor=1,
         )
+    # Acessórios mágicos de PV/PM (T20 JdA p.342)
+    if "anel da vitalidade" in equipados_low:
+        pv_calc.adicionar_bonus(fonte="Item Mágico: Anel da vitalidade", categoria="Item", valor=10)
+    if "anel da energia" in equipados_low:
+        pm_calc.adicionar_bonus(fonte="Item Mágico: Anel da energia", categoria="Item", valor=5)
 
     ficha.status.pm_calc = pm_calc
     ficha.status.pv_calc = pv_calc
@@ -572,6 +579,40 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 valor=2
             )
 
+    # Acessórios mágicos de Defesa (T20 JdA p.342–345)
+    equipados_def_low = {
+        (it.nome or "").strip().lower()
+        for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+        if it.equipado
+    }
+    usa_armadura_eq = any(
+        it.equipado and (catalogo_do_item(it.nome) or {}).get("tipo_armadura") in ("Leve", "Pesada")
+        for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+    )
+    # Braceletes de bronze (+4) / ouro (+8): cumulativos com outros itens mágicos, mas não com armaduras
+    if not usa_armadura_eq:
+        if "braceletes de ouro" in equipados_def_low:
+            defesa_calc.adicionar_bonus(fonte="Item Mágico: Braceletes de ouro", categoria="Item", valor=8)
+        elif "braceletes de bronze" in equipados_def_low:
+            defesa_calc.adicionar_bonus(fonte="Item Mágico: Braceletes de bronze", categoria="Item", valor=4)
+    # Outros acessórios de Defesa (não acumulam entre si — usa o maior)
+    melhor_def_acess = None
+    if "anel da proteção" in equipados_def_low:
+        melhor_def_acess = ("Anel da proteção", 2)
+    if "colar guardião" in equipados_def_low:
+        melhor_def_acess = ("Colar guardião", 5)
+    eh_conj_arc = any((c.nome or "") in ("Arcanista", "Bardo") for c in (ficha.classes or []))
+    if eh_conj_arc and "robe do arquimago" in equipados_def_low:
+        val_robe = 5 + max(1, int(ficha.combate.circulo_maximo or 1))
+        if melhor_def_acess is None or val_robe > melhor_def_acess[1]:
+            melhor_def_acess = ("Robe do arquimago", val_robe)
+    if melhor_def_acess:
+        defesa_calc.adicionar_bonus(
+            fonte=f"Item Mágico: {melhor_def_acess[0]}",
+            categoria="Item",
+            valor=melhor_def_acess[1],
+        )
+
     # Buffs ativos
     if hasattr(ficha.status, 'buffs'):
         for b in ficha.status.buffs:
@@ -592,6 +633,13 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
     ))
 
     desl = desl_base
+    if "botas velozes" in equipados_def_low:
+        desl += 3
+        deslocamento_calc.adicionar_bonus(
+            fonte="Item Mágico: Botas velozes",
+            categoria="Item",
+            valor=3,
+        )
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
         if hab.escolhas_aplicadas:

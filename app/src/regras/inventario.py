@@ -76,14 +76,23 @@ def sincronizar_carga(ficha: Personagem) -> None:
     if tem_inv_org:
         bonus_carga += max(0, mod_atributo(ficha, "int"))
     # Mochila de aventureiro vestida/equipada: +2 espaços de carga (T20 p.156)
-    if any(
-        it.equipado and (it.nome or "").strip().lower() == "mochila de aventureiro"
-        for it in (inv.equipamentos or [])
-    ):
-        bonus_carga += 2
+    # Mochila de carga equipada: +10 espaços de carga (T20 p.345)
+    bonus_mochila = 0
+    for it in (inv.equipamentos or []):
+        if not it.equipado:
+            continue
+        nome_low = (it.nome or "").strip().lower()
+        if nome_low == "mochila de carga":
+            bonus_mochila = max(bonus_mochila, 10)
+        elif nome_low == "mochila de aventureiro":
+            bonus_mochila = max(bonus_mochila, 2)
+    bonus_carga += bonus_mochila
 
     inv.carga_maxima = base_carga + bonus_carga
-    espacos_itens = sum(espacos_item(i, inventario_organizado=tem_inv_org) for i in inv.equipamentos)
+    espacos_itens = sum(
+        0 if (i.nome or "").strip().lower() == "mochila de carga" else espacos_item(i, inventario_organizado=tem_inv_org)
+        for i in inv.equipamentos
+    )
     total_moedas = max(0, int(inv.dinheiro.tl or 0)) + max(0, int(inv.dinheiro.tp or 0)) + max(0, int(inv.dinheiro.to or 0))
     espacos_moedas = total_moedas // 1000
     inv.carga_total = int(espacos_itens + espacos_moedas)
