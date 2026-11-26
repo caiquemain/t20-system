@@ -231,6 +231,15 @@ def inicializar_pericias(ficha: Personagem):
                     {"fonte": "Postura: Muralha Intransponível", "valor": 1}
                 )
 
+        # 1g. Aura Sagrada (Paladino, T20 p.83): +Carisma nos testes de resistência
+        if (efeitos.get("aura_sagrada") or (hab.nome or "") == "Aura Sagrada") and "aura_sagrada" in (getattr(ficha, "condicoes_ativas", None) or []):
+            mod_car_aura = calcular_modificador(ficha.atributos.carisma)
+            if mod_car_aura != 0:
+                for p_res in ("Fortitude", "Reflexos", "Vontade"):
+                    detalhamento_bonus.setdefault(p_res, []).append(
+                        {"fonte": "Aura Sagrada (Car)", "valor": mod_car_aura}
+                    )
+
         # 1g. Missa: Escudo Divino (Clérigo, T20 p.58): +1 em resistências (dobra com Mestre Celebrante)
         if (hab.nome or "") == "Missa: Escudo Divino" and "missa_escudo_divino" in (getattr(ficha, "condicoes_ativas", None) or []):
             mult_m = 2 if any(

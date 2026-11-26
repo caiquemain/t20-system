@@ -30,6 +30,7 @@ from .status import (
     calcular_ataque_furtivo,
     calcular_briga,
     calcular_nobre,
+    calcular_paladino,
 )
 
 # 2. ATUALIZADO: Removemos 'calcular_proficiencias_e_sentidos' daqui (pois movida para status)
@@ -90,6 +91,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     ficha.combate.ataque_furtivo_calc = calcular_ataque_furtivo(ficha)
     ficha.combate.briga_calc = calcular_briga(ficha)
     ficha.combate.nobre_calc = calcular_nobre(ficha)
+    ficha.combate.paladino_calc = calcular_paladino(ficha)
     sincronizar_ataques(ficha)
     sincronizar_ataques_equipamento(ficha)
     sincronizar_carga(ficha)

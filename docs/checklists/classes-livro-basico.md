@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 13/14 classes completas (falta apenas Paladino)  
+**Status:** ✅ 14/14 classes completas (100% Concluída!)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -23,7 +23,7 @@
 | **Ladino** | 27 (7 fixas + 20 poderes) | 27 (100%) | 2 arquivos (`test_ladino_*`) | ✅ Completa |
 | **Lutador** | 29 (6 fixas + 23 poderes) | 29 (100%) | 2 arquivos (`test_lutador_*`) | ✅ Completa |
 | **Nobre** | 26 (8 fixas + 18 poderes) | 26 (100%) | 2 arquivos (`test_nobre_*`) | ✅ Completa |
-| **Paladino** | 11 (6 fixas + 5 poderes) | 3 (27%) | — | 🟡 Parcial |
+| **Paladino** | 30 (7 fixas + 23 poderes) | 30 (100%) | 2 arquivos (`test_paladino_*`) | ✅ Completa |
 
 ---
 
@@ -41,7 +41,7 @@
 
 ### Lote 3 — Divinos & Suporte
 - [x] **Clérigo** (Devoto Fiel, Magias, Mão da Divindade + 18 poderes + testes)
-- [ ] **Paladino** (Abençoado, Golpe Divino, Cura pelas Mãos, Aura Sagrada + poderes + testes)
+- [x] **Paladino** (Abençoado, Código do Herói, Golpe Divino, Cura pelas Mãos, Aura Sagrada, Bênção da Justiça, Vingador Sagrado + 23 poderes + testes)
 - [x] **Druida** (Devoto Fiel, Empatia Selvagem, Magias, Caminho dos Ermos, Força da Natureza + 22 poderes + testes)
 
 ### Lote 4 — Versáteis & Complexas

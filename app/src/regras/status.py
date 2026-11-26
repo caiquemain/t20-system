@@ -185,6 +185,24 @@ def calcular_pv_pm(ficha: Personagem):
                     valor=int(pm_bravata) * nivel_buc
                 )
 
+    # Virtudes Paladinescas (Paladino, T20 p.83): +1 / +3 / +6 / +10 / +15 PM para 1..5 Virtudes
+    virtudes_unicas = {
+        (h.nome or "").strip()
+        for h in ficha.habilidades
+        if (h.efeitos or {}).get("virtude_paladinesca")
+        or (h.efeitos or {}).get("pm_bonus_virtude")
+        or (h.nome or "").startswith("Virtude Paladinesca:")
+        or (h.nome or "").startswith("Virtude:")
+    }
+    qtd_virtudes = min(5, len(virtudes_unicas))
+    if qtd_virtudes > 0:
+        bonus_virtudes = qtd_virtudes * (qtd_virtudes + 1) // 2
+        pm_calc.adicionar_bonus(
+            fonte=f"Virtudes Paladinescas ({qtd_virtudes})",
+            categoria="Poder",
+            valor=bonus_virtudes
+        )
+
     ficha.status.pm_calc = pm_calc
     ficha.status.pv_calc = pv_calc
     ficha.status.pv.maximo = pv_calc.total
@@ -475,6 +493,21 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                     categoria="Poder",
                     valor=mod_car
                 )
+
+        # Égide Sagrada (Paladino, T20 p.83): sob condição ativa, soma Car na Defesa (cumulativo)
+        if (hab.nome or "") == "Bênção da Justiça" and "egide_sagrada" in condicoes_ativas:
+            esc_raw = (hab.escolhas_aplicadas or {}).get("bencao") or (hab.escolhas_aplicadas or {}).get("escolha_bencao")
+            esc_bencao = esc_raw if isinstance(esc_raw, str) else (
+                ficha.classes[0].subclasse if ficha.classes else ""
+            )
+            if str(esc_bencao).strip() != "Montaria Sagrada":
+                mod_car = calcular_modificador(ficha.atributos.carisma)
+                if mod_car > 0:
+                    defesa_calc.adicionar_bonus(
+                        fonte="Habilidade: Égide Sagrada (Car)",
+                        categoria="Poder",
+                        valor=mod_car
+                    )
 
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(
@@ -1121,6 +1154,166 @@ def calcular_nobre(ficha: Personagem) -> Optional[Dict[str, Any]]:
     }
 
 
+def calcular_paladino(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula parâmetros do Paladino (T20 JdA p.81-84): Golpe Divino, Cura pelas Mãos,
+    Aura Sagrada, Bênção da Justiça, Julgamento Divino: Vindicação, Virtudes e Vingador Sagrado."""
+    nivel_pal = 0
+    subclasse_pal = ""
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Paladino":
+            nivel_pal = int(c.nivel or 0)
+            subclasse_pal = (c.subclasse or "").strip()
+            break
+    if nivel_pal <= 0:
+        return None
+
+    mod_car = calcular_modificador(ficha.atributos.carisma)
+    nivel_total = int(ficha.cabecalho.nivel_total or 1)
+    conds = getattr(ficha, "condicoes_ativas", None) or []
+
+    def _tem(chave_ef: str, nome_hab: str) -> bool:
+        return any(
+            (h.efeitos or {}).get(chave_ef) or (h.nome or "") == nome_hab
+            for h in ficha.habilidades
+        )
+
+    arma_sagrada = _tem("arma_sagrada", "Arma Sagrada")
+    fulgor_divino = _tem("fulgor_divino", "Fulgor Divino")
+    aura_poderosa = _tem("aura_poderosa", "Aura Poderosa")
+    aura_cura = _tem("aura_cura", "Aura de Cura")
+    aura_ardente = _tem("aura_ardente", "Aura Ardente")
+    aura_antimagia = _tem("aura_antimagia", "Aura Antimagia")
+    aura_invencibilidade = _tem("aura_invencibilidade", "Aura de Invencibilidade")
+    tem_vindicacao = _tem("julgamento_vindicacao", "Julgamento Divino: Vindicação")
+    virtude_caridade = _tem("virtude_caridade", "Virtude Paladinesca: Caridade")
+    virtude_compaixao = _tem("virtude_compaixao", "Virtude Paladinesca: Compaixão")
+    virtude_humildade = _tem("virtude_humildade", "Virtude Paladinesca: Humildade")
+    tem_vingador = nivel_pal >= 20 or _tem("vingador_sagrado", "Vingador Sagrado")
+    vingador_ativo = tem_vingador and ("vingador_sagrado" in conds)
+
+    # Golpe Divino (1º): +1d8 (1º), +2d8 (5º), +3d8 (9º), +4d8 (13º), +5d8 (17º); 2 PM + 1 PM/degrau
+    degrau_gd = min(4, max(0, (nivel_pal - 1) // 4))
+    dados_gd_base = 1 + degrau_gd
+    dados_gd_total = dados_gd_base + (2 if vingador_ativo else 0)
+    tipo_dado_gd = "d12" if arma_sagrada else "d8"
+    custo_gd_base = 2
+    custo_gd_max = 2 + degrau_gd
+    if vingador_ativo:
+        custo_gd_base = custo_gd_base // 2
+        custo_gd_max = custo_gd_max // 2
+
+    golpe_divino = {
+        "dados_base": dados_gd_base,
+        "dados_total": dados_gd_total,
+        "tipo_dado": tipo_dado_gd,
+        "formula": f"+{dados_gd_total}{tipo_dado_gd}",
+        "bonus_ataque": mod_car,
+        "custo_base_pm": custo_gd_base,
+        "custo_max_pm": custo_gd_max,
+        "fulgor_divino": fulgor_divino,
+    }
+
+    # Cura pelas Mãos (2º): 1d8+1 (2º) até 5d8+5 (18º); Compaixão -> 2d6+1 e alcance Curto
+    cura_pelas_maos = None
+    if nivel_pal >= 2:
+        degrau_cura = min(4, max(0, (nivel_pal - 2) // 4))
+        qtd_cura = 1 + degrau_cura
+        if virtude_compaixao:
+            dado_por_pm = "2d6+1"
+            formula_max = f"{qtd_cura * 2}d6+{qtd_cura}"
+            alcance_cura = "Curto"
+        else:
+            dado_por_pm = "1d8+1"
+            formula_max = f"{qtd_cura}d8+{qtd_cura}"
+            alcance_cura = "Corpo a corpo"
+        cura_pelas_maos = {
+            "degraus": qtd_cura,
+            "dado_por_pm": dado_por_pm,
+            "formula_max": formula_max,
+            "alcance": alcance_cura,
+            "custo_max_pm": qtd_cura,
+            "reducao_pm_aliado": 1 if virtude_caridade else 0,
+            "remove_condicoes": nivel_pal >= 6,
+            "cd_mortos_vivos": 10 + (nivel_total // 2) + mod_car,
+        }
+
+    # Aura Sagrada (3º): raio 9m (30m com Aura Poderosa), +Car resistências
+    aura_sagrada = None
+    if nivel_pal >= 3:
+        aura_sagrada = {
+            "ativa": "aura_sagrada" in conds,
+            "raio_m": 30 if aura_poderosa else 9,
+            "bonus_resistencias": mod_car,
+            "aura_cura_pv": (5 + mod_car) if aura_cura else None,
+            "aura_ardente_dano": (5 + mod_car) if aura_ardente else None,
+            "aura_antimagia": aura_antimagia,
+            "aura_invencibilidade": aura_invencibilidade,
+        }
+
+    # Bênção da Justiça (5º): Égide Sagrada ou Montaria Sagrada
+    bencao_justica = None
+    if nivel_pal >= 5:
+        escolha_bencao = subclasse_pal or None
+        for h in ficha.habilidades:
+            if (h.nome or "") == "Bênção da Justiça":
+                esc = (h.escolhas_aplicadas or {}).get("bencao") or (h.escolhas_aplicadas or {}).get("escolha_bencao")
+                if isinstance(esc, str) and esc.strip():
+                    escolha_bencao = esc.strip()
+                break
+        bencao_justica = {
+            "escolha": escolha_bencao,
+            "egide_bonus_defesa": mod_car if escolha_bencao == "Égide Sagrada" else None,
+            "egide_reverter_magia": (nivel_pal >= 11) if escolha_bencao == "Égide Sagrada" else False,
+            "montaria_patamar": ("Mestre" if nivel_pal >= 11 else "Veterano") if escolha_bencao == "Montaria Sagrada" else None,
+        }
+
+    # Julgamento Divino: Vindicação (2 PM: +1/+1d8; +1 PM a cada 5 níveis)
+    vindicacao = None
+    if tem_vindicacao:
+        degraus_vind = 1 + (nivel_pal // 5)
+        vindicacao = {
+            "bonus_ataque_max": degraus_vind,
+            "bonus_dano_max": f"+{degraus_vind}d8",
+            "custo_max_pm": 1 + degraus_vind,
+        }
+
+    # Virtudes Paladinescas (1..5 -> +1/+3/+6/+10/+15 PM)
+    virtudes_unicas = {
+        (h.nome or "").strip()
+        for h in ficha.habilidades
+        if (h.efeitos or {}).get("virtude_paladinesca")
+        or (h.efeitos or {}).get("pm_bonus_virtude")
+        or (h.nome or "").startswith("Virtude Paladinesca:")
+        or (h.nome or "").startswith("Virtude:")
+    }
+    qtd_virtudes = min(5, len(virtudes_unicas))
+    virtudes = {
+        "quantidade": qtd_virtudes,
+        "pm_bonus": qtd_virtudes * (qtd_virtudes + 1) // 2,
+        "caridade": virtude_caridade,
+        "compaixao": virtude_compaixao,
+        "humildade_pm_temp": max(0, mod_car) if virtude_humildade else None,
+    }
+
+    vingador_sagrado = None
+    if tem_vingador:
+        vingador_sagrado = {
+            "ativo": vingador_ativo,
+            "voo_m": 18,
+            "rd": 20,
+        }
+
+    return {
+        "golpe_divino": golpe_divino,
+        "cura_pelas_maos": cura_pelas_maos,
+        "aura_sagrada": aura_sagrada,
+        "bencao_justica": bencao_justica,
+        "vindicacao": vindicacao,
+        "virtudes": virtudes,
+        "vingador_sagrado": vingador_sagrado,
+    }
+
+
 def _nivel_inicio_da_habilidade(hab) -> int:
     """Extrai o nível de início de uma habilidade de classe a partir da
     fonte. Ex.: 'Bárbaro (5)' -> 5; 'Bárbaro' -> 1."""
@@ -1220,6 +1413,14 @@ def calcular_reducoes_dano(ficha: Personagem):
 
     if rd_armadura_pesada_total > 0:
         lista_rd.append(f"geral {rd_armadura_pesada_total}")
+
+    # Vingador Sagrado (Paladino 20º, T20 p.84): RD 20 enquanto ativo
+    if "vingador_sagrado" in (getattr(ficha, "condicoes_ativas", None) or []):
+        if any(
+            (h.efeitos or {}).get("vingador_sagrado") or (h.nome or "") == "Vingador Sagrado"
+            for h in ficha.habilidades
+        ):
+            lista_rd.append("geral 20")
 
     # Append (nao overwrite): preserva RD vinda de outras fontes (linhagens)
     ficha.status.rd = sorted(set(ficha.status.rd + lista_rd))

@@ -1,6 +1,6 @@
 # 🗺️ Plano de Ação — Fechamento do Livro Básico (T20 JdA)
 
-**Atualizado em:** 2026-11-25  
+**Atualizado em:** 2026-11-26  
 **Foco:** Consolidar 100% do **Livro Básico (Tormenta20 Jogo do Ano)** antes de expandir suplementos, mantendo motor de regras confiável, testes automatizados e identidade visual coesa.
 
 ---
@@ -36,21 +36,16 @@
 
 ---
 
-## ⚔️ Fase 3 — Completar as 12 Classes Restantes do Livro Básico
+## ✅ Fase 3 — Completar Todas as 14 Classes do Livro Básico (Concluída)
 > Checklist detalhada: [`docs/checklists/classes-livro-basico.md`](./checklists/classes-livro-basico.md)
 
-Hoje apenas **Arcanista (24/24)** e **Bárbaro (24/24)** estão 100% completos com poderes e suíte de testes.  
-Sugestão de execução em **4 lotes de 3 classes** (do mais mecânico/frequente ao mais complexo):
+Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em `dados_habilidades_classe.py`, integradas ao motor de regras (`app/src/regras/`) e cobertas por suítes dedicadas (`801 testes passando`):
 
-- **Lote 1 (Marciais):** Guerreiro, Lutador, Cavaleiro
-- **Lote 2 (Especialistas):** Ladino, Caçador, Bucaneiro
-- **Lote 3 (Divinos & Suporte):** Clérigo, Paladino, Druida
-- **Lote 4 (Versáteis & Complexas):** Bardo, Nobre, Inventor
-
-**Critério de pronto por classe:**
-1. Todas as habilidades fixas (níveis 1–20) e poderes de classe do Livro Básico cadastrados em `dados_habilidades_classe.py`.
-2. Efeitos mecânicos declarativos conectados em `app/src/regras/`.
-3. Suíte `app/tests/test_<classe>_*.py` cobrindo base, poderes passivos e poderes ativos.
+- [x] **Base anterior:** Arcanista (24/24), Bárbaro (24/24)
+- [x] **Lote 1 (Marciais):** Guerreiro (23/23), Lutador (29/29), Cavaleiro (26/26)
+- [x] **Lote 2 (Especialistas):** Ladino (27/27), Caçador (28/28), Bucaneiro (26/26)
+- [x] **Lote 3 (Divinos & Suporte):** Clérigo (21/21), Paladino (30/30), Druida (27/27)
+- [x] **Lote 4 (Versáteis & Complexas):** Bardo (24/24), Nobre (26/26), Inventor (38/38)
 
 ---
 

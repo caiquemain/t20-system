@@ -275,6 +275,8 @@ class Combate(BaseModel):
     briga_calc: Optional[Dict[str, Any]] = None
     # Cálculo de Nobre (T20 p.78-80): Palavras Afiadas, Presença Aristocrática, Orgulho e Voz Poderosa.
     nobre_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Paladino (T20 p.81-84): Golpe Divino, Cura pelas Mãos, Aura Sagrada, Bênção da Justiça, Vindicação, Virtudes e Vingador Sagrado.
+    paladino_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0
