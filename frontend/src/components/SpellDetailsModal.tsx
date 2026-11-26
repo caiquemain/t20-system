@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { Magia } from '../types';
 import {
     getSchoolColor,
@@ -11,9 +11,20 @@ import {
     rolarExpressao,
     extrairFormulaDeTexto,
     parseCustoAprimoramento,
+    aplicarAprimoramentosNaFormula,
     type ResultadoExpressao,
 } from '../utils/diceRoller';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { T20Icon } from './T20Icon';
+
+export interface SpellRollConfig {
+    aprimoramentosQtd: Record<number, number>;
+    metamagiasAtivas: Record<string, boolean>;
+    comoRitual: boolean;
+    truqueAtivo: boolean;
+    formulaEfetiva: string | null;
+    custoTotalPm: number;
+}
 
 interface SpellDetailsModalProps {
     magia: Magia | null;
@@ -21,6 +32,8 @@ interface SpellDetailsModalProps {
     onRemove: () => void;
     ficha?: any;
     hideRemove?: boolean;
+    configInicial?: SpellRollConfig;
+    onConfigChange?: (nomeMagia: string, cfg: SpellRollConfig) => void;
 }
 
 const METAMAGIAS_PODERES = [
@@ -29,35 +42,51 @@ const METAMAGIAS_PODERES = [
     { nome: 'Magia Acelerada', pm: 4, resumo: 'Muda execução para ação livre (1x/rodada)' },
 ];
 
-export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onClose, onRemove, ficha, hideRemove }) => {
-    const [aprimoramentosQtd, setAprimoramentosQtd] = useState<Record<number, number>>({});
-    const [metamagiasAtivas, setMetamagiasAtivas] = useState<Record<string, boolean>>({});
-    const [comoRitual, setComoRitual] = useState(false);
-    const [truqueAtivo, setTruqueAtivo] = useState(false);
+export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({
+    magia,
+    onClose,
+    onRemove,
+    ficha,
+    hideRemove,
+    configInicial,
+    onConfigChange,
+}) => {
+    const [aprimoramentosQtd, setAprimoramentosQtd] = useState<Record<number, number>>(configInicial?.aprimoramentosQtd || {});
+    const [metamagiasAtivas, setMetamagiasAtivas] = useState<Record<string, boolean>>(configInicial?.metamagiasAtivas || {});
+    const [comoRitual, setComoRitual] = useState<boolean>(Boolean(configInicial?.comoRitual));
+    const [truqueAtivo, setTruqueAtivo] = useState<boolean>(Boolean(configInicial?.truqueAtivo));
     const [ultimoRoll, setUltimoRoll] = useState<{
         resultado: ResultadoExpressao;
         rotulo: string;
         custoPm: number;
     } | null>(null);
 
+    useEscapeKey(Boolean(magia), onClose);
+
+    // Recarrega a configuração salva ao trocar a magia aberta
+    useEffect(() => {
+        setAprimoramentosQtd(configInicial?.aprimoramentosQtd || {});
+        setMetamagiasAtivas(configInicial?.metamagiasAtivas || {});
+        setComoRitual(Boolean(configInicial?.comoRitual));
+        setTruqueAtivo(Boolean(configInicial?.truqueAtivo));
+        setUltimoRoll(null);
+    }, [magia?.nome]);
+
     const custoBaseView = useMemo(() => (magia ? calcularCustoMagiaView(magia, ficha) : { total: 0, fontes: [] }), [magia, ficha]);
     const limiteView = useMemo(() => calcularLimitePmMagiaView(ficha, comoRitual), [ficha, comoRitual]);
 
-    if (!magia) return null;
+    const nomesHabs = useMemo(
+        () => new Set((ficha?.habilidades || []).map((h: any) => (h?.nome || '').trim())),
+        [ficha?.habilidades]
+    );
+    const metamagiasDisponiveis = useMemo(
+        () => METAMAGIAS_PODERES.filter(m => nomesHabs.has(m.nome)),
+        [nomesHabs]
+    );
 
-    const typeColor = getTypeColor(magia.tipo);
-    const schoolColor = getSchoolColor(magia.escola);
-    const circleColor = getCircleColor(magia.circulo);
-    const cdMagia = ficha?.combate?.cd_magias ?? 10;
-    const bonusDanoMagias = Number(ficha?.combate?.bonus_dano_magias || 0);
-
-    const nomesHabs = new Set((ficha?.habilidades || []).map((h: any) => (h?.nome || '').trim()));
-    const metamagiasDisponiveis = METAMAGIAS_PODERES.filter(m => nomesHabs.has(m.nome));
-
-    // Soma de PM dos aprimoramentos + poderes de metamagia selecionados
     const pmAprimoramentos = truqueAtivo
         ? 0
-        : (magia.aprimoramentos || []).reduce((acc, ap, idx) => {
+        : (magia?.aprimoramentos || []).reduce((acc, ap, idx) => {
             const qtd = aprimoramentosQtd[idx] || 0;
             if (!qtd) return acc;
             const parsed = parseCustoAprimoramento(ap.custo);
@@ -71,13 +100,39 @@ export const SpellDetailsModal: React.FC<SpellDetailsModalProps> = ({ magia, onC
     const custoTotalPm = truqueAtivo ? 0 : custoBaseView.total + pmAprimoramentos + pmMetamagias;
     const acimaLimitePm = !truqueAtivo && custoTotalPm > limiteView.limite;
 
-    // Fórmula de rolagem: usa rolagem estruturada do motor ou fallback da descrição
-    const formulaBase = magia.rolagem?.formula || extrairFormulaDeTexto(magia.descricao);
-    const tipoRolagem = magia.rolagem?.tipo || (/cura|recupera/i.test(magia.descricao) ? 'cura' : 'dano');
-    const tipoDano = magia.rolagem?.tipo_dano || '';
-    const formulaFinal = formulaBase
-        ? (tipoRolagem === 'dano' && bonusDanoMagias > 0 ? `${formulaBase}+${bonusDanoMagias}` : formulaBase)
+    const bonusDanoMagias = Number(ficha?.combate?.bonus_dano_magias || 0);
+    const formulaBase = magia ? (magia.rolagem?.formula || extrairFormulaDeTexto(magia.descricao)) : null;
+    const tipoRolagem = magia ? (magia.rolagem?.tipo || (/cura|recupera/i.test(magia.descricao) ? 'cura' : 'dano')) : 'dano';
+    const tipoDano = magia?.rolagem?.tipo_dano || '';
+    const formulaFinal = magia
+        ? aplicarAprimoramentosNaFormula(
+            formulaBase,
+            magia.aprimoramentos || [],
+            aprimoramentosQtd,
+            truqueAtivo,
+            tipoRolagem === 'dano' ? bonusDanoMagias : 0
+        )
         : null;
+
+    // Sincroniza configuração atual com a lista externa de Ataques
+    useEffect(() => {
+        if (!magia || !onConfigChange) return;
+        onConfigChange(magia.nome, {
+            aprimoramentosQtd,
+            metamagiasAtivas,
+            comoRitual,
+            truqueAtivo,
+            formulaEfetiva: formulaFinal,
+            custoTotalPm,
+        });
+    }, [magia?.nome, aprimoramentosQtd, metamagiasAtivas, comoRitual, truqueAtivo, formulaFinal, custoTotalPm]);
+
+    if (!magia) return null;
+
+    const typeColor = getTypeColor(magia.tipo);
+    const schoolColor = getSchoolColor(magia.escola);
+    const circleColor = getCircleColor(magia.circulo);
+    const cdMagia = ficha?.combate?.cd_magias ?? 10;
 
     const handleToggleAprimoramento = (idx: number, ehTruque: boolean, delta: number) => {
         if (ehTruque) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Magia } from '../types';
 import { getSchoolColor, getCircleColor, getTypeColor } from '../utils/magicUtils';
 import { T20Icon } from './T20Icon';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface GrimorioModalProps {
     ficha?: any;
@@ -25,6 +26,8 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
     const [filtroTipo, setFiltroTipo] = useState<string>('todos');
     const [filtroAcessiveis, setFiltroAcessiveis] = useState<boolean>(false);
     const [magiaSelecionada, setMagiaSelecionada] = useState<Magia | null>(null);
+
+    useEscapeKey(isOpen, onClose);
 
     useEffect(() => {
         if (!isOpen) {

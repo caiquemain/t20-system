@@ -1,5 +1,6 @@
 import React from 'react';
 import { T20Icon } from './T20Icon';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import '../Ficha.css';
 
 interface RacialAttributeModalProps {
@@ -24,6 +25,7 @@ export const RacialAttributeModal: React.FC<RacialAttributeModalProps> = ({
     racaNome, qtdEscolhas, escolhasAtuais, onToggle,
     atributos, infoRacaAtual
 }) => {
+    useEscapeKey(isOpen, onClose);
     if (!isOpen) return null;
 
     return (

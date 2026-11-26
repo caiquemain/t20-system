@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { T20Icon } from './T20Icon';
 import { rolarAtaqueD20, rolarExpressao, type ResultadoD20, type ResultadoExpressao } from '../utils/diceRoller';
+import type { SpellRollConfig } from './SpellDetailsModal';
 
 interface AtaqueView {
     nome: string; bonus_ataque: string; dano: string; critico: string;
@@ -11,12 +12,15 @@ interface AttackListProps {
     ataques: AtaqueView[];
     fluxoDeMana?: boolean;
     focoVital?: boolean;
+    spellConfigs?: Record<string, SpellRollConfig>;
+    onOpenSpell?: (nomeMagia: string) => void;
 }
 
 interface RollAtaqueState {
     nome: string;
     ehMagia: boolean;
     cdTexto?: string;
+    custoPm?: number;
     ataque?: ResultadoD20;
     dano: ResultadoExpressao | null;
     tipoDano: string;
@@ -26,17 +30,20 @@ interface RollAtaqueState {
 const ehPenalidade = (t: string) => /-\d/.test(t) || /não proficiente|penalidade|desbalanceada/i.test(t);
 const ehBuff = (t: string) => /\+\d/.test(t) || /conta como/i.test(t);
 
-export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, focoVital }) => {
+export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, focoVital, spellConfigs, onOpenSpell }) => {
     const [ultimoRoll, setUltimoRoll] = useState<RollAtaqueState | null>(null);
 
     const handleRolarAtaque = (a: AtaqueView) => {
         const ehMagia = /^CD\s+\d+|^Auto$/i.test((a.bonus_ataque || '').trim());
-        const danoRes = rolarExpressao(a.dano);
+        const cfg = spellConfigs?.[a.nome];
+        const danoFormula = (ehMagia && cfg?.formulaEfetiva) ? cfg.formulaEfetiva : a.dano;
+        const danoRes = rolarExpressao(danoFormula);
         if (ehMagia) {
             setUltimoRoll({
                 nome: a.nome,
                 ehMagia: true,
                 cdTexto: a.bonus_ataque === 'Auto' ? 'Acerto Automático' : `${a.teste} ${a.bonus_ataque}`,
+                custoPm: cfg?.custoTotalPm,
                 dano: danoRes,
                 tipoDano: a.tipo,
             });
@@ -106,7 +113,10 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <strong style={{ color: '#ffd54f' }}>{ultimoRoll.nome}</strong>
                         {ultimoRoll.ehMagia ? (
-                            <span style={{ color: '#ce93d8', fontWeight: 'bold' }}>{ultimoRoll.cdTexto}</span>
+                            <span style={{ color: '#ce93d8', fontWeight: 'bold' }}>
+                                {ultimoRoll.cdTexto}
+                                {ultimoRoll.custoPm !== undefined ? ` • ${ultimoRoll.custoPm} PM` : ''}
+                            </span>
                         ) : ultimoRoll.ataque && (
                             <span>
                                 Ataque:{' '}
@@ -159,10 +169,23 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                     <tbody>
                         {ataques.map((a, i) => {
                             const ehMagia = strEhMagia(a.especial);
+                            const cfg = ehMagia ? spellConfigs?.[a.nome] : undefined;
+                            const danoExibido = cfg?.formulaEfetiva || a.dano;
                             return (
                                 <tr key={i} style={{ borderBottom: '1px solid #252525' }}>
                                     <td style={{ padding: '6px' }} className="tooltip-container">
-                                        <strong style={{ color: ehMagia ? '#ce93d8' : '#e0e0e0' }}>{a.nome}</strong>
+                                        <strong
+                                            onClick={() => ehMagia && onOpenSpell && onOpenSpell(a.nome)}
+                                            title={ehMagia && onOpenSpell ? 'Clique para abrir aprimoramentos da magia' : undefined}
+                                            style={{ color: ehMagia ? '#ce93d8' : '#e0e0e0', cursor: ehMagia && onOpenSpell ? 'pointer' : 'default' }}
+                                        >
+                                            {a.nome}
+                                        </strong>
+                                        {cfg && (
+                                            <span style={{ marginLeft: 6, fontSize: '0.7rem', color: '#ce93d8', background: 'rgba(156,39,176,0.16)', border: '1px solid rgba(206,147,216,0.4)', borderRadius: 3, padding: '1px 5px' }}>
+                                                {cfg.custoTotalPm} PM
+                                            </span>
+                                        )}
                                         {a.especial && (
                                             <>
                                                 <span
@@ -193,7 +216,7 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                                         )}
                                     </td>
                                     <td style={{ padding: '6px', color: ehMagia ? '#ce93d8' : '#ccc', fontWeight: ehMagia ? 'bold' : 'normal' }}>{a.bonus_ataque}</td>
-                                    <td style={{ padding: '6px', color: '#ffcc80', fontWeight: 'bold' }}>{a.dano}</td>
+                                    <td style={{ padding: '6px', color: '#ffcc80', fontWeight: 'bold' }}>{danoExibido}</td>
                                     <td style={{ padding: '6px', color: '#ccc' }}>{a.critico}</td>
                                     <td style={{ padding: '6px', color: '#ccc' }}>{a.tipo}</td>
                                     <td style={{ padding: '6px', color: '#ccc' }}>{a.alcance}</td>
@@ -202,7 +225,7 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                                         <button
                                             type="button"
                                             onClick={() => handleRolarAtaque(a)}
-                                            title={`Rolar ${a.nome}`}
+                                            title={`Rolar ${a.nome} (${danoExibido})`}
                                             style={{
                                                 background: ehMagia ? 'rgba(156, 39, 176, 0.2)' : 'rgba(255, 193, 7, 0.12)',
                                                 color: ehMagia ? '#ce93d8' : '#ffd54f',

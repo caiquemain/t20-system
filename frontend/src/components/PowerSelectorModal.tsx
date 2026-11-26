@@ -3,6 +3,7 @@ import '../Ficha.css';
 import { PowerListItem } from './PowerListItem';
 import { validarTodosRequisitos } from '../utils/validators';
 import type { Personagem } from '../types';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface PowerSelectorModalProps {
     isOpen: boolean;
@@ -34,6 +35,8 @@ export const PowerSelectorModal: React.FC<PowerSelectorModalProps> = ({
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
     const [tooltipData, setTooltipData] = useState<any | null>(null);
     const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEscapeKey(isOpen, onClose);
 
     useEffect(() => {
         if (isOpen) {

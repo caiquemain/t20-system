@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import '../Ficha.css';
 import { RacialAbilityRow } from './RacialAbilityRow'; // Importação limpa
 import { T20Icon } from './T20Icon';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface AbilityConfigModalProps {
     isOpen: boolean;
@@ -49,6 +50,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     poderesEscolhasEmEdicao = {}, setPoderesEscolhasEmEdicao,
     linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao
 }) => {
+    useEscapeKey(isOpen, onClose);
     useEffect(() => {
         if (isOpen && habilidadesEmEdicao.length === 0 && ficha && ficha.habilidades) {
             console.log("⚠️ Lista vazia detectada! Tentando popular automaticamente...");

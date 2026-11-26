@@ -2,6 +2,7 @@ import React from 'react';
 import { SpellList } from './SpellList'; // Reutiliza o componente detalhado
 import type { Magia } from '../types';
 import { T20Icon } from './T20Icon';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface FullGrimorioModalProps {
     isOpen: boolean;
@@ -15,6 +16,7 @@ interface FullGrimorioModalProps {
 export const FullGrimorioModal: React.FC<FullGrimorioModalProps> = ({
     isOpen, onClose, magias, onRemove, pmAtual, pmMaximo
 }) => {
+    useEscapeKey(isOpen, onClose);
     if (!isOpen) return null;
 
     return (

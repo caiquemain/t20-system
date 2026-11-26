@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { T20Icon, type IconName } from '../T20Icon';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 export interface SelectionItem {
     nome: string;
@@ -24,6 +25,7 @@ const normalizar = (s: string) =>
 export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco', items, selected }: SelectionModalProps) {
     const [busca, setBusca] = useState('');
     const [hoveredItem, setHoveredItem] = useState<SelectionItem | null>(null);
+    useEscapeKey(isOpen, onClose);
 
     const filtrados = useMemo(() => {
         const termo = normalizar(busca);
