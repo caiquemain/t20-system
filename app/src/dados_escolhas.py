@@ -23,6 +23,23 @@ FAMILIARES_ARCANOS = [
     "Gato", "Lagarto", "Morcego", "Rato", "Sapo",
 ]
 
+# Quadro "Animais Totêmicos" — Bárbaro (T20 JdA p.41)
+ANIMAIS_TOTEMICOS_MAGIAS = {
+    "Coruja": "Orientação",
+    "Corvo": "Visão Mística",
+    "Falcão": "Detectar Ameaças",
+    "Grifo": "Primor Atlético",
+    "Lobo": "Concentração de Combate",
+    "Raposa": "Imagem Espelhada",
+    "Tartaruga": "Armadura Arcana",
+    "Urso": "Vitalidade Fantasma",
+}
+
+ANIMAIS_TOTEMICOS = [
+    {"valor": animal, "rotulo": f"{animal} ({magia})"}
+    for animal, magia in ANIMAIS_TOTEMICOS_MAGIAS.items()
+]
+
 TIPOS_DANO_ELEMENTAL = ["ácido", "eletricidade", "fogo", "frio", "trevas"]
 
 CAMINHOS_ARCANISTA_INFO = {
@@ -37,6 +54,7 @@ PODERES_COM_ESCOLHA = {
     "Especialista em Escola": [{"chave": "escola", "rotulo": "Escola de Magia", "catalogo": "ESCOLAS_MAGIA"}],
     "Mestre em Escola": [{"chave": "escola", "rotulo": "Escola de Magia", "catalogo": "ESCOLAS_MAGIA"}],
     "Familiar": [{"chave": "familiar", "rotulo": "Familiar Arcano", "catalogo": "FAMILIARES_ARCANOS"}],
+    "Totem Espiritual": [{"chave": "totem", "rotulo": "Animal Totêmico", "catalogo": "ANIMAIS_TOTEMICOS"}],
 }
 
 # Escolhas fixas de classe (UI futura: Bardo/Druida escolhem 3 escolas)
@@ -59,6 +77,8 @@ def montar_catalogo_escolhas() -> dict:
         "ATRIBUTOS": ATRIBUTOS,
         "ESCOLAS_MAGIA": ESCOLAS_MAGIA,
         "FAMILIARES_ARCANOS": FAMILIARES_ARCANOS,
+        "ANIMAIS_TOTEMICOS": ANIMAIS_TOTEMICOS,
+        "ANIMAIS_TOTEMICOS_MAGIAS": ANIMAIS_TOTEMICOS_MAGIAS,
         "TIPOS_DANO_ELEMENTAL": TIPOS_DANO_ELEMENTAL,
         "CAMINHOS_ARCANISTA_INFO": CAMINHOS_ARCANISTA_INFO,
         "PODERES_COM_ESCOLHA": poderes,

@@ -412,7 +412,12 @@ def calcular_furia(ficha: Personagem) -> Optional[Dict[str, int]]:
     if any((h.nome or "") == "Fúria Titânica" for h in ficha.habilidades):
         bonus *= 2
 
-    return {"bonus": bonus, "custo": custo}
+    aplica_arremesso = any(
+        (h.efeitos or {}).get("furia_arremesso") or (h.nome or "") == "Fúria da Savana"
+        for h in ficha.habilidades
+    )
+
+    return {"bonus": bonus, "custo": custo, "aplica_arremesso": aplica_arremesso}
 
 
 def _nivel_inicio_da_habilidade(hab) -> int:

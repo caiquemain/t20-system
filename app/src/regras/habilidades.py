@@ -444,6 +444,8 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append(f"+{vv} dano com: {armas}")
         if efeitos.get("dano_arma_base"):
             lista_efeitos.append("Dano de arremesso/funda aumentado em 1 passo")
+        if efeitos.get("furia_arremesso"):
+            lista_efeitos.append("Fúria aplica bônus em ataque e dano também a armas de arremesso")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 
