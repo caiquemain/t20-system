@@ -5,6 +5,7 @@ export interface SelectionItem {
     nome: string;
     descricao?: string;
     tags?: string[];
+    tooltip?: string;
 }
 
 interface SelectionModalProps {
@@ -22,13 +23,15 @@ const normalizar = (s: string) =>
 
 export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco', items, selected }: SelectionModalProps) {
     const [busca, setBusca] = useState('');
+    const [hoveredItem, setHoveredItem] = useState<SelectionItem | null>(null);
 
     const filtrados = useMemo(() => {
         const termo = normalizar(busca);
         if (!termo) return items;
         return items.filter(i =>
             normalizar(i.nome).includes(termo) ||
-            normalizar(i.descricao || '').includes(termo)
+            normalizar(i.descricao || '').includes(termo) ||
+            normalizar(i.tooltip || '').includes(termo)
         );
     }, [busca, items]);
 
@@ -81,6 +84,7 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco'
                         return (
                             <div
                                 key={item.nome}
+                                title={item.tooltip}
                                 onClick={() => { onSelect(item.nome); onClose(); }}
                                 style={{
                                     background: isSel ? 'rgba(255,215,0,0.12)' : '#252525',
@@ -88,11 +92,17 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco'
                                     borderRadius: 10, padding: 16, cursor: 'pointer',
                                     transition: 'all 0.15s ease'
                                 }}
-                                onMouseEnter={e => { if (!isSel) e.currentTarget.style.borderColor = '#666'; }}
-                                onMouseLeave={e => { if (!isSel) e.currentTarget.style.borderColor = '#333'; }}
+                                onMouseEnter={e => {
+                                    if (!isSel) e.currentTarget.style.borderColor = '#666';
+                                    if (item.tooltip) setHoveredItem(item);
+                                }}
+                                onMouseLeave={e => {
+                                    if (!isSel) e.currentTarget.style.borderColor = '#333';
+                                    setHoveredItem(prev => (prev?.nome === item.nome ? null : prev));
+                                }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                    <strong style={{ color: isSel ? '#ffd700' : '#eee', fontSize: '1.05rem' }}>{item.nome}</strong>
+                                    <strong style={{ color: isSel ? '#ffd700' : '#eee', fontSize: '1.05rem' }}>{item.nome || 'Sem devoção'}</strong>
                                     {isSel && <span style={{ color: '#ffd700' }}><T20Icon name="check" size={16} /></span>}
                                 </div>
                                 {item.tags && item.tags.length > 0 && (
@@ -114,6 +124,28 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco'
                         <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#666' }}>Nada encontrado para "{busca}".</p>
                     )}
                 </div>
+
+                {/* Painel de Tooltip / Detalhes no Hover */}
+                {(() => {
+                    const ativo = hoveredItem || items.find(i => i.nome === selected && i.tooltip) || null;
+                    if (!ativo?.tooltip) return null;
+                    return (
+                        <div style={{
+                            padding: '14px 24px',
+                            borderTop: '1px solid #3a3a3a',
+                            background: '#141414',
+                            color: '#d8dce8',
+                            fontSize: '0.82rem',
+                            lineHeight: 1.45,
+                            whiteSpace: 'pre-line',
+                            maxHeight: 180,
+                            overflowY: 'auto',
+                            borderRadius: '0 0 12px 12px'
+                        }}>
+                            {ativo.tooltip}
+                        </div>
+                    );
+                })()}
             </div>
         </div>
     );

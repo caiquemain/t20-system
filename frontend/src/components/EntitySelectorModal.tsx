@@ -28,9 +28,10 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
     onConfirm, onFechar, permitirVazio = false, labelVazio = 'Nenhum'
 }) => {
     const [busca, setBusca] = useState('');
+    const [hoveredItem, setHoveredItem] = useState<EntityItem | null>(null);
 
-    // Limpa busca ao fechar
-    useEffect(() => { if (!aberto) setBusca(''); }, [aberto]);
+    // Limpa busca e hover ao fechar
+    useEffect(() => { if (!aberto) { setBusca(''); setHoveredItem(null); } }, [aberto]);
 
     // ESC fecha o modal
     useEffect(() => {
@@ -127,6 +128,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                         return (
                             <div
                                 key={it.nome}
+                                title={it.tooltip}
                                 onClick={() => !it.bloqueado && onConfirm(it.nome)}
                                 style={{
                                     background: isSel ? 'rgba(255,215,0,0.15)' : 'rgba(40,40,60,0.5)',
@@ -137,8 +139,14 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                                     transition: 'all 0.2s',
                                     display: 'flex', flexDirection: 'column', gap: 4
                                 }}
-                                onMouseEnter={e => { if (!it.bloqueado) (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                                onMouseEnter={e => {
+                                    if (!it.bloqueado) (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+                                    if (it.tooltip) setHoveredItem(it);
+                                }}
+                                onMouseLeave={e => {
+                                    (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                                    setHoveredItem(prev => (prev?.nome === it.nome ? null : prev));
+                                }}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     {it.icone && <T20Icon name={it.icone} size={18} color={isSel ? '#ffd700' : '#bbb'} />}
@@ -157,7 +165,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                                     </div>
                                 )}
                                 {it.descricao && (
-                                    <div style={{ color: '#999', fontSize: '0.78rem', lineHeight: 1.3, marginTop: 2 }}>
+                                    <div style={{ color: '#999', fontSize: '0.78rem', lineHeight: 1.3, marginTop: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                         {it.descricao}
                                     </div>
                                 )}
@@ -175,6 +183,27 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                         </div>
                     )}
                 </div>
+
+                {/* Painel de Tooltip / Detalhes no Hover */}
+                {(() => {
+                    const ativo = hoveredItem || itens.find(i => i.nome === selecionado && i.tooltip) || null;
+                    if (!ativo?.tooltip) return null;
+                    return (
+                        <div style={{
+                            padding: '12px 20px',
+                            borderTop: '1px solid #3a3a5a',
+                            background: 'rgba(12, 14, 28, 0.92)',
+                            color: '#d8dce8',
+                            fontSize: '0.8rem',
+                            lineHeight: 1.45,
+                            whiteSpace: 'pre-line',
+                            maxHeight: 170,
+                            overflowY: 'auto'
+                        }}>
+                            {ativo.tooltip}
+                        </div>
+                    );
+                })()}
 
                 {/* Footer */}
                 <div style={{

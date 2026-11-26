@@ -340,6 +340,14 @@ def inicializar_pericias(ficha: Personagem):
                 logger.error(
                     f"Erro ao processar bônus de escolha em {hab.nome}: {e}")
 
+    # O&R de Nimb (T20 JdA p.102): -5 em testes de perícias baseadas em Carisma
+    if (getattr(ficha.cabecalho, "deus", "") or "").strip() == "Nimb":
+        for p_nome, attr_p in DADOS_PERICIAS.items():
+            if attr_p == "car":
+                detalhamento_bonus.setdefault(p_nome, []).append(
+                    {"fonte": "Devoção: Nimb (O&R)", "valor": -5}
+                )
+
     # 3. Lista de Perícias Treinadas/Extras
     pericias_extras: List[str] = []
 
