@@ -423,6 +423,28 @@ def inicializar_pericias(ficha: Personagem):
             {"fonte": f"Item Mágico: {fonte_manto}", "valor": 5}
         )
 
+    # Condições oficiais ativas (Apêndice, T20 JdA p.394–395) — aplica a penalidade mais severa por perícia
+    conds_ativas_p = getattr(ficha, "condicoes_ativas", None) or []
+    if conds_ativas_p:
+        from .condicoes import calcular_efeitos_condicoes
+        ef_cond_p = calcular_efeitos_condicoes(conds_ativas_p)
+        if ef_cond_p["condicoes_efetivas"]:
+            for p_nome_c, meta_c in DADOS_PERICIAS.items():
+                attr_c = (meta_c.get("atributo") or "").lower()
+                pen_c = ef_cond_p["pericias_todas"]
+                if attr_c in ("for", "des", "con"):
+                    pen_c = min(pen_c, ef_cond_p["pericias_fisicas"])
+                if attr_c in ("for", "des"):
+                    pen_c = min(pen_c, ef_cond_p["pericias_for_des"])
+                if attr_c in ("int", "sab", "car"):
+                    pen_c = min(pen_c, ef_cond_p["pericias_mentais"])
+                if p_nome_c in ef_cond_p["pericias_especificas"]:
+                    pen_c = min(pen_c, ef_cond_p["pericias_especificas"][p_nome_c])
+                if pen_c < 0:
+                    detalhamento_bonus.setdefault(p_nome_c, []).append(
+                        {"fonte": f"Condição ({', '.join(ef_cond_p['condicoes_efetivas'])})", "valor": pen_c}
+                    )
+
     # 3. Lista de Perícias Treinadas/Extras
     pericias_extras: List[str] = []
 

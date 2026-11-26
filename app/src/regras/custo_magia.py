@@ -179,6 +179,14 @@ def calcular_custo_magia(ficha: Personagem, magia,
             total = math.floor(total / 2)
             calc.adicionar_bonus("Artista Completo (×0.5 sob Inspiração)", "Multiplicativo", total - antes)
 
+    # Alquebrado (T20 JdA p.394): +1 PM no custo de habilidades/magias
+    from .condicoes import calcular_efeitos_condicoes
+    ef_cond_m = calcular_efeitos_condicoes(condicoes)
+    if ef_cond_m["custo_pm_extra"]:
+        extra_pm = ef_cond_m["custo_pm_extra"]
+        total += extra_pm
+        calc.adicionar_bonus("Condição: Alquebrado (+1 PM)", "Condição", extra_pm)
+
     # Mínimo 1 PM (regra confirmada); limite de gasto por magia = nível
     total = max(1, total)
     limite_pm = max(1, ficha.cabecalho.nivel_total or 1)

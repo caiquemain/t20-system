@@ -613,6 +613,17 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
             valor=melhor_def_acess[1],
         )
 
+    # Condições oficiais ativas (Apêndice, T20 JdA p.394–395) — não acumulam, aplica a mais severa
+    if condicoes_ativas:
+        from .condicoes import calcular_efeitos_condicoes
+        ef_cond = calcular_efeitos_condicoes(condicoes_ativas)
+        if ef_cond["defesa"]:
+            defesa_calc.adicionar_bonus(
+                fonte=f"Condições ({', '.join(ef_cond['condicoes_efetivas'])})",
+                categoria="Condição",
+                valor=ef_cond["defesa"],
+            )
+
     # Buffs ativos
     if hasattr(ficha.status, 'buffs'):
         for b in ficha.status.buffs:
