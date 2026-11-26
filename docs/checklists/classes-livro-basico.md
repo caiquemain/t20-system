@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 9/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo, Druida e Guerreiro)  
+**Status:** 🟡 10/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo, Druida, Guerreiro e Inventor)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -19,8 +19,8 @@
 | **Clérigo** | 21 (3 fixas + 18 poderes) | 21 (100%) | 2 arquivos (`test_clerigo_*`) | ✅ Completa |
 | **Druida** | 27 (5 fixas + 22 poderes) | 27 (100%) | 2 arquivos (`test_druida_*`) | ✅ Completa |
 | **Guerreiro** | 23 (4 fixas + 19 poderes) | 23 (100%) | 2 arquivos (`test_guerreiro_*`) | ✅ Completa |
+| **Inventor** | 38 (8 fixas + 30 poderes) | 38 (100%) | 2 arquivos (`test_inventor_*`) | ✅ Completa |
 | **Ladino** | 11 (4 fixas + 7 poderes) | 7 (64%) | — | 🟡 Parcial |
-| **Inventor** | 8 (2 fixas + 6 poderes) | 5 (63%) | — | 🟡 Parcial |
 | **Lutador** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
 | **Paladino** | 11 (6 fixas + 5 poderes) | 3 (27%) | — | 🟡 Parcial |
 | **Nobre** | 9 (4 fixas + 5 poderes) | 2 (22%) | — | 🟡 Parcial |
@@ -47,7 +47,7 @@
 ### Lote 4 — Versáteis & Complexas
 - [x] **Bardo** (Inspiração, Magias, Eclético, Artista Completo + 20 poderes + testes)
 - [ ] **Nobre** (Autoconfiança, Espólio, Orgulho, Gritar Ordens + poderes + testes)
-- [ ] **Inventor** (Engenhosidade, Protótipo, Fabricar Item Superior, Engenhocas + poderes + testes)
+- [x] **Inventor** (Engenhosidade, Protótipo, Fabricar Item Superior/Mágico, Comerciante, Encontrar Fraqueza, Olho do Dragão, Obra-Prima + 30 poderes + testes)
 
 ## ✅ Critério de Pronto (por classe)
 - Catálogo completo de habilidades fixas (nv 1–20) e poderes do Livro Básico

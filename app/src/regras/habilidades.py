@@ -546,6 +546,24 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append(f"Romper Resistências: +1 PM no Ataque Especial para ignorar {efeitos['romper_resistencias_rd']} de RD")
         if efeitos.get("golpe_de_raspao"):
             lista_efeitos.append("Golpe de Raspão: 2 PM ao errar ataque para causar metade do dano (1x/rodada)")
+        if efeitos.get("comerciante_venda_pct"):
+            lista_efeitos.append(f"Comerciante: vende itens {efeitos['comerciante_venda_pct']}% mais caro")
+        if efeitos.get("olho_do_dragao"):
+            lista_efeitos.append("Olho do Dragão: ação completa para identificar automaticamente item mágico")
+        if efeitos.get("obra_prima"):
+            lista_efeitos.append("Obra-Prima: item único (~5 melhorias e 4 encantos) sem custo")
+        if efeitos.get("alquimista_batalha_soma_int"):
+            lista_efeitos.append("Alquimista de Batalha: soma Inteligência no dano de alquímicos e poções")
+        if efeitos.get("cano_raiado_margem"):
+            lista_efeitos.append(f"Cano Raiado: +{efeitos['cano_raiado_margem']} margem de ameaça em arma de disparo fabricada por você")
+        if efeitos.get("ferreiro_passo_dano"):
+            lista_efeitos.append("Ferreiro: +1 passo de dano em arma corpo a corpo fabricada por você")
+        if efeitos.get("granadeiro_alcance_medio"):
+            lista_efeitos.append("Granadeiro: arremessa alquímicos/poções em alcance médio e usa Int na CD")
+        if efeitos.get("mestre_cuca_bonus"):
+            lista_efeitos.append(f"Mestre Cuca: +{efeitos['mestre_cuca_bonus']} no bônus numérico das comidas cozinhadas")
+        if efeitos.get("sintese_rapida_dobro_doses"):
+            lista_efeitos.append("Síntese Rápida: fabrica o dobro de doses de alquímico/poção no mesmo tempo")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 

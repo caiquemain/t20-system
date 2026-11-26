@@ -246,6 +246,19 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
             if ef_h.get("passo_dano_global"):
                 especial.append("Campeão (+1 passo de dano)")
 
+        # Armeiro / Balística (Inventor, T20 p.68-69): usa Int no lugar de For/Des
+        mod_int = mod_atributo(ficha, "int")
+        if cat.get("proposito") == "Corpo a Corpo" and any(
+            (h.efeitos or {}).get("armeiro_int_corpo_a_corpo") for h in ficha.habilidades
+        ):
+            if mod_int > mod_atributo(ficha, "for"):
+                especial.append(f"Armeiro (Int +{mod_int} ataque/dano)")
+        elif cat.get("proposito") == "À Distância" and any(
+            (h.efeitos or {}).get("balistica_int_distancia") for h in ficha.habilidades
+        ):
+            if mod_int > mod_atributo(ficha, "des"):
+                especial.append(f"Balística (Int +{mod_int} ataque)")
+
         if not proficiente:
             especial.append("-5 ataque (não proficiente)")
         ataques.append(Ataque(

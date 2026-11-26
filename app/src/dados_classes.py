@@ -84,7 +84,7 @@ DADOS_CLASSES = {
         "pm_inicial": 4, "pm_nivel": 4,
         "pericias_iniciais": ["Ofício", "Vontade"],
         "pericias_escolha": 4,
-        "pericias_lista": ["Conhecimento", "Cura", "Diplomacia", "Fortitude", "Iniciativa", "Investigação", "Luta", "Misticismo", "Percepção", "Pilotagem", "Pontaria"],
+        "pericias_lista": ["Conhecimento", "Cura", "Diplomacia", "Fortitude", "Iniciativa", "Investigação", "Luta", "Misticismo", "Ofício", "Percepção", "Pilotagem", "Pontaria"],
         "proficiencias": []
     },
     "Ladino": {

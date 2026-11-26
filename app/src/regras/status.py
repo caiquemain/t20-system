@@ -387,6 +387,31 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 valor=1 * mult_missa
             )
 
+        # Couraceiro (Inventor, T20 p.69): usando armadura leve, usa Int no lugar de Des se for maior
+        if efeitos.get("couraceiro_int_defesa") and not usa_pesada:
+            usa_leve = any(
+                it.equipado and (catalogo_do_item(it.nome) or {}).get("tipo_armadura") == "Leve"
+                for it in ficha.inventario.equipamentos
+            )
+            if usa_leve:
+                mod_int = calcular_modificador(ficha.atributos.inteligencia)
+                if mod_int > mod_des:
+                    defesa_calc.adicionar_bonus(
+                        fonte="Poder: Couraceiro (Int no lugar de Des)",
+                        categoria="Poder",
+                        valor=mod_int - mod_des
+                    )
+
+        # Blindagem (Inventor, T20 p.69): usando armadura pesada, soma Int na Defesa
+        if efeitos.get("blindagem_int_pesada") and usa_pesada:
+            mod_int = calcular_modificador(ficha.atributos.inteligencia)
+            if mod_int > 0:
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Blindagem (Int)",
+                    categoria="Poder",
+                    valor=mod_int
+                )
+
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(
                 fonte=f"Poder: {hab.nome} (Tormenta x{qtd_tormenta})",
@@ -850,6 +875,69 @@ def calcular_ataque_especial(ficha: Personagem) -> Optional[Dict[str, Any]]:
         "romper_resistencias": romper,
         "campeao_recupera_metade": campeao,
         "campeao_passo_dano": campeao,
+    }
+
+
+def calcular_inventor(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula parâmetros do Inventor (T20 JdA p.67-71): melhorias, item mágico, engenhocas e fórmulas."""
+    nivel_inv = 0
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Inventor":
+            nivel_inv = int(c.nivel or 0)
+            break
+    if nivel_inv <= 0:
+        return None
+
+    # Fabricar Item Superior: 1 (2º), 2 (5º), 3 (8º), 4 (11º)
+    melhorias_max = 0
+    for nv_req, qtd in ((2, 1), (5, 2), (8, 3), (11, 4)):
+        if nivel_inv >= nv_req:
+            melhorias_max = qtd
+
+    # Fabricar Item Mágico: Menor (9º), Médio (13º), Maior (17º)
+    item_magico = None
+    if nivel_inv >= 17:
+        item_magico = "Maior"
+    elif nivel_inv >= 13:
+        item_magico = "Médio"
+    elif nivel_inv >= 9:
+        item_magico = "Menor"
+
+    mod_int = calcular_modificador(ficha.atributos.inteligencia)
+
+    # Engenhoqueiro: limite = Int (+3 com Manutenção Eficiente); círculo = 1 (1º), 2 (6º), 3 (10º), 4 (14º), 5 (18º)
+    tem_eng = any((h.efeitos or {}).get("fabricar_engenhoca") or (h.nome or "") == "Engenhoqueiro" for h in ficha.habilidades)
+    limite_eng = 0
+    circulo_eng = 0
+    if tem_eng:
+        bonus_eng = sum(int((h.efeitos or {}).get("limite_engenhocas_bonus", 0) or 0) for h in ficha.habilidades)
+        limite_eng = max(0, mod_int) + bonus_eng
+        circulo_eng = 1
+        for nv_req, circ in ((6, 2), (10, 3), (14, 4), (18, 5)):
+            if nivel_inv >= nv_req:
+                circulo_eng = circ
+
+    # Alquimista Iniciado / Mestre Alquimista: fórmulas = 3 + (nivel - 1) + 3 * Conhecimento de Fórmulas
+    tem_alq = any((h.efeitos or {}).get("fabricar_pocao") or (h.nome or "") == "Alquimista Iniciado" for h in ficha.habilidades)
+    mestre_alq = any((h.efeitos or {}).get("mestre_alquimista") or (h.nome or "") == "Mestre Alquimista" for h in ficha.habilidades)
+    circulo_pocao = 0
+    formulas_total = 0
+    if tem_alq:
+        circulo_pocao = 2 if nivel_inv >= 6 else 1
+        if mestre_alq:
+            for nv_req, circ in ((10, 3), (14, 4), (18, 5)):
+                if nivel_inv >= nv_req:
+                    circulo_pocao = circ
+        extras = sum(int((h.efeitos or {}).get("formulas_adicionais", 0) or 0) for h in ficha.habilidades)
+        formulas_total = 3 + max(0, nivel_inv - 1) + extras
+
+    return {
+        "melhorias_max": melhorias_max,
+        "item_magico": item_magico,
+        "limite_engenhocas": limite_eng,
+        "circulo_engenhoca": circulo_eng,
+        "circulo_pocao": circulo_pocao,
+        "formulas_total": formulas_total,
     }
 
 
