@@ -14,11 +14,11 @@ nunca "mente".
 
 | Camada | Tecnologia |
 |---|---|
-| **Backend** | Python 3.11 · FastAPI · Pydantic v2 · Motor (Mongo assíncrono) · pypdf |
+| **Backend** | Python 3.11+ · FastAPI · Pydantic v2 · Motor (Mongo assíncrono) · PyMuPDF |
 | **Banco** | MongoDB 7.0 |
 | **Frontend** | React 19 · TypeScript 5.9 · Vite 7 · react-router-dom 7 · axios |
 | **Infra** | Docker Compose (api + web + db) |
-| **Testes** | pytest (16 arquivos, ~156 testes do motor de regras) |
+| **Testes** | pytest (34 arquivos, 429 testes do motor de regras e PDF) |
 | **Extras** | Extensão de browser `t20-roll20-bridge` (Manifest V3) |
 
 ---
@@ -27,11 +27,15 @@ nunca "mente".
 
 ### Criação de Personagem (Wizard + Home + Ficha)
 - **Wizard** (`/wizard`) de criação passo a passo + edição (`/wizard/:id`)
-- **Home** (`/`) com listagem das fichas salvas
+- **Home** (`/`) com listagem das fichas salvas e atalhos rápidos
 - **Atributos** por pool de pontos (10 iniciais) com tabela de custo crescente
 - **Modificadores raciais** fixos + escolhas (+1 em atributo à escolha)
-- **Raças, Classes (16), Origens, Deuses** com validações cruzadas
+- **Raças, Classes (14 base + suplementos), Origens, Deuses** com validações cruzadas
 - Bloqueios de regra aplicados automaticamente (ex.: Golem não escolhe Origem)
+
+### Bestiário & Grimório Global
+- **Bestiário** (`/bestiario` e `/bestiario/:id`): catálogo com **297 monstros/ameaças** importados, busca/filtros, ficha detalhada e botão de envio direto para o Roll20
+- **Grimório Global** (`/grimorio`): consulta completa de magias fora da ficha com filtros por círculo, escola e tipo
 
 ### Motor de Regras (backend, `app/src/regras/`)
 - **PV/PM** com fontes nomeadas por habilidade no tooltip
@@ -39,13 +43,14 @@ nunca "mente".
 - **Perícias**: treino, slots de classe/INT, atributo-chave selecionável,
   Ofícios customizados, penalidade de armadura, bônus condicionais
 - **Defesa & Deslocamento**: pilha de bônus explicada, deslocamentos especiais
-  (natação 🧜‍♀️, voo 🪽) com toggle de forma
+  (natação, voo) com toggle de forma
 - **Combate**: BBA, ataques, bônus de dano por arma, proficiências
+- **Classes**: Arcanista (24/24) e Bárbaro (24/24) com poderes e testes completos; demais 12 classes do Livro Básico em expansão (ver `docs/checklists/classes-livro-basico.md`)
 - **Magias**: grimório com ~198 magias, custo PM por círculo (Tabela 4-1),
   aprimoramentos, CD por atributo-chave, reduções condicionais de custo
 - **Habilidades ativáveis**: custo PM, ação, duração, buffs com origem rastreada
 - **Condições situacionais**: toggle no card da habilidade
-  (🦎 Reptiliano, ⛰️ Conhecimento das Rochas) que alimenta `condicoes_ativas`
+  (Reptiliano, Conhecimento das Rochas) que alimenta `condicoes_ativas`
 - **Histórico/level-up**: linha do tempo da ficha com level-up assistido
 - **Inventário/equipamentos** com efeitos mecânicos
 
@@ -54,20 +59,20 @@ nunca "mente".
   (ex.: Canção dos Mares oferece só as 6 magias da regra, com match exato)
 - **Slots flexíveis**: perícia OU poder OU racial (Versátil, Memória Póstuma,
   Deformidade) com abas e troca de modo
-- **Chips de escolha** nos cards com rótulos legíveis (`✨ Magia 1: Luz`)
-- **Engenhosidade (Kliren)**: botão ⚡ por perícia, gasta 2 PM, soma INT no teste
-- **Desejos (Qareen)**: botão 🧞 abre modal com as magias do grimório;
+- **Chips de escolha** nos cards com rótulos legíveis (`Magia 1: Luz`)
+- **Engenhosidade (Kliren)**: botão por perícia, gasta 2 PM, soma INT no teste
+- **Desejos (Qareen)**: botão abre modal com as magias do grimório;
   a magia desejada custa −1 PM
 
 ### Persistência & Exportação
 - Salvamento automático com debounce (PUT) + criação (POST) + exclusão (DELETE)
 - Recálculo completo (`atualizar_ficha`) em todo GET/PUT — fonte única de verdade
 - Descanso completo, buffs temporários, efeitos ativos por aba dedicada
-- **Exportação da ficha em PDF** (`GET /personagens/{id}/pdf`, via pypdf)
+- **Exportação da ficha em PDF** (`GET /personagens/{id}/pdf`, via **PyMuPDF**, com testes em `app/tests/test_pdf.py`)
 
 ### Ponte Roll20 (`t20-roll20-bridge/`)
-- Extensão Manifest V3 que envia a ficha do T20 System para a ficha oficial
-  JdA do Roll20 (perícias treinadas, dinheiro, campos da ficha principal)
+- Extensão Manifest V3 que envia a ficha do T20 System (e ameaças do Bestiário) para a ficha oficial
+  JdA do Roll20 (perícias treinadas, dinheiro, ataques, poderes, magias, equipamentos)
 - Detalhes do mapeamento em `docs/roll20-field-mapping.md`
 
 ---
@@ -168,7 +173,7 @@ Suraggel Aggelus/Sulfure e Nagah). Núcleo validado por testes E2E:
 | 14 | Minotauro | Chifres, Couro Rígido, Faro |
 | 15 | Dahllan | Amiga das Plantas, Armadura de Allihanna, Empatia Selvagem |
 | 16 | Lefou | Cria da Tormenta, Deformidade |
-| 17 | Hynne | (em validação — ver `docs/checklists/`) |
+| 17 | Hynne | Arremessador, Pequeno e Rechonchudo, Sorte Salvadora (reroll na Fase de Rolagens) |
 
 Estado detalhado por raça em `docs/checklists/racas-e2e.md`.
 
@@ -181,18 +186,17 @@ Estado detalhado por raça em `docs/checklists/racas-e2e.md`.
 docker compose up -d --build
 ```
 
-- App: http://localhost:5173 (`/` home · `/wizard` criação · `/ficha/:id` ficha)
+- App: http://localhost:5173 (`/` home · `/wizard` criação · `/ficha/:id` ficha · `/bestiario` bestiário · `/grimorio` grimório)
 - Docs interativas da API: http://localhost:8000/docs
 
 ### Testes
 
 ```bash
 docker compose exec -T api python -m pytest tests/ -q
-# 16 arquivos, ~156 testes do motor de regras
+# 34 arquivos, 429 testes do motor de regras e exportação PDF
 ```
 
-> ⚠️ Os testes rodam **dentro do container** (`docker compose exec api`).
-> Fora do Docker não há `pytest` instalado — `python3 -m pytest` falha localmente.
+> ⚠️ Os testes rodam **dentro do container** (`docker compose exec api`) ou via `poetry run pytest tests/ -q` em `app/`.
 
 ### Diagnóstico rápido
 
@@ -217,15 +221,13 @@ Guia passo a passo para Linux: `COMO_RODAR_LINUX.md`.
 
 ---
 
-## 🗺️ Roadmap
-- Hynne (Sorte/reroll) — validação E2E restante (`docs/checklists/racas-e2e.md`)
-- Inventário de armas (destrava E2E de Mestre do Tridente e bônus de dano)
-- Sistema de rolagens (consome Engenhosidade/Desejos automaticamente —
-  ver `docs/checklists/rolagens.md`)
-- R6: Símbolo Sagrado ativável, condicionais situacionais ampliados,
-  stepper de aprimoramentos de magia
-- Ponte Roll20: condições e dinheiro seguem manuais na mesa
-  (ver `docs/checklists/roll20-bridge.md`)
+## 🗺️ Roadmap & Plano de Ação
+O plano detalhado e priorizado para fechar 100% do **Livro Básico (T20 JdA)** está em [**`docs/PLANO_DE_ACAO.md`**](./docs/PLANO_DE_ACAO.md):
+- **Fase 1:** Fechar dívidas das raças base (filtro Livro Básico vs. suplementos, `resistencia_veneno`, `deslocamento_escalada_igual`, reaprendizado)
+- **Fase 2:** Migrar emojis Unicode para biblioteca SVG moderna (`lucide-react` + componente `<T20Icon />`) — ver `docs/checklists/icones-ui.md`
+- **Fase 3:** Completar as 12 classes restantes do Livro Básico (hoje 2/14 completas) — ver `docs/checklists/classes-livro-basico.md`
+- **Fase 4:** Modelar efeitos nos Poderes Concedidos (20/20) e Poderes Gerais faltantes
+- **Fase 5:** Sistema de rolagens (`docs/checklists/rolagens.md`), refinamentos de PDF (`docs/checklists/pdf.md`), Roll20 (`docs/checklists/roll20-bridge.md`) e ESLint
 
 ---
 

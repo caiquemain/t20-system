@@ -111,18 +111,6 @@ function Ficha() {
         }
     }, [ficha?.cabecalho.raca, ficha?.escolhas_atributos_raciais]);
 
-    // [RACIAL-DEBUG] espelho do estado a cada mudança relevante
-    useEffect(() => {
-        if (!ficha) return;
-        console.log('[RACIAL-DEBUG] estado da ficha:', {
-            raca: ficha.cabecalho?.raca,
-            escolhas: ficha.escolhas_atributos_raciais,
-            modRaciais: ficha.modificadores_raciais,
-            atributos: ficha.atributos,
-            base: ficha.atributos_base,
-        });
-    }, [ficha?.escolhas_atributos_raciais, ficha?.modificadores_raciais, ficha?.atributos]);
-
     const handleSelecionarEntidade = (tipo: 'raca' | 'origem' | 'deus' | 'classe', nome: string) => {
         if (!ficha) return;
         
@@ -171,7 +159,6 @@ function Ficha() {
     };
 
     const handleSalvarAtributosRaciais = () => {
-        console.log('[RACIAL-DEBUG] modal salvou escolhas:', JSON.parse(JSON.stringify(escolhasRaciais)));
         updateFicha({ escolhas_atributos_raciais: escolhasRaciais });
         setShowRacialModal(false);
     };
@@ -721,7 +708,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                                     else if (efeito.includes('Tamanho')) { icon = '📏'; color = '#ffeb3b'; bg = 'rgba(255, 235, 59, 0.1)'; }
 
                                     const [titulo, desc] = efeito.includes(':') ? efeito.split(/:(.+)/) : [efeito, null];
-                                    const tituloLimpo = titulo.replace(/^[✨🛡️👁️📏]\s*/, '');
+                                    const tituloLimpo = titulo.replace(/^(?:✨|🛡️|👁️|📏)\s*/u, '');
 
                                     return (
                                         <div

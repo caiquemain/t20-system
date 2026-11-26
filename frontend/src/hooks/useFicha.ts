@@ -143,16 +143,10 @@ export const useFicha = (id: string | undefined) => {
                 response = await createPersonagem(dadosParaSalvar);
             }
             if (response && response.data) {
-                console.log('[RACIAL-DEBUG] resposta do servidor:', {
-                    atributos: response.data.atributos,
-                    modRaciais: response.data.modificadores_raciais,
-                    escolhas: response.data.escolhas_atributos_raciais,
-                });
                 setFicha(prev => {
                     if (!prev) return response.data;
                     return { ...prev, ...response.data };
                 });
-                console.log("💾 Ficha salva com sucesso.");
             }
         } catch (e) {
             console.error("❌ Erro ao salvar ficha:", e);
@@ -163,9 +157,6 @@ export const useFicha = (id: string | undefined) => {
     }, [id]);
 
     const updateFicha = useCallback((novosDados: Partial<Personagem>, salvarAgora: boolean = false) => {
-        if ('escolhas_atributos_raciais' in novosDados || 'atributos' in novosDados || 'modificadores_raciais' in novosDados) {
-            console.log('[RACIAL-DEBUG] updateFicha payload:', JSON.parse(JSON.stringify(novosDados)));
-        }
         setFicha((prev) => {
             if (!prev) return null;
             const novaFicha = { ...prev, ...novosDados };
