@@ -212,3 +212,67 @@ def test_gerar_odg_ficha_completa():
     # Anotações não deve ser duplicada mesmo aparecendo 2x no template PDF
     assert len(frames_por_nome["Anotações"]) == 1
     assert "essência de mana" in frames_por_nome["Anotações"][0]
+
+
+def test_gerar_odt_ficha_completa():
+    import zipfile
+    import xml.etree.ElementTree as ET
+    from io import BytesIO
+    from src.odt_export import ODT_MIMETYPE, gerar_odt_bytes
+
+    f = Personagem(
+        cabecalho=Cabecalho(
+            nome="Tordek Ferro",
+            jogador="Caique",
+            raca="Anão",
+            origem="Artesão",
+            deus="Khalmyr",
+            nivel_total=5,
+        ),
+        classes=[
+            ClasseInfo(nome="Guerreiro", nivel=3, primaria=True),
+            ClasseInfo(nome="Clérigo", nivel=2, primaria=False),
+        ],
+        atributos_base=Atributos(forca=3, destreza=1, constituicao=2, sabedoria=3),
+        inventario=Inventario(
+            dinheiro=Dinheiro(tp=450, to=12),
+            equipamentos=[
+                Item(nome="Cota de malha", equipado=True, espaco=5),
+                Item(nome="Escudo pesado", equipado=True, espaco=2),
+            ],
+        ),
+        descricao=Descricao(
+            idade="85",
+            alinhamento="Leal e Bondoso",
+            aparencia="Barba trançada com anéis de ferro",
+            anotacoes="Lembrar de comprar essência de mana.",
+        ),
+    )
+    f.pericias["Luta"] = PericiaInfo(treino=1, total=0)
+    f.combate.magias.append(Magia(nome="Curar Ferimentos", circulo=1, tipo="Divina", escola="Evocação", custo_pm=1))
+    atualizar_ficha(f)
+
+    odt_bytes = gerar_odt_bytes(f)
+    assert len(odt_bytes) > 2_000
+
+    with zipfile.ZipFile(BytesIO(odt_bytes), "r") as zf:
+        infos = zf.infolist()
+        assert infos[0].filename == "mimetype"
+        assert infos[0].compress_type == zipfile.ZIP_STORED
+        assert zf.read("mimetype") == ODT_MIMETYPE.encode("ascii")
+
+        nomes = set(zf.namelist())
+        assert {"META-INF/manifest.xml", "meta.xml", "styles.xml", "content.xml"}.issubset(nomes)
+        ET.fromstring(zf.read("META-INF/manifest.xml"))
+        ET.fromstring(zf.read("meta.xml"))
+        ET.fromstring(zf.read("styles.xml"))
+        content_root = ET.fromstring(zf.read("content.xml"))
+
+    texto_completo = "\n".join(el.text for el in content_root.iter() if el.text)
+    assert "Tordek Ferro" in texto_completo
+    assert "Guerreiro 3 / Clérigo 2" in texto_completo
+    assert "Cota de malha" in texto_completo
+    assert "Curar Ferimentos" in texto_completo
+    assert "Barba trançada" in texto_completo
+    assert "essência de mana" in texto_completo
+    assert "Duro como Pedra" in texto_completo

@@ -1,4 +1,4 @@
-import { gerarPDF, gerarODG } from '../utils/gerarPDF';
+import { gerarPDF, gerarODT } from '../utils/gerarPDF';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../Ficha.css';
@@ -103,7 +103,7 @@ function Ficha() {
     const [isFlying, setIsFlying] = useState(false);
     const [isAquatic, setIsAquatic] = useState(false);
     const [exportandoPdf, setExportandoPdf] = useState(false);
-    const [exportandoOdg, setExportandoOdg] = useState(false);
+    const [exportandoOdt, setExportandoOdt] = useState(false);
 
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
@@ -540,33 +540,33 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                     <T20Icon name="pdf" size={15} /> {exportandoPdf ? "Gerando PDF..." : "Baixar PDF"}
                 </button>
                 <button
-                    disabled={exportandoOdg}
-                    title="Exportar ficha editável para LibreOffice Draw (.odg)"
+                    disabled={exportandoOdt}
+                    title="Exportar ficha editável para LibreOffice Writer (.odt)"
                     onClick={async () => {
-                        if (exportandoOdg) return;
-                        setExportandoOdg(true);
+                        if (exportandoOdt) return;
+                        setExportandoOdt(true);
                         try {
-                            await gerarODG(ficha, id);
+                            await gerarODT(ficha, id);
                         } finally {
-                            setExportandoOdg(false);
+                            setExportandoOdt(false);
                         }
                     }}
                     style={{
                         padding: "8px 14px",
-                        backgroundColor: exportandoOdg ? "#555" : "#1565c0",
+                        backgroundColor: exportandoOdt ? "#555" : "#1565c0",
                         color: "white",
                         border: "none",
                         borderRadius: "4px",
-                        cursor: exportandoOdg ? "wait" : "pointer",
+                        cursor: exportandoOdt ? "wait" : "pointer",
                         fontWeight: "bold",
                         marginLeft: "6px",
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "6px",
-                        opacity: exportandoOdg ? 0.8 : 1,
+                        opacity: exportandoOdt ? 0.8 : 1,
                     }}
                 >
-                    <T20Icon name="pdf" size={15} /> {exportandoOdg ? "Gerando ODG..." : "Baixar ODG"}
+                    <T20Icon name="pdf" size={15} /> {exportandoOdt ? "Gerando ODT..." : "Baixar ODT"}
                 </button>
                 <div className="header-inputs">
                     <input
