@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 12/14 classes completas (faltam apenas Nobre e Paladino)  
+**Status:** 🟡 13/14 classes completas (falta apenas Paladino)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -22,8 +22,8 @@
 | **Inventor** | 38 (8 fixas + 30 poderes) | 38 (100%) | 2 arquivos (`test_inventor_*`) | ✅ Completa |
 | **Ladino** | 27 (7 fixas + 20 poderes) | 27 (100%) | 2 arquivos (`test_ladino_*`) | ✅ Completa |
 | **Lutador** | 29 (6 fixas + 23 poderes) | 29 (100%) | 2 arquivos (`test_lutador_*`) | ✅ Completa |
+| **Nobre** | 26 (8 fixas + 18 poderes) | 26 (100%) | 2 arquivos (`test_nobre_*`) | ✅ Completa |
 | **Paladino** | 11 (6 fixas + 5 poderes) | 3 (27%) | — | 🟡 Parcial |
-| **Nobre** | 9 (4 fixas + 5 poderes) | 2 (22%) | — | 🟡 Parcial |
 
 ---
 
@@ -46,7 +46,7 @@
 
 ### Lote 4 — Versáteis & Complexas
 - [x] **Bardo** (Inspiração, Magias, Eclético, Artista Completo + 20 poderes + testes)
-- [ ] **Nobre** (Autoconfiança, Espólio, Orgulho, Gritar Ordens + poderes + testes)
+- [x] **Nobre** (Autoconfiança, Espólio, Orgulho, Palavras Afiadas, Riqueza, Gritar Ordens, Presença Aristocrática, Realeza + 18 poderes + testes)
 - [x] **Inventor** (Engenhosidade, Protótipo, Fabricar Item Superior/Mágico, Comerciante, Encontrar Fraqueza, Olho do Dragão, Obra-Prima + 30 poderes + testes)
 
 ## ✅ Critério de Pronto (por classe)

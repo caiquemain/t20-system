@@ -456,6 +456,26 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                     valor=mod_int
                 )
 
+        # Autoconfiança (Nobre, T20 p.79): sem armadura pesada, usa Car no lugar de Des se for maior
+        if efeitos.get("autoconfianca_car_defesa") and not usa_pesada:
+            mod_car = calcular_modificador(ficha.atributos.carisma)
+            if mod_car > mod_des:
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Autoconfiança (Car no lugar de Des)",
+                    categoria="Poder",
+                    valor=mod_car - mod_des
+                )
+
+        # Armadura Brilhante (Nobre, T20 p.79): usando armadura pesada, soma Car na Defesa
+        if efeitos.get("armadura_brilhante_car_pesada") and usa_pesada:
+            mod_car = calcular_modificador(ficha.atributos.carisma)
+            if mod_car > 0:
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Armadura Brilhante (Car)",
+                    categoria="Poder",
+                    valor=mod_car
+                )
+
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(
                 fonte=f"Poder: {hab.nome} (Tormenta x{qtd_tormenta})",
@@ -1055,6 +1075,49 @@ def calcular_briga(ficha: Personagem) -> Optional[Dict[str, Any]]:
         "dano_con_trincado": calcular_modificador(ficha.atributos.constituicao) if trincado else 0,
         "ignora_rd": ignora_rd,
         "dono_da_rua": dono,
+    }
+
+
+def calcular_nobre(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula parâmetros do Nobre (T20 JdA p.78-80): Palavras Afiadas, Presença Aristocrática, Orgulho e Voz Poderosa."""
+    nivel_nob = 0
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Nobre":
+            nivel_nob = int(c.nivel or 0)
+            break
+    if nivel_nob <= 0:
+        return None
+
+    mod_car = calcular_modificador(ficha.atributos.carisma)
+    nivel_total = int(ficha.cabecalho.nivel_total or 1)
+    voz_pod = any((h.efeitos or {}).get("voz_poderosa_alcance") or (h.nome or "") == "Voz Poderosa" for h in ficha.habilidades)
+    grito_tir = any((h.efeitos or {}).get("grito_tiranico") or (h.nome or "") == "Grito Tirânico" for h in ficha.habilidades)
+    realeza = any((h.efeitos or {}).get("realeza") or (h.nome or "") == "Realeza" for h in ficha.habilidades)
+
+    # Palavras Afiadas (2º): 2d6 (2º), 4d6 (6º), 6d6 (10º), 8d6 (14º), 10d6 (18º); custo 1..5 PM
+    palavras = None
+    if nivel_nob >= 2:
+        degrau = min(4, max(0, (nivel_nob - 2) // 4))
+        dados = 2 + degrau * 2
+        tipo_dado = "d8" if grito_tir else "d6"
+        palavras = {
+            "dados": dados,
+            "formula": f"{dados}{tipo_dado}",
+            "custo_max": 1 + degrau,
+        }
+
+    cd_presenca = (
+        10 + (nivel_total // 2) + mod_car + (5 if realeza else 0)
+        if nivel_nob >= 5
+        else None
+    )
+
+    return {
+        "palavras_afiadas": palavras,
+        "alcance_habilidades": "Médio" if voz_pod else "Curto",
+        "presenca_aristocratica_cd": cd_presenca,
+        "orgulho_max_pm": max(0, mod_car),
+        "realeza": realeza,
     }
 
 

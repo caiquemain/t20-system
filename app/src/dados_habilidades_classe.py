@@ -3118,22 +3118,22 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # NOBRE
+    # NOBRE (T20 JdA, p. 78-80)
     # ==========================================================================
     "NOBRE_AUTOCONFIANCA": {
         "nome": "Autoconfiança",
         "tipo": "Habilidade de Classe",
         "classe": "Nobre",
         "nivel": 1,
-        "descricao": "Usa Carisma na Defesa em vez de Destreza. ",
-        "efeitos": {"defesa_atributo_troca": "car"}
+        "descricao": "Pode usar seu Carisma em vez de Destreza na Defesa (não soma atributo na Defesa usando armadura pesada).",
+        "efeitos": {"autoconfianca_car_defesa": True}
     },
     "NOBRE_ESPOLIO": {
         "nome": "Espólio",
         "tipo": "Habilidade de Classe",
         "classe": "Nobre",
         "nivel": 1,
-        "descricao": "Recebe item de até T$ 2.000. ",
+        "descricao": "Recebe um item a sua escolha com preço de até T$ 2.000.",
         "efeitos": {"item_inicial_extra_valor": 2000}
     },
     "NOBRE_ORGULHO": {
@@ -3141,55 +3141,185 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Nobre",
         "nivel": 1,
-        "descricao": "Gaste PM para ganhar +2 em perícia por PM. ",
-        "efeitos": {}
+        "descricao": "Ao fazer teste de perícia, pode gastar até seu Carisma em PM para receber +2 no teste por PM gasto.",
+        "efeitos": {"acao_ativavel": {"custo_pm": "variavel", "limite_pm": "carisma", "bonus_por_pm": 2}}
+    },
+    "NOBRE_PALAVRAS_AFIADAS": {
+        "nome": "Palavras Afiadas",
+        "tipo": "Habilidade de Classe",
+        "classe": "Nobre",
+        "nivel": 2,
+        "descricao": "Ação padrão, 1 PM, alcance curto: Diplomacia ou Intimidação vs Vontade de criatura inteligente (Int -3 ou maior); vence causa 2d6 psíquico não letal (perde metade). +2d6/+1 PM a cada 4 níveis (4d6 no 6º, 6d6 no 10º, 8d6 no 14º, 10d6 no 18º).",
+        "efeitos": {"acao_ativavel": {"acao": "padrão", "custo_pm": 1, "alcance": "curto", "dano_base": "2d6"}}
     },
     "NOBRE_RIQUEZA": {
         "nome": "Riqueza",
         "tipo": "Habilidade de Classe",
         "classe": "Nobre",
         "nivel": 3,
-        "descricao": "Recebe dinheiro (Teste Carisma x Nível) uma vez por aventura. ",
-        "efeitos": {}
+        "descricao": "1x por aventura: teste de Carisma + nível de nobre = TO recebidos de sua família, patrono ou negócios.",
+        "efeitos": {"riqueza_aventura": True}
     },
-    # --- PODERES DE NOBRE ---
+    "NOBRE_GRITAR_ORDENS": {
+        "nome": "Gritar Ordens",
+        "tipo": "Habilidade de Classe",
+        "classe": "Nobre",
+        "nivel": 4,
+        "descricao": "Gasta até Car PM: até início do próximo turno, aliados em alcance curto recebem bônus em testes de perícia igual aos PM gastos.",
+        "efeitos": {"acao_ativavel": {"custo_pm": "variavel", "limite_pm": "carisma", "alcance": "curto"}}
+    },
+    "NOBRE_PRESENCA_ARISTOCRATICA": {
+        "nome": "Presença Aristocrática",
+        "tipo": "Habilidade de Classe",
+        "classe": "Nobre",
+        "nivel": 5,
+        "descricao": "Quando criatura inteligente tenta machucá-lo, 2 PM: Vontade (CD Car) ou não consegue machucá-lo e perde a ação (1x/cena por criatura).",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "resistencia": "Vontade", "atributo_cd": "car"}, "presenca_aristocratica": True}
+    },
+    "NOBRE_REALEZA": {
+        "nome": "Realeza",
+        "tipo": "Habilidade de Classe",
+        "classe": "Nobre",
+        "nivel": 20,
+        "descricao": "CD de Presença Aristocrática +5 (falha por 10+ faz a criatura lutar ao seu lado pela cena). Criatura reduzida a 0 PV por Palavras Afiadas não sofre dano e passa a lutar ao seu lado pela cena.",
+        "efeitos": {"realeza": True, "cd_presenca_aristocratica_bonus": 5}
+    },
+    # --- PODERES DE NOBRE (18 poderes oficiais, T20 JdA p. 79-80) ---
     "NOBRE_ARMADURA_BRILHANTE": {
         "nome": "Armadura Brilhante",
         "tipo": "Poder de Nobre",
         "classe": "Nobre",
         "requisitos": ["Nível 8"],
-        "descricao": "Soma Carisma na Defesa com armadura pesada (substitui Des). ",
-        "efeitos": {}
+        "descricao": "Pode usar seu Carisma na Defesa quando usa armadura pesada (sem somar Destreza).",
+        "efeitos": {"armadura_brilhante_car_pesada": True}
+    },
+    "NOBRE_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
+    },
+    "NOBRE_AUTORIDADE_FEUDAL": {
+        "nome": "Autoridade Feudal",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "requisitos": ["Nível 6"],
+        "descricao": "1 hora e 2 PM: conclama o povo (sem título ou posição religiosa) como parceiro iniciante até o fim da aventura.",
+        "efeitos": {"acao_ativavel": {"tempo": "1 hora", "custo_pm": 2, "efeito": "parceiro_iniciante_aventura"}}
+    },
+    "NOBRE_EDUCACAO_PRIVILEGIADA": {
+        "nome": "Educação Privilegiada",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "descricao": "Torna-se treinado em duas perícias de nobre a sua escolha.",
+        "efeitos": {"pericias_treinadas_escolha": 2}
+    },
+    "NOBRE_ESTRATEGISTA": {
+        "nome": "Estrategista",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "requisitos": ["Int 1", "Treinado em Guerra", "Nível 6"],
+        "descricao": "Ação padrão + 1 PM por aliado em alcance curto (limite Car): cada aliado ganha uma ação de movimento no próximo turno.",
+        "efeitos": {"acao_ativavel": {"acao": "padrão", "custo_pm_por_aliado": 1, "limite_aliados": "carisma", "alcance": "curto"}}
+    },
+    "NOBRE_FAVOR": {
+        "nome": "Favor",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "descricao": "5 PM e 1 hora: pede favores caros, difíceis ou perigosos a pessoas poderosas (Diplomacia persuasão; falha bloqueia por 1 semana).",
+        "efeitos": {"acao_ativavel": {"tempo": "1 hora", "custo_pm": 5, "pericia": "Diplomacia"}}
+    },
+    "NOBRE_GENERAL": {
+        "nome": "General",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "requisitos": ["Estrategista", "Nível 12"],
+        "descricao": "Quando usa Estrategista, aliados direcionados recebem 1d4 PM temporários até o fim do turno deles.",
+        "efeitos": {"general_pm_temp": "1d4"}
     },
     "NOBRE_GRITO_TIRANICO": {
         "nome": "Grito Tirânico",
         "tipo": "Poder de Nobre",
         "classe": "Nobre",
         "requisitos": ["Nível 8"],
-        "descricao": "Palavras Afiadas vira ação completa, d8 dano e atinge área. ",
-        "efeitos": {}
+        "descricao": "Pode usar Palavras Afiadas como ação completa: dados aumentam para d8 e atinge todos os inimigos em alcance curto.",
+        "efeitos": {"grito_tiranico": True}
     },
     "NOBRE_INSPIRAR_CONFIANCA": {
         "nome": "Inspirar Confiança",
         "tipo": "Poder de Nobre",
         "classe": "Nobre",
-        "descricao": "2 PM: Aliado rerola teste recém realizado. ",
-        "efeitos": {}
+        "descricao": "Quando um aliado em alcance curto faz um teste, pode gastar 2 PM para que ele possa rolar novamente.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "alcance": "curto", "efeito": "aliado_rerrolar_teste"}}
     },
     "NOBRE_INSPIRAR_GLORIA": {
         "nome": "Inspirar Glória",
         "tipo": "Poder de Nobre",
         "classe": "Nobre",
         "requisitos": ["Inspirar Confiança", "Nível 8"],
-        "descricao": "5 PM: Aliado ganha ação padrão extra. ",
-        "efeitos": {}
+        "descricao": "1x/rodada, 5 PM: aliado em alcance curto ganha ação padrão adicional no próximo turno (1x/cena por aliado).",
+        "efeitos": {"acao_ativavel": {"custo_pm": 5, "frequencia": "1x_por_rodada", "alcance": "curto", "efeito": "acao_padrao_aliado"}}
+    },
+    "NOBRE_JOGO_CORTE": {
+        "nome": "Jogo da Corte",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "descricao": "Ao fazer teste de Diplomacia, Intuição ou Nobreza, pode gastar 1 PM para rolá-lo novamente.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 1, "pericias": ["Diplomacia", "Intuição", "Nobreza"], "efeito": "rerrolar"}}
+    },
+    "NOBRE_LIDERAR_EXEMPLO": {
+        "nome": "Liderar pelo Exemplo",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "requisitos": ["Nível 6"],
+        "descricao": "2 PM: até início do próximo turno, quando passa em um teste de perícia, aliados em alcance curto podem usar seu resultado na mesma perícia.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "alcance": "curto", "efeito": "aliados_usam_resultado"}}
+    },
+    "NOBRE_LINGUA_OURO": {
+        "nome": "Língua de Ouro",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "requisitos": ["Língua de Prata", "Nível 8"],
+        "descricao": "Ação padrão, 4 PM: gera efeito de Enfeitiçar com aprimoramentos de sugerir ação e afetar todas as criaturas no alcance (CD Car; não mágica).",
+        "efeitos": {"acao_ativavel": {"acao": "padrão", "custo_pm": 4, "efeito": "enfeiticar_em_massa_sugerir", "atributo_cd": "car"}}
     },
     "NOBRE_LINGUA_PRATA": {
         "nome": "Língua de Prata",
         "tipo": "Poder de Nobre",
         "classe": "Nobre",
-        "descricao": "2 PM: Soma metade do nível em perícia de Carisma. ",
-        "efeitos": {}
+        "descricao": "Ao fazer teste de perícia baseada em Carisma, pode gastar 2 PM para receber bônus igual à metade do seu nível.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "efeito": "bonus_metade_nivel_carisma"}}
+    },
+    "NOBRE_LINGUA_RAPIDA": {
+        "nome": "Língua Rápida",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "descricao": "Ao fazer teste de Diplomacia para mudar atitude como ação completa, sofre penalidade de -5 em vez de -10.",
+        "efeitos": {"lingua_rapida_penalidade": -5}
+    },
+    "NOBRE_PRESENCA_MAJESTOSA": {
+        "nome": "Presença Majestosa",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "requisitos": ["Nível 16"],
+        "descricao": "Presença Aristocrática funciona contra qualquer criatura com valor de Inteligência (até animais) e pode ser usada mais de 1x por cena contra a mesma criatura.",
+        "efeitos": {"presenca_majestosa": True}
+    },
+    "NOBRE_TITULO": {
+        "nome": "Título",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "requisitos": ["Autoridade Feudal", "Nível 10"],
+        "descricao": "Adquire título de nobreza: início de cada aventura recebe 20 TO por nível de nobre ou ajuda de um parceiro veterano da corte.",
+        "efeitos": {"titulo_nobreza_to_por_nivel": 20}
+    },
+    "NOBRE_VOZ_PODEROSA": {
+        "nome": "Voz Poderosa",
+        "tipo": "Poder de Nobre",
+        "classe": "Nobre",
+        "descricao": "Recebe +2 em Diplomacia e Intimidação. Habilidades de nobre com alcance curto passam para alcance médio.",
+        "efeitos": {"bonus_pericia": {"Diplomacia": 2, "Intimidação": 2}, "voz_poderosa_alcance": "Médio"}
     },
 
     # ==========================================================================
