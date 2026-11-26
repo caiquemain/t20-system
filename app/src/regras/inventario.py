@@ -47,15 +47,19 @@ def mod_atributo(ficha: Personagem, chave: str) -> int:
     return 0
 
 
-def espacos_item(item) -> float:
-    """Espaços de um item (catálogo sobrepõe item.espaco), vezes quantidade."""
+def espacos_item(item, inventario_organizado: bool = False) -> float:
+    """Espaços de um item (catálogo sobrepõe item.espaco), vezes quantidade.
+    Com Inventário Organizado (T20 p.130), itens de 0,5 espaço passam a ocupar 0,25."""
     cat = catalogo_do_item(item.nome)
-    esp = cat.get("espacos", item.espaco) if cat else item.espaco
-    return float(esp) * max(1, item.qtd)
+    esp = float(cat.get("espacos", item.espaco) if cat else item.espaco)
+    if inventario_organizado and esp == 0.5:
+        esp = 0.25
+    return esp * max(1, item.qtd)
 
 
 def sincronizar_carga(ficha: Personagem) -> None:
-    """Limite = 10 + 2 por FOR (ou -1 por FOR negativo) + bônus de habilidades (ex.: Mochileiro). Sobrecarga > limite."""
+    """Limite = 10 + 2 por FOR (ou -1 por FOR negativo) + bônus de habilidades/itens.
+    Moedas: cada 1.000 moedas = 1 espaço (T20 JdA p.141). Sobrecarga > limite."""
     inv = ficha.inventario
     for_ = mod_atributo(ficha, "for")
     base_carga = max(0, 10 + 2 * for_) if for_ >= 0 else max(0, 10 + for_)
@@ -63,14 +67,27 @@ def sincronizar_carga(ficha: Personagem) -> None:
         int((h.efeitos or {}).get("carga_max_bonus", 0) or 0)
         for h in (ficha.habilidades or [])
     )
-    if any(
-        (h.efeitos or {}).get("carga_soma_int") or (h.nome or "") == "Inventário Organizado"
+    tem_inv_org = any(
+        (h.efeitos or {}).get("carga_soma_int")
+        or (h.efeitos or {}).get("carga_soma_atributo") == "int"
+        or (h.nome or "") == "Inventário Organizado"
         for h in (ficha.habilidades or [])
-    ):
+    )
+    if tem_inv_org:
         bonus_carga += max(0, mod_atributo(ficha, "int"))
+    # Mochila de aventureiro vestida/equipada: +2 espaços de carga (T20 p.156)
+    if any(
+        it.equipado and (it.nome or "").strip().lower() == "mochila de aventureiro"
+        for it in (inv.equipamentos or [])
+    ):
+        bonus_carga += 2
+
     inv.carga_maxima = base_carga + bonus_carga
-    inv.carga_total = int(sum(espacos_item(i) for i in inv.equipamentos))
-    inv.sobrecargado = inv.carga_total > inv.carga_maxima
+    espacos_itens = sum(espacos_item(i, inventario_organizado=tem_inv_org) for i in inv.equipamentos)
+    total_moedas = max(0, int(inv.dinheiro.tl or 0)) + max(0, int(inv.dinheiro.tp or 0)) + max(0, int(inv.dinheiro.to or 0))
+    espacos_moedas = total_moedas // 1000
+    inv.carga_total = int(espacos_itens + espacos_moedas)
+    inv.sobrecargado = (espacos_itens + espacos_moedas) > inv.carga_maxima
 
 
 def _proficiente_categoria(categoria: str, profs: str) -> bool:
