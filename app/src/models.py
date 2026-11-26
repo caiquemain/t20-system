@@ -105,15 +105,36 @@ class Atributos(BaseModel):
 
 class Descricao(BaseModel):
     tamanho: TamanhoEnum = TamanhoEnum.MEDIO
+    idade: Optional[int] = None
+    faixa_etaria: str = "Adulto"  # "Adulto" | "Maduro" | "Velho"
+    alinhamento: str = ""         # LB, NB, CB, LN, N, CN, LM, NM, CM
     idiomas: List[str] = []
     aparencia: str = ""
+    personalidade: str = ""
     historia: str = ""
     anotacoes: str = ""
 
-    @field_validator('aparencia', 'historia', 'anotacoes', mode='before')
+    @field_validator('aparencia', 'personalidade', 'historia', 'anotacoes', 'alinhamento', mode='before')
     @classmethod
     def empty_string_if_none(cls, v):
         return v if v is not None else ""
+
+    @field_validator('idade', mode='before')
+    @classmethod
+    def parse_idade(cls, v):
+        if v is None or v == "":
+            return None
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return None
+
+    @field_validator('faixa_etaria', mode='before')
+    @classmethod
+    def fallback_faixa_etaria(cls, v):
+        if v in ("Adulto", "Maduro", "Velho"):
+            return v
+        return "Adulto"
 
     @field_validator('tamanho', mode='before')
     @classmethod
@@ -156,6 +177,7 @@ class Status(BaseModel):
     pm_calc: Optional[StatCalculado] = Field(default=None)
     defesa_calc: Optional[StatCalculado] = Field(default=None)
     deslocamento_calc: Optional[StatCalculado] = Field(default=None)
+    descanso_calc: Optional[Dict[str, Any]] = Field(default=None)
 
     # --- NOVOS CAMPOS ADICIONADOS ---
     proficiencias: List[str] = []

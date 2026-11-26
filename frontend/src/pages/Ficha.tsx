@@ -22,6 +22,7 @@ import { EquipamentoCard } from '../components/EquipamentoCard';
 import { AttackList } from '../components/AttackList';
 import { T20Icon, getEfeitoVisual } from '../components/T20Icon';
 import { formatarResumoDeus, formatarTooltipDeus } from '../utils/deusTooltip';
+import { ToquesFinaisTab, TABELA_TAMANHO_TOOLTIP } from '../components/ToquesFinaisTab';
 
 // Tipos
 import type { Magia } from '../types';
@@ -91,7 +92,7 @@ function Ficha() {
 
     const [escolhasRaciais, setEscolhasRaciais] = useState<string[]>([]);
     const [showRacialModal, setShowRacialModal] = useState(false);
-    const [activeTab, setActiveTab] = useState<'atributos' | 'efeitos'>('atributos');
+    const [activeTab, setActiveTab] = useState<'atributos' | 'efeitos' | 'descricao'>('atributos');
 
     const [showGrimorio, setShowGrimorio] = useState(false);
     const [selectorAtivo, setSelectorAtivo] = useState<'raca' | 'origem' | 'deus' | 'classe' | null>(null);
@@ -575,7 +576,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         </div>
 
                         <div className="header-divider">|</div>
-                        <div className="header-info-tag" title="Tamanho">
+                        <div className="header-info-tag" title={TABELA_TAMANHO_TOOLTIP[ficha.descricao.tamanho || 'Médio'] || 'Tamanho'}>
                             <span className="tag-label">TAM</span>
                             <span className="tag-value" style={{ color: ficha.descricao.tamanho === 'Médio' ? '#fff' : '#ffeb3b' }}>
                                 {ficha.descricao.tamanho || "Médio"}
@@ -591,18 +592,25 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
 
             <div className="ficha-tabs" style={{ display: 'flex', gap: 10, padding: '0 20px', marginBottom: 15, borderBottom: '1px solid #333' }}>
                 <button
-                    className={`tab-btn ${activeTab === 'atributos' ? 'active' : ''}`}
+                    className={`tab-btn ${activeTab === 'atributos' && !showHistorico ? 'active' : ''}`}
                     onClick={() => { setActiveTab('atributos'); setShowHistorico(false); }}
-                    style={{ background: 'transparent', border: 'none', color: activeTab === 'atributos' ? '#ffd700' : '#888', borderBottom: activeTab === 'atributos' ? '2px solid #ffd700' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ background: 'transparent', border: 'none', color: activeTab === 'atributos' && !showHistorico ? '#ffd700' : '#888', borderBottom: activeTab === 'atributos' && !showHistorico ? '2px solid #ffd700' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                     ATRIBUTOS & PERÍCIAS
                 </button>
                 <button
-                    className={`tab-btn ${activeTab === 'efeitos' ? 'active' : ''}`}
+                    className={`tab-btn ${activeTab === 'efeitos' && !showHistorico ? 'active' : ''}`}
                     onClick={() => { setActiveTab('efeitos'); setShowHistorico(false); }}
-                    style={{ background: 'transparent', border: 'none', color: activeTab === 'efeitos' ? '#2196f3' : '#888', borderBottom: activeTab === 'efeitos' ? '2px solid #2196f3' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ background: 'transparent', border: 'none', color: activeTab === 'efeitos' && !showHistorico ? '#2196f3' : '#888', borderBottom: activeTab === 'efeitos' && !showHistorico ? '2px solid #2196f3' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                     EFEITOS & CONDIÇÕES
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'descricao' && !showHistorico ? 'active' : ''}`}
+                    onClick={() => { setActiveTab('descricao'); setShowHistorico(false); }}
+                    style={{ background: 'transparent', border: 'none', color: activeTab === 'descricao' && !showHistorico ? '#ffb74d' : '#888', borderBottom: activeTab === 'descricao' && !showHistorico ? '2px solid #ffb74d' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                    <T20Icon name="nota" size={15} /> DESCRIÇÃO
                 </button>
                 <button
                     className={`tab-btn ${showHistorico ? 'active' : ''}`}
@@ -736,6 +744,12 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             </div>
                         )}
                     </div>
+                </div>
+            )}
+
+            {!showHistorico && activeTab === 'descricao' && (
+                <div style={{ padding: '0 20px' }}>
+                    <ToquesFinaisTab ficha={ficha} onUpdate={updateFicha} />
                 </div>
             )}
 

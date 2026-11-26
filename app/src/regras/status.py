@@ -1335,6 +1335,41 @@ def calcular_paladino(ficha: Personagem) -> Optional[Dict[str, Any]]:
     }
 
 
+def calcular_descanso(ficha: Personagem) -> Dict[str, Any]:
+    """Calcula recuperação de PV e PM por noite de descanso (T20 JdA p.106).
+
+    Condições: Ruim (nível//2, mín 1), Normal (nível), Confortável (2×nível), Luxuosa (3×nível).
+    Respeita bônus de categoria (Estoico, Mordomo) e recuperação mínima igual ao nível (Vida Rústica).
+    """
+    nivel = max(1, int(ficha.cabecalho.nivel_total or 1))
+    bonus_cat = 0
+    minimo_nivel = False
+
+    for h in ficha.habilidades or []:
+        ef = h.efeitos or {}
+        if ef.get("descanso_categoria_bonus"):
+            bonus_cat += int(ef["descanso_categoria_bonus"])
+        if ef.get("descanso_categoria_acima"):
+            bonus_cat += int(ef["descanso_categoria_acima"])
+        if ef.get("recuperacao_minima_nivel"):
+            minimo_nivel = True
+
+    valores = [max(1, nivel // 2), nivel, nivel * 2, nivel * 3]
+
+    def _rec(idx: int) -> int:
+        v = valores[min(3, idx + bonus_cat)]
+        return max(nivel, v) if minimo_nivel else v
+
+    return {
+        "ruim": _rec(0),
+        "normal": _rec(1),
+        "confortavel": _rec(2),
+        "luxuosa": _rec(3),
+        "bonus_categoria": bonus_cat,
+        "minimo_nivel": minimo_nivel,
+    }
+
+
 def _nivel_inicio_da_habilidade(hab) -> int:
     """Extrai o nível de início de uma habilidade de classe a partir da
     fonte. Ex.: 'Bárbaro (5)' -> 5; 'Bárbaro' -> 1."""

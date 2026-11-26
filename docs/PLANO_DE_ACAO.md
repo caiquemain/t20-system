@@ -58,12 +58,13 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
-## ✅ Fase 5 — Revisão dos 20 Deuses do Panteão & Tooltips (Concluída)
+## ✅ Fase 5 — Revisão dos 20 Deuses do Panteão, Tooltips & Toques Finais (Concluída)
 > Checklist detalhada: [`docs/checklists/deuses-panteao.md`](./checklists/deuses-panteao.md)
 
 - [x] **Auditoria de dados (`dados_deuses.py`):** todos os 20 deuses do T20 JdA p.96–105 atualizados com `titulo`, `crencas` completas, `simbolo`, `energia`, `arma` (incluindo Nimb `"Qualquer"` e Lena/Marah `None`), `devotos`, `poderes` (4 por deus) e `obrigacoes` (Obrigações & Restrições completas).
-- [x] **Motor de regras (`pericias.py`):** penalidade de `–5` em perícias baseadas em Carisma para devotos de *Nimb* (T20 JdA p.102) conectada e testada (`app/tests/test_deuses.py`, `822 testes passando`).
+- [x] **Motor de regras (`pericias.py`):** penalidade de `–5` em perícias baseadas em Carisma para devotos de *Nimb* (T20 JdA p.102) conectada e testada (`app/tests/test_deuses.py`).
 - [x] **Tooltips na seleção de divindade (Frontend):** criados `deusTooltip.ts` e painel de detalhes/tooltip no hover em `EntitySelectorModal` (Ficha) e `SelectionModal` (Wizard `StepConceito`), exibindo Título, Energia, Arma Preferida, Símbolo Sagrado, Poderes Concedidos, Crenças e Obrigações & Restrições.
+- [x] **Toques Finais (T20 JdA p.106–111):** envelhecimento (*Maduro*/*Velho* + raças longevas ×2/×5) conectado em `atributos.py`, condições de descanso (*Ruim/Normal/Confortável/Luxuosa* + *Estoico*/*Mordomo*/*Vida Rústica* + zerar PV/PM temp.) em `status.py` e `StatusBars.tsx`, tooltip da Tabela 1-21 no badge `TAM`, e aba `DESCRIÇÃO` (`ToquesFinaisTab.tsx`) com Idade, Faixa Etária, os 9 Alinhamentos, Aparência, Personalidade, História e Anotações (`app/tests/test_toques_finais.py`, `826 testes passando`).
 
 ---
 

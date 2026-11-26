@@ -136,6 +136,42 @@ def calcular_atributos_finais(ficha: Personagem):
                 valor=int(valor)
             )
 
+    # --- ENVELHECIMENTO (T20 JdA p.108) ---
+    # Maduro (45 anos; x2 Anão/Qareen; x5 Dahllan/Elfo/Golem/Osteon/Sílfide): For/Des/Con -1, Int/Sab/Car +1
+    # Velho  (70 anos; cumulativo): For/Des/Con -3, Int/Sab/Car +2
+    _MULT_LONGEVIDADE = {
+        "Anão": 2, "Qareen": 2,
+        "Dahllan": 5, "Elfo": 5, "Golem": 5, "Osteon": 5, "Sílfide": 5,
+    }
+    _MODS_FAIXA = {
+        "Maduro": {"forca": -1, "destreza": -1, "constituicao": -1, "inteligencia": 1, "sabedoria": 1, "carisma": 1},
+        "Velho": {"forca": -3, "destreza": -3, "constituicao": -3, "inteligencia": 2, "sabedoria": 2, "carisma": 2},
+    }
+    raca_env = (ficha.cabecalho.raca or "").strip()
+    mult_env = _MULT_LONGEVIDADE.get(raca_env, 1)
+    faixa = getattr(ficha.descricao, "faixa_etaria", "Adulto") or "Adulto"
+    idade_val = getattr(ficha.descricao, "idade", None)
+    if isinstance(idade_val, int) and idade_val > 0:
+        if idade_val >= 70 * mult_env:
+            faixa = "Velho"
+        elif idade_val >= 45 * mult_env:
+            faixa = "Maduro"
+        else:
+            faixa = "Adulto"
+        ficha.descricao.faixa_etaria = faixa
+
+    if faixa in _MODS_FAIXA:
+        ficha.modificadores_envelhecimento = dict(_MODS_FAIXA[faixa])
+        for attr_full, val_env in _MODS_FAIXA[faixa].items():
+            if attr_full in ficha.atributos_calc:
+                ficha.atributos_calc[attr_full].adicionar_bonus(
+                    fonte=f"Envelhecimento ({faixa})",
+                    categoria="Envelhecimento",
+                    valor=val_env,
+                )
+    else:
+        ficha.modificadores_envelhecimento = {}
+
     # --- SINCRONIZAÇÃO FINAL (Compatibilidade com Frontend) ---
     # Copia os totais calculados para o objeto 'atributos' que o frontend já lê
     for attr_full, stat in ficha.atributos_calc.items():
