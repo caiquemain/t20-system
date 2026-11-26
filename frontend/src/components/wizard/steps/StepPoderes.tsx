@@ -34,16 +34,19 @@ export function StepPoderes({
     const infoOrigem = dadosOrigens[origemNome];
     const beneficiosOrigem: string[] = useMemo(() => {
         if (!infoOrigem) return [];
+        if (Array.isArray(infoOrigem.beneficios_lista)) {
+            return infoOrigem.beneficios_lista;
+        }
         return [
-            ...(infoOrigem.pericias || []),
-            ...(infoOrigem.poderes || []),
+            ...(Array.isArray(infoOrigem.pericias) ? infoOrigem.pericias : []),
+            ...(Array.isArray(infoOrigem.poderes) ? infoOrigem.poderes : []),
         ];
     }, [infoOrigem]);
-    const escolhasOrigem = ficha.escolhas_origem || [];
+    const escolhasOrigem = Array.isArray(ficha.escolhas_origem) ? ficha.escolhas_origem : [];
 
     const deusNome = ficha.cabecalho.deus || '';
     const infoDeus = dadosDeuses[deusNome];
-    const poderesDeus: string[] = infoDeus?.poderes || [];
+    const poderesDeus: string[] = Array.isArray(infoDeus?.poderes) ? infoDeus.poderes : [];
     const poderConcedidoAtual = useMemo(
         () => (ficha.habilidades || []).find(h => (h.tipo || '').includes('Poder Concedido') || poderesDeus.includes(h.nome))?.nome || '',
         [ficha.habilidades, poderesDeus]

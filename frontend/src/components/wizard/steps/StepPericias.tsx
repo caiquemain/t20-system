@@ -11,22 +11,39 @@ export function StepPericias({ ficha, updateFicha, dadosClasses }: WizardStepPro
 
     const classeNome = ficha.classes[0]?.nome || '';
     const dadosClasse = dadosClasses[classeNome] || {};
-    const periciasFixas: string[] = dadosClasse.pericias_fixas || [];
-    const periciasClasseLista: string[] = dadosClasse.pericias_escolha || dadosClasse.pericias_lista || [];
-    const qtdClasse = Number(dadosClasse.pericias_qtd || dadosClasse.qtd_pericias || 0);
+    const periciasFixas: string[] = Array.isArray(dadosClasse.pericias_iniciais)
+        ? dadosClasse.pericias_iniciais
+        : Array.isArray(dadosClasse.pericias_fixas)
+            ? dadosClasse.pericias_fixas
+            : [];
+    const periciasFixasSelecao: string[] = Array.isArray(dadosClasse.pericias_fixas_selecao)
+        ? dadosClasse.pericias_fixas_selecao
+        : [];
+    const periciasClasseLista: string[] = Array.isArray(dadosClasse.pericias_lista)
+        ? dadosClasse.pericias_lista
+        : [];
+    const qtdClasse = typeof dadosClasse.pericias_escolha === 'number'
+        ? dadosClasse.pericias_escolha
+        : Number(dadosClasse.pericias_qtd || dadosClasse.qtd_pericias || 0);
     const bonusInt = Math.max(0, Number(ficha.atributos?.inteligencia || 0));
-    const totalEscolhasSugeridas = qtdClasse + bonusInt;
+    const totalEscolhasSugeridas = qtdClasse + bonusInt + (periciasFixasSelecao.length > 0 ? 1 : 0);
 
     const todasPericias = useMemo(() => {
         const chaves = Object.keys(DADOS_PERICIAS);
         return chaves.filter(nome => {
             if (busca.trim() && !nome.toLowerCase().includes(busca.trim().toLowerCase())) return false;
-            if (apenasClasse && periciasClasseLista.length > 0 && !periciasClasseLista.includes(nome) && !periciasFixas.includes(nome)) {
+            if (
+                apenasClasse &&
+                periciasClasseLista.length > 0 &&
+                !periciasClasseLista.includes(nome) &&
+                !periciasFixas.includes(nome) &&
+                !periciasFixasSelecao.includes(nome)
+            ) {
                 return false;
             }
             return true;
         });
-    }, [busca, apenasClasse, periciasClasseLista, periciasFixas]);
+    }, [busca, apenasClasse, periciasClasseLista, periciasFixas, periciasFixasSelecao]);
 
     const treinadasAtuais = useMemo(
         () => Object.entries(ficha.pericias || {}).filter(([, p]) => (p?.treino || 0) > 0).map(([k]) => k),
@@ -61,8 +78,13 @@ export function StepPericias({ ficha, updateFicha, dadosClasses }: WizardStepPro
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
                 <div style={{ background: '#1a1d2e', border: '1px solid #32385a', borderRadius: 8, padding: '10px 14px' }}>
                     <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>Fixas da Classe</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#81c784' }}>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#81c784' }}>
                         {periciasFixas.length > 0 ? periciasFixas.join(', ') : 'Nenhuma fixa'}
+                        {periciasFixasSelecao.length > 0 && (
+                            <span style={{ fontSize: '0.82rem', color: '#7dd3fc', fontWeight: 500 }}>
+                                {periciasFixas.length > 0 ? ' + ' : ''}Escolha 1 ({periciasFixasSelecao.join(' ou ')})
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div style={{ background: '#1a1d2e', border: '1px solid #32385a', borderRadius: 8, padding: '10px 14px' }}>
@@ -70,7 +92,7 @@ export function StepPericias({ ficha, updateFicha, dadosClasses }: WizardStepPro
                     <div style={{ fontSize: '1.1rem', fontWeight: 700, color: escolhidasCount > totalEscolhasSugeridas ? '#ffb74d' : '#ffd700' }}>
                         {escolhidasCount} / {totalEscolhasSugeridas}{' '}
                         <span style={{ fontSize: '0.76rem', color: '#94a3b8', fontWeight: 400 }}>
-                            ({qtdClasse} classe + {bonusInt} INT)
+                            ({qtdClasse + (periciasFixasSelecao.length > 0 ? 1 : 0)} classe + {bonusInt} INT)
                         </span>
                     </div>
                 </div>
