@@ -375,6 +375,18 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                     valor=1
                 )
 
+        # Missa: Escudo Divino (Clérigo, T20 p.58): +1 Defesa (dobra com Mestre Celebrante)
+        if (hab.nome or "") == "Missa: Escudo Divino" and "missa_escudo_divino" in condicoes_ativas:
+            mult_missa = 2 if any(
+                (h.efeitos or {}).get("mestre_celebrante") or (h.nome or "") == "Mestre Celebrante"
+                for h in ficha.habilidades
+            ) else 1
+            defesa_calc.adicionar_bonus(
+                fonte="Missa: Escudo Divino",
+                categoria="Poder",
+                valor=1 * mult_missa
+            )
+
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(
                 fonte=f"Poder: {hab.nome} (Tormenta x{qtd_tormenta})",
@@ -760,6 +772,40 @@ def calcular_cavaleiro(ficha: Personagem) -> Optional[Dict[str, Any]]:
         "duelo": duelo,
         "armadura_honra_pv_temp": armadura_honra,
         "estandarte_pm_temp": estandarte,
+    }
+
+
+def calcular_clerigo(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula parâmetros de Missas, Mestre Celebrante e Canalizar Energia do Clérigo (T20 JdA p.56-58)."""
+    eh_clerigo = any((c.nome or "") == "Clérigo" for c in (ficha.classes or []))
+    if not eh_clerigo:
+        return None
+
+    mod_sab = calcular_modificador(ficha.atributos.sabedoria)
+    nivel_total = int(ficha.cabecalho.nivel_total or 1)
+    mestre_cel = any(
+        (h.efeitos or {}).get("mestre_celebrante") or (h.nome or "") == "Mestre Celebrante"
+        for h in ficha.habilidades
+    )
+    mult_benef = 2 if mestre_cel else 1
+    mult_pessoas = 10 if mestre_cel else 1
+
+    tem_canalizar = any(
+        "Canalizar Energia" in (h.nome or "") for h in ficha.habilidades
+    )
+    canalizar_amplo = any(
+        (h.efeitos or {}).get("canalizar_alcance_medio") or (h.nome or "") == "Canalizar Amplo"
+        for h in ficha.habilidades
+    )
+
+    return {
+        "canalizar_alcance": ("Médio" if canalizar_amplo else "Curto") if tem_canalizar else None,
+        "missa_pessoas": max(1, 1 + mod_sab) * mult_pessoas,
+        "missa_multiplicador": mult_benef,
+        "missa_bencao_pv_temp": max(0, nivel_total + mod_sab) * mult_benef,
+        "missa_elevacao_pm_temp": max(0, mod_sab) * mult_benef,
+        "missa_escudo_bonus": 1 * mult_benef,
+        "missa_chamado_bonus": 1 * mult_benef,
     }
 
 

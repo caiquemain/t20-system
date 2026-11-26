@@ -231,6 +231,17 @@ def inicializar_pericias(ficha: Personagem):
                     {"fonte": "Postura: Muralha Intransponível", "valor": 1}
                 )
 
+        # 1g. Missa: Escudo Divino (Clérigo, T20 p.58): +1 em resistências (dobra com Mestre Celebrante)
+        if (hab.nome or "") == "Missa: Escudo Divino" and "missa_escudo_divino" in (getattr(ficha, "condicoes_ativas", None) or []):
+            mult_m = 2 if any(
+                (h.efeitos or {}).get("mestre_celebrante") or (h.nome or "") == "Mestre Celebrante"
+                for h in ficha.habilidades
+            ) else 1
+            for p_res in ("Fortitude", "Reflexos", "Vontade"):
+                detalhamento_bonus.setdefault(p_res, []).append(
+                    {"fonte": "Missa: Escudo Divino", "valor": 1 * mult_m}
+                )
+
         # 2. Bônus Genéricos por Atributo
         if "bonus_pericia_atributo" in efeitos and isinstance(efeitos["bonus_pericia_atributo"], dict):
             for attr_chave, v_bonus in efeitos["bonus_pericia_atributo"].items():

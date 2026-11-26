@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 6/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador e Cavaleiro)  
+**Status:** 🟡 7/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro e Clérigo)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -16,10 +16,10 @@
 | **Bucaneiro** | 26 (7 fixas + 19 poderes) | 26 (100%) | 2 arquivos (`test_bucaneiro_*`) | ✅ Completa |
 | **Caçador** | 28 (5 fixas + 23 poderes) | 28 (100%) | 2 arquivos (`test_cacador_*`) | ✅ Completa |
 | **Cavaleiro** | 26 (6 fixas + 20 poderes) | 26 (100%) | 2 arquivos (`test_cavaleiro_*`) | ✅ Completa |
+| **Clérigo** | 21 (3 fixas + 18 poderes) | 21 (100%) | 2 arquivos (`test_clerigo_*`) | ✅ Completa |
 | **Druida** | 10 (4 fixas + 6 poderes) | 9 (90%) | — | 🟡 Parcial |
 | **Ladino** | 11 (4 fixas + 7 poderes) | 7 (64%) | — | 🟡 Parcial |
 | **Inventor** | 8 (2 fixas + 6 poderes) | 5 (63%) | — | 🟡 Parcial |
-| **Clérigo** | 8 (2 fixas + 6 poderes) | 3 (38%) | — | 🟡 Parcial |
 | **Guerreiro** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
 | **Lutador** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
 | **Paladino** | 11 (6 fixas + 5 poderes) | 3 (27%) | — | 🟡 Parcial |
@@ -40,7 +40,7 @@
 - [x] **Bucaneiro** (Audácia, Insolência, Evasão, Esquiva Sagaz, Panache, Evasão Aprimorada, Sorte de Nimb + 19 poderes + testes)
 
 ### Lote 3 — Divinos & Suporte
-- [ ] **Clérigo** (Devoto Fiel, Magias Divinas, Canalizar Energia + poderes + testes)
+- [x] **Clérigo** (Devoto Fiel, Magias, Mão da Divindade + 18 poderes + testes)
 - [ ] **Paladino** (Abençoado, Golpe Divino, Cura pelas Mãos, Aura Sagrada + poderes + testes)
 - [ ] **Druida** (Devoto, Empatia Selvagem, Forma Selvagem, Magias + poderes + testes)
 

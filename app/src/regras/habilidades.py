@@ -506,6 +506,18 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append("Armadura da Honra: PV temporários (Nível + Car) no início de cada cena")
         if efeitos.get("estandarte_pm_temp"):
             lista_efeitos.append("Estandarte: você e aliados recebem PM temporários (Car, mín 1) no início da cena")
+        if efeitos.get("mao_da_divindade"):
+            lista_efeitos.append("Mão da Divindade: 15 PM para lançar 3 magias divinas quaisquer como ação livre (atordoado 1d4 rodadas)")
+        if efeitos.get("autoridade_eclesiastica"):
+            lista_efeitos.append("Autoridade Eclesiástica: +5 Diplomacia/Intimidação com devotos e metade do preço em templos da divindade")
+        if efeitos.get("mestre_celebrante"):
+            lista_efeitos.append("Mestre Celebrante: Missas afetam 10x mais pessoas e dobram seus benefícios")
+        if efeitos.get("comunhao_vital"):
+            lista_efeitos.append("Comunhão Vital: +2 PM em magia de cura para curar metade em outro alvo em alcance curto")
+        if efeitos.get("prece_de_combate"):
+            lista_efeitos.append("Prece de Combate: +2 PM para lançar magia divina (padrão) em si mesmo como ação de movimento")
+        if efeitos.get("magia_sagrada_profana"):
+            lista_efeitos.append("Magia Sagrada/Profana: +1 PM para mudar dano de magia divina para luz ou trevas")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 
