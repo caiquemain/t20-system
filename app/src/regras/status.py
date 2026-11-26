@@ -311,6 +311,33 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 valor=2
             )
 
+        # Explorador (Caçador, T20 p.51): +Sab (mínimo +1) na Defesa no terreno escolhido
+        if efeitos.get("explorador_terreno") and "terreno_explorador" in condicoes_ativas:
+            mod_sab = max(1, calcular_modificador(ficha.atributos.sabedoria))
+            defesa_calc.adicionar_bonus(
+                fonte="Poder: Explorador (terreno)",
+                categoria="Poder",
+                valor=mod_sab
+            )
+
+        # Escaramuça / Escaramuça Superior (Caçador, T20 p.50): +2/+5 Defesa (sem armadura pesada)
+        if "escaramuca" in condicoes_ativas and not usa_pesada:
+            if efeitos.get("escaramuca_superior"):
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Escaramuça Superior",
+                    categoria="Poder",
+                    valor=5
+                )
+            elif efeitos.get("escaramuca") and not any(
+                (h.efeitos or {}).get("escaramuca_superior") or (h.nome or "") == "Escaramuça Superior"
+                for h in ficha.habilidades
+            ):
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Escaramuça",
+                    categoria="Poder",
+                    valor=2
+                )
+
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(
                 fonte=f"Poder: {hab.nome} (Tormenta x{qtd_tormenta})",
@@ -574,6 +601,63 @@ def calcular_inspiracao(ficha: Personagem) -> Optional[Dict[str, Any]]:
         "cd_bonus": cd_bonus,
         "reduz_custo_metade": artista_completo,
         "golpe_elemental_max_dados": golpe_elemental_max_dados,
+    }
+
+
+def calcular_marca_presa(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula os parâmetros de Marca da Presa do Caçador (T20 JdA, p. 49-51).
+
+    Tabela 1-9:
+        1º-4º: +1d4 (1 PM)
+        5º-8º: +1d8 (2 PM)
+        9º-12º: +1d12 (3 PM)
+        13º-16º: +2d8 (4 PM)
+        17º-20º: +2d10 (5 PM)
+    """
+    marca = next(
+        (h for h in ficha.habilidades if (h.nome or "") == "Marca da Presa"), None
+    )
+    if marca is None:
+        return None
+
+    nivel_classe = 1
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Caçador":
+            nivel_classe = int(c.nivel or 1)
+            break
+
+    progressao = ["1d4", "1d8", "1d12", "2d8", "2d10"]
+    degrau = min(len(progressao) - 1, max(0, (nivel_classe - 1) // 4))
+    dado = progressao[degrau]
+    custo_max = degrau + 1
+
+    mestre = any(
+        (h.efeitos or {}).get("mestre_cacador") or (h.nome or "") == "Mestre Caçador"
+        for h in ficha.habilidades
+    )
+    olho_falcao = any(
+        (h.efeitos or {}).get("marca_presa_alcance") == "Longo" or (h.nome or "") == "Olho do Falcão"
+        for h in ficha.habilidades
+    )
+    tem_espreitar = any(
+        (h.efeitos or {}).get("espreitar_marca_presa") or (h.nome or "") == "Espreitar"
+        for h in ficha.habilidades
+    )
+    ponto_fraco_margem = 2 if any(
+        (h.efeitos or {}).get("ponto_fraco_margem") or (h.nome or "") == "Ponto Fraco"
+        for h in ficha.habilidades
+    ) else 0
+
+    return {
+        "dado": dado,
+        "custo_base": 1,
+        "custo_max": custo_max,
+        "acao": "Livre" if mestre else "Movimento",
+        "alcance": "Longo" if olho_falcao else "Curto",
+        "duracao": "Cena",
+        "espreitar_bonus_max": custo_max if tem_espreitar else 0,
+        "ponto_fraco_margem": ponto_fraco_margem,
+        "mestre_cacador": mestre,
     }
 
 

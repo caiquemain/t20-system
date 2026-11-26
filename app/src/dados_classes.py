@@ -40,7 +40,7 @@ DADOS_CLASSES = {
         "pm_inicial": 4, "pm_nivel": 4,
         "pericias_iniciais": ["Sobrevivência"],
         "pericias_fixas_selecao": ["Luta", "Pontaria"],
-        "pericias_escolha": 7,
+        "pericias_escolha": 6,
         "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Cura", "Fortitude", "Furtividade", "Iniciativa", "Investigação", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos"],
         "proficiencias": ["Armas Marciais", "Escudos"]
     },

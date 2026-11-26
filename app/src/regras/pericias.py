@@ -176,6 +176,34 @@ def inicializar_pericias(ficha: Personagem):
                                 {"fonte": hab.nome, "valor": mod_val}
                             )
 
+        # 1c. Explorador (Caçador, T20 p.51): +Sab (mín +1) nas 5 perícias no terreno escolhido
+        if efeitos.get("explorador_terreno") and "terreno_explorador" in (getattr(ficha, "condicoes_ativas", None) or []):
+            mod_sab = max(1, calcular_modificador(ficha.atributos.sabedoria))
+            for p_nome in (efeitos.get("pericias_terreno") or ["Acrobacia", "Atletismo", "Furtividade", "Percepção", "Sobrevivência"]):
+                detalhamento_bonus.setdefault(p_nome, []).append(
+                    {"fonte": "Explorador (terreno)", "valor": mod_sab}
+                )
+
+        # 1d. Escaramuça / Escaramuça Superior (Caçador, T20 p.50): +2/+5 Reflexos (sem armadura pesada)
+        if "escaramuca" in (getattr(ficha, "condicoes_ativas", None) or []):
+            from .inventario import catalogo_do_item as _cat_item_esc
+            _usa_pesada_esc = any(
+                it.equipado and (_cat_item_esc(it.nome) or {}).get("tipo_armadura") == "Pesada"
+                for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+            )
+            if not _usa_pesada_esc:
+                if efeitos.get("escaramuca_superior"):
+                    detalhamento_bonus.setdefault("Reflexos", []).append(
+                        {"fonte": "Escaramuça Superior", "valor": 5}
+                    )
+                elif efeitos.get("escaramuca") and not any(
+                    (h.efeitos or {}).get("escaramuca_superior") or (h.nome or "") == "Escaramuça Superior"
+                    for h in ficha.habilidades
+                ):
+                    detalhamento_bonus.setdefault("Reflexos", []).append(
+                        {"fonte": "Escaramuça", "valor": 2}
+                    )
+
         # 2. Bônus Genéricos por Atributo
         if "bonus_pericia_atributo" in efeitos and isinstance(efeitos["bonus_pericia_atributo"], dict):
             for attr_chave, v_bonus in efeitos["bonus_pericia_atributo"].items():
