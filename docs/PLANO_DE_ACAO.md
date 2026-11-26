@@ -68,10 +68,11 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
-## ✨ Fase 6 — Perícias, Poderes Concedidos & Poderes Gerais
-- [x] **Perícias (`dados_pericias.py`, `frontend/src/data/pericias.ts`, `SkillUsesModal.tsx`):** revisadas todas as 29 perícias contra Tabela 2-1 (T20 JdA p.115), corrigido catálogo do frontend (que tinha entradas inválidas/incompletas) e criado modal interativo **Usos da Perícia** com todas as ações/CDs oficiais (p.115–123), bloqueio de usos *Apenas Treinado* e rolagem rápida `1d20 + total` (`app/tests/test_pericias_catalogo.py`, `833 testes passando`).
-- **Poderes Concedidos (`dados_poderes_concedidos.py`):** modelar `efeitos` nos 20 poderes concedidos (hoje `0/20` têm efeitos mecânicos).
-- **Poderes Gerais (`dados_habilidades.py`):** revisar os 68 poderes gerais (de 202) que ainda estão sem `efeitos` declarativos, priorizando os do Livro Básico (Combate, Destino, Magia, Tormenta).
+## ✅ Fase 6 — Perícias, Poderes Gerais, Concedidos & Tormenta (Concluída)
+- [x] **Perícias (`dados_pericias.py`, `frontend/src/data/pericias.ts`, `SkillUsesModal.tsx`):** revisadas todas as 29 perícias contra Tabela 2-1 (T20 JdA p.115), corrigido catálogo do frontend e criado modal interativo **Usos da Perícia** com ações/CDs oficiais (p.115–123), bloqueio de usos *Apenas Treinado* e rolagem rápida `1d20 + total` (`app/tests/test_pericias_catalogo.py`).
+- [x] **Poderes Concedidos (`dados_poderes_concedidos.py`):** catalogados todos os **72/72** poderes concedidos oficiais (T20 JdA p.131–136) com `efeitos` declarativos; conectados *Dom da Esperança* (Sab em vez de Con nos PV + imunidades), *Bênção do Mana*, *Descanso Natural*, *Escamas Dracônicas*, *Coragem Total*, *Habitante do Deserto*, *Fulgor Solar* e *Afinidade com a Tormenta*.
+- [x] **Poderes da Tormenta (`dados_poderes_tormenta.py`):** catalogados todos os **22/22** poderes da Tormenta (p.136–137); corrigida a fórmula oficial de perda de Carisma (`–(qtd_efetiva+1)//2`, respeitando *Afinidade com a Tormenta*) e a escala oficial `+1 / +2 RD` a cada **dois outros** poderes em *Carapaça*, *Antenas*, *Articulações Flexíveis*, *Mãos Membranosas*, *Olhos Vermelhos* e *Pele Corrompida*.
+- [x] **Poderes Gerais (`dados_habilidades.py`):** `68/68` poderes de Combate (40), Destino (20) e Magia (8) com `efeitos` declarativos; conectados *Vontade de Ferro* (`+1 PM` a cada 2 níveis) e *Inventário Organizado* (`+Int` carga máxima), cobertos por `app/tests/test_poderes_gerais_concedidos_tormenta.py` (`843 testes passando`).
 
 ---
 

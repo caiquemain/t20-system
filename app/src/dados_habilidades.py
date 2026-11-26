@@ -505,10 +505,10 @@ HABILIDADES_GERAIS = {
     "Vontade_Ferro": {
         "nome": "Vontade de Ferro",
         "tipo": "Poder Geral (Destino)",
-        "descricao": "+1 PM a cada dois níveis e +2 em Vontade.",
+        "descricao": "Você recebe +1 PM para cada dois níveis de personagem e +2 em Vontade.",
         "fonte": "T20 JdA",
         "requisitos": ["Sab 1"],
-        "efeitos": {"pm_max_nivel_fracionado": 0.5, "bonus_pericia": {"Vontade": 2}}
+        "efeitos": {"pm_por_2_niveis": 1, "bonus_pericia": {"Vontade": 2}}
     },
 
     # ------------------------------------------------------------------
@@ -517,67 +517,108 @@ HABILIDADES_GERAIS = {
     "Celebrar_Ritual": {
         "nome": "Celebrar Ritual",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "Pode lançar magias como rituais (dobro PM, tempo longo, custo $).",
+        "descricao": "Pode lançar magias como rituais (dobra limite de PM, execução 1 hora ou o dobro, T$ 10 por PM).",
         "fonte": "T20 JdA",
-        "requisitos": ["8º nível", "Treinado em Misticismo ou Religião"],
-        "efeitos": {}
+        "requisitos": ["Habilidade Magias", "Treinado em Misticismo ou Religião", "8º nível"],
+        "efeitos": {"celebrar_ritual_dobra_limite_pm": True}
     },
     "Escrever_Pergaminho": {
         "nome": "Escrever Pergaminho",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "Pode fabricar pergaminhos.",
+        "descricao": "Pode usar Ofício (escriba) para fabricar pergaminhos com magias que conheça.",
         "fonte": "T20 JdA",
-        "requisitos": ["Magias", "Treinado em Ofício (escriba)"],
-        "efeitos": {}
+        "requisitos": ["Habilidade Magias", "Treinado em Ofício (escriba)"],
+        "efeitos": {"fabricar_pergaminho": True}
     },
     "Foco_Magia": {
         "nome": "Foco em Magia",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "-1 PM em uma magia escolhida.",
+        "descricao": "Escolha uma magia que possa lançar: seu custo diminui em –1 PM (cumulativo).",
         "fonte": "T20 JdA",
         "requisitos": ["Lançar magias"],
-        "efeitos": {}
+        "efeitos": {"foco_magia_reducao_pm": 1, "multiplo": True}
     },
     "Magia_Acelerada": {
         "nome": "Magia Acelerada",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "Aprimoramento: Muda execução para livre (+4 PM).",
+        "descricao": "Aprimoramento (+4 PM): muda execução da magia para ação livre (1x/rodada).",
         "fonte": "T20 JdA",
-        "requisitos": ["Magias 2º círculo"],
-        "efeitos": {}
+        "requisitos": ["Lançar magias de 2º círculo"],
+        "efeitos": {"aprimoramento_magia": True, "custo_pm": 4}
     },
     "Magia_Ampliada": {
         "nome": "Magia Ampliada",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "Aprimoramento: Aumenta alcance ou dobra área (+2 PM).",
+        "descricao": "Aprimoramento (+2 PM): aumenta alcance em 1 passo ou dobra a área de efeito.",
         "fonte": "T20 JdA",
         "requisitos": ["Lançar magias"],
-        "efeitos": {}
+        "efeitos": {"aprimoramento_magia": True, "custo_pm": 2}
     },
     "Magia_Discreta": {
         "nome": "Magia Discreta",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "Aprimoramento: Lança sem gesticular/falar (+2 PM).",
+        "descricao": "Aprimoramento (+2 PM): lança magia sem gesticular ou falar (e sem teste de Misticismo com armadura).",
         "fonte": "T20 JdA",
         "requisitos": ["Lançar magias"],
-        "efeitos": {}
+        "efeitos": {"aprimoramento_magia": True, "custo_pm": 2}
     },
     "Magia_Ilimitada": {
         "nome": "Magia Ilimitada",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "Soma atributo-chave ao limite de PM por magia.",
+        "descricao": "Soma seu atributo-chave ao limite de PM que pode gastar numa magia.",
         "fonte": "T20 JdA",
         "requisitos": ["Lançar magias"],
-        "efeitos": {}
+        "efeitos": {"limite_pm_soma_atributo_chave": True}
     },
     "Preparar_Pocao": {
         "nome": "Preparar Poção",
         "tipo": "Poder Geral (Magia)",
-        "descricao": "Pode fabricar poções.",
+        "descricao": "Pode usar Ofício (alquimista) para fabricar poções de magias conhecidas de 1º e 2º círculos.",
         "fonte": "T20 JdA",
-        "requisitos": ["Magias", "Treinado em Ofício (alquimista)"],
-        "efeitos": {}
+        "requisitos": ["Habilidade Magias", "Treinado em Ofício (alquimista)"],
+        "efeitos": {"fabricar_pocao": True}
     }
 }
+
+# Efeitos declarativos oficiais (T20 JdA p.124-131) para poderes de Combate e Destino
+_EFEITOS_PODERES_GERAIS_LIVRO_BASE = {
+    "Arma_Secundaria_Grande": {"duas_armas_uma_mao": True},
+    "Arremesso_Multiplo": {"custo_pm": 1, "ataque_extra_arremesso": True},
+    "Ataque_Escudo": {"custo_pm": 1, "ataque_extra_escudo": True},
+    "Ataque_Pesado": {"custo_pm": 1, "manobra_livre_duas_maos": ["derrubar", "empurrar"]},
+    "Ataque_Poderoso": {"penalidade_ataque_opcional": -2, "dano_bonus_opcional": 5},
+    "Ataque_Preciso": {"margem_ameaca_uma_arma": 2, "multiplicador_critico_uma_arma": 1},
+    "Bloqueio_Escudo": {"custo_pm": 1, "rd_reacao_escudo": True},
+    "Carga_Cavalaria": {"investida_montada_dano_extra": "2d8", "continuar_movimento_investida": True},
+    "Combate_Defensivo": {"penalidade_ataque_opcional": -2, "defesa_bonus_opcional": 5},
+    "Disparo_Preciso": {"ignora_penalidade_combate_corpo_a_corpo": True},
+    "Disparo_Rapido": {"ataque_extra_disparo_penalidade": -2},
+    "Empunhadura_Poderosa": {"penalidade_arma_aumentada": -2},
+    "Estilo_Arma_Longa": {"ataque_armas_alongadas_bonus": 2, "ataca_adjacentes_alongada": True},
+    "Estilo_Duas_Armas": {"ataque_extra_duas_armas_penalidade": -2},
+    "Estilo_Duas_Maos": {"dano_duas_maos_bonus": 5},
+    "Estilo_Uma_Arma": {"defesa_uma_arma_bonus": 2, "ataque_uma_arma_bonus": 2},
+    "Finta_Aprimorada": {"bonus_pericia_situacional": {"Enganação": {"valor": 2, "condicao": "fintar"}}, "fintar_acao_movimento": True},
+    "Ginete": {"cavalgar_automatico_dano": True, "sem_penalidade_montado": True},
+    "Mira_Apurada": {"mirar_ataque_bonus": 2, "mirar_margem_ameaca_bonus": 2},
+    "Piqueiro": {"custo_pm": 1, "ataque_oportunidade_alongada": True},
+    "Presenca_Aterradora": {"custo_pm": 1, "assustar_area_curto": True},
+    "Reflexos_Combate": {"acao_movimento_extra_1_turno": True},
+    "Trespassar": {"custo_pm": 1, "ataque_extra_abate": True},
+    "Ao_Sabor_Destino": {"ao_sabor_do_destino": True},
+    "Aparencia_Inofensiva": {"aparencia_inofensiva_cd_car": True},
+    "Atraente": {"bonus_pericia_situacional": {"Carisma": {"valor": 2, "condicao": "criaturas atraídas"}}},
+    "Comandar": {"custo_pm": 1, "comandar_aliados_pericia_bonus": 1},
+    "Lobo_Solitario": {"lobo_solitario_bonus": 1, "cura_si_mesmo_sem_penalidade": True},
+    "Medicina": {"medicina_cura_cd_15": "1d6"},
+    "Sortudo": {"custo_pm": 3, "rerrolagem_teste": True},
+    "Surto_Heroico": {"custo_pm": 5, "acao_extra_rodada": True},
+    "Torcida": {"torcida_pericia_defesa_bonus": 2},
+    "Veneficio": {"sem_risco_envenenamento": True, "cd_venenos_bonus": 2},
+}
+for _k_pg, _ef_pg in _EFEITOS_PODERES_GERAIS_LIVRO_BASE.items():
+    if _k_pg in HABILIDADES_GERAIS and not HABILIDADES_GERAIS[_k_pg].get("efeitos"):
+        HABILIDADES_GERAIS[_k_pg]["efeitos"] = dict(_ef_pg)
+
 HABILIDADES_GERAIS.update(DADOS_HABILIDADES_RACIAIS)
 HABILIDADES_GERAIS.update(DADOS_PODERES_ORIGEM)

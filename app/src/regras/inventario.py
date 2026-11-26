@@ -63,6 +63,11 @@ def sincronizar_carga(ficha: Personagem) -> None:
         int((h.efeitos or {}).get("carga_max_bonus", 0) or 0)
         for h in (ficha.habilidades or [])
     )
+    if any(
+        (h.efeitos or {}).get("carga_soma_int") or (h.nome or "") == "Inventário Organizado"
+        for h in (ficha.habilidades or [])
+    ):
+        bonus_carga += max(0, mod_atributo(ficha, "int"))
     inv.carga_maxima = base_carga + bonus_carga
     inv.carga_total = int(sum(espacos_item(i) for i in inv.equipamentos))
     inv.sobrecargado = inv.carga_total > inv.carga_maxima

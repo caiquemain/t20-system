@@ -293,11 +293,11 @@ def inicializar_pericias(ficha: Personagem):
                 "condicao_id": "",
             })
 
-        # 3. Bônus de Tormenta Escalável
+        # 3. Bônus de Tormenta Escalável (+1, aumenta +1 a cada 2 outros poderes da Tormenta)
         if "bonus_pericia_tormenta" in efeitos:
             lista_alvos = efeitos["bonus_pericia_tormenta"]
             if isinstance(lista_alvos, list):
-                bonus_val = qtd_tormenta
+                bonus_val = 1 + max(0, qtd_tormenta - 1) // 2
                 for p_nome in lista_alvos:
                     if isinstance(p_nome, str):
                         if p_nome not in detalhamento_bonus:

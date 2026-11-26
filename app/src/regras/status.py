@@ -23,6 +23,12 @@ def calcular_pv_pm(ficha: Personagem):
             dc = DADOS_CLASSES.get(base, {})
 
     mod_con = calcular_modificador(ficha.atributos.constituicao)
+    usa_sab_pv = any(
+        (h.efeitos or {}).get("pv_usa_sab_em_vez_con") or (h.nome or "") == "Dom da Esperança"
+        for h in ficha.habilidades
+    )
+    mod_pv = calcular_modificador(ficha.atributos.sabedoria) if usa_sab_pv else mod_con
+    label_attr_pv = "Sabedoria (Dom da Esperança)" if usa_sab_pv else "Constituição"
     mapa_attr = {
         'for': 'forca', 'des': 'destreza', 'con': 'constituicao',
         'int': 'inteligencia', 'sab': 'sabedoria', 'car': 'carisma'
@@ -62,8 +68,8 @@ def calcular_pv_pm(ficha: Personagem):
         categoria="Classe",
         valor=dc.get("pv_inicial", 20)
     )
-    if mod_con != 0:
-        pv_calc.adicionar_bonus(fonte="Constituição", categoria="Atributo", valor=mod_con)
+    if mod_pv != 0:
+        pv_calc.adicionar_bonus(fonte=label_attr_pv, categoria="Atributo", valor=mod_pv)
     for nome, v in fontes_pv_ini:
         pv_calc.adicionar_bonus(fonte=f"{nome} (PV inicial)", categoria="Poder", valor=v)
 
@@ -74,7 +80,7 @@ def calcular_pv_pm(ficha: Personagem):
             pv_calc.adicionar_bonus(
                 fonte=f"Classe: {c.nome} ({n} nível{'is' if n > 1 else ''})",
                 categoria="Classe",
-                valor=n * (d.get("pv_nivel", 5) + mod_con)
+                valor=n * (d.get("pv_nivel", 5) + mod_pv)
             )
 
     # ═══════════════════════════════════════════
@@ -161,6 +167,13 @@ def calcular_pv_pm(ficha: Personagem):
                 fonte=f"{hab.nome} (+{v_pat} PM × {patamares} patamar{'es' if patamares > 1 else ''})",
                 categoria="Poder",
                 valor=int(v_pat) * patamares,
+            )
+        v_2nv = ef_pm.get("pm_por_2_niveis", 0) or ef_pm.get("pm_cada_2_niveis", 0)
+        if v_2nv and nivel_total >= 2:
+            pm_calc.adicionar_bonus(
+                fonte=f"{hab.nome} (+{v_2nv} PM/2 níveis)",
+                categoria="Poder",
+                valor=(nivel_total // 2) * int(v_2nv),
             )
 
     # Totem Espiritual (T20 p.42): soma SAB no total de PM
@@ -531,10 +544,11 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                     )
 
         if "defesa_bonus_tormenta" in efeitos:
+            bonus_carapaca = 1 + max(0, qtd_tormenta - 1) // 2
             defesa_calc.adicionar_bonus(
                 fonte=f"Poder: {hab.nome} (Tormenta x{qtd_tormenta})",
                 categoria="Poder",
-                valor=qtd_tormenta
+                valor=bonus_carapaca
             )
 
         if hab.nome == "Esquiva":
@@ -1344,6 +1358,7 @@ def calcular_descanso(ficha: Personagem) -> Dict[str, Any]:
     nivel = max(1, int(ficha.cabecalho.nivel_total or 1))
     bonus_cat = 0
     minimo_nivel = False
+    relento_confortavel = False
 
     for h in ficha.habilidades or []:
         ef = h.efeitos or {}
@@ -1353,6 +1368,8 @@ def calcular_descanso(ficha: Personagem) -> Dict[str, Any]:
             bonus_cat += int(ef["descanso_categoria_acima"])
         if ef.get("recuperacao_minima_nivel"):
             minimo_nivel = True
+        if ef.get("descanso_ao_relento_confortavel") or (h.nome or "") == "Descanso Natural":
+            relento_confortavel = True
 
     valores = [max(1, nivel // 2), nivel, nivel * 2, nivel * 3]
 
@@ -1360,8 +1377,12 @@ def calcular_descanso(ficha: Personagem) -> Dict[str, Any]:
         v = valores[min(3, idx + bonus_cat)]
         return max(nivel, v) if minimo_nivel else v
 
+    ruim_val = _rec(0)
+    if relento_confortavel:
+        ruim_val = max(ruim_val, _rec(2))
+
     return {
-        "ruim": _rec(0),
+        "ruim": ruim_val,
         "normal": _rec(1),
         "confortavel": _rec(2),
         "luxuosa": _rec(3),
@@ -1421,7 +1442,7 @@ def calcular_reducoes_dano(ficha: Personagem):
             base = dados.get("base", 0)
             bonus_por_poder = dados.get("por_poder", 0)
             qtd_outros = max(0, qtd_tormenta - 1)
-            total = base + (qtd_outros * bonus_por_poder)
+            total = base + ((qtd_outros // 2) * bonus_por_poder)
             for elem in elementos:
                 lista_rd.append(f"{elem} {total}")
 
