@@ -7,7 +7,7 @@ Quando uma checklist for 100% concluída, mover o arquivo para `docs/checklists/
 
 | Checklist | Feature / Frente | Status |
 |---|---|---|
-| [racas-e2e.md](./racas-e2e.md) | Raças do Livro Básico (17/17 + débitos) | 🟢 Base fechada (17/17) — débitos pontuais |
+| [racas-e2e.md](./racas-e2e.md) | Raças do Livro Básico (17/17 + Fase 1) | ✅ Livro Básico fechado (17/17) |
 | [classes-livro-basico.md](./classes-livro-basico.md) | Classes do Livro Básico (14 classes JdA) | 🟡 2/14 completas (Arcanista, Bárbaro) |
 | [icones-ui.md](./icones-ui.md) | Migração Unicode → `lucide-react` (SVG) | 📋 Planejada (225 frontend + 29 backend) |
 | [pdf.md](./pdf.md) | Geração de ficha em PDF (PyMuPDF) | 🟢 Funcional + testado — refinamentos pendentes |

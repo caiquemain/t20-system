@@ -185,13 +185,31 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
                 nivel_req = dados_hab.get("nivel", 1)
                 if nivel_req > 0 and nivel_req <= classe.nivel and "Poder de" not in dados_hab.get("tipo", ""):
                     nome_hab = dados_hab["nome"]
+                    fonte_classe = f"{classe.nome} ({nivel_req})"
                     if nome_hab not in nomes_existentes:
                         novas_habs.append(Habilidade(
                             nome=nome_hab, tipo="Classe", descricao=dados_hab.get("descricao", ""),
-                            fonte=f"{classe.nome} ({nivel_req})", escolhas_aplicadas=dados_hab.get("efeitos", {}),
-                            efeitos=dados_hab.get("efeitos", {})
+                            fonte=fonte_classe, escolhas_aplicadas=dict(dados_hab.get("efeitos", {})),
+                            efeitos=dict(dados_hab.get("efeitos", {}))
                         ))
                         nomes_existentes.add(nome_hab)
+                    else:
+                        existente = next(
+                            (h for h in (*novas_habs, *ficha.habilidades) if h.nome == nome_hab),
+                            None,
+                        )
+                        if existente and (existente.fonte or "") != fonte_classe:
+                            efeitos_atual = dict(existente.efeitos or {})
+                            efeitos_atual["_reaprendida"] = True
+                            # Preserva bonus_pericia_se_duplicada caso só esteja na habilidade de classe
+                            if "bonus_pericia_se_duplicada" in (dados_hab.get("efeitos") or {}):
+                                efeitos_atual.setdefault(
+                                    "bonus_pericia_se_duplicada",
+                                    dict(dados_hab["efeitos"]["bonus_pericia_se_duplicada"]),
+                                )
+                            existente.efeitos = efeitos_atual
+                            if fonte_classe not in (existente.fonte or ""):
+                                existente.fonte = f"{existente.fonte} + {fonte_classe}" if existente.fonte else fonte_classe
 
     # C. ORIGEM
     if ficha.escolhas_origem:
@@ -322,25 +340,60 @@ def sincronizar_poderes_habilidades(ficha: Personagem, memoria_global: Optional[
 
 
 def processar_acumulo_habilidades(ficha: Personagem):
-    contagem_nomes = {}
+    contagem_nomes: Dict[str, int] = {}
+    contagem_por_nome: Dict[str, int] = {}
     for hab in ficha.habilidades:
+        nome_norm = (hab.nome or "").strip().lower()
+        if nome_norm:
+            contagem_por_nome[nome_norm] = contagem_por_nome.get(nome_norm, 0) + 1
         ativavel = (hab.efeitos or {}).get("habilidade_ativavel")
         if ativavel and "nome_acumulo" in ativavel:
-            contagem_nomes[ativavel["nome_acumulo"]] = contagem_nomes.get(
-                ativavel["nome_acumulo"], 0) + 1
+            chave = ativavel["nome_acumulo"]
+            contagem_nomes[chave] = contagem_nomes.get(chave, 0) + 1
+
+    duplicadas_bonificadas = set()
 
     for hab in ficha.habilidades:
-        ativavel = (hab.efeitos or {}).get("habilidade_ativavel")
+        efeitos = hab.efeitos or {}
+        nome_norm = (hab.nome or "").strip().lower()
+        reaprendida = bool(efeitos.get("_reaprendida"))
+
+        # 1. Redução de custo PM em habilidade ativável acumulada (ex.: Kliren + Inventor)
+        ativavel = efeitos.get("habilidade_ativavel")
         if ativavel and "nome_acumulo" in ativavel:
-            if contagem_nomes.get(ativavel["nome_acumulo"], 0) >= 2:
+            chave = ativavel["nome_acumulo"]
+            acumulou = reaprendida or contagem_nomes.get(chave, 0) >= 2 or contagem_por_nome.get(chave.lower(), 0) >= 2
+            if acumulou:
                 reducao = ativavel.get("reducao_se_acumular", 0)
-                if reducao > 0:
-                    custo_original = ativavel["custo"]
+                if reducao > 0 and "[Custo reduzido por duplicata:" not in (hab.descricao or ""):
+                    efeitos_copia = dict(efeitos)
+                    ativavel_copia = dict(ativavel)
+                    custo_original = ativavel_copia["custo"]
                     novo_custo = max(0, custo_original - reducao)
-                    ativavel["custo"] = novo_custo
-                    tag_reducao = f" [Custo reduzido por duplicata: {novo_custo} PM]"
-                    if tag_reducao not in hab.descricao:
-                        hab.descricao += tag_reducao
+                    ativavel_copia["custo"] = novo_custo
+                    efeitos_copia["habilidade_ativavel"] = ativavel_copia
+                    hab.efeitos = efeitos_copia
+                    hab.descricao = (hab.descricao or "") + f" [Custo reduzido por duplicata: {novo_custo} PM]"
+
+        # 2. Bônus de perícia por reaprendizado (ex.: Dahllan + Druida em Empatia Selvagem -> +2 Adestramento)
+        efeitos = hab.efeitos or {}
+        bonus_dup = efeitos.get("bonus_pericia_se_duplicada")
+        if isinstance(bonus_dup, dict) and bonus_dup and nome_norm not in duplicadas_bonificadas:
+            if reaprendida or contagem_por_nome.get(nome_norm, 0) >= 2:
+                efeitos_copia = dict(efeitos)
+                bonus_pericia = dict(efeitos_copia.get("bonus_pericia") or {})
+                resumo_partes = []
+                for pericia_nome, val in bonus_dup.items():
+                    if isinstance(pericia_nome, str) and isinstance(val, (int, float)):
+                        bonus_pericia[pericia_nome] = bonus_pericia.get(pericia_nome, 0) + int(val)
+                        resumo_partes.append(f"+{int(val)} {pericia_nome}")
+                efeitos_copia["bonus_pericia"] = bonus_pericia
+                hab.efeitos = efeitos_copia
+                duplicadas_bonificadas.add(nome_norm)
+                if resumo_partes:
+                    tag_reap = f" [Reaprendida: {', '.join(resumo_partes)}]"
+                    if tag_reap not in (hab.descricao or ""):
+                        hab.descricao = (hab.descricao or "") + tag_reap
 
 
 def atualizar_efeitos_ativos(ficha: Personagem):
@@ -375,6 +428,10 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append(f"🚫 Imune a {imn_esc} (fonte elemental)")
         if efeitos.get("resistencia_tormenta"):
             lista_efeitos.append(f"🎲 +{efeitos['resistencia_tormenta']} em resistências vs Tormenta/lefeu")
+        if efeitos.get("resistencia_veneno"):
+            lista_efeitos.append(f"🎲 +{efeitos['resistencia_veneno']} em resistências contra veneno")
+        if efeitos.get("deslocamento_escalada_igual"):
+            lista_efeitos.append(f"🧗 Deslocamento de escalada: {ficha.status.deslocamento}m")
         if efeitos.get("tipo_criatura"):
             lista_efeitos.append(f"🧬 Tipo de criatura: {efeitos['tipo_criatura']}")
         ba = efeitos.get("bonus_ataque_arma") or {}
