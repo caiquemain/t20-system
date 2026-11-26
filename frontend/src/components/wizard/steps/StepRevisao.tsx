@@ -1,3 +1,5 @@
+import { T20Icon } from '../../T20Icon';
+
 interface StepProps {
   ficha: any;
   onFinish: () => void;
@@ -6,7 +8,9 @@ interface StepProps {
 export function StepRevisao({ ficha, onFinish }: StepProps) {
   return (
     <div>
-      <h2 style={{ color: '#ffd700', marginBottom: '20px' }}>✅ Passo 7: Revisão Final</h2>
+      <h2 style={{ color: '#ffd700', marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+        <T20Icon name="check" size={22} /> Passo 7: Revisão Final
+      </h2>
       <p style={{ color: '#aaa', marginBottom: '30px' }}>
         Revise seu personagem antes de começar a aventura!
       </p>
@@ -18,7 +22,9 @@ export function StepRevisao({ ficha, onFinish }: StepProps) {
         padding: '20px',
         marginBottom: '20px'
       }}>
-        <h3 style={{ color: '#fff', marginBottom: '15px' }}>📋 Resumo</h3>
+        <h3 style={{ color: '#fff', marginBottom: '15px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <T20Icon name="lista" size={18} /> Resumo
+        </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', color: '#ccc' }}>
           <p><strong>Nome:</strong> {ficha.cabecalho.nome || '—'}</p>
           <p><strong>Raça:</strong> {ficha.cabecalho.raca || '—'}</p>
@@ -40,10 +46,14 @@ export function StepRevisao({ ficha, onFinish }: StepProps) {
           cursor: 'pointer',
           fontSize: '1.1rem',
           fontWeight: 'bold',
-          width: '100%'
+          width: '100%',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px'
         }}
       >
-        🎉 Finalizar Personagem
+        <T20Icon name="check" size={20} /> Finalizar Personagem
       </button>
     </div>
   );

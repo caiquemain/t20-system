@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SelectionModal } from '../SelectionModal';
+import { T20Icon } from '../../T20Icon';
 import type { WizardStepProps } from '../../../types/wizard';
 
 type ModalAberto = 'raca' | 'origem' | 'deus' | null;
@@ -42,7 +43,9 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
 
     return (
         <div>
-            <h2 style={{ color: '#ffd700', marginBottom: '20px' }}>📝 Passo 1: Conceito do Personagem</h2>
+            <h2 style={{ color: '#ffd700', marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <T20Icon name="nota" size={22} /> Passo 1: Conceito do Personagem
+            </h2>
             <p style={{ color: '#aaa', marginBottom: '30px' }}>
                 Defina a identidade básica do seu herói. Clique nos cards para abrir a seleção.
             </p>
@@ -68,7 +71,7 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 isOpen={modal === 'raca'}
                 onClose={() => setModal(null)}
                 title="Escolha sua Raça"
-                icon="🧬"
+                icon="raca"
                 selected={ficha.cabecalho.raca}
                 items={listaRacas.map(r => ({
                     nome: r,
@@ -81,7 +84,7 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 isOpen={modal === 'origem'}
                 onClose={() => setModal(null)}
                 title="Escolha sua Origem"
-                icon="🏕️"
+                icon="origem"
                 selected={ficha.cabecalho.origem}
                 items={listaOrigens.map(o => ({ nome: o, descricao: dadosOrigens[o]?.descricao }))}
                 onSelect={nome => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: nome }, escolhas_origem: [] }, true)}
@@ -90,7 +93,7 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 isOpen={modal === 'deus'}
                 onClose={() => setModal(null)}
                 title="Escolha sua Divindade"
-                icon="⛪"
+                icon="deus"
                 selected={ficha.cabecalho.deus}
                 items={[{ nome: '', descricao: 'Remover devoção' }, ...getDeusesPermitidos().map(d => ({ nome: d, descricao: dadosDeuses[d]?.descricao }))]}
                 onSelect={nome => updateFicha({ cabecalho: { ...ficha.cabecalho, deus: nome } }, true)}

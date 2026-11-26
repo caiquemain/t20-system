@@ -3,6 +3,7 @@ import { createPersonagem } from '../services/api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFicha } from '../hooks/useFicha';
 import { WizardStepper } from '../components/wizard/WizardStepper';
+import { T20Icon, type IconName } from '../components/T20Icon';
 
 // Importar os Steps (vamos criar em seguida)
 import { StepConceito } from '../components/wizard/steps/StepConceito';
@@ -13,14 +14,14 @@ import { StepPoderes } from '../components/wizard/steps/StepPoderes';
 import { StepMagias } from '../components/wizard/steps/StepMagias';
 import { StepRevisao } from '../components/wizard/steps/StepRevisao';
 
-const WIZARD_STEPS = [
-  { id: 'conceito', label: 'Conceito', icon: '📝' },
-  { id: 'atributos', label: 'Atributos', icon: '💪' },
-  { id: 'classe', label: 'Classe', icon: '⚔️' },
-  { id: 'pericias', label: 'Perícias', icon: '🎯' },
-  { id: 'poderes', label: 'Poderes', icon: '✨' },
-  { id: 'magias', label: 'Magias', icon: '📖' },
-  { id: 'revisao', label: 'Revisão', icon: '✅' },
+const WIZARD_STEPS: { id: string; label: string; icon: IconName }[] = [
+  { id: 'conceito', label: 'Conceito', icon: 'nota' },
+  { id: 'atributos', label: 'Atributos', icon: 'xp' },
+  { id: 'classe', label: 'Classe', icon: 'classe' },
+  { id: 'pericias', label: 'Perícias', icon: 'arco' },
+  { id: 'poderes', label: 'Poderes', icon: 'efeito' },
+  { id: 'magias', label: 'Magias', icon: 'grimorio' },
+  { id: 'revisao', label: 'Revisão', icon: 'check' },
 ];
 
 function Wizard() {
@@ -46,7 +47,7 @@ function Wizard() {
         })();
     }, [id, navigate]);
 
-  // 🔄 Reutiliza o hook que já temos!
+  // Reutiliza o hook que já temos!
   const {
     ficha,
     loading,
@@ -69,11 +70,12 @@ function Wizard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: '10px',
         height: '100vh',
         fontSize: '1.5rem',
         color: '#888'
       }}>
-        ⏳ Carregando grimório...
+        <T20Icon name="grimorio" size={24} /> Carregando grimório...
       </div>
     );
   }
@@ -149,13 +151,16 @@ function Wizard() {
             color: '#fff',
             padding: '8px 16px',
             borderRadius: '6px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px'
           }}
         >
-          ← Voltar para Home
+          <T20Icon name="voltar" size={16} /> Voltar para Home
         </button>
-        <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#ffd700' }}>
-          🧙‍♂️ Criador de Personagem
+        <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#ffd700', display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+          <T20Icon name="magia" size={26} /> Criador de Personagem
         </h1>
         <div style={{ width: '120px' }} />
       </div>
@@ -194,10 +199,13 @@ function Wizard() {
             borderRadius: '8px',
             cursor: currentStep === 0 ? 'not-allowed' : 'pointer',
             fontSize: '1rem',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px'
           }}
         >
-          ← Anterior
+          <T20Icon name="voltar" size={16} /> Anterior
         </button>
 
         {currentStep === WIZARD_STEPS.length - 1 ? (
@@ -211,10 +219,13 @@ function Wizard() {
               borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '1rem',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            Finalizar Personagem ✓
+            Finalizar Personagem <T20Icon name="check" size={16} />
           </button>
         ) : (
           <button

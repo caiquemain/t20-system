@@ -1,4 +1,5 @@
 import { PONTOS_INICIAIS, MIN_ATTR, MAX_ATTR, TABELA_CUSTO, MAPA_ATTR_KEY } from '../../../utils/atributosRules';
+import { T20Icon } from '../../T20Icon';
 import type { WizardStepProps } from '../../../types/wizard';
 
 const MAPA_ATTR: Record<string, string> = {
@@ -57,7 +58,9 @@ export function StepAtributos({ ficha, updateFicha, dadosRacas }: WizardStepProp
 
     return (
         <div>
-            <h2 style={{ color: '#ffd700', marginBottom: '20px' }}>💪 Passo 2: Atributos</h2>
+            <h2 style={{ color: '#ffd700', marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <T20Icon name="xp" size={22} /> Passo 2: Atributos
+            </h2>
             <p style={{ color: '#aaa', marginBottom: '20px' }}>
                 Compre seus atributos com pontos (mín. {MIN_ATTR}, máx. +{MAX_ATTR}). Bônus raciais são gratuitos.
             </p>
@@ -77,10 +80,14 @@ export function StepAtributos({ ficha, updateFicha, dadosRacas }: WizardStepProp
             {qtdEscolhas > 0 && racaNome && (
                 <div style={{
                     background: 'rgba(255,215,0,0.08)', border: '1px solid #5a4a1a',
-                    borderRadius: 8, padding: '10px 16px', marginBottom: 24, color: '#ffd700', fontSize: '0.9rem'
+                    borderRadius: 8, padding: '10px 16px', marginBottom: 24, color: '#ffd700', fontSize: '0.9rem',
+                    display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap'
                 }}>
-                    🧬 {racaNome} permite <strong>{qtdEscolhas} escolha(s) de +1</strong> em atributos sem bônus fixo.
-                    Clique no botão "🧬" dos cards abaixo. ({escolhasAtuais.length}/{qtdEscolhas} usadas)
+                    <T20Icon name="raca" size={16} />
+                    <span>
+                        {racaNome} permite <strong>{qtdEscolhas} escolha(s) de +1</strong> em atributos sem bônus fixo.
+                        Clique no botão de bônus racial nos cards abaixo. ({escolhasAtuais.length}/{qtdEscolhas} usadas)
+                    </span>
                 </div>
             )}
 
@@ -140,10 +147,12 @@ export function StepAtributos({ ficha, updateFicha, dadosRacas }: WizardStepProp
                                         border: `1px solid ${isEscolhido ? '#4caf50' : '#555'}`,
                                         color: isEscolhido ? '#4caf50' : '#888',
                                         borderRadius: 6, cursor: (!isEscolhido && escolhasCheias) ? 'not-allowed' : 'pointer',
-                                        fontSize: '0.8rem'
+                                        fontSize: '0.8rem',
+                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
                                     }}
                                 >
-                                    {isEscolhido ? '✓ +1 racial escolhido' : '🧬 Escolher +1 racial'}
+                                    <T20Icon name={isEscolhido ? 'check' : 'raca'} size={14} />
+                                    {isEscolhido ? '+1 racial escolhido' : 'Escolher +1 racial'}
                                 </button>
                             )}
                         </div>
