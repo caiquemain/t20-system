@@ -539,77 +539,331 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # BARDO
+    # BARDO (T20 JdA, p. 43-44)
     # ==========================================================================
     "BARDO_INSPIRACAO": {
         "nome": "Inspiração",
         "tipo": "Habilidade de Classe",
         "classe": "Bardo",
         "nivel": 1,
-        "descricao": "Ação padrão, 2 PM: Aliados em alcance curto ganham +1 em perícias pela cena. Aumenta a cada 4 níveis. ",
-        "efeitos": {"acao_ativavel": {"custo_pm": 2, "bonus_pericias_aliados": 1, "escala_nivel": 4}}
+        "descricao": "Ação padrão, 2 PM: você e aliados em alcance curto ganham +1 em testes de perícia até o fim da cena. A cada 4 níveis (5º, 9º, 13º, 17º), pode gastar +2 PM para aumentar o bônus em +1.",
+        "efeitos": {
+            "acao_ativavel": {
+                "acao": "padrão",
+                "custo_pm": 2,
+                "alcance": "curto",
+                "duracao": "cena",
+                "bonus_pericias_aliados": 1,
+                "escala_nivel": {"cada": 4, "bonus": 1, "custo_pm_extra": 2},
+            }
+        }
     },
     "BARDO_MAGIAS": {
         "nome": "Magias (Bardo)",
         "tipo": "Habilidade de Classe",
         "classe": "Bardo",
         "nivel": 1,
-        "descricao": "Lança magias arcanas (atributo Car). Escolha 3 escolas. ",
-        "efeitos": {"habilita_magia": {"tipo": "Arcana", "atributo": "car", "escolas_restritas": 3}}
+        "descricao": "Escolha três escolas de magia (escolha permanente). Lança magias arcanas de 1º círculo (2º no 6º nível, 3º no 10º, 4º no 14º) dessas escolas. Começa com 2 magias e aprende +1 a cada nível par. Pode lançar de armadura leve sem teste de Misticismo. Atributo-chave: Carisma (soma Carisma no total de PM).",
+        "efeitos": {
+            "habilita_magia": {
+                "tipo": "Arcana",
+                "atributo": "car",
+                "escolas_restritas": 3,
+                "armadura_leve_sem_teste": True,
+            }
+        }
     },
     "BARDO_ECLETICO": {
         "nome": "Eclético",
         "tipo": "Habilidade de Classe",
         "classe": "Bardo",
         "nivel": 2,
-        "descricao": "Gaste 1 PM para receber benefícios de treino em uma perícia por um teste. ",
-        "efeitos": {}
+        "descricao": "Ao fazer um teste de perícia, pode gastar 1 PM para receber os benefícios de ser treinado nesta perícia neste teste.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "efeito": "beneficios_treinado_pericia",
+            }
+        }
     },
-    # --- PODERES DE BARDO ---
+    "BARDO_ARTISTA_COMPLETO": {
+        "nome": "Artista Completo",
+        "tipo": "Habilidade de Classe",
+        "classe": "Bardo",
+        "nivel": 20,
+        "descricao": "Pode usar Inspiração como ação livre. Enquanto sob efeito de sua Inspiração, qualquer habilidade de bardo (incluindo magias) tem seu custo em PM reduzido pela metade (após aprimoramentos e outras reduções).",
+        "efeitos": {
+            "artista_completo": True,
+            "inspiracao_acao_livre": True,
+            "reducao_custo_inspiracao_metade": True,
+        }
+    },
+    # --- PODERES DE BARDO (20 poderes oficiais, T20 JdA p. 43-44) ---
     "BARDO_ARTE_MAGICA": {
         "nome": "Arte Mágica",
         "tipo": "Poder de Bardo",
         "classe": "Bardo",
-        "descricao": "Sob Inspiração, a CD de suas habilidades de bardo aumenta em +2. ",
-        "efeitos": {}
+        "descricao": "Enquanto sob efeito de sua habilidade Inspiração, a CD de todas as suas habilidades de bardo aumenta em +2.",
+        "efeitos": {"cd_bardo_inspiracao": 2}
     },
     "BARDO_AUMENTAR_REPERTORIO": {
         "nome": "Aumentar Repertório",
         "tipo": "Poder de Bardo",
         "classe": "Bardo",
-        "descricao": "Aprende duas magias (arcanas ou divinas) das escolas conhecidas. ",
-        "efeitos": {"magias_adicionais": 2}
+        "descricao": "Aprende duas magias de qualquer círculo que possa lançar, pertencentes às escolas que conhece, arcanas ou divinas. Pode escolher este poder quantas vezes quiser.",
+        "efeitos": {"magias_adicionais": 2, "multipla_escolha": True}
+    },
+    "BARDO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
     },
     "BARDO_DANCA_LAMINAS": {
         "nome": "Dança das Lâminas",
         "tipo": "Poder de Bardo",
         "classe": "Bardo",
         "requisitos": ["Esgrima Mágica", "Nível 10"],
-        "descricao": "Ao lançar magia (padrão), gaste 1 PM para fazer ataque corpo a corpo (livre). ",
-        "efeitos": {}
+        "descricao": "Quando lança uma magia com execução de uma ação padrão, pode gastar 1 PM para fazer um ataque corpo a corpo como uma ação livre.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "acao": "livre",
+                "gatilho": "lancar_magia_acao_padrao",
+                "efeito": "ataque_corpo_a_corpo_extra",
+            }
+        }
     },
     "BARDO_ESGRIMA_MAGICA": {
         "nome": "Esgrima Mágica",
         "tipo": "Poder de Bardo",
         "classe": "Bardo",
-        "descricao": "Sob Inspiração, usa Atuação no lugar de Luta para armas leves/uma mão. ",
-        "efeitos": {"ataque_pericia_troca": {"origem": "Luta", "destino": "Atuação"}}
+        "descricao": "Enquanto sob efeito de sua Inspiração, substitui testes de Luta por Atuação para ataques com armas corpo a corpo leves ou de uma mão.",
+        "efeitos": {
+            "ataque_pericia_troca": {
+                "origem": "Luta",
+                "destino": "Atuação",
+                "condicao": "inspiracao",
+                "empunhadura": ["Leve", "Uma Mão"],
+            }
+        }
+    },
+    "BARDO_ESTRELATO": {
+        "nome": "Estrelato",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Nível 6"],
+        "descricao": "Quando usa Atuação para impressionar uma plateia, o bônus recebido em perícias baseadas em Carisma aumenta para +5.",
+        "efeitos": {"estrelato_bonus_carisma": 5}
+    },
+    "BARDO_FASCINAR_EM_MASSA": {
+        "nome": "Fascinar em Massa",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Música: Balada Fascinante"],
+        "descricao": "Quando usa Música: Balada Fascinante, pode gastar +2 PM para afetar todas as criaturas escolhidas no alcance da habilidade (um único teste de Atuação oposto pela Vontade de cada criatura).",
+        "efeitos": {
+            "aprimoramento_musica": {
+                "musica": "Música: Balada Fascinante",
+                "custo_pm_extra": 2,
+                "efeito": "afeta_todas_criaturas_escolhidas_alcance",
+            }
+        }
     },
     "BARDO_GOLPE_ELEMENTAL": {
         "nome": "Golpe Elemental",
         "tipo": "Poder de Bardo",
         "classe": "Bardo",
         "requisitos": ["Golpe Mágico"],
-        "descricao": "Sob Inspiração, ao acertar ataque, gaste 1 PM para +1d6 dano elemental. ",
-        "efeitos": {}
+        "descricao": "Enquanto sob efeito de sua Inspiração, sempre que acertar um ataque corpo a corpo, pode gastar 1 PM para causar +1d6 de dano extra (ácido, eletricidade, fogo ou frio). A cada 4 níveis, pode gastar +1 PM para +1d6.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "gatilho": "acertar_ataque_corpo_a_corpo_inspiracao",
+                "dano_extra": "1d6",
+                "tipos": ["ácido", "eletricidade", "fogo", "frio"],
+                "escala_nivel": {"cada": 4, "dado_extra": "1d6", "custo_pm_extra": 1},
+            }
+        }
+    },
+    "BARDO_GOLPE_MAGICO": {
+        "nome": "Golpe Mágico",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Esgrima Mágica"],
+        "descricao": "Enquanto sob efeito de sua Inspiração, sempre que acertar um ataque corpo a corpo em um inimigo, recebe 2 PM temporários cumulativos (máximo por cena igual ao seu nível).",
+        "efeitos": {
+            "golpe_magico_pm_temp": 2,
+            "limite_cena": "nivel",
+            "condicao": "inspiracao",
+        }
+    },
+    "BARDO_INSPIRACAO_MARCIAL": {
+        "nome": "Inspiração Marcial",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "descricao": "Quando usa Inspiração, você e seus aliados aplicam o bônus recebido também em rolagens de dano.",
+        "efeitos": {"inspiracao_aplica_dano": True}
+    },
+    "BARDO_LENDAS_HISTORIAS": {
+        "nome": "Lendas e Histórias",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Int 1"],
+        "descricao": "Pode gastar 1 PM para rolar novamente um teste recém realizado de Conhecimento, Misticismo, Nobreza ou Religião para informação, identificar criaturas ou identificar itens mágicos.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "efeito": "rerrolar_pericia",
+                "pericias": ["Conhecimento", "Misticismo", "Nobreza", "Religião"],
+            }
+        }
+    },
+    "BARDO_MANIPULAR": {
+        "nome": "Manipular",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Música: Balada Fascinante"],
+        "descricao": "Pode gastar 1 PM para fazer uma criatura fascinada por você ficar enfeitiçada até o fim da cena (Vontade CD Car anula; se passar, fica imune por 1 dia). Usar esta habilidade não conta como ameaça à criatura fascinada.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "condicao_alvo": "fascinada",
+                "efeito": "enfeiticar",
+                "resistencia": "Vontade",
+                "atributo_cd": "car",
+            }
+        }
+    },
+    "BARDO_MANIPULAR_EM_MASSA": {
+        "nome": "Manipular em Massa",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Fascinar em Massa", "Manipular", "Nível 10"],
+        "descricao": "Quando usa Manipular, pode gastar +2 PM para afetar todas as criaturas escolhidas em alcance curto.",
+        "efeitos": {
+            "aprimoramento_habilidade": {
+                "habilidade": "Manipular",
+                "custo_pm_extra": 2,
+                "alcance": "curto",
+                "efeito": "afeta_todas_criaturas_escolhidas",
+            }
+        }
+    },
+    "BARDO_MUSICA_BALADA_FASCINANTE": {
+        "nome": "Música: Balada Fascinante",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "descricao": "Música de Bardo (requer treino em Atuação e instrumento musical; ação padrão, 1 PM, alcance curto): teste de Atuação oposto à Vontade de uma criatura. Se vencer, o alvo fica fascinado enquanto você se concentrar (ação padrão por rodada). Criatura hostil ou em combate recebe +5 no teste e novo teste a cada rodada de concentração. Se passar, fica imune por 1 dia.",
+        "efeitos": {
+            "musica_bardo": {
+                "acao": "padrão",
+                "custo_pm": 1,
+                "alcance": "curto",
+                "requer_instrumento": True,
+                "requer_pericia": "Atuação",
+                "efeito": "fascinado",
+                "resistencia": "Vontade",
+            }
+        }
+    },
+    "BARDO_MUSICA_CANCAO_ASSUSTADORA": {
+        "nome": "Música: Canção Assustadora",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "descricao": "Música de Bardo (requer treino em Atuação e instrumento musical; ação padrão, 1 PM, alcance curto): teste de Atuação oposto à Vontade de cada criatura escolhida no alcance. Alvos que falhem ficam abalados até o fim da cena. Alvos que passem ficam imunes por 1 dia.",
+        "efeitos": {
+            "musica_bardo": {
+                "acao": "padrão",
+                "custo_pm": 1,
+                "alcance": "curto",
+                "requer_instrumento": True,
+                "requer_pericia": "Atuação",
+                "efeito": "abalado",
+                "resistencia": "Vontade",
+            }
+        }
+    },
+    "BARDO_MUSICA_MELODIA_CURATIVA": {
+        "nome": "Música: Melodia Curativa",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "descricao": "Música de Bardo (requer treino em Atuação e instrumento musical; ação padrão, 1 PM, alcance curto): criaturas escolhidas no alcance recuperam 1d6 PV. Pode gastar +1 PM para aumentar a cura em +1d6 PV (sem limite além do limite de PM por nível).",
+        "efeitos": {
+            "musica_bardo": {
+                "acao": "padrão",
+                "custo_pm": 1,
+                "alcance": "curto",
+                "requer_instrumento": True,
+                "requer_pericia": "Atuação",
+                "cura": "1d6",
+                "custo_pm_extra_por_dado": 1,
+            }
+        }
+    },
+    "BARDO_MELODIA_RESTAURADORA": {
+        "nome": "Melodia Restauradora",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Música: Melodia Curativa"],
+        "descricao": "Quando usa Música: Melodia Curativa, pode gastar +2 PM para remover uma condição (abalado, alquebrado, apavorado, atordoado, cego, confuso, enfeitiçado, esmorecido, exausto, fatigado, frustrado, pasmo ou surdo) das criaturas afetadas.",
+        "efeitos": {
+            "aprimoramento_musica": {
+                "musica": "Música: Melodia Curativa",
+                "custo_pm_extra": 2,
+                "efeito": "remove_condicao",
+                "condicoes": [
+                    "abalado", "alquebrado", "apavorado", "atordoado", "cego",
+                    "confuso", "enfeitiçado", "esmorecido", "exausto", "fatigado",
+                    "frustrado", "pasmo", "surdo",
+                ],
+            }
+        }
+    },
+    "BARDO_MESTRE_SUSSURROS": {
+        "nome": "Mestre dos Sussurros",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "requisitos": ["Car 1", "Treinado em Enganação", "Treinado em Investigação"],
+        "descricao": "Rola dois dados e usa o melhor resultado em testes de Investigação para interrogar e Enganação para intriga. Em ambientes sociais (tavernas, festas, cortes), pode fazer esses testes sem custo monetário e em 1 minuto.",
+        "efeitos": {
+            "vantagem_pericia_situacional": {
+                "Investigação": "interrogar",
+                "Enganação": "intriga",
+            }
+        }
+    },
+    "BARDO_PARODIA": {
+        "nome": "Paródia",
+        "tipo": "Poder de Bardo",
+        "classe": "Bardo",
+        "descricao": "Uma vez por rodada, quando vê outra criatura lançando uma magia em alcance médio, pode pagar 1 PM e fazer um teste de Atuação (CD 15 + custo em PM da magia). Se passar, até o final do seu próximo turno pode lançar essa magia.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "frequencia": "1x_por_rodada",
+                "alcance": "médio",
+                "pericia": "Atuação",
+                "cd_formula": "15 + custo_pm",
+            }
+        }
     },
     "BARDO_PRESTIDIGITACAO": {
         "nome": "Prestidigitação",
         "tipo": "Poder de Bardo",
         "classe": "Bardo",
         "requisitos": ["Nível 6"],
-        "descricao": "Ao fazer ação padrão, pode lançar magia (completa/menor) como livre com teste de Atuação. ",
-        "efeitos": {}
+        "descricao": "Quando faz uma ação padrão, pode fazer um teste de Atuação (CD 15 + custo em PM da magia) para lançar uma magia com execução de ação completa ou menor como ação livre (se falhar, a magia não funciona mas gasta os PM). Outros personagens só percebem com Misticismo CD 20.",
+        "efeitos": {
+            "acao_ativavel": {
+                "gatilho": "acao_padrao",
+                "acao": "livre",
+                "pericia": "Atuação",
+                "cd_formula": "15 + custo_pm",
+                "cd_perceber_misticismo": 20,
+            }
+        }
     },
 
     # ==========================================================================

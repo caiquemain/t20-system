@@ -42,7 +42,20 @@ def calcular_cd_magia(ficha: Personagem, magia) -> int:
     cd_base = 10 + math.floor((ficha.cabecalho.nivel_total or 1) / 2) + calcular_modificador(val)
     escola = (magia.escola or "").strip()
     cd_escola = (getattr(ficha.combate, "cd_por_escola", None) or {}).get(escola, 0)
-    return cd_base + cd_escola
+
+    # Arte Mágica (Bardo, T20 p.43): sob efeito de Inspiração, CD das habilidades de bardo +2
+    cd_inspiracao = 0
+    condicoes = getattr(ficha, "condicoes_ativas", None) or []
+    if "inspiracao" in condicoes:
+        for hab in ficha.habilidades:
+            efeitos = {**(hab.efeitos or {}), **(hab.escolhas_aplicadas or {})}
+            v_cd = efeitos.get("cd_bardo_inspiracao")
+            if v_cd:
+                cd_inspiracao += int(v_cd)
+            elif (hab.nome or "") == "Arte Mágica":
+                cd_inspiracao += 2
+
+    return cd_base + cd_escola + cd_inspiracao
 
 
 def calcular_custo_magia(ficha: Personagem, magia,
@@ -108,6 +121,21 @@ def calcular_custo_magia(ficha: Personagem, magia,
         total += reducao_escola  # valores negativos em custo_por_escola
         calc.adicionar_bonus(
             f"Poder: Mestre em Escola ({escola})", "Poder", reducao_escola)
+
+    # Artista Completo (Bardo 20º, T20 p.44): sob Inspiração, custo em PM reduzido
+    # pela metade APÓS aplicar aprimoramentos e quaisquer outras reduções.
+    condicoes = getattr(ficha, "condicoes_ativas", None) or []
+    if "inspiracao" in condicoes:
+        tem_artista = any(
+            (hab.efeitos or {}).get("reducao_custo_inspiracao_metade")
+            or (hab.efeitos or {}).get("artista_completo")
+            or (hab.nome or "") == "Artista Completo"
+            for hab in ficha.habilidades
+        )
+        if tem_artista and total > 0:
+            antes = total
+            total = math.floor(total / 2)
+            calc.adicionar_bonus("Artista Completo (×0.5 sob Inspiração)", "Multiplicativo", total - antes)
 
     # Mínimo 1 PM (regra confirmada); limite de gasto por magia = nível
     total = max(1, total)

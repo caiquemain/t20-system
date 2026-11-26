@@ -17,6 +17,7 @@ REGRAS_MAGIAS_POR_SUBCLASSE = {
 # Poderes que aumentam o limite de magias conhecidas
 PODERES_QUE_DAO_MAGIAS = {
     "Conhecimento Mágico": 2,
+    "Aumentar Repertório": 2,
 }
 
 

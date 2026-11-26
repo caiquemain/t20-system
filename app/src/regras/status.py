@@ -420,6 +420,91 @@ def calcular_furia(ficha: Personagem) -> Optional[Dict[str, int]]:
     return {"bonus": bonus, "custo": custo, "aplica_arremesso": aplica_arremesso}
 
 
+def calcular_inspiracao(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula os parâmetros ativos de Inspiração do Bardo (T20 JdA, p. 43-44).
+
+    Regras oficiais:
+        - Nível 1: ação padrão, 2 PM, alcance curto, cena, +1 em testes de perícia.
+        - A cada 4 níveis (5º, 9º, 13º, 17º): +2 PM para +1 bônus (+1..+5, 2..10 PM).
+        - Inspiração Marcial: aplica o bônus também em rolagens de dano.
+        - Arte Mágica: sob Inspiração, CD das habilidades de bardo +2.
+        - Artista Completo (20º): ação livre; sob Inspiração, habilidades de bardo
+          (incluindo magias) custam metade dos PM (após aprimoramentos e reduções).
+        - Golpe Elemental: sob Inspiração, 1 PM (+1 PM a cada 4 níveis) para +1d6/PM.
+
+    Retorna None se o personagem não possui a habilidade Inspiração.
+    """
+    insp = next(
+        (h for h in ficha.habilidades if (h.nome or "") == "Inspiração"), None
+    )
+    if insp is None:
+        return None
+    efeitos = insp.efeitos or {}
+    ativavel = efeitos.get("acao_ativavel") or efeitos.get("habilidade_ativavel")
+    if not isinstance(ativavel, dict):
+        return None
+
+    bonus_base = int(ativavel.get("bonus_pericias_aliados", 1) or 1)
+    custo_base = int(ativavel.get("custo_pm", 2) or 2)
+    escala = ativavel.get("escala_nivel") or {}
+    if isinstance(escala, dict):
+        cada = int(escala.get("cada", 4) or 4)
+        passo_bonus = int(escala.get("bonus", 1) or 1)
+        passo_custo = int(escala.get("custo_pm_extra", 2) or 2)
+    else:
+        cada = int(escala or 4)
+        passo_bonus = 1
+        passo_custo = 2
+
+    # Nível de classe do Bardo (suporta multiclasse)
+    nivel_classe = 1
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Bardo":
+            nivel_classe = int(c.nivel or 1)
+            break
+
+    passos = (nivel_classe - 1) // cada if cada > 0 and nivel_classe >= 1 else 0
+    bonus = bonus_base + passos * passo_bonus
+    custo = custo_base + passos * passo_custo
+
+    artista_completo = any(
+        (h.efeitos or {}).get("artista_completo") or (h.nome or "") == "Artista Completo"
+        for h in ficha.habilidades
+    )
+    aplica_dano = any(
+        (h.efeitos or {}).get("inspiracao_aplica_dano") or (h.nome or "") == "Inspiração Marcial"
+        for h in ficha.habilidades
+    )
+    cd_bonus = 0
+    for h in ficha.habilidades:
+        v = (h.efeitos or {}).get("cd_bardo_inspiracao")
+        if v:
+            cd_bonus += int(v)
+        elif (h.nome or "") == "Arte Mágica":
+            cd_bonus += 2
+
+    tem_golpe_elemental = any(
+        (h.nome or "") == "Golpe Elemental" for h in ficha.habilidades
+    )
+    golpe_elemental_max_dados = (1 + (nivel_classe - 1) // 4) if tem_golpe_elemental else 0
+
+    condicoes = getattr(ficha, "condicoes_ativas", None) or []
+    ativa = "inspiracao" in condicoes
+
+    return {
+        "bonus": bonus,
+        "custo": custo,
+        "acao": "Livre" if artista_completo else "Padrão",
+        "alcance": "Curto",
+        "duracao": "Cena",
+        "ativa": ativa,
+        "aplica_dano": aplica_dano,
+        "cd_bonus": cd_bonus,
+        "reduz_custo_metade": artista_completo,
+        "golpe_elemental_max_dados": golpe_elemental_max_dados,
+    }
+
+
 def _nivel_inicio_da_habilidade(hab) -> int:
     """Extrai o nível de início de uma habilidade de classe a partir da
     fonte. Ex.: 'Bárbaro (5)' -> 5; 'Bárbaro' -> 1."""

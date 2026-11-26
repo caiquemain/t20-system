@@ -252,6 +252,9 @@ class Combate(BaseModel):
     # Cálculo do bônus ativo de Fúria (Bárbaro): {"bonus": int, "custo": int}.
     # Bônus sobe +1 a cada 5 níveis; Fúria Titânica (20º) dobra.
     furia_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Inspiração (Bardo, T20 p.43-44): bônus/custo escalando a cada 4 níveis,
+    # ação (Padrão/Livre), Inspiração Marcial, Arte Mágica e Artista Completo.
+    inspiracao_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0
