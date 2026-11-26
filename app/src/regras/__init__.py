@@ -37,6 +37,12 @@ from .jogando import (
     calcular_limiar_morte,
     calcular_pv_objeto,
 )
+from .condicoes import (
+    expandir_condicoes,
+    aplicar_condicao_com_escalonamento,
+    calcular_deslocamento_lento,
+    calcular_efeitos_condicoes,
+)
 from .pericias import inicializar_pericias
 
 # 1. ATUALIZADO: Importamos a nova função 'calcular_proficiencias_e_extras' daqui

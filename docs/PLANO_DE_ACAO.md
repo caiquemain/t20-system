@@ -102,6 +102,12 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
+## ✅ Fase 6.9 — Apêndice: Lista de Condições (p.394–395) (Concluída)
+- [x] **Catálogo (`dados_condicoes.py`):** todas as 35 condições oficiais do Apêndice com tipo de efeito, sub-condições implícitas, escalonamento ao repetir e modificadores mecânicos.
+- [x] **Motor de Condições (`condicoes.py`, `status.py`, `pericias.py`, `custo_magia.py`):** expansão recursiva (*Petrificado → Inconsciente → Indefeso → Desprevenido*), escalonamento (*Abalado → Apavorado*, *Fatigado → Exausto*, *Fraco → Debilitado*, *Frustrado → Esmorecido*, *Exausto/Debilitado → Inconsciente*), não-acúmulo de efeitos iguais (aplicando o mais severo, exceto *Caído* cumulativo), arredondamento de *Lento* em incrementos de `1,5m` e aplicação direta na ficha (`Defesa`, `Perícias`, `Alquebrado +1 PM`), cobertos por `app/tests/test_condicoes_apendice.py`.
+
+---
+
 ## 🎲 Fase 7 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
 - **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
 - **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).
