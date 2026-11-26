@@ -6,6 +6,8 @@ import math
 import os
 import re
 import unicodedata
+import xml.etree.ElementTree as ET
+import zipfile
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Response, Depends
@@ -155,8 +157,8 @@ def _formatar_descricao_pagina2(personagem: Personagem) -> str:
     return "\n\n".join(partes)
 
 
-def gerar_pdf_bytes(personagem: Personagem) -> bytes:
-    """Preenche o template oficial da ficha T20 com PyMuPDF e retorna os bytes do PDF."""
+def _construir_campos_ficha(personagem: Personagem) -> dict[str, str]:
+    """Recalcula a ficha em cópia isolada e monta o dicionário de campos do template oficial T20."""
     # Trabalha numa cópia para não mutar a instância original e preserva PV/PM atuais
     ficha = personagem.model_copy(deep=True)
     pv_atual_orig = ficha.status.pv.atual
@@ -391,6 +393,13 @@ def gerar_pdf_bytes(personagem: Personagem) -> bytes:
     anotacoes_final = f"{anotacoes_txt}\n\n{rodape_data}" if anotacoes_txt else rodape_data
     fields_to_fill["Anotações"] = _truncar_texto(anotacoes_final, 3000)
 
+    return fields_to_fill
+
+
+def gerar_pdf_bytes(personagem: Personagem) -> bytes:
+    """Preenche o template oficial da ficha T20 com PyMuPDF e retorna os bytes do PDF."""
+    fields_to_fill = _construir_campos_ficha(personagem)
+
     # ── PREENCHIMENTO COM PYMUPDF (template em cache de memória) ──
     template_bytes = _carregar_template_bytes()
     output = BytesIO()
@@ -407,6 +416,354 @@ def gerar_pdf_bytes(personagem: Personagem) -> bytes:
                         widget.field_value = str(val)
                     widget.update()
         doc.save(output, garbage=4, deflate=True)
+
+    return output.getvalue()
+
+
+# ── EXPORTAÇÃO LIBREOFFICE DRAW (.ODG) BASEADA NO TEMPLATE PDF ──
+_ODG_MIMETYPE = "application/vnd.oasis.opendocument.graphics"
+_PT_TO_CM = 2.54 / 72.0
+_PDF_FLAG_MULTILINE = 4096
+
+_CAMPOS_ALINHADOS_ESQUERDA = {
+    "NOME DO PERSONAGEM",
+    "JOGADOR",
+    "RAÇA",
+    "ORIGEM",
+    "CLASSE",
+    "DIVINDADE",
+    "Armadura",
+    "Escudo",
+    "Proficiências",
+    "Ofício 1",
+    "Ofício_2",
+    "HabRaçasOrigem",
+    "HabClassePoderes",
+    "Magias",
+    "Descrição",
+    "Anotações",
+}
+
+
+def _pt_cm(val: float) -> str:
+    return f"{val * _PT_TO_CM:.4f}cm"
+
+
+@lru_cache(maxsize=1)
+def _carregar_template_odg_layout() -> list[dict]:
+    """Renderiza as páginas do PDF oficial em PNG (150 DPI, sem widgets) e extrai coordenadas dos campos."""
+    template_bytes = _carregar_template_bytes()
+    paginas: list[dict] = []
+    with pymupdf.open(stream=template_bytes, filetype="pdf") as doc:
+        for idx, page in enumerate(doc, start=1):
+            pix = page.get_pixmap(dpi=150, annots=False)
+            png_bytes = pix.tobytes("png")
+
+            vistos: set[str] = set()
+            widgets_info: list[dict] = []
+            for w in page.widgets():
+                nome = w.field_name
+                if not nome or nome in vistos:
+                    continue
+                vistos.add(nome)
+                widgets_info.append({
+                    "name": nome,
+                    "type": w.field_type_string or "Text",
+                    "x0": float(w.rect.x0),
+                    "y0": float(w.rect.y0),
+                    "x1": float(w.rect.x1),
+                    "y1": float(w.rect.y1),
+                    "fontsize": float(w.text_fontsize or 0.0),
+                    "multiline": bool((w.field_flags or 0) & _PDF_FLAG_MULTILINE),
+                })
+
+            paginas.append({
+                "index": idx,
+                "width_pt": float(page.rect.width),
+                "height_pt": float(page.rect.height),
+                "png": png_bytes,
+                "widgets": widgets_info,
+            })
+    return paginas
+
+
+def gerar_odg_bytes(personagem: Personagem) -> bytes:
+    """Gera arquivo LibreOffice Draw (.odg) ODF 1.2 usando o PDF oficial como fundo e caixas editáveis."""
+    fields_to_fill = _construir_campos_ficha(personagem)
+    paginas = _carregar_template_odg_layout()
+
+    w_cm = _pt_cm(paginas[0]["width_pt"])
+    h_cm = _pt_cm(paginas[0]["height_pt"])
+
+    # Namespaces ODF 1.2
+    NS_OFFICE = "urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    NS_STYLE = "urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    NS_TEXT = "urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+    NS_DRAW = "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
+    NS_FO = "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+    NS_SVG = "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+    NS_XLINK = "http://www.w3.org/1999/xlink"
+    NS_DC = "http://purl.org/dc/elements/1.1/"
+    NS_META = "urn:oasis:names:tc:opendocument:xmlns:meta:1.0"
+    NS_MANIFEST = "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"
+
+    for prefix, uri in [
+        ("office", NS_OFFICE),
+        ("style", NS_STYLE),
+        ("text", NS_TEXT),
+        ("draw", NS_DRAW),
+        ("fo", NS_FO),
+        ("svg", NS_SVG),
+        ("xlink", NS_XLINK),
+        ("dc", NS_DC),
+        ("meta", NS_META),
+        ("manifest", NS_MANIFEST),
+    ]:
+        ET.register_namespace(prefix, uri)
+
+    def q(ns: str, tag: str) -> str:
+        return f"{{{ns}}}{tag}"
+
+    # ── 1. manifest.xml ──
+    manifest = ET.Element(q(NS_MANIFEST, "manifest"), {q(NS_MANIFEST, "version"): "1.2"})
+    manifest_entries = [
+        ("/", _ODG_MIMETYPE),
+        ("content.xml", "text/xml"),
+        ("styles.xml", "text/xml"),
+        ("meta.xml", "text/xml"),
+    ]
+    for pag in paginas:
+        manifest_entries.append((f"Pictures/page_{pag['index']}.png", "image/png"))
+    for full_path, media_type in manifest_entries:
+        ET.SubElement(manifest, q(NS_MANIFEST, "file-entry"), {
+            q(NS_MANIFEST, "full-path"): full_path,
+            q(NS_MANIFEST, "media-type"): media_type,
+        })
+    manifest_xml = ET.tostring(manifest, encoding="utf-8", xml_declaration=True)
+
+    # ── 2. meta.xml ──
+    meta_doc = ET.Element(q(NS_OFFICE, "document-meta"), {q(NS_OFFICE, "version"): "1.2"})
+    meta_el = ET.SubElement(meta_doc, q(NS_OFFICE, "meta"))
+    ET.SubElement(meta_el, q(NS_DC, "title")).text = f"Ficha T20 - {personagem.cabecalho.nome or 'Personagem'}"
+    ET.SubElement(meta_el, q(NS_META, "generator")).text = "T20 System Exporter"
+    ET.SubElement(meta_el, q(NS_META, "creation-date")).text = datetime.now().isoformat(timespec="seconds")
+    meta_xml = ET.tostring(meta_doc, encoding="utf-8", xml_declaration=True)
+
+    # ── 3. styles.xml ──
+    styles_doc = ET.Element(q(NS_OFFICE, "document-styles"), {q(NS_OFFICE, "version"): "1.2"})
+    auto_styles_s = ET.SubElement(styles_doc, q(NS_OFFICE, "automatic-styles"))
+
+    pm1 = ET.SubElement(auto_styles_s, q(NS_STYLE, "page-layout"), {q(NS_STYLE, "name"): "PM1"})
+    ET.SubElement(pm1, q(NS_STYLE, "page-layout-properties"), {
+        q(NS_FO, "margin-top"): "0cm",
+        q(NS_FO, "margin-bottom"): "0cm",
+        q(NS_FO, "margin-left"): "0cm",
+        q(NS_FO, "margin-right"): "0cm",
+        q(NS_FO, "page-width"): w_cm,
+        q(NS_FO, "page-height"): h_cm,
+        q(NS_STYLE, "print-orientation"): "portrait",
+    })
+
+    dp1 = ET.SubElement(auto_styles_s, q(NS_STYLE, "style"), {
+        q(NS_STYLE, "name"): "dp1",
+        q(NS_STYLE, "family"): "drawing-page",
+    })
+    ET.SubElement(dp1, q(NS_STYLE, "drawing-page-properties"), {
+        q(NS_DRAW, "background-size"): "full",
+        q(NS_DRAW, "fill"): "none",
+    })
+
+    master_styles = ET.SubElement(styles_doc, q(NS_OFFICE, "master-styles"))
+    layer_set = ET.SubElement(master_styles, q(NS_DRAW, "layer-set"))
+    ET.SubElement(layer_set, q(NS_DRAW, "layer"), {
+        q(NS_DRAW, "name"): "background",
+        q(NS_DRAW, "protected"): "true",
+    })
+    ET.SubElement(layer_set, q(NS_DRAW, "layer"), {
+        q(NS_DRAW, "name"): "layout",
+    })
+    ET.SubElement(master_styles, q(NS_STYLE, "master-page"), {
+        q(NS_STYLE, "name"): "Default",
+        q(NS_STYLE, "page-layout-name"): "PM1",
+        q(NS_DRAW, "style-name"): "dp1",
+    })
+    styles_xml = ET.tostring(styles_doc, encoding="utf-8", xml_declaration=True)
+
+    # ── 4. content.xml ──
+    content_doc = ET.Element(q(NS_OFFICE, "document-content"), {q(NS_OFFICE, "version"): "1.2"})
+    font_decls = ET.SubElement(content_doc, q(NS_OFFICE, "font-face-decls"))
+    ET.SubElement(font_decls, q(NS_STYLE, "font-face"), {
+        q(NS_STYLE, "name"): "Liberation Sans",
+        q(NS_SVG, "font-family"): "'Liberation Sans', Arial, sans-serif",
+        q(NS_STYLE, "font-family-generic"): "swiss",
+        q(NS_STYLE, "font-pitch"): "variable",
+    })
+
+    auto_styles_c = ET.SubElement(content_doc, q(NS_OFFICE, "automatic-styles"))
+
+    # Estilo gráfico do fundo (imagem sem borda)
+    gr_bg = ET.SubElement(auto_styles_c, q(NS_STYLE, "style"), {
+        q(NS_STYLE, "name"): "gr_bg",
+        q(NS_STYLE, "family"): "graphic",
+    })
+    ET.SubElement(gr_bg, q(NS_STYLE, "graphic-properties"), {
+        q(NS_DRAW, "stroke"): "none",
+        q(NS_DRAW, "fill"): "none",
+    })
+
+    # Estilo gráfico para campos de 1 linha (centralizado verticalmente)
+    gr_single = ET.SubElement(auto_styles_c, q(NS_STYLE, "style"), {
+        q(NS_STYLE, "name"): "gr_single",
+        q(NS_STYLE, "family"): "graphic",
+    })
+    ET.SubElement(gr_single, q(NS_STYLE, "graphic-properties"), {
+        q(NS_DRAW, "stroke"): "none",
+        q(NS_DRAW, "fill"): "none",
+        q(NS_FO, "padding-top"): "0.01cm",
+        q(NS_FO, "padding-bottom"): "0.01cm",
+        q(NS_FO, "padding-left"): "0.03cm",
+        q(NS_FO, "padding-right"): "0.03cm",
+        q(NS_DRAW, "textarea-vertical-align"): "middle",
+    })
+
+    # Estilo gráfico para campos multilinha (alinhado no topo)
+    gr_multi = ET.SubElement(auto_styles_c, q(NS_STYLE, "style"), {
+        q(NS_STYLE, "name"): "gr_multi",
+        q(NS_STYLE, "family"): "graphic",
+    })
+    ET.SubElement(gr_multi, q(NS_STYLE, "graphic-properties"), {
+        q(NS_DRAW, "stroke"): "none",
+        q(NS_DRAW, "fill"): "none",
+        q(NS_FO, "padding-top"): "0.04cm",
+        q(NS_FO, "padding-bottom"): "0.04cm",
+        q(NS_FO, "padding-left"): "0.06cm",
+        q(NS_FO, "padding-right"): "0.06cm",
+        q(NS_DRAW, "textarea-vertical-align"): "top",
+    })
+
+    # Cache dinâmico de estilos de parágrafo/texto por (tamanho_pt, alinhamento, negrito)
+    text_styles_criados: dict[tuple[str, str, bool], str] = {}
+
+    def _obter_estilo_texto(font_pt: float, align: str, bold: bool = False) -> str:
+        size_key = f"{font_pt:.1f}pt"
+        chave = (size_key, align, bold)
+        if chave in text_styles_criados:
+            return text_styles_criados[chave]
+        nome_estilo = f"P_{len(text_styles_criados) + 1}"
+        st = ET.SubElement(auto_styles_c, q(NS_STYLE, "style"), {
+            q(NS_STYLE, "name"): nome_estilo,
+            q(NS_STYLE, "family"): "paragraph",
+        })
+        ET.SubElement(st, q(NS_STYLE, "paragraph-properties"), {
+            q(NS_FO, "text-align"): align,
+            q(NS_FO, "line-height"): "110%",
+        })
+        text_props = {
+            q(NS_STYLE, "font-name"): "Liberation Sans",
+            q(NS_FO, "font-size"): size_key,
+            q(NS_FO, "color"): "#111111",
+        }
+        if bold:
+            text_props[q(NS_FO, "font-weight")] = "bold"
+        ET.SubElement(st, q(NS_STYLE, "text-properties"), text_props)
+        text_styles_criados[chave] = nome_estilo
+        return nome_estilo
+
+    body = ET.SubElement(content_doc, q(NS_OFFICE, "body"))
+    drawing = ET.SubElement(body, q(NS_OFFICE, "drawing"))
+
+    for pag in paginas:
+        page_el = ET.SubElement(drawing, q(NS_DRAW, "page"), {
+            q(NS_DRAW, "name"): f"page{pag['index']}",
+            q(NS_DRAW, "style-name"): "dp1",
+            q(NS_DRAW, "master-page-name"): "Default",
+        })
+
+        # Camada de fundo: imagem fiel do template oficial
+        bg_frame = ET.SubElement(page_el, q(NS_DRAW, "frame"), {
+            q(NS_DRAW, "name"): f"Fundo_Pagina_{pag['index']}",
+            q(NS_DRAW, "layer"): "background",
+            q(NS_DRAW, "style-name"): "gr_bg",
+            q(NS_SVG, "x"): "0cm",
+            q(NS_SVG, "y"): "0cm",
+            q(NS_SVG, "width"): _pt_cm(pag["width_pt"]),
+            q(NS_SVG, "height"): _pt_cm(pag["height_pt"]),
+        })
+        ET.SubElement(bg_frame, q(NS_DRAW, "image"), {
+            q(NS_XLINK, "href"): f"Pictures/page_{pag['index']}.png",
+            q(NS_XLINK, "type"): "simple",
+            q(NS_XLINK, "show"): "embed",
+            q(NS_XLINK, "actuate"): "onLoad",
+        })
+
+        # Camada editável: caixas de texto nas coordenadas exatas dos campos AcroForm
+        for w in pag["widgets"]:
+            nome = w["name"]
+            if nome not in fields_to_fill:
+                continue
+            val = fields_to_fill[nome]
+            if val is None or val == "" or val == "/Off":
+                continue
+
+            rect_w = max(4.0, w["x1"] - w["x0"])
+            rect_h = max(4.0, w["y1"] - w["y0"])
+            eh_checkbox = (val == "/Yes") or (w["type"] == "CheckBox")
+
+            if eh_checkbox:
+                if val != "/Yes":
+                    continue
+                texto = "✕"
+                font_pt = max(6.5, min(11.0, rect_h * 0.85))
+                align = "center"
+                bold = True
+                gr_style = "gr_single"
+            else:
+                texto = str(val)
+                multiline = w["multiline"] or ("\n" in texto) or rect_h > 36.0
+                if w["fontsize"] > 0:
+                    font_pt = max(6.5, min(16.0, w["fontsize"]))
+                elif multiline:
+                    font_pt = 7.5
+                else:
+                    font_pt = max(6.5, min(12.0, rect_h * 0.62))
+
+                eh_esquerda = (
+                    multiline
+                    or nome in _CAMPOS_ALINHADOS_ESQUERDA
+                    or nome.startswith(("Ataque ", "Item"))
+                )
+                align = "start" if eh_esquerda else "center"
+                bold = nome in ("NOME DO PERSONAGEM", "CA", "PVs Totais", "PMs Totais") or nome.startswith("Mod")
+                gr_style = "gr_multi" if multiline else "gr_single"
+
+            p_style = _obter_estilo_texto(font_pt, align, bold)
+
+            frame = ET.SubElement(page_el, q(NS_DRAW, "frame"), {
+                q(NS_DRAW, "name"): nome,
+                q(NS_DRAW, "layer"): "layout",
+                q(NS_DRAW, "style-name"): gr_style,
+                q(NS_SVG, "x"): _pt_cm(w["x0"]),
+                q(NS_SVG, "y"): _pt_cm(w["y0"]),
+                q(NS_SVG, "width"): _pt_cm(rect_w),
+                q(NS_SVG, "height"): _pt_cm(rect_h),
+            })
+            tbox = ET.SubElement(frame, q(NS_DRAW, "text-box"))
+            for linha in texto.split("\n"):
+                p = ET.SubElement(tbox, q(NS_TEXT, "p"), {q(NS_TEXT, "style-name"): p_style})
+                p.text = linha
+
+    content_xml = ET.tostring(content_doc, encoding="utf-8", xml_declaration=True)
+
+    # ── 5. Empacotamento ZIP ODF 1.2 (mimetype sem compressão em 1º lugar) ──
+    output = BytesIO()
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("mimetype", _ODG_MIMETYPE.encode("ascii"), compress_type=zipfile.ZIP_STORED)
+        zf.writestr("META-INF/manifest.xml", manifest_xml)
+        zf.writestr("meta.xml", meta_xml)
+        zf.writestr("styles.xml", styles_xml)
+        zf.writestr("content.xml", content_xml)
+        for pag in paginas:
+            zf.writestr(f"Pictures/page_{pag['index']}.png", pag["png"], compress_type=zipfile.ZIP_STORED)
 
     return output.getvalue()
 
@@ -439,3 +796,33 @@ async def gerar_pdf(personagem_id: str, db=Depends(get_db)):
     except Exception as e:
         logger.error(f"Erro ao gerar PDF: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Erro ao gerar PDF: {str(e)}")
+
+
+@router.get("/{personagem_id}/odg")
+async def gerar_odg(personagem_id: str, db=Depends(get_db)):
+    """Gera ficha editável no formato LibreOffice Draw (.odg) usando o PDF oficial como base."""
+    try:
+        try:
+            oid = ObjectId(personagem_id)
+        except Exception:
+            raise HTTPException(status_code=404, detail="ID inválido")
+
+        personagem_doc = await db.personagens.find_one({"_id": oid})
+        if not personagem_doc:
+            raise HTTPException(status_code=404, detail="Personagem não encontrado")
+
+        personagem = Personagem(**personagem_doc)
+        odg_bytes = gerar_odg_bytes(personagem)
+        nome_slug = _sanitizar_nome_arquivo(personagem.cabecalho.nome)
+
+        return Response(
+            content=odg_bytes,
+            media_type=_ODG_MIMETYPE,
+            headers={"Content-Disposition": f"attachment; filename=ficha-{nome_slug}.odg"},
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao gerar ODG: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar ODG: {str(e)}")
