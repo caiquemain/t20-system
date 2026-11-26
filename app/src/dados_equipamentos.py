@@ -4,11 +4,11 @@
 # categoria = proficiência | proposito | empunhadura | mecanica (arremesso/disparo)
 DADOS_ARMAS = {
     # --- SIMPLES | CORPO A CORPO ---
-    "Adaga": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Leve", "preco": 2, "dano": "1d4", "critico": "19", "alcance": None, "tipo": "Perfuração", "espacos": 1, "habilidades": [], "arremessavel": True, "destreza_no_ataque": True},
+    "Adaga": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Leve", "preco": 2, "dano": "1d4", "critico": "19", "alcance": "Curto", "tipo": "Perfuração", "espacos": 1, "habilidades": [], "arremessavel": True, "destreza_no_ataque": True},
     "Espada curta": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Leve", "preco": 10, "dano": "1d6", "critico": "19", "alcance": None, "tipo": "Perfuração", "espacos": 1, "habilidades": []},
     "Foice": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Leve", "preco": 4, "dano": "1d6", "critico": "x3", "alcance": None, "tipo": "Corte", "espacos": 1, "habilidades": []},
     "Clava": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 0, "dano": "1d6", "critico": "x2", "alcance": None, "tipo": "Impacto", "espacos": 1, "habilidades": []},
-    "Lança": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 2, "dano": "1d6", "critico": "x2", "alcance": None, "tipo": "Perfuração", "espacos": 1, "habilidades": [], "arremessavel": True},
+    "Lança": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 2, "dano": "1d6", "critico": "x2", "alcance": "Curto", "tipo": "Perfuração", "espacos": 1, "habilidades": [], "arremessavel": True},
     "Maça": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 12, "dano": "1d8", "critico": "x2", "alcance": None, "tipo": "Impacto", "espacos": 1, "habilidades": []},
     "Bordão": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Duas Mãos", "preco": 0, "dano": "1d6/1d6", "critico": "x2", "alcance": None, "tipo": "Impacto", "espacos": 2, "habilidades": ["dupla"]},
     "Pique": {"categoria": "Simples", "proposito": "Corpo a Corpo", "empunhadura": "Duas Mãos", "preco": 2, "dano": "1d8", "critico": "x2", "alcance": None, "tipo": "Perfuração", "espacos": 2, "habilidades": ["alongada"]},
@@ -19,7 +19,7 @@ DADOS_ARMAS = {
     "Funda": {"categoria": "Simples", "proposito": "À Distância", "mecanica": "Disparo", "empunhadura": "Uma Mão", "preco": 0, "dano": "1d4", "critico": "x2", "alcance": "Médio", "tipo": "Impacto", "espacos": 1, "habilidades": [], "for_no_dano": True, "recarga": "movimento"},
     "Arco curto": {"categoria": "Simples", "proposito": "À Distância", "mecanica": "Disparo", "empunhadura": "Duas Mãos", "preco": 30, "dano": "1d6", "critico": "x3", "alcance": "Médio", "tipo": "Perfuração", "espacos": 2, "habilidades": []},
     # --- MARCIAIS | CORPO A CORPO ---
-    "Machadinha": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Leve", "preco": 6, "dano": "1d6", "critico": "x3", "alcance": None, "tipo": "Corte", "espacos": 1, "habilidades": [], "arremessavel": True},
+    "Machadinha": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Leve", "preco": 6, "dano": "1d6", "critico": "x3", "alcance": "Curto", "tipo": "Corte", "espacos": 1, "habilidades": [], "arremessavel": True},
     "Cimitarra": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 15, "dano": "1d6", "critico": "18", "alcance": None, "tipo": "Corte", "espacos": 1, "habilidades": ["ágil"]},
     "Espada longa": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 15, "dano": "1d8", "critico": "19", "alcance": None, "tipo": "Corte", "espacos": 1, "habilidades": []},
     "Florete": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 20, "dano": "1d6", "critico": "18", "alcance": None, "tipo": "Perfuração", "espacos": 1, "habilidades": ["ágil"]},
@@ -27,7 +27,7 @@ DADOS_ARMAS = {
     "Mangual": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 8, "dano": "1d8", "critico": "x2", "alcance": None, "tipo": "Impacto", "espacos": 1, "habilidades": ["versátil"], "versatil": "+2 desarmar"},
     "Martelo de guerra": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 12, "dano": "1d8", "critico": "x3", "alcance": None, "tipo": "Impacto", "espacos": 1, "habilidades": []},
     "Picareta": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 8, "dano": "1d6", "critico": "x4", "alcance": None, "tipo": "Perfuração", "espacos": 1, "habilidades": []},
-    "Tridente": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 15, "dano": "1d8", "critico": "x2", "alcance": None, "tipo": "Perfuração", "espacos": 1, "habilidades": ["versátil"], "versatil": "+2 derrubar", "arremessavel": True},
+    "Tridente": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Uma Mão", "preco": 15, "dano": "1d8", "critico": "x2", "alcance": "Curto", "tipo": "Perfuração", "espacos": 1, "habilidades": ["versátil"], "versatil": "+2 derrubar", "arremessavel": True},
     "Alabarda": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Duas Mãos", "preco": 10, "dano": "1d10", "critico": "x3", "alcance": None, "tipo": "Corte/Perfuração", "espacos": 2, "habilidades": ["alongada"]},
     "Alfange": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Duas Mãos", "preco": 75, "dano": "2d4", "critico": "18", "alcance": None, "tipo": "Corte", "espacos": 2, "habilidades": []},
     "Gadanho": {"categoria": "Marcial", "proposito": "Corpo a Corpo", "empunhadura": "Duas Mãos", "preco": 18, "dano": "2d4", "critico": "x4", "alcance": None, "tipo": "Corte", "espacos": 2, "habilidades": []},
@@ -308,3 +308,56 @@ DADOS_SERVICOS = {
     "Magia 3º círculo": {"preco": 360, "unidade": "lançamento", "notas": ""},
     "Mensageiro (km)": {"preco": 0.5, "unidade": "km", "notas": ""},
 }
+
+# --- TABELA 3-1: DINHEIRO INICIAL POR NÍVEL (T20 JdA p.140) ---
+DINHEIRO_INICIAL_POR_NIVEL = {
+    1: "4d6",
+    2: 300,
+    3: 600,
+    4: 1000,
+    5: 2000,
+    6: 3000,
+    7: 5000,
+    8: 7000,
+    9: 10000,
+    10: 13000,
+    11: 19000,
+    12: 27000,
+    13: 36000,
+    14: 49000,
+    15: 66000,
+    16: 88000,
+    17: 110000,
+    18: 150000,
+    19: 200000,
+    20: 260000,
+}
+
+# --- TABELA 3-2: PASSOS DE DANO DE ARMAS (T20 JdA p.143) ---
+_ESCALA_PADRAO_DANO = [
+    "1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10",
+    "1d12", "3d6", "4d6", "4d8", "4d10", "4d12",
+]
+_ESCALA_ESPECIAL_DANO = {
+    "2d4": ["1", "1d2", "1d3", "1d4", "1d6", "2d4", "1d10", "1d12", "3d6", "4d6", "4d8", "4d10", "4d12"],
+    "2d6": ["1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10", "2d6", "3d6", "4d6", "4d8", "4d10", "4d12"],
+    "3d4": ["1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10", "3d4", "3d6", "4d6", "4d8", "4d10", "4d12"],
+    "2d8": ["1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10", "2d6", "2d8", "3d8", "4d8", "4d10", "4d12"],
+    "2d10": ["1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10", "2d6", "2d8", "2d10", "3d10", "4d10", "4d12"],
+}
+
+
+def ajustar_passo_dano(dado: str, passos: int) -> str:
+    """Ajusta uma rolagem de dano em `passos` conforme Tabela 3-2 (T20 JdA p.143)."""
+    if not dado or passos == 0:
+        return dado
+    chave = dado.strip().lower()
+    if "/" in chave:
+        return "/".join(ajustar_passo_dano(p, passos) for p in chave.split("/"))
+    escala = _ESCALA_ESPECIAL_DANO.get(chave, _ESCALA_PADRAO_DANO)
+    if chave not in escala:
+        return dado
+    idx = escala.index(chave)
+    novo_idx = max(0, min(len(escala) - 1, idx + int(passos)))
+    return escala[novo_idx]
+
