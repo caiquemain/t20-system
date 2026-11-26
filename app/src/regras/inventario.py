@@ -55,10 +55,15 @@ def espacos_item(item) -> float:
 
 
 def sincronizar_carga(ficha: Personagem) -> None:
-    """Limite = 10 + 2 por FOR (ou -1 por FOR negativo). Sobrecarga > limite."""
+    """Limite = 10 + 2 por FOR (ou -1 por FOR negativo) + bônus de habilidades (ex.: Mochileiro). Sobrecarga > limite."""
     inv = ficha.inventario
     for_ = mod_atributo(ficha, "for")
-    inv.carga_maxima = max(0, 10 + 2 * for_) if for_ >= 0 else max(0, 10 + for_)
+    base_carga = max(0, 10 + 2 * for_) if for_ >= 0 else max(0, 10 + for_)
+    bonus_carga = sum(
+        int((h.efeitos or {}).get("carga_max_bonus", 0) or 0)
+        for h in (ficha.habilidades or [])
+    )
+    inv.carga_maxima = base_carga + bonus_carga
     inv.carga_total = int(sum(espacos_item(i) for i in inv.equipamentos))
     inv.sobrecargado = inv.carga_total > inv.carga_maxima
 

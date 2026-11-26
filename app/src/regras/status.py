@@ -142,6 +142,27 @@ def calcular_pv_pm(ficha: Personagem):
             valor=impares * v
         )
 
+    # Bônus fixo de PM inicial (pm_max_ini) e por patamar (Coração Heroico: 1º/5º/11º/17º)
+    patamares = 1 + (1 if nivel_total >= 5 else 0) + (1 if nivel_total >= 11 else 0) + (1 if nivel_total >= 17 else 0)
+    for hab in ficha.habilidades:
+        ef_pm = dict(hab.efeitos or {})
+        if hab.escolhas_aplicadas:
+            ef_pm.update(hab.escolhas_aplicadas)
+        v_ini = ef_pm.get("pm_max_ini", 0)
+        if v_ini:
+            pm_calc.adicionar_bonus(
+                fonte=f"{hab.nome} (+{v_ini} PM)",
+                categoria="Poder",
+                valor=int(v_ini),
+            )
+        v_pat = ef_pm.get("pm_por_patamar", 0)
+        if v_pat:
+            pm_calc.adicionar_bonus(
+                fonte=f"{hab.nome} (+{v_pat} PM × {patamares} patamar{'es' if patamares > 1 else ''})",
+                categoria="Poder",
+                valor=int(v_pat) * patamares,
+            )
+
     # Totem Espiritual (T20 p.42): soma SAB no total de PM
     mapa_attr_pm = {
         "for": "forca", "des": "destreza", "con": "constituicao",
