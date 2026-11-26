@@ -67,3 +67,67 @@ def test_carga_moedas_mochila_aventureiro_e_inventario_organizado():
     f = atualizar_ficha(f)
     assert f.inventario.carga_maxima == 18
     assert f.inventario.carga_total == 3
+
+
+def test_tabelas_3_7_3_8_3_9_melhorias_e_materiais():
+    from src.dados_equipamentos import (
+        DADOS_ARMADURAS, PRECO_MELHORIAS, DADOS_MELHORIAS, DADOS_MATERIAIS_ESPECIAIS,
+    )
+    assert len(DADOS_ARMADURAS) == 12
+    assert PRECO_MELHORIAS[1] == {"aumento_preco": 300, "aumento_cd": 5}
+    assert PRECO_MELHORIAS[4] == {"aumento_preco": 18000, "aumento_cd": 20}
+    assert len(DADOS_MELHORIAS) == 29
+    assert set(DADOS_MATERIAIS_ESPECIAIS.keys()) == {
+        "Aço-Rubi", "Adamante", "Gelo Eterno", "Madeira Tollon", "Matéria Vermelha", "Mitral"
+    }
+    assert DADOS_MATERIAIS_ESPECIAIS["Adamante"]["precos"]["Armadura Pesada"] == 18000
+    assert DADOS_MATERIAIS_ESPECIAIS["Mitral"]["precos"]["Armadura Pesada"] == 12000
+
+
+def test_bonus_itens_equipados_acolchoada_simbolo_vestuario_chapeu_casaco():
+    f_sem = atualizar_ficha(Personagem(
+        cabecalho=Cabecalho(nome="Mago", raca="Humano", deus="Wynna"),
+        classes=[ClasseInfo(nome="Arcanista", nivel=1, primaria=True, subclasse="Mago")],
+        atributos_base=Atributos(inteligencia=3, destreza=2, constituicao=1),
+    ))
+    f_com = atualizar_ficha(Personagem(
+        cabecalho=Cabecalho(nome="Mago", raca="Humano", deus="Wynna"),
+        classes=[ClasseInfo(nome="Arcanista", nivel=1, primaria=True, subclasse="Mago")],
+        atributos_base=Atributos(inteligencia=3, destreza=2, constituicao=1),
+        inventario=Inventario(equipamentos=[
+            Item(nome="Símbolo sagrado", equipado=True),
+            Item(nome="Chapéu arcano", equipado=True),
+            Item(nome="Robe místico", equipado=True),
+            Item(nome="Sapatos de camurça", equipado=True),
+        ]),
+    ))
+    # Símbolo sagrado (+1 Fort/Ref/Von)
+    assert f_com.pericias["Fortitude"].total == f_sem.pericias["Fortitude"].total + 1
+    assert f_com.pericias["Reflexos"].total == f_sem.pericias["Reflexos"].total + 1
+    assert f_com.pericias["Vontade"].total == f_sem.pericias["Vontade"].total + 1
+    # Robe místico (+1 Misticismo) e Sapatos de camurça (+1 Acrobacia)
+    assert f_com.pericias["Misticismo"].total == f_sem.pericias["Misticismo"].total + 1
+    assert f_com.pericias["Acrobacia"].total == f_sem.pericias["Acrobacia"].total + 1
+    # Chapéu arcano (+1 PM para Arcanista)
+    assert f_com.status.pm.maximo == f_sem.status.pm.maximo + 1
+
+    # Guerreiro proficiente com Armadura acolchoada (+2 Fort) e Casaco longo (penalidade 2)
+    g_sem = atualizar_ficha(Personagem(
+        cabecalho=Cabecalho(nome="Soldado", raca="Humano"),
+        classes=[ClasseInfo(nome="Guerreiro", nivel=1, primaria=True)],
+        atributos_base=Atributos(forca=2, destreza=2, constituicao=1),
+    ))
+    g_com = atualizar_ficha(Personagem(
+        cabecalho=Cabecalho(nome="Soldado", raca="Humano"),
+        classes=[ClasseInfo(nome="Guerreiro", nivel=1, primaria=True)],
+        atributos_base=Atributos(forca=2, destreza=2, constituicao=1),
+        inventario=Inventario(equipamentos=[
+            Item(nome="Armadura acolchoada", equipado=True),
+            Item(nome="Casaco longo", equipado=True),
+        ]),
+    ))
+    assert g_com.pericias["Fortitude"].total == g_sem.pericias["Fortitude"].total + 2
+    assert g_com.status.penalidade_armadura == 2
+    assert g_com.pericias["Acrobacia"].total == g_sem.pericias["Acrobacia"].total - 2
+
+

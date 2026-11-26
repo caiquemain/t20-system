@@ -237,6 +237,20 @@ def calcular_pv_pm(ficha: Personagem):
             valor=bonus_virtudes
         )
 
+    # Chapéu arcano (T20 JdA p.159): +1 PM se possuir Caminho do Arcanista
+    tem_caminho_arc = any((c.nome or "") == "Arcanista" for c in (ficha.classes or [])) or any(
+        (h.nome or "") == "Caminho do Arcanista" for h in (ficha.habilidades or [])
+    )
+    if tem_caminho_arc and any(
+        it.equipado and (it.nome or "").strip().lower() == "chapéu arcano"
+        for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+    ):
+        pm_calc.adicionar_bonus(
+            fonte="Item: Chapéu arcano",
+            categoria="Item",
+            valor=1,
+        )
+
     ficha.status.pm_calc = pm_calc
     ficha.status.pv_calc = pv_calc
     ficha.status.pv.maximo = pv_calc.total

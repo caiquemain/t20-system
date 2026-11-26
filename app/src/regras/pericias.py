@@ -348,6 +348,49 @@ def inicializar_pericias(ficha: Personagem):
                     {"fonte": "Devoção: Nimb (O&R)", "valor": -5}
                 )
 
+    # Bônus de itens equipados (T20 JdA p.153-159: Armadura acolchoada, Símbolo sagrado e Vestuário)
+    _VESTUARIO_PERICIAS = {
+        "bandana": {"Intimidação": 1},
+        "camisa bufante": {"Atuação": 1},
+        "capa esvoaçante": {"Enganação": 1},
+        "capa pesada": {"Fortitude": 1},
+        "farrapos de ermitão": {"Adestramento": 2, "Diplomacia": -2},
+        "gorro de ervas": {"Vontade": 1},
+        "luva de pelica": {"Ladinagem": 1},
+        "manto eclesiástico": {"Religião": 1},
+        "robe místico": {"Misticismo": 1},
+        "sapatos de camurça": {"Acrobacia": 1},
+        "tabardo": {"Diplomacia": 1},
+        "veste de seda": {"Reflexos": 1},
+    }
+    tem_costas_largas = any(
+        (h.nome or "") == "Costas Largas" for h in (ficha.habilidades or [])
+    )
+    limite_vestidos = 5 if tem_costas_largas else 4
+    vestidos_usados = 0
+    simbolo_aplicado = False
+    for it in (getattr(ficha.inventario, "equipamentos", None) or []):
+        if not it.equipado:
+            continue
+        nome_low = (it.nome or "").strip().lower()
+        if nome_low == "armadura acolchoada":
+            detalhamento_bonus.setdefault("Fortitude", []).append(
+                {"fonte": "Armadura acolchoada", "valor": 2}
+            )
+        elif nome_low.startswith("símbolo sagrado") and not simbolo_aplicado:
+            if (getattr(ficha.cabecalho, "deus", "") or "").strip():
+                simbolo_aplicado = True
+                for p_res in ("Fortitude", "Reflexos", "Vontade"):
+                    detalhamento_bonus.setdefault(p_res, []).append(
+                        {"fonte": "Símbolo sagrado", "valor": 1}
+                    )
+        elif nome_low in _VESTUARIO_PERICIAS and vestidos_usados < limite_vestidos:
+            vestidos_usados += 1
+            for p_v, val_v in _VESTUARIO_PERICIAS[nome_low].items():
+                detalhamento_bonus.setdefault(p_v, []).append(
+                    {"fonte": it.nome, "valor": val_v}
+                )
+
     # 3. Lista de Perícias Treinadas/Extras
     pericias_extras: List[str] = []
 
