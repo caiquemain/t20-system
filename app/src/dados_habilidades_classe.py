@@ -2890,76 +2890,231 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # LUTADOR
+    # LUTADOR (T20 JdA, p. 75-77)
     # ==========================================================================
     "LUTADOR_BRIGA": {
         "nome": "Briga",
         "tipo": "Habilidade de Classe",
         "classe": "Lutador",
         "nivel": 1,
-        "descricao": "Dano desarmado 1d6. Aumenta com nível. ",
-        "efeitos": {"dano_desarmado_base": "1d6"}
+        "descricao": "Ataques desarmados causam 1d6 (letal ou não letal sem penalidade). Aumenta a cada 4 níveis: 1d8 (5º), 1d10 (9º), 2d6 (13º), 2d8 (17º) e 2d10 (20º com Dono da Rua).",
+        "efeitos": {"dano_desarmado_base": "1d6", "progressao_briga": ["1d6", "1d8", "1d10", "2d6", "2d8"]}
     },
     "LUTADOR_GOLPE_RELAMPAGO": {
         "nome": "Golpe Relâmpago",
         "tipo": "Habilidade de Classe",
         "classe": "Lutador",
         "nivel": 1,
-        "descricao": "1 PM: Ataque desarmado extra ao agredir. ",
-        "efeitos": {}
+        "descricao": "Quando usa a ação agredir para ataque desarmado, pode gastar 1 PM para realizar um ataque desarmado adicional.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 1, "efeito": "ataque_desarmado_adicional"}}
     },
     "LUTADOR_CASCA_GROSSA": {
         "nome": "Casca Grossa",
         "tipo": "Habilidade de Classe",
         "classe": "Lutador",
         "nivel": 3,
-        "descricao": "Soma Constituição na Defesa (se sem armadura pesada). ",
-        "efeitos": {"defesa_soma_atributo": "con"}
+        "descricao": "Soma sua Constituição na Defesa (limitado pelo nível, se não usar armadura pesada). No 7º nível e a cada 4 níveis (11º, 15º, 19º), recebe +1 na Defesa.",
+        "efeitos": {
+            "defesa_soma_atributo": {"atributo": "con", "limite_por_nivel": True, "sem_armadura_pesada": True},
+            "casca_grossa_escala": {"inicio": 7, "cada": 4, "bonus": 1, "classe": "Lutador"},
+        }
     },
-    # --- PODERES DE LUTADOR ---
+    "LUTADOR_GOLPE_CRUEL": {
+        "nome": "Golpe Cruel",
+        "tipo": "Habilidade de Classe",
+        "classe": "Lutador",
+        "nivel": 5,
+        "descricao": "Sua margem de ameaça com ataques desarmados aumenta em +1.",
+        "efeitos": {"desarmado_margem_ameaca": 1}
+    },
+    "LUTADOR_GOLPE_VIOLENTO": {
+        "nome": "Golpe Violento",
+        "tipo": "Habilidade de Classe",
+        "classe": "Lutador",
+        "nivel": 9,
+        "descricao": "Seu multiplicador de crítico com ataques desarmados aumenta em +1.",
+        "efeitos": {"desarmado_multiplicador_critico": 1}
+    },
+    "LUTADOR_DONO_DA_RUA": {
+        "nome": "Dono da Rua",
+        "tipo": "Habilidade de Classe",
+        "classe": "Lutador",
+        "nivel": 20,
+        "descricao": "Dano desarmado aumenta para 2d10 (Médio). Ao usar ação agredir para ataque desarmado, faz dois ataques em vez de um (podendo usar Golpe Relâmpago para um terceiro).",
+        "efeitos": {"dono_da_rua": True, "dano_desarmado_override": "2d10"}
+    },
+    # --- PODERES DE LUTADOR (23 poderes oficiais, T20 JdA p. 76-77) ---
+    "LUTADOR_ARMA_IMPROVISADA": {
+        "nome": "Arma Improvisada",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "Atacar com armas improvisadas conta como ataque desarmado com dano +1 passo. Ação de movimento + Percepção (CD 20) encontra uma; se errar com d20 ímpar, quebra.",
+        "efeitos": {"arma_improvisada_passo_dano": 1}
+    },
     "LUTADOR_ATE_ACERTAR": {
         "nome": "Até Acertar",
         "tipo": "Poder de Lutador",
         "classe": "Lutador",
-        "descricao": "Se errar, recebe +2 cumulativo no próximo ataque. ",
-        "efeitos": {}
+        "descricao": "Ao errar ataque desarmado, recebe +2 cumulativo em ataques e dano desarmado contra o mesmo oponente até acertar ou fim da cena.",
+        "efeitos": {"ate_acertar_bonus": 2}
+    },
+    "LUTADOR_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
     },
     "LUTADOR_BRACOS_CALEJADOS": {
         "nome": "Braços Calejados",
         "tipo": "Poder de Lutador",
         "classe": "Lutador",
-        "descricao": "Soma Força na Defesa (se sem armadura). ",
-        "efeitos": {"defesa_soma_atributo": "for"}
+        "descricao": "Se não estiver usando armadura, soma sua Força na Defesa (limitado pelo seu nível).",
+        "efeitos": {"defesa_soma_atributo": {"atributo": "for", "limite_por_nivel": True, "sem_armadura": True}}
+    },
+    "LUTADOR_CABECADA": {
+        "nome": "Cabeçada",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "2 PM ao fazer ataque desarmado: oponente fica desprevenido contra este ataque (1x/cena por alvo).",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "frequencia": "1x_por_cena_alvo", "efeito": "alvo_desprevenido"}}
+    },
+    "LUTADOR_CHAVE": {
+        "nome": "Chave",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Int 1", "Lutador de Chão", "Nível 4"],
+        "descricao": "Agarrando criatura e fazendo manobra para causar dano, seu dano desarmado aumenta em um passo.",
+        "efeitos": {"chave_passo_dano": 1}
+    },
+    "LUTADOR_CONFIANCA_RINGUES": {
+        "nome": "Confiança dos Ringues",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Nível 8"],
+        "descricao": "Quando um inimigo erra ataque corpo a corpo contra você, recebe 2 PM temporários cumulativos (máximo por cena igual ao nível).",
+        "efeitos": {"confianca_ringues_pm_temp": 2, "limite_cena": "nivel"}
+    },
+    "LUTADOR_CONVENCIDO": {
+        "nome": "Convencido",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "Recebe resistência a medo e mental +5.",
+        "efeitos": {"resistencia_medo_mental": 5}
     },
     "LUTADOR_GOLPE_BAIXO": {
         "nome": "Golpe Baixo",
         "tipo": "Poder de Lutador",
         "classe": "Lutador",
-        "descricao": "2 PM: Acerto exige Fortitude ou atordoa alvo. ",
-        "efeitos": {}
+        "descricao": "2 PM ao fazer ataque desarmado: se acertar, oponente faz Fortitude (CD For) ou fica atordoado por 1 rodada (1x/cena).",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "resistencia": "Fortitude", "atributo_cd": "for", "condicao": "atordoado"}}
+    },
+    "LUTADOR_GOLPE_IMPRUDENTE": {
+        "nome": "Golpe Imprudente",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "Ao usar Golpe Relâmpago, ataques desarmados recebem +1 dado de dano do mesmo tipo, mas sofre -5 na Defesa até início do próximo turno.",
+        "efeitos": {"golpe_imprudente": {"dado_extra": 1, "penalidade_defesa": -5}}
+    },
+    "LUTADOR_IMOBILIZACAO": {
+        "nome": "Imobilização",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Chave", "Nível 8"],
+        "descricao": "Ação completa agarrando criatura: teste de manobra; se passar, imobiliza a criatura (indefesa, só pode tentar se soltar).",
+        "efeitos": {"acao_ativavel": {"acao": "completa", "efeito": "imobilizar_alvo"}}
     },
     "LUTADOR_LINGUA_BECOS": {
         "nome": "Língua dos Becos",
         "tipo": "Poder de Lutador",
         "classe": "Lutador",
         "requisitos": ["For 1", "Treinado em Intimidação"],
-        "descricao": "1 PM: Usa Força em vez de Carisma em perícia social. ",
-        "efeitos": {}
+        "descricao": "1 PM ao fazer teste de perícia baseada em Carisma: usa Força no lugar de Carisma.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 1, "efeito": "usar_forca_em_carisma"}}
+    },
+    "LUTADOR_LUTADOR_CHAO": {
+        "nome": "Lutador de Chão",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "Recebe +2 em ataques para agarrar e derrubar. Ao agarrar criatura, pode gastar 1 PM para derrubar como ação livre.",
+        "efeitos": {"lutador_chao_manobra": 2, "custo_derrubar_livre": 1}
+    },
+    "LUTADOR_NOME_ARENA": {
+        "nome": "Nome na Arena",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Nível 11"],
+        "descricao": "1x/cena, ação completa, Luta (CD 10): +2 em perícias originalmente de Carisma pela cena (+2 a cada 10 acima da CD) e melhora atitude de fãs de lutas em 1 categoria.",
+        "efeitos": {"acao_ativavel": {"acao": "completa", "pericia": "Luta", "cd": 10}}
+    },
+    "LUTADOR_PUNHOS_ADAMANTE": {
+        "nome": "Punhos de Adamante",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Nível 8"],
+        "descricao": "Seus ataques desarmados ignoram 10 pontos de redução de dano do alvo.",
+        "efeitos": {"desarmado_ignora_rd": 10}
+    },
+    "LUTADOR_RASTEIRA": {
+        "nome": "Rasteira",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "2 PM ao fazer ataque desarmado contra criatura até 1 categoria maior: se acertar, ela fica caída.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "efeito": "derrubar_ao_acertar"}}
+    },
+    "LUTADOR_SARADO": {
+        "nome": "Sarado",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["For 3"],
+        "descricao": "Soma sua Força no total de PV e em Fortitude. Pode usar Força em vez de Carisma em Diplomacia com quem se atraia por físicos bem definidos.",
+        "efeitos": {"pv_soma_atributo": "for", "pericia_soma_atributo": {"Fortitude": "for"}}
+    },
+    "LUTADOR_SEQUENCIA_DESTRUIDORA": {
+        "nome": "Sequência Destruidora",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Trocação", "Nível 12"],
+        "descricao": "Início do turno, 2 PM: diz um número (>=2); se acertar essa quantidade de ataques, o último recebe +4 cumulativo de dano por ataque feito.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "bonus_dano_por_ataque": 4}}
+    },
+    "LUTADOR_TRINCADO": {
+        "nome": "Trincado",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Con 3", "Sarado", "Nível 10"],
+        "descricao": "Soma sua Constituição nas rolagens de dano desarmado.",
+        "efeitos": {"desarmado_soma_con_dano": True}
     },
     "LUTADOR_TROCACAO": {
         "nome": "Trocação",
         "tipo": "Poder de Lutador",
         "classe": "Lutador",
         "requisitos": ["Nível 6"],
-        "descricao": "Ao acertar, paga PM (1, 2, 3...) para atacar de novo. ",
-        "efeitos": {}
+        "descricao": "Ao acertar ataque desarmado, pode fazer outro contra o mesmo alvo pagando PM igual ao nº de ataques já realizados na rodada (1, 2, 3...) até errar ou acabar os PM.",
+        "efeitos": {"acao_ativavel": {"custo_pm": "progressivo", "efeito": "ataques_desarmados_consecutivos"}}
+    },
+    "LUTADOR_TROCACAO_TUMULTUOSA": {
+        "nome": "Trocação Tumultuosa",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "requisitos": ["Trocação", "Nível 8"],
+        "descricao": "2 PM ao usar ação agredir desarmada (antes de rolar): atinge todas as criaturas adjacentes (incluindo aliados).",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "efeito": "ataque_todas_adjacentes"}}
+    },
+    "LUTADOR_VALENTAO": {
+        "nome": "Valentão",
+        "tipo": "Poder de Lutador",
+        "classe": "Lutador",
+        "descricao": "Recebe +2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
+        "efeitos": {"valentao_bonus": 2}
     },
     "LUTADOR_VOADORA": {
         "nome": "Voadora",
         "tipo": "Poder de Lutador",
         "classe": "Lutador",
-        "descricao": "2 PM: Investida causa +1d6 dano a cada 3m deslocado. ",
-        "efeitos": {}
+        "descricao": "2 PM ao fazer investida desarmada: recebe +1d6 no dano para cada 3m deslocados até o oponente (limitado pelo seu nível).",
+        "efeitos": {"acao_ativavel": {"custo_pm": 2, "gatilho": "investida_desarmada", "dano_por_3m": "1d6"}}
     },
 
     # ==========================================================================

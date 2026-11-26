@@ -578,6 +578,18 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append(f"Veneno Persistente: veneno aplicado dura {efeitos['veneno_duracao_ataques']} ataques")
         if efeitos.get("mao_na_boca_agarrar"):
             lista_efeitos.append(f"Mão na Boca: +{efeitos['mao_na_boca_agarrar']} em agarrar; agarrar ação livre após ataque furtivo em desprevenido")
+        if efeitos.get("dono_da_rua"):
+            lista_efeitos.append("Dono da Rua: dano desarmado 2d10; ação agredir desarmada faz 2 ataques")
+        if efeitos.get("resistencia_medo_mental"):
+            lista_efeitos.append(f"Convencido: +{efeitos['resistencia_medo_mental']} em resistências contra medo e efeitos mentais")
+        if efeitos.get("desarmado_ignora_rd"):
+            lista_efeitos.append(f"Punhos de Adamante: ataques desarmados ignoram {efeitos['desarmado_ignora_rd']} de RD")
+        if efeitos.get("lutador_chao_manobra"):
+            lista_efeitos.append(f"Lutador de Chão: +{efeitos['lutador_chao_manobra']} para agarrar e derrubar; 1 PM derrubar livre")
+        if efeitos.get("desarmado_soma_con_dano"):
+            lista_efeitos.append("Trincado: soma Constituição nas rolagens de dano desarmado")
+        if efeitos.get("ate_acertar_bonus"):
+            lista_efeitos.append(f"Até Acertar: +{efeitos['ate_acertar_bonus']} cumulativo em ataque/dano desarmado ao errar")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 
