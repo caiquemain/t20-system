@@ -263,8 +263,6 @@ class Combate(BaseModel):
     magias_calc: Optional[Any] = None   # R5: breakdown de cálculo do limite
     circulo_maximo: int = 0   # 🆕 R5: círculo máximo de magias que o personagem pode lançar
     limite_magias: Optional[int] = None
-
-    circulo_maximo: int = 1
     bonus_dano_dado_tipo: Optional[Dict[str, int]] = None
 
     bonus_dano_magias: Optional[int] = None
