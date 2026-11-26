@@ -338,6 +338,43 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                     valor=2
                 )
 
+        # Escudeiro (Cavaleiro, T20 p.54): sua armadura concede +1 na Defesa
+        def_arm = efeitos.get("defesa_bonus_armadura", 0)
+        if def_arm:
+            usa_armadura = any(
+                it.equipado and (catalogo_do_item(it.nome) or {}).get("tipo_armadura") in ("Leve", "Pesada")
+                for it in ficha.inventario.equipamentos
+            )
+            if usa_armadura:
+                defesa_calc.adicionar_bonus(
+                    fonte=f"Poder: {hab.nome} (armadura)",
+                    categoria="Poder",
+                    valor=int(def_arm)
+                )
+
+        # Postura de Combate: Torre Inabalável (Cavaleiro, T20 p.54): soma Con na Defesa
+        if (hab.nome or "") == "Postura de Combate: Torre Inabalável" and "torre_inabalavel" in condicoes_ativas:
+            mod_con = calcular_modificador(ficha.atributos.constituicao)
+            if mod_con > 0:
+                defesa_calc.adicionar_bonus(
+                    fonte="Postura: Torre Inabalável",
+                    categoria="Poder",
+                    valor=mod_con
+                )
+
+        # Postura de Combate: Muralha Intransponível (Cavaleiro, T20 p.54): +1 Defesa com escudo
+        if (hab.nome or "") == "Postura de Combate: Muralha Intransponível" and "muralha_intransponivel" in condicoes_ativas:
+            usa_escudo = any(
+                it.equipado and (catalogo_do_item(it.nome) or {}).get("tipo_armadura") == "Escudo"
+                for it in ficha.inventario.equipamentos
+            )
+            if usa_escudo:
+                defesa_calc.adicionar_bonus(
+                    fonte="Postura: Muralha Intransponível",
+                    categoria="Poder",
+                    valor=1
+                )
+
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(
                 fonte=f"Poder: {hab.nome} (Tormenta x{qtd_tormenta})",
@@ -392,6 +429,18 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 categoria="Poder",
                 valor=bonus_desl
             )
+
+    # Posturas de Cavaleiro que alteram deslocamento
+    if "torre_inabalavel" in condicoes_ativas and any(
+        (h.nome or "") == "Postura de Combate: Torre Inabalável" for h in ficha.habilidades
+    ):
+        desl = 0
+        deslocamento_calc.total = 0
+    elif "muralha_intransponivel" in condicoes_ativas and any(
+        (h.nome or "") == "Postura de Combate: Muralha Intransponível" for h in ficha.habilidades
+    ):
+        desl = 3
+        deslocamento_calc.total = 3
 
     # Armadura pesada vestida: -3m deslocamento (respeita imunidade)
     if usa_pesada:
@@ -661,6 +710,59 @@ def calcular_marca_presa(ficha: Personagem) -> Optional[Dict[str, Any]]:
     }
 
 
+def calcular_cavaleiro(ficha: Personagem) -> Optional[Dict[str, Any]]:
+    """Calcula parâmetros de Baluarte, Duelo, Armadura da Honra e Estandarte (T20 JdA p.52-55)."""
+    baluarte_hab = next(
+        (h for h in ficha.habilidades if (h.nome or "") == "Baluarte"), None
+    )
+    if baluarte_hab is None:
+        return None
+
+    nivel_classe = 1
+    for c in ficha.classes or []:
+        if (c.nome or "") == "Cavaleiro":
+            nivel_classe = int(c.nivel or 1)
+            break
+
+    # Baluarte: +2 (1º), +4 (5º), +6 (9º), +8 (13º), +10 (17º); custo 1..5 PM
+    passos_bal = min(4, max(0, (nivel_classe - 1) // 4))
+    baluarte = {
+        "bonus": 2 + passos_bal * 2,
+        "custo": 1 + passos_bal,
+        "aliados_adjacentes": nivel_classe >= 7,
+        "aliados_alcance_curto": nivel_classe >= 15,
+    }
+
+    # Duelo (2º): +2 (2º), +3 (7º), +4 (12º), +5 (17º); custo 2..5 PM
+    duelo = None
+    if any((h.nome or "") == "Duelo" for h in ficha.habilidades) and nivel_classe >= 2:
+        passos_duelo = min(3, max(0, (nivel_classe - 2) // 5))
+        duelo = {
+            "bonus": 2 + passos_duelo,
+            "custo": 2 + passos_duelo,
+        }
+
+    mod_car = calcular_modificador(ficha.atributos.carisma)
+    nivel_total = int(ficha.cabecalho.nivel_total or 1)
+    armadura_honra = (
+        max(0, nivel_total + mod_car)
+        if any((h.efeitos or {}).get("armadura_honra_pv_temp") or (h.nome or "") == "Armadura da Honra" for h in ficha.habilidades)
+        else 0
+    )
+    estandarte = (
+        max(1, mod_car)
+        if any((h.efeitos or {}).get("estandarte_pm_temp") or (h.nome or "") == "Estandarte" for h in ficha.habilidades)
+        else 0
+    )
+
+    return {
+        "baluarte": baluarte,
+        "duelo": duelo,
+        "armadura_honra_pv_temp": armadura_honra,
+        "estandarte_pm_temp": estandarte,
+    }
+
+
 def _nivel_inicio_da_habilidade(hab) -> int:
     """Extrai o nível de início de uma habilidade de classe a partir da
     fonte. Ex.: 'Bárbaro (5)' -> 5; 'Bárbaro' -> 1."""
@@ -677,14 +779,20 @@ def calcular_reducoes_dano(ficha: Personagem):
     logger.info("--- [7] Calculando RD e Resistências ---")
     lista_rd = []
     bonus_dano_geral = 0
+    rd_armadura_pesada_total = 0
     nivel_total = int(ficha.cabecalho.nivel_total or 1)
     ficha.status.resistencia_magia = 0  # reset idempotente
+
+    usa_pesada_rd = any(
+        it.equipado and (catalogo_do_item(it.nome) or {}).get("tipo_armadura") == "Pesada"
+        for it in ficha.inventario.equipamentos
+    )
 
     qtd_tormenta = sum(
         1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo)
 
     for hab in ficha.habilidades:
-        efeitos = hab.efeitos or {}
+        efeitos = dict(hab.efeitos or {})
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
 
@@ -727,17 +835,33 @@ def calcular_reducoes_dano(ficha: Personagem):
                     rd_total = int(rd_max)
                 lista_rd.append(f"geral {rd_total}")
 
-        # ── BÔNUS DE DANO GERAL (Instinto Selvagem do Bárbaro) ──
-        # Ex.: {"dano_bonus": 1, "escala_nivel": {"cada": 6, "bonus": 1}}
+        # ── RD DE ARMADURA PESADA ACUMULATIVA (Bastião + Especialização em Armadura) ──
+        if usa_pesada_rd:
+            if efeitos.get("rd_armadura_pesada"):
+                rd_armadura_pesada_total += int(efeitos["rd_armadura_pesada"])
+            if (hab.nome or "") == "Caminho do Cavaleiro":
+                escolha_cam = (hab.escolhas_aplicadas or {}).get("caminho") or (
+                    ficha.classes[0].subclasse if ficha.classes else ""
+                )
+                if str(escolha_cam).strip() == "Bastião":
+                    rd_armadura_pesada_total += 5
+
+        # ── BÔNUS DE DANO GERAL (Instinto Selvagem do Bárbaro, Escudeiro do Cavaleiro) ──
         if "dano_bonus" in efeitos:
             dano_base = int(efeitos["dano_bonus"])
             escala = efeitos.get("escala_nivel") or {}
             cada = int(escala.get("cada", 0) or 0)
             passo = int(escala.get("bonus", 0) or 0)
             nivel_inicio = _nivel_inicio_da_habilidade(hab)
-            if nivel_total >= nivel_inicio and cada > 0:
-                extra = (nivel_total - nivel_inicio) // cada
-                bonus_dano_geral += dano_base + extra * passo
+            if cada > 0:
+                if nivel_total >= nivel_inicio:
+                    extra = (nivel_total - nivel_inicio) // cada
+                    bonus_dano_geral += dano_base + extra * passo
+            else:
+                bonus_dano_geral += dano_base
+
+    if rd_armadura_pesada_total > 0:
+        lista_rd.append(f"geral {rd_armadura_pesada_total}")
 
     # Append (nao overwrite): preserva RD vinda de outras fontes (linhagens)
     ficha.status.rd = sorted(set(ficha.status.rd + lista_rd))
