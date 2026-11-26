@@ -16,16 +16,14 @@
 
 ---
 
-## 🎯 Fase 1 — Fechar Dívidas das Raças do Livro Básico
+## ✅ Fase 1 — Fechar Dívidas das Raças do Livro Básico (Concluída)
 > Checklist detalhada: [`docs/checklists/racas-e2e.md`](./checklists/racas-e2e.md)
 
-1. **Separar Livro Básico de suplementos no `/racas`:**
-   - Adicionar metadado `fonte` (ou filtro `?fonte=T20 JdA`) para que o Wizard não misture as 26 raças de suplementos com as 17 do livro base por padrão.
-2. **Conectar efeitos raciais declarados mas ignorados pelo motor:**
-   - `resistencia_veneno` (Medusa — *Natureza Venenosa*, +5 em testes contra veneno) → refletir em `efeitos_ativos` e tooltip de Fortitude.
-   - `deslocamento_escalada_igual` (Goblin — *Espelunqueiro*) → refletir em `status` / `efeitos_ativos`.
-3. **Reaprendizado de habilidades duplicadas:**
-   - Implementar regra genérica para habilidades recebidas duas vezes (ex.: Dahllan + Druida em *Empatia Selvagem* → +2 Adestramento) e adicionar teste de regressão para Kliren + Inventor (*Engenhosidade*).
+- [x] **Separar Livro Básico de suplementos no `/racas` e `/dados/racas`:** filtro padrão `fonte == "T20 JdA"` (18 entradas = 17 raças base), com parâmetros opcionais `?incluir_suplementos=true` e `?fonte=...`.
+- [x] **Conectar efeitos raciais declarados mas ignorados pelo motor:**
+  - `resistencia_veneno` (Medusa — *Natureza Venenosa*, +5 contra veneno) refletido em `efeitos_ativos` e tooltip situacional de `Fortitude`.
+  - `deslocamento_escalada_igual` (Goblin — *Espelunqueiro*) refletido em `efeitos_ativos` com o deslocamento terrestre calculado.
+- [x] **Reaprendizado de habilidades duplicadas:** regra genérica em `processar_acumulo_habilidades` + preservação de duplicatas raça/classe em `garantir_habilidades_iniciais` (Dahllan + Druida → `+2 Adestramento`; Kliren + Inventor → `Engenhosidade` cai de 2 PM para 1 PM), coberto por `app/tests/test_raca_fase1_dividas.py` (439 testes passando).
 
 ---
 

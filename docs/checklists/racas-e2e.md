@@ -14,60 +14,22 @@ Estado da validação das **17 raças do livro base** (18 entradas com Suraggel 
 | Bônus raciais em perícia e Defesa | `test_raca_pericias_bonus.py` |
 | Escolhas do wizard consumidas pelo motor | `test_raca_escolhas_wizard.py` |
 | Estrutura de habilidades ativáveis | `test_raca_habilidades_ativaveis.py` |
+| Filtro Livro Básico, efeitos Medusa/Goblin e reaprendizado | `test_raca_fase1_dividas.py` |
 
-## Débitos conhecidos (não bloqueiam o livro base)
+## ✅ Resolvido na Fase 1
+- [x] Endpoints `/racas` e `/dados/racas` filtram por `fonte == "T20 JdA"` por padrão (`?incluir_suplementos=true` opcional).
+- [x] **Medusa — Natureza Venenosa** (`resistencia_veneno`): +5 contra veneno em `efeitos_ativos` e tooltip situacional de `Fortitude`.
+- [x] **Goblin — Espelunqueiro** (`deslocamento_escalada_igual`): deslocamento de escalada exibido em `efeitos_ativos`.
+- [x] **Reaprendizado de habilidades duplicadas**: **Dahllan + Druida** (*Empatia Selvagem* → +2 Adestramento) e **Kliren + Inventor** (*Engenhosidade* → custo reduzido para 1 PM), com testes de regressão e idempotência.
 
-### Efeitos declarados ainda não exibidos em `status` / `efeitos_ativos`
-- **Medusa — Natureza Venenosa** (`resistencia_veneno`): +5 em testes contra veneno declarado em `dados_habilidades_raciais.py`, mas ainda não exibido em `efeitos_ativos` / tooltip de Fortitude.
-- **Goblin — Espelunqueiro** (`deslocamento_escalada_igual`): deslocamento de escalada igual ao normal declarado, mas ainda não refletido em `status` / `efeitos_ativos`.
+## Débitos remanescentes (fora do escopo imediato do Livro Básico)
 
 ### Comportamentos em combate não modelados
-
-- **Golem — Fonte Elemental**: regra "ao sofrer dano mágico do tipo escolhido,
-  em vez disso cura PV = metade do dano" **não é aplicada** em combate.
-  Exigiria hook no pipeline de dano.
-- **Osteon — Natureza Esquelética**: "cura mágica de luz causa dano a você;
-  dano de trevas recupera seus PV" **não é aplicada**. Mesma razão acima.
-- **Golem — Criatura Artificial**: "Cura não funciona em você;
-  Ofício (artesão) pode ser usada no lugar dela" não é enforçado.
-- **Osteon — Preço da Não Vida**: efeitos vazios (`{}`). O sistema não
-  modela "descanso sob estrelas ou sofre fome". Débito explícito.
+- **Golem — Fonte Elemental**: curar metade do dano mágico elemental exige hook no pipeline de dano.
+- **Osteon — Natureza Esquelética**: luz causa dano / trevas cura exige hook no pipeline de dano/cura.
+- **Golem — Criatura Artificial**: restrição de cura / Ofício (artesão).
+- **Osteon — Preço da Não Vida**: efeitos vazios (`{}` — descanso sob estrelas).
 - **Hynne — Sorte Salvadora**: reroll depende do sistema de rolagens (`docs/checklists/rolagens.md`).
 
-### Habilidades de reaprendizado (duplicata)
-
-Regra comum em várias raças: "caso receba esta habilidade novamente,
-recebe +2 em X" — **não implementado genericamente**. Casos:
-- **Dahllan — Empatia Selvagem**: se Druida + Dahllan → +2 Adestramento
-- **Sílfide — Magia das Fadas**: reaprender magias reduz custo (parcialmente
-  coberto por `reducao_custo_se_conhecida`, mas o "recebe novamente a
-  habilidade" não soma bônus)
-- **Kliren — Engenhosidade**: redução de custo já funciona via
-  `nome_acumulo` + `reducao_se_acumular`, mas **não há teste cobrindo
-  o cenário Inventor + Kliren**
-
-### Raças de suplemento (fora do escopo do livro base)
-
-O catálogo `DADOS_RACAS` contém **26 raças extras** (Heróis de Arton,
-Ameaças de Arton, materiais antigos), misturadas com as 17 do livro:
-
-- **Heróis de Arton**: Duende, Eiradaan, Galokk, Meio-Elfo, Sátiro
-- **Ameaças/antigos**: Meio-Orc, Orc, Bugbear, Hobgoblin, Centauro, Gnoll,
-  Kallyanach, Kaijin, Kappa, Nezumi, Tengu, Minauro, Ceratops, Pteros,
-  Velocis, Voracis, Yidishan, Elfo-do-Mar, Nagah (M/F), Finntroll
-
-**Problema**: aparecem no dropdown de criação sem distinção de fonte.
-O endpoint `/racas` retorna todas.
-
-- **Duende — 8 habilidades ativáveis sem `efeito`**: quebram o tooltip do
-  card. Coberto por `test_todas_habilidades_ativaveis_do_livro_base_*`
-  (escopo restrito). Fix pendente.
-
-## Próximos passos sugeridos
-
-1. Separar raças de suplemento em `DADOS_RACAS_SUPLEMENTOS` (ou filtrar
-   `/racas` por `fonte == "T20 JdA"`)
-2. Conectar `resistencia_veneno` (Medusa) e `deslocamento_escalada_igual` (Goblin) em `regras/`
-3. Implementar reaprendizado genérico de habilidades raciais + teste Kliren/Inventor
-4. Preencher `efeito` das 8 habilidades ativáveis do Duende (quando retomar suplementos)
-5. Modelar hooks de dano/cura para Golem e Osteon (projeto de combate)
+### Suplementos (quando retomar fora do Livro Básico)
+- **Duende (Heróis de Arton)** — 8 habilidades ativáveis sem `efeito` (fora do filtro padrão `T20 JdA`).

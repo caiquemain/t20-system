@@ -94,7 +94,10 @@ DADOS_HABILIDADES_RACIAIS = {
         "tipo": "Racial",
         "descricao": "Você pode se comunicar com animais por meio de linguagem corporal e vocalizações. Você pode usar Adestramento para mudar atitude e persuasão com animais. Caso receba esta habilidade novamente, recebe +2 em Adestramento.",
         "fonte": "T20 JdA",
-        "efeitos": {"pericia_adestramento_persuasao": True}
+        "efeitos": {
+            "pericia_adestramento_persuasao": True,
+            "bonus_pericia_se_duplicada": {"Adestramento": 2},
+        }
     },
 
     # --- ELFO ---

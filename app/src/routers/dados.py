@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from typing import Dict
+from typing import Dict, Optional
 from src.models import Magia
 from src.dados_racas import DADOS_RACAS
 from src.dados_classes import DADOS_CLASSES
@@ -17,13 +17,24 @@ from src.dados_equipamentos import DADOS_ARMAS, DADOS_ARMADURAS, DADOS_GERAIS
 
 router = APIRouter(tags=["Dados"])
 
+FONTE_LIVRO_BASICO = "T20 JdA"
+
+
+def _filtrar_racas(incluir_suplementos: bool = False, fonte: Optional[str] = None) -> Dict:
+    if fonte:
+        return {k: v for k, v in DADOS_RACAS.items() if v.get("fonte") == fonte}
+    if incluir_suplementos:
+        return DADOS_RACAS
+    return {k: v for k, v in DADOS_RACAS.items() if v.get("fonte") == FONTE_LIVRO_BASICO}
+
+
 @router.get("/racas")
-def listar_nomes_racas():
-    return sorted(list(DADOS_RACAS.keys()))
+def listar_nomes_racas(incluir_suplementos: bool = False, fonte: Optional[str] = None):
+    return sorted(list(_filtrar_racas(incluir_suplementos=incluir_suplementos, fonte=fonte).keys()))
 
 @router.get("/dados/racas", tags=["Dados Estáticos"])
-def obter_detalhes_racas():
-    return DADOS_RACAS
+def obter_detalhes_racas(incluir_suplementos: bool = False, fonte: Optional[str] = None):
+    return _filtrar_racas(incluir_suplementos=incluir_suplementos, fonte=fonte)
 
 @router.get("/classes")
 def listar_nomes_classes():

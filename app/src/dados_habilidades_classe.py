@@ -931,7 +931,10 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Druida",
         "nivel": 1,
         "descricao": "Comunica com animais. Usa Adestramento para diplomacia. ",
-        "efeitos": {"pericia_adestramento_persuasao": True}
+        "efeitos": {
+            "pericia_adestramento_persuasao": True,
+            "bonus_pericia_se_duplicada": {"Adestramento": 2},
+        }
     },
     "DRUIDA_MAGIAS": {
         "nome": "Magias (Druida)",
@@ -1080,7 +1083,20 @@ DADOS_HABILIDADES_CLASSE = {
         "classe": "Inventor",
         "nivel": 1,
         "descricao": "2 PM: Soma Inteligência em teste de perícia (exceto ataque). ",
-        "efeitos": {}
+        "efeitos": {
+            "habilidade_ativavel": {
+                "custo": 2,
+                "acao": "Livre",
+                "gatilho": "Teste de Perícia",
+                "efeito": "Soma Inteligência no teste atual.",
+                "duracao": "Instantâneo",
+                "nome_acumulo": "Engenhosidade",
+                "reducao_se_acumular": 1,
+                "modificadores": [
+                    {"atributo": "teste_pericia", "valor_dinamico": "inteligencia", "tipo_bonus": "engenhosidade"}
+                ]
+            }
+        }
     },
     "INVENTOR_PROTOTIPO": {
         "nome": "Protótipo",

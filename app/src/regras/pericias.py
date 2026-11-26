@@ -152,6 +152,15 @@ def inicializar_pericias(ficha: Personagem):
                          "condicao": condicao_txt,
                          "condicao_id": CONDICAO_POR_HABILIDADE.get(hab.nome, "")})
 
+        # 2c. Resistência a veneno (ex.: Medusa — Natureza Venenosa: +5 em Fortitude contra veneno)
+        if "resistencia_veneno" in efeitos and isinstance(efeitos["resistencia_veneno"], (int, float)):
+            bonus_condicional.setdefault("Fortitude", []).append({
+                "fonte": hab.nome,
+                "valor": int(efeitos["resistencia_veneno"]),
+                "condicao": "contra veneno",
+                "condicao_id": "",
+            })
+
         # 3. Bônus de Tormenta Escalável
         if "bonus_pericia_tormenta" in efeitos:
             lista_alvos = efeitos["bonus_pericia_tormenta"]
