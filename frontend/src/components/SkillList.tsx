@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Personagem } from '../types';
 import { DADOS_PERICIAS_FRONTEND } from '../data/pericias';
 import { T20Icon } from './T20Icon';
+import { SkillUsesModal } from './SkillUsesModal';
 
 interface SkillListProps {
     ficha: Personagem;
@@ -11,6 +12,7 @@ interface SkillListProps {
 }
 
 export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updateFicha, listaTodasPericias }) => {
+    const [periciaModal, setPericiaModal] = useState<string | null>(null);
 
     const classePrincipal = ficha.classes[0]?.nome;
     const dadosClasse = dadosClasses[classePrincipal] || {};
@@ -215,10 +217,23 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                                 onClick={(e) => { e.stopPropagation(); removerOficio(chavePericia); }}
                                 style={{ cursor: 'pointer', color: '#ef5350', marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}><T20Icon name="fechar" size={12} /></span>
                         )}
+                        <span
+                            className="icon-badge"
+                            title={`Ver usos e rolar ${nomeExibicao} (${meta.usos?.length || 1} ${(meta.usos?.length || 1) === 1 ? 'uso' : 'usos'})`}
+                            onClick={(e) => { e.stopPropagation(); setPericiaModal(chavePericia); }}
+                            style={{ cursor: 'pointer', color: '#90caf9', marginLeft: 3, display: 'inline-flex', alignItems: 'center' }}
+                        >
+                            <T20Icon name="dado" size={12} />
+                        </span>
                     </div>
                 </div>
 
-                <div className="col-total tooltip-container">
+                <div
+                    className="col-total tooltip-container"
+                    onClick={(e) => { e.stopPropagation(); setPericiaModal(chavePericia); }}
+                    style={{ cursor: 'pointer' }}
+                    title={`Clique para abrir usos e rolar ${nomeExibicao}`}
+                >
                     <div className="total-box">{totalVal >= 0 ? `+${totalVal}` : totalVal}</div>
 
                     {/* TOOLTIP MELHORADO */}
@@ -329,7 +344,7 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
             {!cumpriuRequisitoObrigatorio && periciasObrigatoriasSelecao.length > 0 && (
                 <div style={{ background: 'rgba(255, 193, 7, 0.15)', borderBottom: '1px solid #ffc107', padding: '10px', textAlign: 'center' }}>
                     <p style={{ color: '#ffc107', margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <T20Icon name="alerta" size={14} /> Requisito de Classe: Escolha Luta ou Pontaria
+                        <T20Icon name="alerta" size={14} /> Requisito de Classe: Escolha {periciasObrigatoriasSelecao.join(' ou ')}
                     </p>
                     {isTravadoPelaObrigatoria && <p style={{ color: '#ff5252', fontSize: '0.75rem', marginTop: 4 }}>(Último slot reservado para obrigatória!)</p>}
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 8 }}>
@@ -369,6 +384,21 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
                 <input type="text" placeholder="Novo Ofício..." value={novoOficio} onChange={(e) => setNovoOficio(e.target.value)} />
                 <button onClick={adicionarOficio}>+</button>
             </div>
+
+            {periciaModal && (() => {
+                const infoM = periciasTreinadas[periciaModal] || { treino: 0, total: 0 };
+                const chaveBaseM = periciaModal.startsWith('Ofício') ? 'Ofício' : periciaModal;
+                const attrM = (infoM as any).atributo_selecionado || DADOS_PERICIAS_FRONTEND[chaveBaseM]?.atributo || 'int';
+                return (
+                    <SkillUsesModal
+                        pericia={periciaModal}
+                        total={infoM.total || 0}
+                        treinada={(infoM.treino || 0) > 0}
+                        atributoAtual={attrM}
+                        onClose={() => setPericiaModal(null)}
+                    />
+                );
+            })()}
             <style>{`
                 .skill-row-grid, .skill-header-grid { display: grid; grid-template-columns: 22px 1fr 35px 10px 135px; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
                 .skill-header-grid { font-size: 0.6rem; color: #888; font-weight: bold; border-bottom: 1px solid #444; padding: 5px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
