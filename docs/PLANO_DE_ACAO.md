@@ -68,7 +68,8 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
-## ✨ Fase 6 — Poderes Concedidos & Poderes Gerais
+## ✨ Fase 6 — Perícias, Poderes Concedidos & Poderes Gerais
+- [x] **Perícias (`dados_pericias.py`, `frontend/src/data/pericias.ts`, `SkillUsesModal.tsx`):** revisadas todas as 29 perícias contra Tabela 2-1 (T20 JdA p.115), corrigido catálogo do frontend (que tinha entradas inválidas/incompletas) e criado modal interativo **Usos da Perícia** com todas as ações/CDs oficiais (p.115–123), bloqueio de usos *Apenas Treinado* e rolagem rápida `1d20 + total` (`app/tests/test_pericias_catalogo.py`, `833 testes passando`).
 - **Poderes Concedidos (`dados_poderes_concedidos.py`):** modelar `efeitos` nos 20 poderes concedidos (hoje `0/20` têm efeitos mecânicos).
 - **Poderes Gerais (`dados_habilidades.py`):** revisar os 68 poderes gerais (de 202) que ainda estão sem `efeitos` declarativos, priorizando os do Livro Básico (Combate, Destino, Magia, Tormenta).
 

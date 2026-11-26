@@ -342,8 +342,8 @@ def inicializar_pericias(ficha: Personagem):
 
     # O&R de Nimb (T20 JdA p.102): -5 em testes de perícias baseadas em Carisma
     if (getattr(ficha.cabecalho, "deus", "") or "").strip() == "Nimb":
-        for p_nome, attr_p in DADOS_PERICIAS.items():
-            if attr_p == "car":
+        for p_nome, meta_p in DADOS_PERICIAS.items():
+            if isinstance(meta_p, dict) and meta_p.get("atributo") == "car":
                 detalhamento_bonus.setdefault(p_nome, []).append(
                     {"fonte": "Devoção: Nimb (O&R)", "valor": -5}
                 )

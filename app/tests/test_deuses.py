@@ -52,8 +52,11 @@ def test_nimb_penalidade_menos_5_pericias_carisma():
         atributos_base=Atributos(carisma=3, forca=1),
     ))
 
-    for p_nome, attr in DADOS_PERICIAS.items():
-        if attr == "car":
+    car_testadas = 0
+    for p_nome, meta in DADOS_PERICIAS.items():
+        if meta["atributo"] == "car":
             assert f_nimb.pericias[p_nome].total == f_sem.pericias[p_nome].total - 5
+            car_testadas += 1
         elif p_nome == "Atletismo":
             assert f_nimb.pericias[p_nome].total == f_sem.pericias[p_nome].total
+    assert car_testadas == 6
