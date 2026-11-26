@@ -23,13 +23,16 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
         });
     };
 
-    const CardSelecao = ({ rotulo, valor, placeholder, onOpen, cor, tooltip }: any) => (
+    const ehGolem = (ficha.cabecalho.raca || '').toLowerCase() === 'golem';
+
+    const CardSelecao = ({ rotulo, valor, placeholder, onOpen, cor, desabilitado }: any) => (
         <div
-            onClick={onOpen}
-            title={tooltip}
+            onClick={() => !desabilitado && onOpen()}
             style={{
                 background: '#1a1a1a', border: `1px solid ${valor ? '#444' : '#5a4a1a'}`,
-                borderRadius: 10, padding: '16px 20px', cursor: 'pointer',
+                borderRadius: 10, padding: '16px 20px',
+                cursor: desabilitado ? 'not-allowed' : 'pointer',
+                opacity: desabilitado ? 0.55 : 1,
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}
         >
@@ -39,7 +42,7 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                     {valor || placeholder}
                 </div>
             </div>
-            <span style={{ color: '#ffd700', fontSize: '1.2rem' }}>▸</span>
+            {!desabilitado && <span style={{ color: '#ffd700', fontSize: '1.2rem' }}>▸</span>}
         </div>
     );
 
@@ -65,14 +68,19 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 </div>
 
                 <CardSelecao rotulo="RAÇA" valor={ficha.cabecalho.raca} placeholder="Escolher raça..." onOpen={() => setModal('raca')} />
-                <CardSelecao rotulo="ORIGEM" valor={ficha.cabecalho.origem} placeholder="Escolher origem..." onOpen={() => setModal('origem')} />
+                <CardSelecao
+                    rotulo="ORIGEM"
+                    valor={ehGolem ? 'Sem origem (Golem)' : ficha.cabecalho.origem}
+                    placeholder="Escolher origem..."
+                    onOpen={() => setModal('origem')}
+                    desabilitado={ehGolem}
+                />
                 <CardSelecao
                     rotulo="DIVINDADE (OPCIONAL)"
                     valor={ficha.cabecalho.deus}
                     placeholder="Sem devoção"
                     onOpen={() => setModal('deus')}
                     cor="#ffd700"
-                    tooltip={ficha.cabecalho.deus ? formatarTooltipDeus(ficha.cabecalho.deus, dadosDeuses[ficha.cabecalho.deus]) : undefined}
                 />
             </div>
 

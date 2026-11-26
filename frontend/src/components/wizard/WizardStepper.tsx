@@ -9,9 +9,10 @@ interface Step {
 interface WizardStepperProps {
   steps: Step[];
   currentStep: number;
+  onStepClick?: (index: number) => void;
 }
 
-export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
+export function WizardStepper({ steps, currentStep, onStepClick }: WizardStepperProps) {
   return (
     <div style={{
       display: 'flex',
@@ -20,7 +21,8 @@ export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
       gap: '0',
       padding: '20px',
       maxWidth: '1200px',
-      margin: '0 auto'
+      margin: '0 auto',
+      flexWrap: 'wrap',
     }}>
       {steps.map((step, index) => {
         const isActive = index === currentStep;
@@ -29,12 +31,16 @@ export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
         return (
           <div key={step.id} style={{ display: 'flex', alignItems: 'center' }}>
             {/* Círculo do Step */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+            <div
+              onClick={() => onStepClick && onStepClick(index)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: onStepClick ? 'pointer' : 'default',
+              }}
+            >
               <div style={{
                 width: '50px',
                 height: '50px',

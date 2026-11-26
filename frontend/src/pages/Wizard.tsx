@@ -166,7 +166,14 @@ function Wizard() {
       </div>
 
       {/* Stepper */}
-      <WizardStepper steps={WIZARD_STEPS} currentStep={currentStep} />
+      <WizardStepper
+        steps={WIZARD_STEPS}
+        currentStep={currentStep}
+        onStepClick={(idx) => {
+          setCurrentStep(idx);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
 
       {/* Conteúdo do Step */}
       <div style={{
