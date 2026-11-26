@@ -5,6 +5,34 @@ interface ValidationResult {
     msg: string;
 }
 
+const CLASSES_COM_HABILIDADE_MAGIAS = new Set([
+    'arcanista', 'bardo', 'clérigo', 'clerigo', 'druida', 'bruxo', 'mago', 'feiticeiro',
+]);
+
+function temHabilidadeMagias(ficha: Personagem): boolean {
+    const porClasse = (ficha.classes || []).some(c =>
+        CLASSES_COM_HABILIDADE_MAGIAS.has((c.nome || '').trim().toLowerCase())
+    );
+    const porHabilidade = (ficha.habilidades || []).some(h =>
+        (h.nome || '').trim().toLowerCase() === 'magias'
+    );
+    return porClasse || porHabilidade;
+}
+
+function obterCirculoMaximo(ficha: Personagem): number {
+    const direto = Number((ficha.combate as { circulo_maximo?: number } | undefined)?.circulo_maximo || 0);
+    if (direto > 0) return direto;
+    return temHabilidadeMagias(ficha) ? 1 : 0;
+}
+
+function podeLancarMagias(ficha: Personagem): boolean {
+    return (
+        temHabilidadeMagias(ficha)
+        || obterCirculoMaximo(ficha) >= 1
+        || ((ficha.combate?.magias?.length || 0) > 0)
+    );
+}
+
 export const verificarRequisito = (
     ficha: Personagem,
     req: string,
@@ -13,13 +41,42 @@ export const verificarRequisito = (
 ): ValidationResult => {
     const reqLower = req.toLowerCase().trim();
 
+    // 0. Requisitos de Magia ("Lançar magias", "Habilidade Magias", "Lançar magias de Xº círculo")
+    const matchCirculo = reqLower.match(/lançar magias de (\d+)[º°o]?\s*c[íi]rculo|lancar magias de (\d+)[º°o]?\s*c[íi]rculo/);
+    if (matchCirculo) {
+        const circReq = parseInt(matchCirculo[1] || matchCirculo[2], 10);
+        const circAtual = obterCirculoMaximo(ficha);
+        return {
+            ok: circAtual >= circReq,
+            msg: `Requer lançar magias de ${circReq}º círculo (Atual: ${circAtual > 0 ? `${circAtual}º` : 'nenhum'})`,
+        };
+    }
+
+    if (reqLower === 'habilidade magias' || reqLower.includes('habilidade de classe magias')) {
+        return {
+            ok: temHabilidadeMagias(ficha),
+            msg: 'Requer: Habilidade Magias',
+        };
+    }
+
+    if (
+        reqLower === 'lançar magias'
+        || reqLower === 'lancar magias'
+        || reqLower === 'capacidade de lançar magias'
+        || reqLower === 'capacidade de lancar magias'
+    ) {
+        return {
+            ok: podeLancarMagias(ficha),
+            msg: 'Requer: Lançar magias',
+        };
+    }
+
     // 1. Validação de Caminho/Subclasse (Arcanista, etc)
     if (reqLower.includes('caminho') || reqLower.includes('subclasse')) {
-        const partes = reqLower.split(/[:=]/); // Divide por : ou =
+        const partes = reqLower.split(/[:=]/);
         const conteudo = partes[1] ? partes[1].trim() : "";
         const opcoes = conteudo.split(' ou ').map(op => op.trim());
 
-        // Verifica na ficha salva OU na edição atual
         const temNaFicha = ficha.classes.some(c =>
             c.subclasse && opcoes.includes(c.subclasse.toLowerCase())
         );
@@ -34,15 +91,14 @@ export const verificarRequisito = (
     // 2. Atributos (Ex: "For 1", "Destreza 3")
     const matchAttr = reqLower.match(/^(for|des|con|int|sab|car)\w*\s?:?\s?(\d+)$/);
     if (matchAttr) {
-        const mapaAtributos: Record<string, string> = {
+        const mapaAtributos: Record<string, keyof Personagem['atributos']> = {
             'for': 'forca', 'des': 'destreza', 'con': 'constituicao',
             'int': 'inteligencia', 'sab': 'sabedoria', 'car': 'carisma'
         };
         const sigla = matchAttr[1].substring(0, 3);
         const attrKey = mapaAtributos[sigla];
-        const valorMin = parseInt(matchAttr[2]);
-        // @ts-ignore
-        const valorAtual = ficha.atributos[attrKey] || 0;
+        const valorMin = parseInt(matchAttr[2], 10);
+        const valorAtual = Number(ficha.atributos?.[attrKey] ?? 0);
 
         return {
             ok: valorAtual >= valorMin,
@@ -50,48 +106,76 @@ export const verificarRequisito = (
         };
     }
 
-    // 3. Perícias (Ex: "Treinado em Luta")
+    // 3. Perícias (Ex: "Treinado em Luta", "Treinado em Misticismo ou Religião", "Treinado em Ofício (Escriba)")
     if (reqLower.includes('treinado em')) {
-        const periciaNome = req.replace(/treinado em /i, '').trim();
-        const periciaKey = Object.keys(ficha.pericias).find(k => k.toLowerCase() === periciaNome.toLowerCase());
-        const isTreinado = periciaKey ? ficha.pericias[periciaKey].treino > 0 : false;
+        const bruto = req.replace(/treinado em /i, '').trim();
+        const opcoes = bruto.split(/\s+ou\s+/i).map(s => s.trim()).filter(Boolean);
+        const periciasKeys = Object.keys(ficha.pericias || {});
+
+        const isTreinado = opcoes.some(op => {
+            const opLow = op.toLowerCase();
+            const keyExata = periciasKeys.find(k => k.toLowerCase() === opLow);
+            if (keyExata && (ficha.pericias[keyExata]?.treino || 0) > 0) return true;
+            // Se pedir "Ofício (X)" e o personagem tiver "Ofício" genérico treinado, também libera se não houver chave específica
+            if (opLow.startsWith('ofício') || opLow.startsWith('oficio')) {
+                const keyOficio = periciasKeys.find(k => k.toLowerCase() === 'ofício' || k.toLowerCase() === 'oficio');
+                if (keyOficio && (ficha.pericias[keyOficio]?.treino || 0) > 0) return true;
+            }
+            return false;
+        });
 
         return {
             ok: isTreinado,
-            msg: `Requer treino em ${periciaNome}`
+            msg: `Requer treino em ${bruto}`
         };
     }
 
-    // 4. Nível (Ex: "Nível 5", "6º nível de guerreiro")
-    const matchNivel = reqLower.match(/(?:nível|nivel)\s?(\d+)/);
+    // 4. Nível (Ex: "Nível 5", "6º nível", "5º nível de arcanista")
+    const matchNivel =
+        reqLower.match(/^(\d+)[º°o]?\s*(?:nível|nivel)(?:\s+de\s+(.+))?$/)
+        || reqLower.match(/^(?:nível|nivel)\s*(\d+)(?:\s+de\s+(.+))?$/);
     if (matchNivel) {
-        const nivelReq = parseInt(matchNivel[1]);
-        const nivelChar = ficha.cabecalho.nivel_total;
+        const nivelReq = parseInt(matchNivel[1], 10);
+        const classeReq = (matchNivel[2] || '').trim();
+        let nivelAtual = Number(ficha.cabecalho?.nivel_total || 1);
+        if (classeReq) {
+            const cls = (ficha.classes || []).find(c => (c.nome || '').toLowerCase() === classeReq);
+            nivelAtual = cls ? Number(cls.nivel || 0) : 0;
+        }
         return {
-            ok: nivelChar >= nivelReq,
-            msg: `Requer Nível ${nivelReq} (Atual: ${nivelChar})`
+            ok: nivelAtual >= nivelReq,
+            msg: classeReq
+                ? `Requer ${nivelReq}º nível de ${classeReq} (Atual: ${nivelAtual})`
+                : `Requer Nível ${nivelReq} (Atual: ${nivelAtual})`
         };
     }
 
-    // --- [NOVO] 5. Proficiências (Ex: "Proficiência com escudos", "Armaduras Pesadas") ---
-    // Verifica se o texto do requisito contém alguma das proficiências que o personagem JÁ TEM.
-    // Ex: Se char tem "Escudos" e requisito é "Proficiência com escudos", reqLower.includes("escudos") dá true.
-    if (ficha.proficiencias && ficha.proficiencias.length > 0) {
-        const temProficiencia = ficha.proficiencias.some(prof => reqLower.includes(prof.toLowerCase()));
-
-        // Só valida como "ok" se o requisito realmente parecer ser sobre proficiência/equipamento
-        const keywordsProf = ['proficiência', 'proficiencia', 'escudos', 'armas', 'armaduras'];
-        if (temProficiencia && keywordsProf.some(k => reqLower.includes(k))) {
+    // 5. Proficiências (Ex: "Proficiência com escudos", "Armaduras Pesadas")
+    const keywordsProf = ['proficiência', 'proficiencia', 'escudos', 'armas', 'armaduras'];
+    if (keywordsProf.some(k => reqLower.includes(k))) {
+        const statusProfs: unknown = ficha.status?.proficiencias;
+        const statusProfsList: string[] = Array.isArray(statusProfs)
+            ? statusProfs.map(String)
+            : typeof statusProfs === 'string'
+                ? statusProfs.split(/[,;]/).map(s => s.trim()).filter(Boolean)
+                : [];
+        const listaProfs: string[] = [
+            ...(Array.isArray(ficha.proficiencias) ? ficha.proficiencias : []),
+            ...statusProfsList,
+        ];
+        const temProficiencia = listaProfs.some(prof => reqLower.includes(prof.toLowerCase()));
+        if (temProficiencia) {
             return { ok: true, msg: 'Ok' };
         }
     }
 
-    // 6. Outros Poderes (Ex: "Foco Vital")
-    // Verifica na ficha ou na lista de pré-seleção
-    const temNaFicha = ficha.habilidades.some(h => h.nome.toLowerCase() === reqLower);
-    const temNaSelecao = poderesEscolhidos.map(p => p.toLowerCase()).includes(reqLower);
+    // 6. Outros Poderes / Habilidades (suporta "Poder A ou Poder B")
+    const opcoesPoder = reqLower.split(/\s+ou\s+/).map(s => s.trim()).filter(Boolean);
+    const habsLow = (ficha.habilidades || []).map(h => (h.nome || '').toLowerCase());
+    const selLow = poderesEscolhidos.map(p => p.toLowerCase());
+    const temPoder = opcoesPoder.some(op => habsLow.includes(op) || selLow.includes(op));
 
-    if (temNaFicha || temNaSelecao) return { ok: true, msg: 'Ok' };
+    if (temPoder) return { ok: true, msg: 'Ok' };
 
     return { ok: false, msg: `Requer: ${req}` };
 };
