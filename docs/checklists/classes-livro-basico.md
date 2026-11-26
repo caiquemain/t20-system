@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 7/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro e Clérigo)  
+**Status:** 🟡 8/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro, Caçador, Cavaleiro, Clérigo e Druida)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -17,7 +17,7 @@
 | **Caçador** | 28 (5 fixas + 23 poderes) | 28 (100%) | 2 arquivos (`test_cacador_*`) | ✅ Completa |
 | **Cavaleiro** | 26 (6 fixas + 20 poderes) | 26 (100%) | 2 arquivos (`test_cavaleiro_*`) | ✅ Completa |
 | **Clérigo** | 21 (3 fixas + 18 poderes) | 21 (100%) | 2 arquivos (`test_clerigo_*`) | ✅ Completa |
-| **Druida** | 10 (4 fixas + 6 poderes) | 9 (90%) | — | 🟡 Parcial |
+| **Druida** | 27 (5 fixas + 22 poderes) | 27 (100%) | 2 arquivos (`test_druida_*`) | ✅ Completa |
 | **Ladino** | 11 (4 fixas + 7 poderes) | 7 (64%) | — | 🟡 Parcial |
 | **Inventor** | 8 (2 fixas + 6 poderes) | 5 (63%) | — | 🟡 Parcial |
 | **Guerreiro** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
@@ -42,7 +42,7 @@
 ### Lote 3 — Divinos & Suporte
 - [x] **Clérigo** (Devoto Fiel, Magias, Mão da Divindade + 18 poderes + testes)
 - [ ] **Paladino** (Abençoado, Golpe Divino, Cura pelas Mãos, Aura Sagrada + poderes + testes)
-- [ ] **Druida** (Devoto, Empatia Selvagem, Forma Selvagem, Magias + poderes + testes)
+- [x] **Druida** (Devoto Fiel, Empatia Selvagem, Magias, Caminho dos Ermos, Força da Natureza + 22 poderes + testes)
 
 ### Lote 4 — Versáteis & Complexas
 - [x] **Bardo** (Inspiração, Magias, Eclético, Artista Completo + 20 poderes + testes)

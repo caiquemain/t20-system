@@ -1899,22 +1899,22 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # DRUIDA
+    # DRUIDA (T20 JdA, p. 60-63)
     # ==========================================================================
     "DRUIDA_DEVOTO": {
         "nome": "Devoto Fiel (Druida)",
         "tipo": "Habilidade de Classe",
         "classe": "Druida",
         "nivel": 1,
-        "descricao": "Devoto de Allihanna, Megalokk ou Oceano. Ganha 2 Poderes Concedidos. ",
-        "efeitos": {"escolha_divindade": {"restrito": ["Allihanna", "Megalokk", "Oceanus"]}, "poderes_concedidos_bonus": 1}
+        "descricao": "Torna-se devoto de Allihanna, Megalokk ou Oceano e recebe dois poderes concedidos (em vez de um).",
+        "efeitos": {"escolha_divindade": {"restrito": ["Allihanna", "Megalokk", "Oceano"]}, "poderes_concedidos_bonus": 1}
     },
     "DRUIDA_EMPATIA": {
         "nome": "Empatia Selvagem",
         "tipo": "Habilidade de Classe",
         "classe": "Druida",
         "nivel": 1,
-        "descricao": "Comunica com animais. Usa Adestramento para diplomacia. ",
+        "descricao": "Comunica-se com animais por linguagem corporal e vocalizações; usa Adestramento com animais para mudar atitude e persuasão.",
         "efeitos": {
             "pericia_adestramento_persuasao": True,
             "bonus_pericia_se_duplicada": {"Adestramento": 2},
@@ -1925,7 +1925,7 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Druida",
         "nivel": 1,
-        "descricao": "Lança magias divinas (Sab). Escolha 3 escolas. ",
+        "descricao": "Escolha três escolas de magia (escolha permanente). Lança magias divinas de 1º círculo (2º no 6º nível, 3º no 10º, 4º no 14º) dessas escolas. Começa com 2 magias e aprende +1 a cada nível par. Atributo-chave: Sabedoria (soma Sabedoria no total de PM).",
         "efeitos": {"habilita_magia": {"tipo": "Divina", "atributo": "sab", "escolas_restritas": 3}}
     },
     "DRUIDA_CAMINHO_ERMOS": {
@@ -1933,54 +1933,213 @@ DADOS_HABILIDADES_CLASSE = {
         "tipo": "Habilidade de Classe",
         "classe": "Druida",
         "nivel": 2,
-        "descricao": "Ignora terreno difícil natural. ",
-        "efeitos": {"imunidade_terreno_dificil_natural": True}
+        "descricao": "Em terrenos naturais, atravessa terrenos difíceis sem reduzir deslocamento e a CD para rastreá-lo aumenta em +10.",
+        "efeitos": {"imunidade_terreno_dificil_natural": True, "cd_rastrear_natural_bonus": 10}
     },
-    # --- PODERES DE DRUIDA ---
+    "DRUIDA_FORCA_NATUREZA": {
+        "nome": "Força da Natureza",
+        "tipo": "Habilidade de Classe",
+        "classe": "Druida",
+        "nivel": 20,
+        "descricao": "Diminui o custo de todas as suas magias em -2 PM e aumenta a CD delas em +2. Os bônus dobram (-4 PM e +4 na CD) em terrenos naturais.",
+        "efeitos": {
+            "forca_da_natureza": True,
+            "reducao_pm_magias": 2,
+            "cd_magias_bonus": 2,
+            "dobra_em_terreno_natural": True,
+        }
+    },
+    # --- PODERES DE DRUIDA (22 poderes oficiais, T20 JdA p. 61-63) ---
+    "DRUIDA_ASPECTO_INVERNO": {
+        "nome": "Aspecto do Inverno",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "Aprende uma magia de convocação ou evocação (arcana ou divina). Recebe RD frio 5 e suas magias de dano de frio causam +1 de dano por dado.",
+        "efeitos": {
+            "magia_adicional_escolas": ["Convocação", "Evocação"],
+            "resistencia_rd": {"frio": 5},
+            "bonus_dano_dado_frio": 1,
+        }
+    },
+    "DRUIDA_ASPECTO_OUTONO": {
+        "nome": "Aspecto do Outono",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "Aprende uma magia de necromancia (arcana ou divina). Pode gastar 1 PM para impor -2 nos testes de resistência de todos os inimigos em alcance curto até o início do próximo turno.",
+        "efeitos": {
+            "magia_adicional_escola": "Necromancia",
+            "acao_ativavel": {"custo_pm": 1, "alcance": "curto", "penalidade_resistencias": -2},
+        }
+    },
+    "DRUIDA_ASPECTO_PRIMAVERA": {
+        "nome": "Aspecto da Primavera",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "Aprende uma magia de encantamento ou ilusão (arcana ou divina). Escolha um número de magias igual ao seu Carisma (mínimo 1); o custo delas é reduzido em -1 PM.",
+        "efeitos": {
+            "magia_adicional_escolas": ["Encantamento", "Ilusão"],
+            "reducao_pm_magias_escolhidas": {"qtd_atributo": "car", "minimo": 1, "valor": 1},
+        }
+    },
     "DRUIDA_ASPECTO_VERAO": {
         "nome": "Aspecto do Verão",
         "tipo": "Poder de Druida",
         "classe": "Druida",
-        "descricao": "Aprende magia Transmutação. Gaste 1 PM para arma flamejante (+1d6 fogo). ",
-        "efeitos": {"magia_adicional_escola": "Transmutação"}
+        "descricao": "Aprende uma magia de transmutação (arcana ou divina). Pode gastar 1 PM para cobrir uma arma com chamas até o fim da cena (+1d6 fogo; ao acertar em combate ganha 1 PM temporário, máx por cena = nível).",
+        "efeitos": {
+            "magia_adicional_escola": "Transmutação",
+            "acao_ativavel": {"custo_pm": 1, "duracao": "cena", "dano_fogo": "1d6", "pm_temp_acerto": 1},
+        }
+    },
+    "DRUIDA_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
     },
     "DRUIDA_COMPANHEIRO_ANIMAL": {
         "nome": "Companheiro Animal",
         "tipo": "Poder de Druida",
         "classe": "Druida",
         "requisitos": ["Car 1", "Treinado em Adestramento"],
-        "descricao": "Recebe parceiro animal. ",
-        "efeitos": {"parceiro_adicional": 1}
+        "descricao": "Recebe um companheiro animal (parceiro iniciante; veterano no 7º nível, mestre no 15º). Pode escolher quantas vezes quiser para companheiros diferentes (sujeito ao limite de parceiros).",
+        "efeitos": {"parceiro_adicional": 1, "multipla_escolha": True}
+    },
+    "DRUIDA_COMPANHEIRO_APRIMORADO": {
+        "nome": "Companheiro Animal Aprimorado",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Companheiro Animal", "Nível 6"],
+        "descricao": "Um de seus companheiros animais recebe um segundo tipo, ganhando os bônus de seu nível.",
+        "efeitos": {"companheiro_segundo_tipo": True}
+    },
+    "DRUIDA_COMPANHEIRO_LENDARIO": {
+        "nome": "Companheiro Animal Lendário",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Companheiro Animal", "Nível 18"],
+        "descricao": "Um de seus companheiros animais dobra os bônus concedidos de seu tipo original.",
+        "efeitos": {"companheiro_dobra_bonus": True}
+    },
+    "DRUIDA_COMPANHEIRO_MAGICO": {
+        "nome": "Companheiro Animal Mágico",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Companheiro Animal", "Nível 8"],
+        "descricao": "Um de seus companheiros animais recebe um segundo tipo diferente entre adepto, destruidor, magivocador ou médico.",
+        "efeitos": {"companheiro_tipo_magico": ["adepto", "destruidor", "magivocador", "médico"]}
+    },
+    "DRUIDA_CORACAO_SELVA": {
+        "nome": "Coração da Selva",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "A CD para resistir a seus efeitos de veneno aumenta em +2 e estes efeitos causam +1 de perda de vida por dado.",
+        "efeitos": {"veneno_cd_bonus": 2, "veneno_dano_por_dado": 1}
+    },
+    "DRUIDA_ESPIRITO_EQUINOCIOS": {
+        "nome": "Espírito dos Equinócios",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Aspecto da Primavera", "Aspecto do Outono", "Nível 10"],
+        "descricao": "4 PM: até o final da cena, pode rolar novamente qualquer resultado 1 nos dados.",
+        "efeitos": {"acao_ativavel": {"custo_pm": 4, "duracao": "cena", "efeito": "rerrolar_1"}}
+    },
+    "DRUIDA_ESPIRITO_SOLSTICIOS": {
+        "nome": "Espírito dos Solstícios",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Aspecto do Inverno", "Aspecto do Verão", "Nível 10"],
+        "descricao": "Ao lançar magia, pode gastar +4 PM para maximizar os efeitos numéricos variáveis dela.",
+        "efeitos": {"acao_ativavel": {"custo_pm_extra": 4, "efeito": "maximizar_magia"}}
     },
     "DRUIDA_FORCA_PENHASCOS": {
         "nome": "Força dos Penhascos",
         "tipo": "Poder de Druida",
         "classe": "Druida",
         "requisitos": ["Nível 4"],
-        "descricao": "+2 Fortitude. Gaste PM para reduzir dano (RD 10/PM). ",
-        "efeitos": {"bonus_pericia": {"Fortitude": 2}}
+        "descricao": "Recebe +2 em Fortitude. Em contato com solo ou pedra, ao sofrer dano pode gastar até Sab PM para reduzir esse dano em 10 por PM.",
+        "efeitos": {
+            "bonus_pericia": {"Fortitude": 2},
+            "acao_ativavel": {"custo_pm": "variavel", "limite_pm": "sabedoria", "rd_por_pm": 10},
+        }
+    },
+    "DRUIDA_FORMA_PRIMAL": {
+        "nome": "Forma Primal",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Nível 18"],
+        "descricao": "Ao usar Forma Selvagem, pode se transformar em uma fera primal recebendo os benefícios de dois tipos de animais (bônus iguais não acumulam).",
+        "efeitos": {"forma_primal": True}
     },
     "DRUIDA_FORMA_SELVAGEM": {
         "nome": "Forma Selvagem",
         "tipo": "Poder de Druida",
         "classe": "Druida",
-        "descricao": "3 PM: Transforma em animal (bônus físicos variados). ",
-        "efeitos": {"forma_selvagem": True}
+        "descricao": "Ação completa, 3 PM: transforma-se em criatura selvagem (Ágil, Feroz, Resistente, Sorrateira ou Veloz). Não pode falar, empunhar itens ou lançar magias; mantém itens vestidos; +10 em Enganação para se passar por animal comum.",
+        "efeitos": {
+            "forma_selvagem": True,
+            "acao_ativavel": {"acao": "completa", "custo_pm": 3},
+            "formas": ["Ágil", "Feroz", "Resistente", "Sorrateira", "Veloz"],
+        }
+    },
+    "DRUIDA_FORMA_SELVAGEM_APRIMORADA": {
+        "nome": "Forma Selvagem Aprimorada",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Forma Selvagem", "Nível 6"],
+        "descricao": "Ao usar Forma Selvagem, pode gastar 6 PM ao todo para assumir uma forma aprimorada.",
+        "efeitos": {"forma_selvagem_aprimorada": True, "custo_pm_total": 6}
+    },
+    "DRUIDA_FORMA_SELVAGEM_SUPERIOR": {
+        "nome": "Forma Selvagem Superior",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "requisitos": ["Forma Selvagem Aprimorada", "Nível 12"],
+        "descricao": "Ao usar Forma Selvagem, pode gastar 10 PM ao todo para assumir uma forma superior.",
+        "efeitos": {"forma_selvagem_superior": True, "custo_pm_total": 10}
+    },
+    "DRUIDA_LIBERDADE_PRADARIA": {
+        "nome": "Liberdade da Pradaria",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "Recebe +2 em Reflexos. Ao ar livre, pode gastar 1 PM ao lançar magia para aumentar o alcance em um passo (toque -> curto -> médio -> longo).",
+        "efeitos": {
+            "bonus_pericia": {"Reflexos": 2},
+            "acao_ativavel": {"custo_pm": 1, "condicao": "ar_livre", "efeito": "aumentar_alcance_magia_1_passo"},
+        }
     },
     "DRUIDA_MAGIA_NATURAL": {
         "nome": "Magia Natural",
         "tipo": "Poder de Druida",
         "classe": "Druida",
         "requisitos": ["Forma Selvagem"],
-        "descricao": "Lança magias em forma selvagem. ",
-        "efeitos": {}
+        "descricao": "Em forma selvagem, pode lançar magias e empunhar catalisadores e esotéricos.",
+        "efeitos": {"magia_em_forma_selvagem": True}
+    },
+    "DRUIDA_PRESAS_AFIADAS": {
+        "nome": "Presas Afiadas",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "A margem de ameaça de suas armas naturais aumenta em +2.",
+        "efeitos": {"armas_naturais_margem_ameaca": 2}
     },
     "DRUIDA_SEGREDOS_NATUREZA": {
         "nome": "Segredos da Natureza",
         "tipo": "Poder de Druida",
         "classe": "Druida",
-        "descricao": "Aprende duas magias (arcanas ou divinas) das escolas conhecidas. ",
-        "efeitos": {"magias_adicionais": 2}
+        "descricao": "Aprende duas magias de qualquer círculo que possa lançar, das escolas conhecidas (arcanas ou divinas). Pode escolher este poder quantas vezes quiser.",
+        "efeitos": {"magias_adicionais": 2, "multipla_escolha": True}
+    },
+    "DRUIDA_TRANQUILIDADE_LAGOS": {
+        "nome": "Tranquilidade dos Lagos",
+        "tipo": "Poder de Druida",
+        "classe": "Druida",
+        "descricao": "Recebe +2 em Vontade. Portando recipiente com água, 1x/rodada pode pagar 1 PM para refazer um teste de resistência.",
+        "efeitos": {
+            "bonus_pericia": {"Vontade": 2},
+            "acao_ativavel": {"custo_pm": 1, "frequencia": "1x_por_rodada", "efeito": "refazer_resistencia"},
+        }
     },
 
     # ==========================================================================

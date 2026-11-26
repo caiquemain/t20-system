@@ -18,6 +18,11 @@ REGRAS_MAGIAS_POR_SUBCLASSE = {
 PODERES_QUE_DAO_MAGIAS = {
     "Conhecimento Mágico": 2,
     "Aumentar Repertório": 2,
+    "Segredos da Natureza": 2,
+    "Aspecto do Inverno": 1,
+    "Aspecto do Outono": 1,
+    "Aspecto da Primavera": 1,
+    "Aspecto do Verão": 1,
 }
 
 
