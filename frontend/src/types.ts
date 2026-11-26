@@ -24,12 +24,15 @@ export interface ClasseInfo {
 }
 
 export interface Descricao {
-    idade?: string;
+    idade?: number | string | null;
+    faixa_etaria?: string;
+    alinhamento?: string;
     altura?: string;
     tamanho: TamanhoEnum;
     genero?: string;
     idiomas: string[];
     aparencia?: string;
+    personalidade?: string;
     historia?: string;
     anotacoes?: string;
 }
@@ -119,6 +122,14 @@ export interface Status {
     imunidades: string[];
     sentidos: string[];
     vulnerabilidades: string[];
+    descanso_calc?: {
+        ruim: number;
+        normal: number;
+        confortavel: number;
+        luxuosa: number;
+        bonus_categoria: number;
+        minimo_nivel: boolean;
+    };
 }
 
 export interface PericiaInfo {

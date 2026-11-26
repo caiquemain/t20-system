@@ -31,6 +31,7 @@ from .status import (
     calcular_briga,
     calcular_nobre,
     calcular_paladino,
+    calcular_descanso,
 )
 
 # 2. ATUALIZADO: Removemos 'calcular_proficiencias_e_sentidos' daqui (pois movida para status)
@@ -81,6 +82,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     inicializar_pericias(ficha)
 
     calcular_reducoes_dano(ficha)
+    ficha.status.descanso_calc = calcular_descanso(ficha)
     ficha.combate.furia_calc = calcular_furia(ficha)
     ficha.combate.inspiracao_calc = calcular_inspiracao(ficha)
     ficha.combate.marca_presa_calc = calcular_marca_presa(ficha)

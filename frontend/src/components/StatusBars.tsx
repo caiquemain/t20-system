@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Personagem } from '../types';
 import { T20Icon, type IconName } from './T20Icon';
 import '../Ficha.css';
@@ -18,6 +18,7 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
     isFlying,
     isAquatic
 }) => {
+    const [showDescansoMenu, setShowDescansoMenu] = useState(false);
     const { pv, pm, defesa, deslocamento, rd, proficiencias, imunidades, sentidos, vulnerabilidades} = ficha.status;
     const statusAny = ficha.status as any;
 
@@ -37,18 +38,28 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
     // @ts-ignore
     const elementoGolem = habGolem?.escolhas_aplicadas?.["elemento_escolha"];
 
-    const handleDescansar = () => {
-        if (onUpdate) {
-            if (window.confirm("Deseja realizar um Descanso Completo? Isso recuperará todo seu PV e PM.")) {
-                onUpdate({
-                    status: {
-                        ...ficha.status,
-                        pv: { ...pv, atual: pv.maximo },
-                        pm: { ...pm, atual: pm.maximo }
-                    }
-                });
+    const nivel = Math.max(1, ficha.cabecalho.nivel_total || 1);
+    const descansoCalc = ficha.status.descanso_calc || {
+        ruim: Math.max(1, Math.floor(nivel / 2)),
+        normal: nivel,
+        confortavel: nivel * 2,
+        luxuosa: nivel * 3,
+        bonus_categoria: 0,
+        minimo_nivel: false,
+    };
+
+    const aplicarDescanso = (quantidade: number | 'completo') => {
+        if (!onUpdate) return;
+        const novoPv = quantidade === 'completo' ? pv.maximo : Math.min(pv.maximo, pv.atual + quantidade);
+        const novoPm = quantidade === 'completo' ? pm.maximo : Math.min(pm.maximo, pm.atual + quantidade);
+        onUpdate({
+            status: {
+                ...ficha.status,
+                pv: { ...pv, atual: novoPv, temporario: 0 },
+                pm: { ...pm, atual: novoPm, temporario: 0 },
             }
-        }
+        });
+        setShowDescansoMenu(false);
     };
 
     const getIconeResistencia = (texto: string): IconName => {
@@ -89,25 +100,86 @@ export const StatusBars: React.FC<StatusBarsProps> = ({
 
     return (
         <div className="section-card" style={{ marginTop: '25px', position: 'relative' }}>
-            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', position: 'relative' }}>
                 <h3 className="section-title" style={{ margin: 0 }}>Status Vitais</h3>
                 {onUpdate && (
-                    <button onClick={handleDescansar} className="btn-descansar" title="Recuperar todo PV e PM">
-                        <T20Icon name="descanso" size={14} /> Descansar
-                    </button>
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            onClick={() => setShowDescansoMenu(prev => !prev)}
+                            className="btn-descansar"
+                            title="Recuperar PV e PM por condição de descanso (T20 p.106)"
+                        >
+                            <T20Icon name="descanso" size={14} /> Descansar ▾
+                        </button>
+                        {showDescansoMenu && (
+                            <div style={{
+                                position: 'absolute', right: 0, top: '110%', zIndex: 50,
+                                background: '#1a1a2e', border: '1px solid #3a3a5a', borderRadius: 8,
+                                padding: 8, minWidth: 215, boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+                                display: 'flex', flexDirection: 'column', gap: 4
+                            }}>
+                                <div style={{ fontSize: '0.72rem', color: '#999', padding: '2px 6px' }}>
+                                    Condição de Descanso (zera PV/PM temp.)
+                                </div>
+                                {[
+                                    { label: 'Ruim', val: descansoCalc.ruim, desc: 'Ao relento' },
+                                    { label: 'Normal', val: descansoCalc.normal, desc: 'Estalagem comum' },
+                                    { label: 'Confortável', val: descansoCalc.confortavel, desc: '2× nível' },
+                                    { label: 'Luxuosa', val: descansoCalc.luxuosa, desc: '3× nível' },
+                                ].map(opt => (
+                                    <button
+                                        key={opt.label}
+                                        onClick={() => aplicarDescanso(opt.val)}
+                                        style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            background: 'rgba(255,255,255,0.04)', border: '1px solid #333',
+                                            color: '#eee', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: '0.8rem'
+                                        }}
+                                        title={opt.desc}
+                                    >
+                                        <span>{opt.label}</span>
+                                        <span style={{ color: '#8bc34a', fontWeight: 'bold' }}>+{opt.val} PV/PM</span>
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => aplicarDescanso('completo')}
+                                    style={{
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                        background: 'rgba(76,175,80,0.15)', border: '1px solid #4caf50',
+                                        color: '#a5d6a7', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', fontSize: '0.8rem', marginTop: 2
+                                    }}
+                                >
+                                    <span>Completo (100%)</span>
+                                    <span>Máx</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
             {/* PV */}
             <div className="bar-container tooltip-anchor">
-                <div className="bar-header"><span>PV</span><span>{pv.atual}/{pv.maximo}</span></div>
+                <div className="bar-header">
+                    <span>PV</span>
+                    <span>
+                        {pv.atual}/{pv.maximo}
+                        {(pv.temporario || 0) > 0 && <span style={{ color: '#4fc3f7', marginLeft: 4 }}>(+{pv.temporario})</span>}
+                    </span>
+                </div>
                 <div className="bar-track"><div className="bar-fill pv-fill" style={{ width: `${pvPerc}%` }}></div></div>
                 {renderTooltipPilha(statusAny.pv_calc, pv.maximo)}
             </div>
 
             {/* PM */}
             <div className="bar-container tooltip-anchor">
-                <div className="bar-header"><span>PM</span><span>{pm.atual}/{pm.maximo}</span></div>
+                <div className="bar-header">
+                    <span>PM</span>
+                    <span>
+                        {pm.atual}/{pm.maximo}
+                        {(pm.temporario || 0) > 0 && <span style={{ color: '#ce93d8', marginLeft: 4 }}>(+{pm.temporario})</span>}
+                    </span>
+                </div>
                 <div className="bar-track"><div className="bar-fill pm-fill" style={{ width: `${pmPerc}%` }}></div></div>
                 {renderTooltipPilha(statusAny.pm_calc, pm.maximo)}
             </div>
