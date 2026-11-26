@@ -492,6 +492,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append(f"Ponto Fraco: +{efeitos['ponto_fraco_margem']} margem de ameaça contra criatura marcada (dobra com Inimigo)")
         if efeitos.get("marca_presa_alcance") == "Longo":
             lista_efeitos.append("Olho do Falcão: usa Marca da Presa em alcance longo")
+        if efeitos.get("codigo_de_honra"):
+            lista_efeitos.append("Código de Honra: não pode flanquear nem atacar caído/desprevenido/incapaz")
+        if efeitos.get("resoluto"):
+            lista_efeitos.append("Resoluto: 1 PM para refazer resistência contra condição com +5")
+        if efeitos.get("bravura_final"):
+            lista_efeitos.append("Bravura Final: 3 PM (sustentada) para continuar de pé com 0 ou menos PV")
+        if efeitos.get("rd_condicional_covardes"):
+            lista_efeitos.append(f"Desprezar os Covardes: RD {efeitos['rd_condicional_covardes']} se caído, desprevenido ou flanqueado")
+        if efeitos.get("montaria_corajosa_dano"):
+            lista_efeitos.append(f"Montaria Corajosa: +{efeitos['montaria_corajosa_dano']} em dano corpo a corpo montado")
+        if efeitos.get("armadura_honra_pv_temp"):
+            lista_efeitos.append("Armadura da Honra: PV temporários (Nível + Car) no início de cada cena")
+        if efeitos.get("estandarte_pm_temp"):
+            lista_efeitos.append("Estandarte: você e aliados recebem PM temporários (Car, mín 1) no início da cena")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 

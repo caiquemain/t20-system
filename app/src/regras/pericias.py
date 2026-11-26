@@ -204,6 +204,33 @@ def inicializar_pericias(ficha: Personagem):
                         {"fonte": "Escaramuça", "valor": 2}
                     )
 
+        # 1e. Solidez (Cavaleiro, T20 p.55): soma bônus de Defesa do escudo nos testes de resistência
+        if efeitos.get("solidez_escudo_resistencias") or (hab.nome or "") == "Solidez":
+            from .inventario import catalogo_do_item as _cat_item_sol
+            bonus_escudo = 0
+            for it in (getattr(ficha.inventario, "equipamentos", None) or []):
+                if not it.equipado:
+                    continue
+                cat_it = _cat_item_sol(it.nome) or {}
+                if cat_it.get("tipo_armadura") == "Escudo":
+                    bonus_escudo = max(bonus_escudo, int(cat_it.get("bonus_defesa", 0) or 0))
+            if bonus_escudo > 0:
+                for p_res in ("Fortitude", "Reflexos", "Vontade"):
+                    detalhamento_bonus.setdefault(p_res, []).append(
+                        {"fonte": "Solidez (escudo)", "valor": bonus_escudo}
+                    )
+
+        # 1f. Postura de Combate: Muralha Intransponível (+1 Reflexos com escudo)
+        if (hab.nome or "") == "Postura de Combate: Muralha Intransponível" and "muralha_intransponivel" in (getattr(ficha, "condicoes_ativas", None) or []):
+            from .inventario import catalogo_do_item as _cat_item_mur
+            if any(
+                it.equipado and (_cat_item_mur(it.nome) or {}).get("tipo_armadura") == "Escudo"
+                for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+            ):
+                detalhamento_bonus.setdefault("Reflexos", []).append(
+                    {"fonte": "Postura: Muralha Intransponível", "valor": 1}
+                )
+
         # 2. Bônus Genéricos por Atributo
         if "bonus_pericia_atributo" in efeitos and isinstance(efeitos["bonus_pericia_atributo"], dict):
             for attr_chave, v_bonus in efeitos["bonus_pericia_atributo"].items():

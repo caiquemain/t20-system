@@ -23,6 +23,7 @@ from .status import (
     calcular_furia,
     calcular_inspiracao,
     calcular_marca_presa,
+    calcular_cavaleiro,
 )
 
 # 2. ATUALIZADO: Removemos 'calcular_proficiencias_e_sentidos' daqui (pois movida para status)
@@ -68,15 +69,15 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     # [LOTE 1] Poderes de Arcanista injetam efeitos de Familiar (bonus_pericia,
     # pericia_atributo_opcao) que precisam ser lidos por inicializar_pericias.
     aplicar_poderes_arcanista(ficha)
-    inicializar_pericias(ficha)
-
-    # 3. ATUALIZADO: Chamada da nova função
+    # Proficiências calculadas ANTES de perícias para checagem de armadura/escudo
     calcular_proficiencias_e_extras(ficha)
+    inicializar_pericias(ficha)
 
     calcular_reducoes_dano(ficha)
     ficha.combate.furia_calc = calcular_furia(ficha)
     ficha.combate.inspiracao_calc = calcular_inspiracao(ficha)
     ficha.combate.marca_presa_calc = calcular_marca_presa(ficha)
+    ficha.combate.cavaleiro_calc = calcular_cavaleiro(ficha)
     sincronizar_ataques(ficha)
     sincronizar_ataques_equipamento(ficha)
     sincronizar_carga(ficha)

@@ -1464,76 +1464,260 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # CAVALEIRO
+    # CAVALEIRO (T20 JdA, p. 52-55)
     # ==========================================================================
     "CAVALEIRO_CODIGO_HONRA": {
         "nome": "Código de Honra",
         "tipo": "Habilidade de Classe",
         "classe": "Cavaleiro",
         "nivel": 1,
-        "descricao": "Não pode flanquear, atacar caído/desprevenido. Violação perde PM. ",
-        "efeitos": {}
+        "descricao": "Não pode atacar oponente pelas costas (flanquear), caído, desprevenido ou incapaz de lutar. Se violar, perde todos os PM e só pode recuperá-los a partir do próximo dia.",
+        "efeitos": {"codigo_de_honra": True}
     },
     "CAVALEIRO_BALUARTE": {
         "nome": "Baluarte",
         "tipo": "Habilidade de Classe",
         "classe": "Cavaleiro",
         "nivel": 1,
-        "descricao": "1 PM (Reação): +2 Defesa e Resistência. Aumenta com nível. ",
-        "efeitos": {}
+        "descricao": "Ao sofrer ataque ou fazer teste de resistência, 1 PM para +2 Defesa e resistências até início do próximo turno (+2/+1 PM a cada 4 níveis: +4 no 5º, +6 no 9º, +8 no 13º, +10 no 17º). 7º nível: +2 PM estende a aliados adjacentes; 15º nível: +5 PM estende a alcance curto.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "bonus_defesa_resistencia": 2,
+                "escala_nivel": {"cada": 4, "bonus": 2, "custo_pm_extra": 1},
+            }
+        }
     },
     "CAVALEIRO_DUELO": {
         "nome": "Duelo",
         "tipo": "Habilidade de Classe",
         "classe": "Cavaleiro",
         "nivel": 2,
-        "descricao": "2 PM: +2 ataque/dano contra alvo (x1). Bônus aumenta com nível. ",
-        "efeitos": {}
+        "descricao": "2 PM: escolhe um oponente em alcance curto e recebe +2 em ataques e dano contra ele até fim da cena (termina se atacar outro). A cada 5 níveis (7º, 12º, 17º), +1 PM para +1 bônus.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 2,
+                "alcance": "curto",
+                "duracao": "cena",
+                "bonus_ataque_dano": 2,
+                "escala_nivel": {"inicio": 2, "cada": 5, "bonus": 1, "custo_pm_extra": 1},
+            }
+        }
     },
-    # --- PODERES DE CAVALEIRO ---
+    "CAVALEIRO_CAMINHO": {
+        "nome": "Caminho do Cavaleiro",
+        "tipo": "Habilidade de Classe",
+        "classe": "Cavaleiro",
+        "nivel": 5,
+        "descricao": "Escolha entre Bastião (RD 5 de armadura pesada, cumulativa com Especialização em Armadura) ou Montaria (cavalo de guerra com +5 Adestramento e Cavalgar, parceiro veterano; mestre no 11º).",
+        "efeitos": {"escolha_caminho_cavaleiro": ["Bastião", "Montaria"]}
+    },
+    "CAVALEIRO_RESOLUTO": {
+        "nome": "Resoluto",
+        "tipo": "Habilidade de Classe",
+        "classe": "Cavaleiro",
+        "nivel": 11,
+        "descricao": "1 PM para refazer um teste de resistência contra uma condição que o esteja afetando com +5 de bônus (se passar, cancela o efeito; 1x por efeito).",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 1, "bonus_rerrolagem": 5, "efeito": "refazer_resistencia_condicao"},
+            "resoluto": True,
+        }
+    },
+    "CAVALEIRO_BRAVURA_FINAL": {
+        "nome": "Bravura Final",
+        "tipo": "Habilidade de Classe",
+        "classe": "Cavaleiro",
+        "nivel": 20,
+        "descricao": "Se reduzido a 0 ou menos PV, pode gastar 3 PM (sustentada) para continuar consciente e de pé.",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 3, "duracao": "sustentada", "efeito": "continuar_de_pe_0_pv"},
+            "bravura_final": True,
+        }
+    },
+    # --- PODERES DE CAVALEIRO (20 poderes oficiais, T20 JdA p. 53-55) ---
     "CAVALEIRO_ARMADURA_HONRA": {
         "nome": "Armadura da Honra",
         "tipo": "Poder de Cavaleiro",
         "classe": "Cavaleiro",
-        "descricao": "Início da cena: Ganha PV temporários (Nível + Car). ",
-        "efeitos": {}
+        "descricao": "No início de cada cena, recebe PV temporários iguais a seu nível + seu Carisma (duram até o final da cena).",
+        "efeitos": {"armadura_honra_pv_temp": True}
+    },
+    "CAVALEIRO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
+    },
+    "CAVALEIRO_AUTORIDADE_FEUDAL": {
+        "nome": "Autoridade Feudal",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "requisitos": ["Nível 6"],
+        "descricao": "1 hora e 2 PM: conclama o povo (sem título ou posição religiosa) como parceiro iniciante de um tipo a sua escolha até o fim da aventura.",
+        "efeitos": {
+            "acao_ativavel": {"tempo": "1 hora", "custo_pm": 2, "efeito": "parceiro_iniciante_aventura"}
+        }
     },
     "CAVALEIRO_DESPREZAR_COVARDES": {
         "nome": "Desprezar os Covardes",
         "tipo": "Poder de Cavaleiro",
         "classe": "Cavaleiro",
-        "descricao": "Recebe RD 5 se estiver caído, desprevenido ou flanqueado. ",
-        "efeitos": {}
+        "descricao": "Recebe redução de dano 5 se estiver caído, desprevenido ou flanqueado.",
+        "efeitos": {"rd_condicional_covardes": 5}
     },
     "CAVALEIRO_ESCUDEIRO": {
         "nome": "Escudeiro",
         "tipo": "Poder de Cavaleiro",
         "classe": "Cavaleiro",
-        "descricao": "Parceiro que dá +1 Dano, +1 Defesa e ações auxiliares. ",
-        "efeitos": {"dano_bonus": 1, "defesa_bonus": 1}
+        "descricao": "Parceiro especial que não conta no limite: suas armas fornecem +1 dano e sua armadura concede +1 Defesa. 1 PM: ação de movimento extra (levantar, sacar item ou trazer montaria).",
+        "efeitos": {"dano_bonus": 1, "defesa_bonus_armadura": 1, "escudeiro": True}
+    },
+    "CAVALEIRO_ESPECIALIZACAO_ARMADURA": {
+        "nome": "Especialização em Armadura",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "requisitos": ["Nível 12"],
+        "descricao": "Se estiver usando armadura pesada, recebe redução de dano 5 (cumulativa com a RD de Bastião).",
+        "efeitos": {"rd_armadura_pesada": 5}
     },
     "CAVALEIRO_ESTANDARTE": {
         "nome": "Estandarte",
         "tipo": "Poder de Cavaleiro",
         "classe": "Cavaleiro",
         "requisitos": ["Título", "Nível 14"],
-        "descricao": "Início da cena: Aliados ganham PM temporários igual Car. ",
-        "efeitos": {}
+        "descricao": "No início de cada cena, você e todos os aliados que possam ver seu estandarte recebem PM temporários iguais ao seu Carisma (mínimo 1).",
+        "efeitos": {"estandarte_pm_temp": True}
     },
-    "CAVALEIRO_POSTURA_PROVOCACAO": {
-        "nome": "Postura: Provocação Petulante",
+    "CAVALEIRO_ETIQUETA": {
+        "nome": "Etiqueta",
         "tipo": "Poder de Cavaleiro",
         "classe": "Cavaleiro",
-        "descricao": "Inimigos em alcance curto devem atacar você (Vontade CD Car). ",
-        "efeitos": {}
+        "descricao": "Recebe +2 em Diplomacia e Nobreza; ao fazer teste dessas perícias, pode gastar 1 PM para rolá-lo novamente.",
+        "efeitos": {
+            "bonus_pericia": {"Diplomacia": 2, "Nobreza": 2},
+            "acao_ativavel": {"custo_pm": 1, "efeito": "rerrolar_diplomacia_nobreza"},
+        }
+    },
+    "CAVALEIRO_INVESTIDA_DESTRUIDORA": {
+        "nome": "Investida Destruidora",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Ao fazer a ação investida, pode gastar 2 PM (antes de rolar o ataque) para causar +2d8 pontos de dano.",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 2, "gatilho": "investida", "dano_extra": "2d8"}
+        }
+    },
+    "CAVALEIRO_MONTARIA_CORAJOSA": {
+        "nome": "Montaria Corajosa",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "requisitos": ["Montaria"],
+        "descricao": "Sua montaria concede +1d6 em rolagens de dano corpo a corpo (cumulativo com qualquer bônus de parceiro).",
+        "efeitos": {"montaria_corajosa_dano": "1d6"}
+    },
+    "CAVALEIRO_PAJEM": {
+        "nome": "Pajem",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Recebe +2 em Diplomacia e sua condição de descanso sobe uma categoria. Executa pequenas tarefas e não conta no limite de parceiros.",
+        "efeitos": {"bonus_pericia": {"Diplomacia": 2}, "descanso_categoria_acima": 1}
+    },
+    "CAVALEIRO_POSTURA_ARIETE": {
+        "nome": "Postura de Combate: Aríete Implacável",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Postura (movimento, 2 PM, cena): +2 ataque em investidas (+1 por +2 PM extra) e +2d8 dano contra construtos ou objetos. Precisa se deslocar todos os turnos para manter.",
+        "efeitos": {
+            "postura_combate": {
+                "acao": "movimento", "custo_pm": 2, "duracao": "cena",
+                "bonus_investida": 2, "dano_construto_objeto": "2d8",
+            }
+        }
+    },
+    "CAVALEIRO_POSTURA_CASTIGO": {
+        "nome": "Postura de Combate: Castigo de Ferro",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Postura (movimento, 2 PM, cena): sempre que um aliado adjacente sofrer ataque corpo a corpo, pode gastar 1 PM para fazer um ataque na criatura que o atacou.",
+        "efeitos": {
+            "postura_combate": {
+                "acao": "movimento", "custo_pm": 2, "duracao": "cena",
+                "custo_contra_ataque": 1,
+            }
+        }
+    },
+    "CAVALEIRO_POSTURA_FOCO": {
+        "nome": "Postura de Combate: Foco de Batalha",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Postura (movimento, 2 PM, cena): sempre que um inimigo atacá-lo, recebe 1 PM temporário cumulativo (máximo por cena igual ao nível).",
+        "efeitos": {
+            "postura_combate": {
+                "acao": "movimento", "custo_pm": 2, "duracao": "cena",
+                "pm_temp_por_ataque": 1, "limite_cena": "nivel",
+            }
+        }
+    },
+    "CAVALEIRO_POSTURA_MURALHA": {
+        "nome": "Postura de Combate: Muralha Intransponível",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Postura (movimento, 2 PM, cena, requer escudo): +1 Defesa e Reflexos (+1 por +2 PM extra), Evasão em Reflexos para metade, mas deslocamento reduzido para 3m.",
+        "efeitos": {
+            "postura_combate": {
+                "acao": "movimento", "custo_pm": 2, "duracao": "cena",
+                "requer_escudo": True, "bonus_defesa_reflexos": 1, "deslocamento": 3,
+            }
+        }
+    },
+    "CAVALEIRO_POSTURA_PROVOCACAO": {
+        "nome": "Postura de Combate: Provocação Petulante",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Postura (movimento, 2 PM, cena): inimigos que iniciarem turnos em alcance curto fazem Vontade (CD Car); se falharem, ações hostis devem ter você como alvo. Mental.",
+        "efeitos": {
+            "postura_combate": {
+                "acao": "movimento", "custo_pm": 2, "duracao": "cena",
+                "resistencia": "Vontade", "atributo_cd": "car", "mental": True,
+            }
+        }
+    },
+    "CAVALEIRO_POSTURA_TORRE": {
+        "nome": "Postura de Combate: Torre Inabalável",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Postura (movimento, 2 PM, cena): imune a ser tirado do lugar (mundano/mágico), não pode se deslocar, soma Constituição na Defesa e pode substituir Reflexos e Vontade por Fortitude.",
+        "efeitos": {
+            "postura_combate": {
+                "acao": "movimento", "custo_pm": 2, "duracao": "cena",
+                "deslocamento": 0, "defesa_soma_con": True, "substitui_resistencias_fortitude": True,
+            }
+        }
     },
     "CAVALEIRO_SOLIDEZ": {
         "nome": "Solidez",
         "tipo": "Poder de Cavaleiro",
         "classe": "Cavaleiro",
-        "requisitos": ["Escudo"],
-        "descricao": "Soma bônus do escudo nos testes de resistência. ",
-        "efeitos": {}
+        "descricao": "Se estiver usando um escudo, soma o bônus na Defesa recebido pelo escudo em testes de resistência.",
+        "efeitos": {"solidez_escudo_resistencias": True}
+    },
+    "CAVALEIRO_TITULO": {
+        "nome": "Título",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "requisitos": ["Autoridade Feudal", "Nível 10"],
+        "descricao": "Adquire título de nobreza: início de cada aventura recebe 20 TO por nível de cavaleiro ou ajuda de um parceiro veterano da corte.",
+        "efeitos": {"titulo_nobreza_to_por_nivel": 20}
+    },
+    "CAVALEIRO_TORRE_ARMADA": {
+        "nome": "Torre Armada",
+        "tipo": "Poder de Cavaleiro",
+        "classe": "Cavaleiro",
+        "descricao": "Quando um inimigo erra um ataque contra você, pode gastar 1 PM para receber +5 em rolagens de dano contra esse inimigo até o fim do seu próximo turno.",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 1, "gatilho": "inimigo_erra_ataque", "dano_bonus": 5}
+        }
     },
 
     # ==========================================================================
