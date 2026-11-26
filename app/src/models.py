@@ -255,6 +255,9 @@ class Combate(BaseModel):
     # Cálculo de Inspiração (Bardo, T20 p.43-44): bônus/custo escalando a cada 4 níveis,
     # ação (Padrão/Livre), Inspiração Marcial, Arte Mágica e Artista Completo.
     inspiracao_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Marca da Presa (Caçador, T20 p.49-51): dado/custo escalando a cada 4 níveis,
+    # ação (Movimento/Livre), alcance (Curto/Longo), Espreitar, Ponto Fraco e Mestre Caçador.
+    marca_presa_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0

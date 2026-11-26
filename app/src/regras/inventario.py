@@ -202,6 +202,36 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
         if "bravata_imprudente" in conds and any((h.nome or "") == "Bravata Imprudente" for h in ficha.habilidades):
             especial.append("Bravata Imprudente (+2 ataque e margem de ameaça)")
 
+        # Arqueiro (Caçador/Guerreiro, T20 p.50): soma Sabedoria no dano com armas à distância (limitado pelo nível)
+        if cat.get("proposito") == "À Distância":
+            for hab in ficha.habilidades:
+                ddsa = (hab.efeitos or {}).get("dano_distancia_soma_atributo")
+                if ddsa:
+                    if isinstance(ddsa, dict):
+                        attr_cod = str(ddsa.get("atributo", "")).lower()[:3]
+                        limite_nv = bool(ddsa.get("limite_por_nivel", True))
+                    else:
+                        attr_cod = str(ddsa).lower()[:3]
+                        limite_nv = True
+                    val_attr = mod_atributo(ficha, attr_cod)
+                    if limite_nv:
+                        val_attr = min(val_attr, int(ficha.cabecalho.nivel_total or 1))
+                    if val_attr > 0:
+                        bonus_dano_arma += val_attr
+                        especial.append(f"{hab.nome} (+{val_attr} dano)")
+
+        # Escaramuça / Escaramuça Superior (Caçador, T20 p.50): +1d8 / +1d12 dano quando ativa (sem armadura pesada)
+        if "escaramuca" in conds:
+            usa_pesada_inv = any(
+                it.equipado and (catalogo_do_item(it.nome) or {}).get("tipo_armadura") == "Pesada"
+                for it in ficha.inventario.equipamentos
+            )
+            if not usa_pesada_inv:
+                if any((h.efeitos or {}).get("escaramuca_superior") or (h.nome or "") == "Escaramuça Superior" for h in ficha.habilidades):
+                    especial.append("Escaramuça Superior (+1d12 dano)")
+                elif any((h.efeitos or {}).get("escaramuca") or (h.nome or "") == "Escaramuça" for h in ficha.habilidades):
+                    especial.append("Escaramuça (+1d8 dano)")
+
         if not proficiente:
             especial.append("-5 ataque (não proficiente)")
         ataques.append(Ataque(

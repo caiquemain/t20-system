@@ -1171,79 +1171,296 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # CAÇADOR
+    # CAÇADOR (T20 JdA, p. 49-51)
     # ==========================================================================
     "CACADOR_MARCA_PRESA": {
         "nome": "Marca da Presa",
         "tipo": "Habilidade de Classe",
         "classe": "Caçador",
         "nivel": 1,
-        "descricao": "Movimento (1 PM): +1d4 dano contra criatura (cena). Aumenta dado a cada 4 níveis. ",
-        "efeitos": {"dano_bonus_dado": "1d4"}
+        "descricao": "Ação de movimento, 1 PM: analisa uma criatura em alcance curto; até o fim da cena recebe +1d4 nas rolagens de dano contra ela. A cada 4 níveis, pode gastar +1 PM para aumentar o bônus (+1d8 no 5º, +1d12 no 9º, +2d8 no 13º, +2d10 no 17º).",
+        "efeitos": {
+            "acao_ativavel": {
+                "acao": "movimento",
+                "custo_pm": 1,
+                "alcance": "curto",
+                "duracao": "cena",
+                "progressao_dados": ["1d4", "1d8", "1d12", "2d8", "2d10"],
+                "escala_nivel": 4,
+            },
+            "dano_bonus_dado": "1d4",
+        }
     },
     "CACADOR_RASTREADOR": {
         "nome": "Rastreador",
         "tipo": "Habilidade de Classe",
         "classe": "Caçador",
         "nivel": 1,
-        "descricao": "+2 Sobrevivência. Move normal rastreando. ",
-        "efeitos": {"bonus_pericia": {"Sobrevivência": 2}}
+        "descricao": "Recebe +2 em Sobrevivência e pode se mover com deslocamento normal enquanto rastreia sem sofrer penalidade no teste.",
+        "efeitos": {"bonus_pericia": {"Sobrevivência": 2}, "rastreador_sem_penalidade": True}
     },
     "CACADOR_EXPLORADOR": {
         "nome": "Explorador",
         "tipo": "Habilidade de Classe",
         "classe": "Caçador",
         "nivel": 3,
-        "descricao": "Escolha terreno. +Sab em Defesa e perícias físicas nesse terreno. ",
-        "efeitos": {"terreno_predileto_escolha": 1}
+        "descricao": "Escolha um tipo de terreno (aquático, ártico, colina, deserto, floresta, montanha, pântano, planície, subterrâneo ou urbano; a partir do 11º nível, também área de Tormenta). Nesse terreno, soma Sabedoria (mínimo +1) na Defesa e em Acrobacia, Atletismo, Furtividade, Percepção e Sobrevivência. A cada 4 níveis (7º, 11º, 15º, 19º), escolhe outro terreno ou aumenta o bônus em um já escolhido em +2.",
+        "efeitos": {
+            "terreno_predileto_escolha": 1,
+            "explorador_terreno": True,
+            "pericias_terreno": ["Acrobacia", "Atletismo", "Furtividade", "Percepção", "Sobrevivência"],
+        }
     },
-    # --- PODERES DE CAÇADOR ---
+    "CACADOR_CAMINHO_EXPLORADOR": {
+        "nome": "Caminho do Explorador",
+        "tipo": "Habilidade de Classe",
+        "classe": "Caçador",
+        "nivel": 5,
+        "descricao": "Em terrenos nos quais possua Explorador, atravessa terrenos difíceis sem reduzir seu deslocamento e a CD para rastreá-lo aumenta em +10.",
+        "efeitos": {"caminho_do_explorador": True, "cd_rastrear_bonus": 10}
+    },
+    "CACADOR_MESTRE_CACADOR": {
+        "nome": "Mestre Caçador",
+        "tipo": "Habilidade de Classe",
+        "classe": "Caçador",
+        "nivel": 20,
+        "descricao": "Usa Marca da Presa como ação livre. Ao usá-la, pode pagar 5 PM para aumentar sua margem de ameaça contra a criatura em +2. Se reduzir uma criatura marcada a 0 PV, recupera 5 PM.",
+        "efeitos": {
+            "mestre_cacador": True,
+            "marca_presa_acao_livre": True,
+            "recupera_pm_abate_marcada": 5,
+        }
+    },
+    # --- PODERES DE CAÇADOR (23 poderes oficiais, T20 JdA p. 50-51) ---
     "CACADOR_AMBIDESTRIA": {
         "nome": "Ambidestria",
         "tipo": "Poder de Caçador",
         "classe": "Caçador",
         "requisitos": ["Des 2"],
-        "descricao": "Ataca com duas armas com -2 de penalidade. ",
-        "efeitos": {}
+        "descricao": "Empunhando duas armas (ao menos uma leve) na ação agredir, pode fazer dois ataques (um com cada arma) sofrendo -2 em todos os testes de ataque até seu próximo turno.",
+        "efeitos": {"ambidestria": True, "penalidade_ataque": -2}
+    },
+    "CACADOR_ARMADILHA_ARATACA": {
+        "nome": "Armadilha: Arataca",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Armadilha (ação completa, 3 PM, área 3m adjacente, Investigação CD Sab): a vítima sofre 2d6 pontos de dano de perfuração e fica agarrada (escapar: ação padrão, Força ou Acrobacia CD Sab).",
+        "efeitos": {
+            "armadilha": {
+                "acao": "completa", "custo_pm": 3, "area": "3m",
+                "dano": "2d6", "tipo_dano": "perfuração",
+                "condicao": "agarrada", "cd_atributo": "sab",
+            }
+        }
+    },
+    "CACADOR_ARMADILHA_ESPINHOS": {
+        "nome": "Armadilha: Espinhos",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Armadilha (ação completa, 3 PM, área 3m adjacente, Investigação CD Sab): a vítima sofre 6d6 pontos de dano de perfuração (Reflexos CD Sab reduz à metade).",
+        "efeitos": {
+            "armadilha": {
+                "acao": "completa", "custo_pm": 3, "area": "3m",
+                "dano": "6d6", "tipo_dano": "perfuração",
+                "resistencia": "Reflexos", "cd_atributo": "sab",
+            }
+        }
+    },
+    "CACADOR_ARMADILHA_LACO": {
+        "nome": "Armadilha: Laço",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Armadilha (ação completa, 3 PM, área 3m adjacente, Investigação CD Sab): a vítima faz Reflexos CD Sab; se passar, fica caída; se falhar, fica agarrada (soltar: ação padrão, Força ou Acrobacia CD Sab).",
+        "efeitos": {
+            "armadilha": {
+                "acao": "completa", "custo_pm": 3, "area": "3m",
+                "resistencia": "Reflexos", "cd_atributo": "sab",
+                "efeito_sucesso": "caída", "efeito_falha": "agarrada",
+            }
+        }
+    },
+    "CACADOR_ARMADILHA_REDE": {
+        "nome": "Armadilha: Rede",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Armadilha (ação completa, 3 PM, área 3m adjacente, Investigação CD Sab): todas as criaturas na área ficam enredadas e não podem sair (libertar: ação padrão, Força ou Acrobacia CD 25). Área vira terreno difícil; escolhe quantas criaturas ativam.",
+        "efeitos": {
+            "armadilha": {
+                "acao": "completa", "custo_pm": 3, "area": "3m",
+                "condicao": "enredada", "cd_escapar": 25, "terreno_dificil": True,
+            }
+        }
+    },
+    "CACADOR_ARMADILHEIRO": {
+        "nome": "Armadilheiro",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "requisitos": ["Um poder de armadilha", "Nível 5"],
+        "descricao": "Soma sua Sabedoria no dano e na CD de suas armadilhas (cumulativo).",
+        "efeitos": {"armadilheiro_soma_sab": True}
     },
     "CACADOR_ARQUEIRO": {
         "nome": "Arqueiro",
         "tipo": "Poder de Caçador",
         "classe": "Caçador",
         "requisitos": ["Sab 1"],
-        "descricao": "Soma Sabedoria no dano à distância. ",
-        "efeitos": {"dano_distancia_soma_atributo": "sab"}
+        "descricao": "Usando arma de ataque à distância, soma sua Sabedoria nas rolagens de dano (limitado pelo seu nível).",
+        "efeitos": {"dano_distancia_soma_atributo": {"atributo": "sab", "limite_por_nivel": True}}
+    },
+    "CACADOR_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
+    },
+    "CACADOR_BOTE": {
+        "nome": "Bote",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "requisitos": ["Ambidestria", "Nível 6"],
+        "descricao": "Empunhando duas armas durante uma investida, pode pagar 1 PM para fazer um ataque adicional com sua arma secundária.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1, "gatilho": "investida_duas_armas",
+                "efeito": "ataque_adicional_arma_secundaria",
+            }
+        }
+    },
+    "CACADOR_CAMUFLAGEM": {
+        "nome": "Camuflagem",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "requisitos": ["Nível 6"],
+        "descricao": "Pode gastar 2 PM para se esconder mesmo sem camuflagem ou cobertura disponível.",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 2, "efeito": "esconder_sem_cobertura"}
+        }
+    },
+    "CACADOR_CHUVA_LAMINAS": {
+        "nome": "Chuva de Lâminas",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "requisitos": ["Des 4", "Ambidestria", "Nível 12"],
+        "descricao": "Uma vez por rodada, quando usa Ambidestria, pode pagar 2 PM para fazer um ataque adicional com sua arma primária.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 2, "frequencia": "1x_por_rodada",
+                "gatilho": "ambidestria", "efeito": "ataque_adicional_arma_primaria",
+            }
+        }
     },
     "CACADOR_COMPANHEIRO_ANIMAL": {
         "nome": "Companheiro Animal",
         "tipo": "Poder de Caçador",
         "classe": "Caçador",
         "requisitos": ["Car 1", "Treinado em Adestramento"],
-        "descricao": "Recebe parceiro animal. ",
+        "descricao": "Recebe um companheiro animal (parceiro).",
         "efeitos": {"parceiro_adicional": 1}
+    },
+    "CACADOR_ELO_NATUREZA": {
+        "nome": "Elo com a Natureza",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "requisitos": ["Sab 1", "Nível 3"],
+        "descricao": "Soma sua Sabedoria no total de PM e aprende e pode lançar Caminhos da Natureza (atributo-chave Sabedoria).",
+        "efeitos": {
+            "pm_soma_atributo": "sab",
+            "magia_adicional": {"nome": "Caminhos da Natureza", "atributo": "sab"},
+        }
     },
     "CACADOR_EMBOSCAR": {
         "nome": "Emboscar",
         "tipo": "Poder de Caçador",
         "classe": "Caçador",
         "requisitos": ["Treinado em Furtividade"],
-        "descricao": "Gaste 2 PM na primeira rodada para ação padrão extra. ",
-        "efeitos": {}
+        "descricao": "Na primeira rodada de um combate, pode gastar 2 PM para realizar uma ação padrão adicional em seu turno.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 2, "gatilho": "primeira_rodada_combate",
+                "efeito": "acao_padrao_adicional",
+            }
+        }
+    },
+    "CACADOR_EMPATIA_SELVAGEM": {
+        "nome": "Empatia Selvagem",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Comunica-se com animais por linguagem corporal e vocalizações; usa Adestramento com animais para mudar atitude e persuasão.",
+        "efeitos": {
+            "pericia_adestramento_persuasao": True,
+            "bonus_pericia_se_duplicada": {"Adestramento": 2},
+        }
     },
     "CACADOR_ESCARAMUCA": {
         "nome": "Escaramuça",
         "tipo": "Poder de Caçador",
         "classe": "Caçador",
         "requisitos": ["Des 2", "Nível 6"],
-        "descricao": "Se mover 6m, ganha +2 Defesa/Reflexos e +1d8 dano. ",
-        "efeitos": {}
+        "descricao": "Quando se move 6m ou mais, recebe +2 na Defesa e Reflexos e +1d8 nas rolagens de dano corpo a corpo e à distância em alcance curto até o início do próximo turno (não funciona de armadura pesada).",
+        "efeitos": {
+            "escaramuca": {"defesa": 2, "reflexos": 2, "dano": "1d8", "sem_armadura_pesada": True}
+        }
     },
-    "CACADOR_INIMIGO": {
-        "nome": "Inimigo de (Tipo)",
+    "CACADOR_ESCARAMUCA_SUPERIOR": {
+        "nome": "Escaramuça Superior",
         "tipo": "Poder de Caçador",
         "classe": "Caçador",
-        "descricao": "Escolha tipo de criatura. Dobra dados da Marca da Presa contra ela. ",
-        "efeitos": {"inimigo_predileto_escolha": 1}
+        "requisitos": ["Escaramuça", "Nível 12"],
+        "descricao": "Aumenta os bônus de Escaramuça para +5 na Defesa e Reflexos e +1d12 em rolagens de dano.",
+        "efeitos": {
+            "escaramuca_superior": {"defesa": 5, "reflexos": 5, "dano": "1d12", "sem_armadura_pesada": True}
+        }
+    },
+    "CACADOR_ESPREITAR": {
+        "nome": "Espreitar",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Quando usa Marca da Presa, recebe +1 em testes de perícia contra a criatura marcada (+1 por PM adicional gasto; dobra com Inimigo).",
+        "efeitos": {"espreitar_marca_presa": True}
+    },
+    "CACADOR_ERVAS_CURATIVAS": {
+        "nome": "Ervas Curativas",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Ação completa + PM (limitado por Sabedoria): aplica ervas em si ou aliado adjacente; para cada PM gasto, cura 2d6 PV ou remove uma condição envenenado.",
+        "efeitos": {
+            "acao_ativavel": {
+                "acao": "completa", "custo_pm": "variavel",
+                "limite_pm": "sabedoria", "cura_por_pm": "2d6",
+                "remove_condicao": "envenenado",
+            }
+        }
+    },
+    "CACADOR_IMPETO": {
+        "nome": "Ímpeto",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Pode gastar 1 PM para aumentar seu deslocamento em +6m por uma rodada.",
+        "efeitos": {
+            "acao_ativavel": {"custo_pm": 1, "deslocamento_bonus": 6, "duracao": "1 rodada"}
+        }
+    },
+    "CACADOR_INIMIGO": {
+        "nome": "Inimigo de (Criatura)",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Escolha um tipo de criatura (animal, construto, espírito, monstro ou morto-vivo) ou duas raças humanoides. Ao usar Marca da Presa contra ela, dobra os dados de bônus no dano. Pode escolher outras vezes para inimigos diferentes.",
+        "efeitos": {"inimigo_predileto_escolha": 1, "multipla_escolha": True}
+    },
+    "CACADOR_OLHO_FALCAO": {
+        "nome": "Olho do Falcão",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Pode usar a habilidade Marca da Presa em criaturas em alcance longo.",
+        "efeitos": {"marca_presa_alcance": "Longo"}
+    },
+    "CACADOR_PONTO_FRACO": {
+        "nome": "Ponto Fraco",
+        "tipo": "Poder de Caçador",
+        "classe": "Caçador",
+        "descricao": "Quando usa Marca da Presa, seus ataques contra a criatura marcada recebem +2 na margem de ameaça (dobra com Inimigo).",
+        "efeitos": {"ponto_fraco_margem": 2}
     },
 
     # ==========================================================================

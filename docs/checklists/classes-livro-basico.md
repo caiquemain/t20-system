@@ -1,6 +1,6 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 4/14 classes completas (Arcanista, Bárbaro, Bardo e Bucaneiro)  
+**Status:** 🟡 5/14 classes completas (Arcanista, Bárbaro, Bardo, Bucaneiro e Caçador)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
 **Atualizado em:** 2026-11-26
 
@@ -14,8 +14,8 @@
 | **Bárbaro** | 24 (4 fixas + 20 poderes) | 24 (100%) | 5 arquivos (`test_barbaro_*`) | ✅ Completa |
 | **Bardo** | 24 (4 fixas + 20 poderes) | 24 (100%) | 3 arquivos (`test_bardo_*`) | ✅ Completa |
 | **Bucaneiro** | 26 (7 fixas + 19 poderes) | 26 (100%) | 2 arquivos (`test_bucaneiro_*`) | ✅ Completa |
+| **Caçador** | 28 (5 fixas + 23 poderes) | 28 (100%) | 2 arquivos (`test_cacador_*`) | ✅ Completa |
 | **Druida** | 10 (4 fixas + 6 poderes) | 9 (90%) | — | 🟡 Parcial |
-| **Caçador** | 9 (3 fixas + 6 poderes) | 6 (67%) | — | 🟡 Parcial |
 | **Ladino** | 11 (4 fixas + 7 poderes) | 7 (64%) | — | 🟡 Parcial |
 | **Inventor** | 8 (2 fixas + 6 poderes) | 5 (63%) | — | 🟡 Parcial |
 | **Clérigo** | 8 (2 fixas + 6 poderes) | 3 (38%) | — | 🟡 Parcial |
@@ -36,7 +36,7 @@
 
 ### Lote 2 — Especialistas
 - [ ] **Ladino** (Ataque Furtivo, Especialista, Evasão + poderes + testes)
-- [ ] **Caçador** (Marca da Presa, Rastreador, Explorador + poderes + testes)
+- [x] **Caçador** (Marca da Presa, Rastreador, Explorador, Caminho do Explorador, Mestre Caçador + 23 poderes + testes)
 - [x] **Bucaneiro** (Audácia, Insolência, Evasão, Esquiva Sagaz, Panache, Evasão Aprimorada, Sorte de Nimb + 19 poderes + testes)
 
 ### Lote 3 — Divinos & Suporte

@@ -478,6 +478,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append("Abusar dos Fracos: +1 passo de dano contra criatura sob condição de medo")
         if efeitos.get("foliao_bonus_carisma"):
             lista_efeitos.append(f"Folião: +{efeitos['foliao_bonus_carisma']} em perícias de Carisma e +1 atitude em festas/tavernas")
+        if efeitos.get("rastreador_sem_penalidade"):
+            lista_efeitos.append("Rastreador: deslocamento normal enquanto rastreia sem penalidade")
+        if efeitos.get("caminho_do_explorador"):
+            lista_efeitos.append("Caminho do Explorador: ignora terreno difícil e +10 CD para rastreá-lo no terreno escolhido")
+        if efeitos.get("mestre_cacador"):
+            lista_efeitos.append("Mestre Caçador: Marca da Presa ação livre; recupera 5 PM ao abater criatura marcada")
+        if efeitos.get("armadilheiro_soma_sab"):
+            lista_efeitos.append("Armadilheiro: soma Sabedoria no dano e na CD das armadilhas")
+        if efeitos.get("espreitar_marca_presa"):
+            lista_efeitos.append("Espreitar: +1 em perícias contra criatura marcada (+1 por PM extra; dobra com Inimigo)")
+        if efeitos.get("ponto_fraco_margem"):
+            lista_efeitos.append(f"Ponto Fraco: +{efeitos['ponto_fraco_margem']} margem de ameaça contra criatura marcada (dobra com Inimigo)")
+        if efeitos.get("marca_presa_alcance") == "Longo":
+            lista_efeitos.append("Olho do Falcão: usa Marca da Presa em alcance longo")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 
