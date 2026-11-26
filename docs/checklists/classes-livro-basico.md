@@ -1,8 +1,8 @@
 # ⚔️ Classes do Livro Básico (T20 JdA) — Cobertura
 
-**Status:** 🟡 2/14 classes completas (Arcanista e Bárbaro)  
+**Status:** 🟡 3/14 classes completas (Arcanista, Bárbaro e Bardo)  
 **Fonte de dados:** `app/src/dados_habilidades_classe.py`  
-**Atualizado em:** 2026-11-25
+**Atualizado em:** 2026-11-26
 
 ---
 
@@ -11,13 +11,13 @@
 | Classe | Entradas cadastradas | Com `efeitos` | Testes dedicados | Status |
 |---|---|---|---|---|
 | **Arcanista** | 24 (3 fixas + 21 poderes) | 24 (100%) | 6 arquivos (`test_arcanista_*`, `test_poderes_arcanista.py`) | ✅ Completa |
-| **Bárbaro** | 24 (4 fixas + 20 poderes) | 24 (100%) | 4 arquivos (`test_barbaro_*`) | ✅ Completa |
+| **Bárbaro** | 24 (4 fixas + 20 poderes) | 24 (100%) | 5 arquivos (`test_barbaro_*`) | ✅ Completa |
+| **Bardo** | 24 (4 fixas + 20 poderes) | 24 (100%) | 3 arquivos (`test_bardo_*`) | ✅ Completa |
 | **Druida** | 10 (4 fixas + 6 poderes) | 9 (90%) | — | 🟡 Parcial |
 | **Caçador** | 9 (3 fixas + 6 poderes) | 6 (67%) | — | 🟡 Parcial |
 | **Ladino** | 11 (4 fixas + 7 poderes) | 7 (64%) | — | 🟡 Parcial |
 | **Inventor** | 8 (2 fixas + 6 poderes) | 5 (63%) | — | 🟡 Parcial |
 | **Bucaneiro** | 11 (5 fixas + 6 poderes) | 5 (45%) | — | 🟡 Parcial |
-| **Bardo** | 9 (3 fixas + 6 poderes) | 4 (44%) | — | 🟡 Parcial |
 | **Clérigo** | 8 (2 fixas + 6 poderes) | 3 (38%) | — | 🟡 Parcial |
 | **Guerreiro** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
 | **Lutador** | 9 (3 fixas + 6 poderes) | 3 (33%) | — | 🟡 Parcial |
@@ -45,7 +45,7 @@
 - [ ] **Druida** (Devoto, Empatia Selvagem, Forma Selvagem, Magias + poderes + testes)
 
 ### Lote 4 — Versáteis & Complexas
-- [ ] **Bardo** (Inspiração, Magias, Eclético + poderes + testes)
+- [x] **Bardo** (Inspiração, Magias, Eclético, Artista Completo + 20 poderes + testes)
 - [ ] **Nobre** (Autoconfiança, Espólio, Orgulho, Gritar Ordens + poderes + testes)
 - [ ] **Inventor** (Engenhosidade, Protótipo, Fabricar Item Superior, Engenhocas + poderes + testes)
 

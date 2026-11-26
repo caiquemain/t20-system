@@ -446,6 +446,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append("Dano de arremesso/funda aumentado em 1 passo")
         if efeitos.get("furia_arremesso"):
             lista_efeitos.append("Fúria aplica bônus em ataque e dano também a armas de arremesso")
+        if efeitos.get("inspiracao_aplica_dano"):
+            lista_efeitos.append("Inspiração aplica bônus também em rolagens de dano (Inspiração Marcial)")
+        if efeitos.get("cd_bardo_inspiracao"):
+            lista_efeitos.append(f"+{efeitos['cd_bardo_inspiracao']} na CD de habilidades de bardo sob Inspiração (Arte Mágica)")
+        if efeitos.get("artista_completo"):
+            lista_efeitos.append("Inspiração como ação livre; custo em PM pela metade sob Inspiração (Artista Completo)")
+        if efeitos.get("estrelato_bonus_carisma"):
+            lista_efeitos.append(f"+{efeitos['estrelato_bonus_carisma']} em perícias de Carisma ao impressionar plateia (Estrelato)")
+        if efeitos.get("golpe_magico_pm_temp"):
+            lista_efeitos.append(f"+{efeitos['golpe_magico_pm_temp']} PM temporários ao acertar corpo a corpo sob Inspiração (Golpe Mágico)")
+        vps = efeitos.get("vantagem_pericia_situacional")
+        if isinstance(vps, dict) and vps:
+            pares = ", ".join(f"{k} ({v})" for k, v in vps.items())
+            lista_efeitos.append(f"Rola 2 dados e usa o melhor em: {pares}")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 

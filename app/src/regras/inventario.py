@@ -135,6 +135,23 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
             proficiente = simples_pela_habilidade
         teste = "Luta" if cat.get("proposito") == "Corpo a Corpo" else "Pontaria"
         especial = []
+
+        # Esgrima Mágica (Bardo, T20 p.43): sob Inspiração, substitui Luta por Atuação
+        # em armas corpo a corpo leves ou de uma mão (usa Atuação se for melhor).
+        if (
+            teste == "Luta"
+            and cat.get("empunhadura") in ("Leve", "Uma Mão")
+            and "inspiracao" in (getattr(ficha, "condicoes_ativas", None) or [])
+            and any((h.nome or "") == "Esgrima Mágica" for h in ficha.habilidades)
+        ):
+            p_luta = (ficha.pericias or {}).get("Luta")
+            p_atuacao = (ficha.pericias or {}).get("Atuação")
+            total_luta = p_luta.total if p_luta else 0
+            total_atuacao = p_atuacao.total if p_atuacao else 0
+            if total_atuacao >= total_luta:
+                teste = "Atuação"
+                especial.append("Esgrima Mágica (Atuação)")
+
         if cat.get("habilidades"):
             outras = [h for h in cat["habilidades"] if not (h == "versátil" and cat.get("versatil"))]
             if outras:
