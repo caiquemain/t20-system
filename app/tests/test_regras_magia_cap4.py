@@ -200,3 +200,57 @@ def test_catalogo_198_magias_tabela_4_1_e_ataques_magicos():
     mago = atualizar_ficha(mago)
     assert all(a.nome != "Bola de Fogo" for a in mago.combate.ataques)
 
+
+def test_magia_ilimitada_celebrar_ritual_foco_e_itens_magicos():
+    from src.models import Habilidade
+    from src.regras import calcular_limite_pm_magia
+
+    # Arcanista 3º nível com INT 4: limite padrão = 3 PM
+    mago = Personagem(
+        cabecalho=Cabecalho(nome="Mago", raca="Humano"),
+        classes=[ClasseInfo(nome="Arcanista", nivel=3, primaria=True, subclasse="Mago")],
+        atributos_base=Atributos(inteligencia=4),
+    )
+    mago = atualizar_ficha(mago)
+    assert mago.combate.limite_pm_magia == 3
+    cd_base = mago.combate.cd_magias
+
+    # Com Magia Ilimitada: limite = 3 + 4 (INT) = 7 PM
+    mago.habilidades.append(Habilidade(
+        nome="Magia Ilimitada",
+        tipo="Poder Geral (Magia)",
+        descricao="Soma seu atributo-chave ao limite de PM.",
+        efeitos={"limite_pm_soma_atributo_chave": True},
+    ))
+    mago = atualizar_ficha(mago)
+    assert mago.combate.limite_pm_magia == 7
+    bola = Magia(nome="Bola de Fogo", circulo=2, tipo="Arcana", escola="Evocação")
+    # 3 PM base + 4 PM aprimoramento = 7 PM (permitido graças a Magia Ilimitada!)
+    assert calcular_custo_magia(mago, bola, aprimoramentos_pm=4).total == 7
+
+    # Com Celebrar Ritual: dobra limite em ritual -> 14 PM
+    mago.habilidades.append(Habilidade(
+        nome="Celebrar Ritual",
+        tipo="Poder Geral (Magia)",
+        descricao="Dobra limite de PM como ritual.",
+        efeitos={"celebrar_ritual_dobra_limite_pm": True},
+    ))
+    mago = atualizar_ficha(mago)
+    assert mago.combate.limite_pm_ritual == 14
+    assert calcular_limite_pm_magia(mago, como_ritual=True)["limite"] == 14
+    assert calcular_custo_magia(mago, bola, aprimoramentos_pm=10, como_ritual=True).total == 13
+
+    # Com Foco em Magia (Bola de Fogo) + Cajado do poder: -2 PM em Bola de Fogo e +3 CD
+    mago.habilidades.append(Habilidade(
+        nome="Foco em Magia",
+        tipo="Poder Geral (Magia)",
+        descricao="-1 PM na magia escolhida.",
+        efeitos={"foco_em_magia": True},
+        escolhas_aplicadas={"magia": "Bola de Fogo"},
+    ))
+    mago.inventario.equipamentos.append(Item(nome="Cajado do poder", equipado=True))
+    mago = atualizar_ficha(mago)
+    assert mago.combate.cd_magias == cd_base + 3
+    assert calcular_custo_magia(mago, bola).total == 1  # 3 - 1 (Foco) - 1 (Cajado) = 1 PM
+
+

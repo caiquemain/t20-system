@@ -75,9 +75,58 @@ def calcular_cd_magia(ficha: Personagem, magia) -> int:
     return cd_base + cd_escola + cd_inspiracao + cd_liturgia + cd_forca_nat
 
 
+def calcular_limite_pm_magia(ficha: Personagem, como_ritual: bool = False) -> dict:
+    """Calcula o limite máximo de PM ao lançar uma magia (T20 JdA p.171, 130, 224).
+
+    - Base: nível de personagem (mín. 1)
+    - Magia Ilimitada: soma o modificador do atributo-chave ao limite
+    - Celebrar Ritual: dobra o limite quando lançada como ritual
+    """
+    from .utils import calcular_modificador
+
+    nivel = max(1, int(ficha.cabecalho.nivel_total or 1))
+    limite = nivel
+    fontes = [{"fonte": f"Nível ({nivel})", "valor": nivel}]
+
+    tem_magia_ilimitada = any(
+        (h.efeitos or {}).get("limite_pm_soma_atributo_chave")
+        or (h.nome or "") == "Magia Ilimitada"
+        for h in (ficha.habilidades or [])
+    )
+    if tem_magia_ilimitada:
+        attr_chave = obter_atributo_chave_magia(ficha)
+        if attr_chave:
+            mod_chave = calcular_modificador(getattr(ficha.atributos, attr_chave, 0))
+            if mod_chave > 0:
+                limite += mod_chave
+                fontes.append({"fonte": f"Magia Ilimitada ({attr_chave[:3].upper()})", "valor": mod_chave})
+
+    tem_celebrar_ritual = any(
+        (h.efeitos or {}).get("celebrar_ritual_dobra_limite_pm")
+        or (h.nome or "") == "Celebrar Ritual"
+        for h in (ficha.habilidades or [])
+    )
+    limite_ritual = limite * 2 if tem_celebrar_ritual else None
+    if como_ritual and limite_ritual is not None:
+        fontes.append({"fonte": "Celebrar Ritual (×2)", "valor": limite})
+        limite_efetivo = limite_ritual
+    else:
+        limite_efetivo = limite
+
+    return {
+        "limite": limite_efetivo,
+        "limite_base": limite,
+        "limite_ritual": limite_ritual,
+        "tem_magia_ilimitada": tem_magia_ilimitada,
+        "tem_celebrar_ritual": tem_celebrar_ritual,
+        "fontes": fontes,
+    }
+
+
 def calcular_custo_magia(ficha: Personagem, magia,
                          aprimoramentos_pm: int = 0,
-                         eh_truque: bool = False) -> StatCalculado:
+                         eh_truque: bool = False,
+                         como_ritual: bool = False) -> StatCalculado:
     circulo = _circulo_int(magia)
     base = CUSTO_POR_CIRCULO.get(circulo, 1)
     calc = StatCalculado(base=base, total=base)
@@ -112,6 +161,15 @@ def calcular_custo_magia(ficha: Personagem, magia,
             total -= valor
             calc.adicionar_bonus(f"{hab.nome} (−{valor} PM)", "Redução", -valor)
 
+    # Foco em Magia (T20 JdA p.130): -1 PM cumulativo na magia escolhida
+    for hab in ficha.habilidades:
+        if (hab.efeitos or {}).get("foco_em_magia") or (hab.nome or "") == "Foco em Magia":
+            esc = hab.escolhas_aplicadas or {}
+            alvo_foco = esc.get("magia") or esc.get("magia_escolhida") or esc.get("foco_magia")
+            if alvo_foco and str(alvo_foco).strip().lower() == (magia.nome or "").strip().lower():
+                total -= 1
+                calc.adicionar_bonus("Poder: Foco em Magia (−1 PM)", "Poder", -1)
+
     # Reduções se a magia já é conhecida de outra fonte (Qareen/Sereia/Bardo)
     for hab in ficha.habilidades:
         efeitos = {**(hab.efeitos or {}), **(hab.escolhas_aplicadas or {})}
@@ -139,23 +197,39 @@ def calcular_custo_magia(ficha: Personagem, magia,
         calc.adicionar_bonus(
             f"Poder: Mestre em Escola ({escola})", "Poder", reducao_escola)
 
+    # Itens equipados que reduzem custo em PM (T20 JdA p.160, 337, 345)
+    equipados_low = {
+        (it.nome or "").strip().lower()
+        for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+        if it.equipado
+    }
+    eh_divina = (
+        "divin" in tipo_magia
+        or "universal" in tipo_magia
+        or (not tipo_magia and any((c.nome or "") == "Clérigo" for c in (ficha.classes or [])))
+    )
+    eh_arcana = "arcan" in tipo_magia or "universal" in tipo_magia
+    if "cajado do poder" in equipados_low and eh_arcana:
+        total -= 1
+        calc.adicionar_bonus("Item Mágico: Cajado do poder (−1 PM)", "Item", -1)
+    if "símbolo abençoado" in equipados_low and eh_divina and (getattr(ficha.cabecalho, "deus", "") or "").strip():
+        total -= 1
+        calc.adicionar_bonus("Item Mágico: Símbolo abençoado (−1 PM)", "Item", -1)
+    if "medalhão de prata" in equipados_low and (getattr(magia, "alcance", "") or "").strip().lower() == "pessoal":
+        total -= 1
+        calc.adicionar_bonus("Esotérico: Medalhão de prata (−1 PM)", "Item", -1)
+
     # Símbolo Sagrado Energizado (Clérigo, T20 p.58): -1 PM em magias divinas
     condicoes = getattr(ficha, "condicoes_ativas", None) or []
-    if "simbolo_energizado" in condicoes:
-        eh_divina = (
-            "divin" in tipo_magia
-            or "universal" in tipo_magia
-            or (not tipo_magia and any((c.nome or "") == "Clérigo" for c in (ficha.classes or [])))
-        )
-        if eh_divina:
-            for hab in ficha.habilidades:
-                red_simb = (hab.efeitos or {}).get("reducao_pm_magias_divinas_energizado")
-                if red_simb:
-                    total -= int(red_simb)
-                    calc.adicionar_bonus(
-                        f"Símbolo Sagrado Energizado (−{int(red_simb)} PM)", "Poder", -int(red_simb)
-                    )
-                    break
+    if "simbolo_energizado" in condicoes and eh_divina:
+        for hab in ficha.habilidades:
+            red_simb = (hab.efeitos or {}).get("reducao_pm_magias_divinas_energizado")
+            if red_simb:
+                total -= int(red_simb)
+                calc.adicionar_bonus(
+                    f"Símbolo Sagrado Energizado (−{int(red_simb)} PM)", "Poder", -int(red_simb)
+                )
+                break
 
     # Força da Natureza (Druida 20º, T20 p.62): -2 PM (-4 PM em terrenos naturais)
     for hab in ficha.habilidades:
@@ -187,14 +261,15 @@ def calcular_custo_magia(ficha: Personagem, magia,
         total += extra_pm
         calc.adicionar_bonus("Condição: Alquebrado (+1 PM)", "Condição", extra_pm)
 
-    # Mínimo 1 PM (regra confirmada); limite de gasto por magia = nível
+    # Mínimo 1 PM; limite de gasto por magia considera Magia Ilimitada / Celebrar Ritual
     total = max(1, total)
-    limite_pm = max(1, ficha.cabecalho.nivel_total or 1)
+    info_lim = calcular_limite_pm_magia(ficha, como_ritual=como_ritual)
+    limite_pm = info_lim["limite"]
     if total > limite_pm:
         antes_limite = total
         total = limite_pm
         calc.adicionar_bonus(
-            f"Limite de PM por magia (nível {limite_pm})",
+            f"Limite de PM por magia ({limite_pm} PM)",
             "Limite",
             total - antes_limite,
         )
@@ -361,8 +436,29 @@ def calcular_cd_magias_ficha(ficha: Personagem) -> Optional[int]:
             cd_calc.adicionar_bonus(fonte="Poder: Força da Natureza", categoria="Poder", valor=val_fn)
             break
 
+    # Esotéricos e cajados mágicos equipados que aumentam CD de magias arcanas (T20 JdA p.160, 337)
+    eh_arcano_ficha = any(
+        (c.nome or "") in CLASSES_CONJURADORAS_ARCANAS for c in (ficha.classes or [])
+    )
+    if eh_arcano_ficha:
+        equipados_cd = {
+            (it.nome or "").strip().lower()
+            for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+            if it.equipado
+        }
+        if "cajado do poder" in equipados_cd:
+            cd_calc.adicionar_bonus(fonte="Item Mágico: Cajado do poder", categoria="Item", valor=3)
+        elif any(n in equipados_cd for n in ("cajado arcano", "varinha arcana", "orbe cristalino")):
+            nome_eso = next(n for n in ("Cajado arcano", "Varinha arcana", "Orbe cristalino") if n.lower() in equipados_cd)
+            cd_calc.adicionar_bonus(fonte=f"Esotérico: {nome_eso}", categoria="Item", valor=1)
+
     ficha.combate.cd_magias_calc = cd_calc
     ficha.combate.cd_magias = cd_calc.total
+
+    # Limite de PM para lançar magias (considera Magia Ilimitada e Celebrar Ritual)
+    info_lim = calcular_limite_pm_magia(ficha)
+    ficha.combate.limite_pm_magia = info_lim["limite_base"]
+    ficha.combate.limite_pm_ritual = info_lim["limite_ritual"]
     return cd_calc.total
 
 

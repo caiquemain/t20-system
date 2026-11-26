@@ -14,6 +14,7 @@ from .custo_magia import (
     calcular_custo_magia,
     calcular_cd_magia,
     calcular_cd_magias_ficha,
+    calcular_limite_pm_magia,
     calcular_cd_concentracao,
     verificar_armadura_magia_arcana,
     pode_usar_aprimoramento,
