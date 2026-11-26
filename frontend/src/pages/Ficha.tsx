@@ -101,6 +101,7 @@ function Ficha() {
 
     const [isFlying, setIsFlying] = useState(false);
     const [isAquatic, setIsAquatic] = useState(false);
+    const [exportandoPdf, setExportandoPdf] = useState(false);
 
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
@@ -505,12 +506,35 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             <header className="ficha-header">
                 <button className="btn-back" onClick={() => navigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                     <T20Icon name="voltar" size={15} /> Voltar
-                </button> <button
-          onClick={() => gerarPDF(ficha, id)}
-          style={{ padding: "8px 16px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", marginLeft: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-        >
-          <T20Icon name="pdf" size={15} /> Baixar PDF
-        </button>
+                </button>
+                <button
+                    disabled={exportandoPdf}
+                    onClick={async () => {
+                        if (exportandoPdf) return;
+                        setExportandoPdf(true);
+                        try {
+                            await gerarPDF(ficha, id);
+                        } finally {
+                            setExportandoPdf(false);
+                        }
+                    }}
+                    style={{
+                        padding: "8px 16px",
+                        backgroundColor: exportandoPdf ? "#555" : "#2e7d32",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: exportandoPdf ? "wait" : "pointer",
+                        fontWeight: "bold",
+                        marginLeft: "8px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        opacity: exportandoPdf ? 0.8 : 1,
+                    }}
+                >
+                    <T20Icon name="pdf" size={15} /> {exportandoPdf ? "Gerando PDF..." : "Baixar PDF"}
+                </button>
                 <div className="header-inputs">
                     <input
                         className="input-nome"

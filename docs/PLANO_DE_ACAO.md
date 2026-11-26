@@ -109,7 +109,7 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 ---
 
 ## 🎲 Fase 7 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
-- **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
-- **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).
-- **Ponte Roll20** ([`roll20-bridge.md`](./checklists/roll20-bridge.md)): modo "ficha nova" direto da ponte e consolidar envio de monstros/NPCs.
-- **ESLint Frontend:** zerar os ~230 erros restantes (`@typescript-eslint/no-explicit-any` e `@ts-ignore` → `@ts-expect-error`) por módulo.
+- [x] **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, todos os campos calculados preenchidos (`ModFor..ModCar`, colunas de perícias + Ofícios, defesa/armadura/escudo, dinheiro, proficiências, tamanho, CD de magia, Página 2 Descrição/Anotações sem sobrescrever `Observação`).
+- [ ] **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
+- [ ] **Ponte Roll20** ([`roll20-bridge.md`](./checklists/roll20-bridge.md)): modo "ficha nova" direto da ponte e consolidar envio de monstros/NPCs.
+- [ ] **ESLint Frontend:** zerar os ~230 erros restantes (`@typescript-eslint/no-explicit-any` e `@ts-ignore` → `@ts-expect-error`) por módulo.
