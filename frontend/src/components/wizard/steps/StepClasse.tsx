@@ -30,25 +30,65 @@ export function StepClasse({ ficha, updateFicha, listaClasses, dadosClasses }: W
                     <span style={{ color: '#ffd700', fontSize: '1.2rem' }}>▸</span>
                 </div>
 
-                <div style={{ maxWidth: 200 }}>
-                    <label style={{ display: 'block', marginBottom: 8, color: '#ccc' }}>Nível Inicial</label>
-                    <input
-                        type="number" min={1} max={20} value={nivel}
-                        onChange={e => {
-                            const nc = [...ficha.classes];
-                            nc[0] = { ...nc[0], nivel: parseInt(e.target.value) || 1 };
-                            updateFicha({ classes: nc }, true);
-                        }}
-                        style={{ width: '100%', padding: 12, background: '#1a1a1a', border: '1px solid #555', borderRadius: 8, color: '#fff', fontSize: '1rem' }}
-                    />
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div style={{ width: 180 }}>
+                        <label style={{ display: 'block', marginBottom: 8, color: '#ccc' }}>Nível Inicial</label>
+                        <input
+                            type="number" min={1} max={20} value={nivel}
+                            onChange={e => {
+                                const nc = [...ficha.classes];
+                                nc[0] = { ...nc[0], nivel: Math.min(20, Math.max(1, parseInt(e.target.value) || 1)) };
+                                updateFicha({ classes: nc }, true);
+                            }}
+                            style={{ width: '100%', padding: 12, background: '#1a1a1a', border: '1px solid #555', borderRadius: 8, color: '#fff', fontSize: '1rem' }}
+                        />
+                    </div>
+
+                    {classeNome === 'Arcanista' && (
+                        <div style={{ flex: 1, minWidth: 240 }}>
+                            <label style={{ display: 'block', marginBottom: 8, color: '#ce93d8', fontWeight: 'bold' }}>
+                                Caminho do Arcanista
+                            </label>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                {(['Bruxo', 'Feiticeiro', 'Mago'] as const).map(cam => {
+                                    const ativo = (ficha.classes[0]?.subclasse || '') === cam;
+                                    return (
+                                        <button
+                                            key={cam}
+                                            type="button"
+                                            onClick={() => {
+                                                const nc = [...ficha.classes];
+                                                nc[0] = { ...nc[0], subclasse: cam };
+                                                updateFicha({ classes: nc }, true);
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                padding: '10px 12px',
+                                                borderRadius: 8,
+                                                border: ativo ? '2px solid #ce93d8' : '1px solid #444',
+                                                background: ativo ? 'rgba(156, 39, 176, 0.22)' : '#1a1a1a',
+                                                color: ativo ? '#fff' : '#bbb',
+                                                fontWeight: ativo ? 'bold' : 'normal',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {cam}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {dados && (
-                <div style={{ marginTop: 30, background: '#1a1a1a', border: '1px solid #333', borderRadius: 10, padding: 20, maxWidth: 700 }}>
-                    <h3 style={{ color: '#ffd700', marginTop: 0 }}>{classeNome}</h3>
-                    {dados.descricao && <p style={{ color: '#bbb', fontSize: '0.9rem', lineHeight: 1.5 }}>{dados.descricao}</p>}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>
+                <div style={{ marginTop: 26, background: '#1a1a1a', border: '1px solid #333', borderRadius: 10, padding: 20, maxWidth: 700 }}>
+                    <h3 style={{ color: '#ffd700', marginTop: 0 }}>
+                        {classeNome}{ficha.classes[0]?.subclasse ? ` (${ficha.classes[0].subclasse})` : ''}
+                    </h3>
+                    {dados.descricao && <p style={{ color: '#bbb', fontSize: '0.9rem', lineHeight: 1.5, fontFamily: "system-ui, sans-serif", textTransform: 'none' }}>{dados.descricao}</p>}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(125px, 1fr))', gap: 10, marginTop: 16 }}>
                         <div style={{ background: '#252525', borderRadius: 8, padding: 12, textAlign: 'center' }}>
                             <div style={{ color: '#888', fontSize: '0.75rem' }}>PV INICIAL</div>
                             <div style={{ color: '#4caf50', fontSize: '1.3rem', fontWeight: 'bold' }}>{dados.pv_inicial}</div>
@@ -67,9 +107,14 @@ export function StepClasse({ ficha, updateFicha, listaClasses, dadosClasses }: W
                         </div>
                         <div style={{ background: '#252525', borderRadius: 8, padding: 12, textAlign: 'center' }}>
                             <div style={{ color: '#888', fontSize: '0.75rem' }}>ATRIBUTO PM</div>
-                            <div style={{ color: '#ffd700', fontSize: '1.3rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{dados.pm_atributo}</div>
+                            <div style={{ color: '#ffd700', fontSize: '1.3rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{dados.pm_atributo || '—'}</div>
                         </div>
                     </div>
+                    {ficha.status?.proficiencias && (
+                        <div style={{ marginTop: 14, fontSize: '0.82rem', color: '#94a3b8', fontFamily: "system-ui, sans-serif", textTransform: 'none' }}>
+                            <strong style={{ color: '#cbd5e1' }}>Proficiências:</strong> {Array.isArray(ficha.status.proficiencias) ? ficha.status.proficiencias.join(', ') : ficha.status.proficiencias}
+                        </div>
+                    )}
                 </div>
             )}
 
