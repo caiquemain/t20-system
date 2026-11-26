@@ -124,14 +124,57 @@ def inicializar_pericias(ficha: Personagem):
                         opcoes_atributos_extras[p_alvo] = []
                     opcoes_atributos_extras[p_alvo].append(novo_attr)
 
-        # 1. Bônus Específicos Diretos (Fixo)
+        # 1. Bônus Específicos Diretos (Fixo ou Escalável por nível, ex.: Esquiva Sagaz)
         if "bonus_pericia" in efeitos and isinstance(efeitos["bonus_pericia"], dict):
-            for p_nome, v_bonus in efeitos["bonus_pericia"].items():
-                if isinstance(p_nome, str) and isinstance(v_bonus, (int, float)):
-                    if p_nome not in detalhamento_bonus:
-                        detalhamento_bonus[p_nome] = []
-                    detalhamento_bonus[p_nome].append(
-                        {"fonte": hab.nome, "valor": v_bonus})
+            exige_lib = bool(efeitos.get("exige_liberdade_movimento"))
+            aplicar_bp = True
+            if exige_lib:
+                from .inventario import catalogo_do_item as _cat_item
+                _usa_pesada = any(
+                    it.equipado and (_cat_item(it.nome) or {}).get("tipo_armadura") == "Pesada"
+                    for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+                )
+                _conds = getattr(ficha, "condicoes_ativas", None) or []
+                if _usa_pesada or "imovel" in _conds:
+                    aplicar_bp = False
+            if aplicar_bp:
+                escala = efeitos.get("escala_nivel")
+                for p_nome, v_bonus in efeitos["bonus_pericia"].items():
+                    if isinstance(p_nome, str) and isinstance(v_bonus, (int, float)):
+                        val_final = int(v_bonus)
+                        if isinstance(escala, dict) and escala.get("cada"):
+                            inicio = int(escala.get("inicio", 1) or 1)
+                            cada = int(escala.get("cada", 0) or 0)
+                            passo = int(escala.get("bonus", 1) or 1)
+                            classe_esc = escala.get("classe")
+                            nivel_ref = int(ficha.cabecalho.nivel_total or 1)
+                            if classe_esc:
+                                nivel_ref = next(
+                                    (int(c.nivel or 0) for c in (ficha.classes or []) if (c.nome or "") == classe_esc),
+                                    nivel_ref,
+                                )
+                            if nivel_ref >= inicio and cada > 0:
+                                val_final = int(v_bonus) + ((nivel_ref - inicio) // cada) * passo
+                        if p_nome not in detalhamento_bonus:
+                            detalhamento_bonus[p_nome] = []
+                        detalhamento_bonus[p_nome].append(
+                            {"fonte": hab.nome, "valor": val_final})
+
+        # 1b. Soma de Atributo Extra na Perícia (ex.: Presença Paralisante: +Car em Iniciativa)
+        if "pericia_soma_atributo" in efeitos and isinstance(efeitos["pericia_soma_atributo"], dict):
+            _mapa_attr = {
+                "for": "forca", "des": "destreza", "con": "constituicao",
+                "int": "inteligencia", "sab": "sabedoria", "car": "carisma",
+            }
+            for p_nome, attr_cod in efeitos["pericia_soma_atributo"].items():
+                if isinstance(p_nome, str) and isinstance(attr_cod, str):
+                    campo = _mapa_attr.get(attr_cod.lower()[:3])
+                    if campo:
+                        mod_val = calcular_modificador(getattr(ficha.atributos, campo, 0))
+                        if mod_val != 0:
+                            detalhamento_bonus.setdefault(p_nome, []).append(
+                                {"fonte": hab.nome, "valor": mod_val}
+                            )
 
         # 2. Bônus Genéricos por Atributo
         if "bonus_pericia_atributo" in efeitos and isinstance(efeitos["bonus_pericia_atributo"], dict):

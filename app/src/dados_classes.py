@@ -31,7 +31,7 @@ DADOS_CLASSES = {
         "pm_inicial": 3, "pm_nivel": 3,
         "pericias_iniciais": ["Reflexos"],
         "pericias_fixas_selecao": ["Luta", "Pontaria"],
-        "pericias_escolha": 5,
+        "pericias_escolha": 4,
         "pericias_lista": ["Acrobacia", "Atletismo", "Atuação", "Enganação", "Fortitude", "Furtividade", "Iniciativa", "Intimidação", "Jogatina", "Luta", "Ofício", "Percepção", "Pilotagem", "Pontaria"],
         "proficiencias": ["Armas Marciais"]
     },

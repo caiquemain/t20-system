@@ -460,6 +460,24 @@ def atualizar_efeitos_ativos(ficha: Personagem):
         if isinstance(vps, dict) and vps:
             pares = ", ".join(f"{k} ({v})" for k, v in vps.items())
             lista_efeitos.append(f"Rola 2 dados e usa o melhor em: {pares}")
+        if efeitos.get("evasao_aprimorada"):
+            lista_efeitos.append("Evasão Aprimorada: sem dano ao passar em Reflexos; metade ao falhar")
+        elif efeitos.get("evasao"):
+            lista_efeitos.append("Evasão: sem dano ao passar em Reflexos para metade")
+        if efeitos.get("panache_recupera_pm"):
+            lista_efeitos.append(f"Panache: recupera {efeitos['panache_recupera_pm']} PM em crítico ou ao reduzir inimigo a 0 PV")
+        if efeitos.get("sorte_de_nimb"):
+            lista_efeitos.append("Sorte de Nimb: 5 PM para rolar teste novamente (11+ vira 20 natural)")
+        if efeitos.get("pernas_do_mar"):
+            lista_efeitos.append("Pernas do Mar: não fica desprevenido nem reduz deslocamento equilibrando/escalando")
+        if efeitos.get("presenca_paralisante"):
+            lista_efeitos.append("Presença Paralisante: ação padrão extra na 1ª rodada se for o primeiro na iniciativa")
+        if efeitos.get("grudar_o_cano"):
+            lista_efeitos.append("Grudar o Cano: sem penalidade de -5 e +1 passo de dano com arma de fogo contra adjacente")
+        if efeitos.get("abusar_dos_fracos_passo_dano"):
+            lista_efeitos.append("Abusar dos Fracos: +1 passo de dano contra criatura sob condição de medo")
+        if efeitos.get("foliao_bonus_carisma"):
+            lista_efeitos.append(f"Folião: +{efeitos['foliao_bonus_carisma']} em perícias de Carisma e +1 atitude em festas/tavernas")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 

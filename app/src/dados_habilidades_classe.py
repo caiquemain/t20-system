@@ -867,93 +867,307 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # BUCANEIRO
+    # BUCANEIRO (T20 JdA, p. 46-48)
     # ==========================================================================
     "BUCANEIRO_AUDACIA": {
         "nome": "Audácia",
         "tipo": "Habilidade de Classe",
         "classe": "Bucaneiro",
         "nivel": 1,
-        "descricao": "Gaste 2 PM para somar Carisma em um teste de perícia (exceto ataque). ",
-        "efeitos": {}
+        "descricao": "Quando faz um teste de perícia, pode gastar 2 PM para somar seu Carisma no teste. Não pode ser usada em testes de ataque.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 2,
+                "efeito": "soma_carisma_pericia",
+                "exceto_ataque": True,
+            }
+        }
     },
     "BUCANEIRO_INSOLENCIA": {
         "nome": "Insolência",
         "tipo": "Habilidade de Classe",
         "classe": "Bucaneiro",
         "nivel": 1,
-        "descricao": "Soma Carisma na Defesa (limitado pelo nível). Exige liberdade mov. ",
-        "efeitos": {"defesa_soma_atributo": {"atributo": "car", "limite_por_nivel": True}}
+        "descricao": "Soma seu Carisma na Defesa, limitado pelo seu nível. Exige liberdade de movimentos (não funciona de armadura pesada ou imóvel).",
+        "efeitos": {
+            "defesa_soma_atributo": {
+                "atributo": "car",
+                "limite_por_nivel": True,
+                "exige_liberdade_movimento": True,
+            }
+        }
     },
     "BUCANEIRO_EVASAO": {
         "nome": "Evasão",
         "tipo": "Habilidade de Classe",
         "classe": "Bucaneiro",
         "nivel": 2,
-        "descricao": "Não sofre dano se passar em Reflexos contra área. ",
-        "efeitos": {"evasao": True}
+        "descricao": "Quando sofre um efeito que permite teste de Reflexos para reduzir dano à metade, não sofre dano algum se passar. Exige liberdade de movimentos.",
+        "efeitos": {"evasao": True, "exige_liberdade_movimento": True}
     },
     "BUCANEIRO_ESQUIVA_SAGAZ": {
         "nome": "Esquiva Sagaz",
         "tipo": "Habilidade de Classe",
         "classe": "Bucaneiro",
         "nivel": 3,
-        "descricao": "+1 Defesa e Reflexos. Aumenta a cada 4 níveis. ",
-        "efeitos": {"defesa_bonus": 1, "bonus_pericia": {"Reflexos": 1}}
+        "descricao": "Recebe +1 na Defesa e em Reflexos. Esse bônus aumenta em +1 a cada quatro níveis (7º, 11º, 15º, 19º). Exige liberdade de movimentos.",
+        "efeitos": {
+            "defesa_bonus": 1,
+            "bonus_pericia": {"Reflexos": 1},
+            "escala_nivel": {"inicio": 3, "cada": 4, "bonus": 1, "classe": "Bucaneiro"},
+            "exige_liberdade_movimento": True,
+        }
     },
     "BUCANEIRO_PANACHE": {
         "nome": "Panache",
         "tipo": "Habilidade de Classe",
         "classe": "Bucaneiro",
         "nivel": 5,
-        "descricao": "Recupera 1 PM ao fazer crítico ou reduzir inimigo a 0 PV. ",
-        "efeitos": {}
+        "descricao": "Sempre que faz um acerto crítico em combate ou reduz um inimigo a 0 PV, recupera 1 PM.",
+        "efeitos": {"panache_recupera_pm": 1}
     },
-    # --- PODERES DE BUCANEIRO ---
+    "BUCANEIRO_EVASAO_APRIMORADA": {
+        "nome": "Evasão Aprimorada",
+        "tipo": "Habilidade de Classe",
+        "classe": "Bucaneiro",
+        "nivel": 10,
+        "descricao": "Quando sofre efeito com Reflexos para metade, não sofre dano se passar e sofre apenas metade se falhar. Exige liberdade de movimentos.",
+        "efeitos": {"evasao_aprimorada": True, "exige_liberdade_movimento": True}
+    },
+    "BUCANEIRO_SORTE_DE_NIMB": {
+        "nome": "Sorte de Nimb",
+        "tipo": "Habilidade de Classe",
+        "classe": "Bucaneiro",
+        "nivel": 20,
+        "descricao": "Quando faz um teste, pode gastar 5 PM para rolá-lo novamente. Qualquer resultado 11 ou mais na segunda rolagem é considerado um 20 natural.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 5,
+                "efeito": "rerrolar_teste_11_vira_20",
+            },
+            "sorte_de_nimb": True,
+        }
+    },
+    # --- PODERES DE BUCANEIRO (19 poderes oficiais, T20 JdA p. 46-48) ---
+    "BUCANEIRO_ABUSAR_DOS_FRACOS": {
+        "nome": "Abusar dos Fracos",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Flagelo dos Mares"],
+        "descricao": "Quando ataca uma criatura sob efeito de uma condição de medo, seu dano aumenta em um passo.",
+        "efeitos": {"abusar_dos_fracos_passo_dano": 1}
+    },
+    "BUCANEIRO_AMIGOS_NO_PORTO": {
+        "nome": "Amigos no Porto",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Car 1", "Nível 6"],
+        "descricao": "Ao chegar em comunidade portuária, teste de Carisma (CD 10) para encontrar um amigo que presta um favor ou atua como parceiro veterano de um tipo a sua escolha por um dia.",
+        "efeitos": {
+            "acao_ativavel": {
+                "pericia_ou_atributo": "Carisma",
+                "cd": 10,
+                "efeito": "parceiro_veterano_ou_favor_1_dia",
+            }
+        }
+    },
     "BUCANEIRO_APARAR": {
         "nome": "Aparar",
         "tipo": "Poder de Bucaneiro",
         "classe": "Bucaneiro",
         "requisitos": ["Esgrimista"],
-        "descricao": "Reação (1 PM): Teste de ataque para bloquear ataque inimigo. ",
-        "efeitos": {}
+        "descricao": "Uma vez por rodada, quando atingido por um ataque, pode gastar 1 PM para fazer teste de ataque com bônus igual ao seu nível (além do normal) com arma corpo a corpo leve ou ágil; se maior que o do oponente, evita o ataque.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "frequencia": "1x_por_rodada",
+                "bonus_ataque": "nivel",
+                "tipo_arma": ["leve", "ágil"],
+                "efeito": "evitar_ataque",
+            }
+        }
+    },
+    "BUCANEIRO_APOSTADOR": {
+        "nome": "Apostador",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Treinado em Jogatina"],
+        "descricao": "Pode gastar um dia para participar de jogos de azar. Escolha um valor e faça teste de Jogatina: T$ 100 (CD 15), T$ 200 (CD 20), T$ 400 (CD 25), T$ 800 (CD 30), T$ 1.600 (CD 35) e assim por diante.",
+        "efeitos": {
+            "acao_ativavel": {
+                "tempo": "1 dia",
+                "pericia": "Jogatina",
+                "efeito": "apostar_dinheiro",
+            }
+        }
+    },
+    "BUCANEIRO_ATAQUE_ACROBATICO": {
+        "nome": "Ataque Acrobático",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "descricao": "Quando se aproxima de um inimigo com um salto ou pirueta (Atletismo ou Acrobacia para se mover) e o ataca no mesmo turno, recebe +2 nesse teste de ataque e na rolagem de dano.",
+        "efeitos": {
+            "ataque_acrobatico": {"ataque": 2, "dano": 2}
+        }
+    },
+    "BUCANEIRO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
     },
     "BUCANEIRO_AVENTUREIRO_AVIDO": {
         "nome": "Aventureiro Ávido",
         "tipo": "Poder de Bucaneiro",
         "classe": "Bucaneiro",
-        "descricao": "Gaste 5 PM para ação padrão ou movimento extra. ",
-        "efeitos": {}
+        "descricao": "Uma vez por rodada, pode gastar 5 PM para realizar uma ação padrão ou de movimento adicional. Se possuir Surto Heroico, em vez disso seu custo diminui em -2 PM.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 5,
+                "frequencia": "1x_por_rodada",
+                "efeito": "acao_padrao_ou_movimento_extra",
+                "reducao_surto_heroico_pm": 2,
+            }
+        }
     },
     "BUCANEIRO_BRAVATA_AUDAZ": {
         "nome": "Bravata Audaz",
         "tipo": "Poder de Bucaneiro",
         "classe": "Bucaneiro",
-        "descricao": "Jura façanha. Se cumprir, +2 PM por nível até fim da aventura. ",
-        "efeitos": {}
+        "descricao": "Bravata: jura fazer uma façanha específica (ND >= nível). Se cumprir, seus PM aumentam em +2 por nível de bucaneiro até o fim da aventura.",
+        "efeitos": {
+            "bravata": "audaz",
+            "pm_por_nivel_se_cumprida": 2,
+        }
+    },
+    "BUCANEIRO_BRAVATA_IMPRUDENTE": {
+        "nome": "Bravata Imprudente",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "descricao": "Bravata: na 1ª rodada de combate, jura derrotar seus inimigos com uma restrição válida. Se vencer, recebe +2 nos testes de ataque e na margem de ameaça até o fim da aventura.",
+        "efeitos": {
+            "bravata": "imprudente",
+            "ataque_se_cumprida": 2,
+            "margem_ameaca_se_cumprida": 2,
+        }
     },
     "BUCANEIRO_EN_GARDE": {
         "nome": "En Garde",
         "tipo": "Poder de Bucaneiro",
         "classe": "Bucaneiro",
         "requisitos": ["Esgrimista"],
-        "descricao": "Movimento (1 PM): +2 Defesa e margem de ameaça com armas leves/ágeis. ",
-        "efeitos": {}
+        "descricao": "Ação de movimento, 1 PM: até o fim da cena, usando arma corpo a corpo leve ou ágil, recebe +2 na margem de ameaça com essas armas e +2 na Defesa.",
+        "efeitos": {
+            "acao_ativavel": {
+                "acao": "movimento",
+                "custo_pm": 1,
+                "duracao": "cena",
+                "defesa_bonus": 2,
+                "margem_ameaca_bonus": 2,
+                "tipo_arma": ["leve", "ágil"],
+            }
+        }
     },
     "BUCANEIRO_ESGRIMISTA": {
         "nome": "Esgrimista",
         "tipo": "Poder de Bucaneiro",
         "classe": "Bucaneiro",
         "requisitos": ["Int 1"],
-        "descricao": "Soma Inteligência no dano com armas leves/ágeis (limitado por nível). ",
-        "efeitos": {"dano_soma_atributo_extra": {"atributo": "int", "tipo_arma": ["leve", "ágil"]}}
+        "descricao": "Quando usa uma arma corpo a corpo leve ou ágil, soma sua Inteligência nas rolagens de dano (limitado pelo seu nível).",
+        "efeitos": {
+            "dano_soma_atributo_extra": {
+                "atributo": "int",
+                "tipo_arma": ["leve", "ágil"],
+                "limite_por_nivel": True,
+            }
+        }
+    },
+    "BUCANEIRO_FLAGELO_DOS_MARES": {
+        "nome": "Flagelo dos Mares",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Treinado em Intimidação"],
+        "descricao": "Aprende e pode lançar Amedrontar (atributo-chave Carisma). Não é uma habilidade mágica.",
+        "efeitos": {
+            "magia_adicional": {"nome": "Amedrontar", "atributo": "car", "nao_magica": True}
+        }
+    },
+    "BUCANEIRO_FOLIAO": {
+        "nome": "Folião",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Car 1"],
+        "descricao": "Durante festas, tavernas e bailes, recebe +2 em testes de perícias de Carisma e a atitude de todas as pessoas em relação a você melhora em uma categoria.",
+        "efeitos": {"foliao_bonus_carisma": 2}
+    },
+    "BUCANEIRO_GRUDAR_O_CANO": {
+        "nome": "Grudar o Cano",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Treinado em Luta", "Pistoleiro"],
+        "descricao": "Quando faz um ataque à distância com arma de fogo contra oponente adjacente, não sofre a penalidade de -5 no teste de ataque e aumenta seu dano em um passo.",
+        "efeitos": {"grudar_o_cano": True}
+    },
+    "BUCANEIRO_PERNAS_DO_MAR": {
+        "nome": "Pernas do Mar",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "descricao": "Recebe +2 em Acrobacia e Atletismo. Quando está se equilibrando ou escalando, não fica desprevenido e seu deslocamento não é reduzido à metade.",
+        "efeitos": {
+            "bonus_pericia": {"Acrobacia": 2, "Atletismo": 2},
+            "pernas_do_mar": True,
+        }
     },
     "BUCANEIRO_PISTOLEIRO": {
         "nome": "Pistoleiro",
         "tipo": "Poder de Bucaneiro",
         "classe": "Bucaneiro",
-        "descricao": "Proficiência em armas de fogo e +2 dano com elas. ",
-        "efeitos": {"proficiencia_adicional": ["armas de fogo"], "dano_bonus_condicional": {"tipo": "arma_fogo", "valor": 2}}
+        "descricao": "Recebe proficiência com armas de fogo e +2 nas rolagens de dano com essas armas.",
+        "efeitos": {
+            "proficiencia_adicional": ["Armas de Fogo"],
+            "dano_bonus_condicional": {"tipo": "arma_fogo", "valor": 2},
+        }
+    },
+    "BUCANEIRO_PRESENCA_PARALISANTE": {
+        "nome": "Presença Paralisante",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Car 1", "Nível 4"],
+        "descricao": "Soma seu Carisma em Iniciativa e, se for o primeiro na iniciativa, ganha uma ação padrão extra na primeira rodada.",
+        "efeitos": {
+            "pericia_soma_atributo": {"Iniciativa": "car"},
+            "presenca_paralisante": True,
+        }
+    },
+    "BUCANEIRO_RIPOSTAR": {
+        "nome": "Ripostar",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Aparar", "Nível 12"],
+        "descricao": "Quando usa Aparar e evita o ataque, pode gastar 1 PM para fazer um ataque corpo a corpo imediato contra o inimigo que o atacou (se em alcance).",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 1,
+                "gatilho": "evitar_ataque_com_aparar",
+                "efeito": "ataque_corpo_a_corpo_imediato",
+            }
+        }
+    },
+    "BUCANEIRO_TOUCHE": {
+        "nome": "Touché",
+        "tipo": "Poder de Bucaneiro",
+        "classe": "Bucaneiro",
+        "requisitos": ["Esgrimista", "Nível 10"],
+        "descricao": "Quando se aproxima de um inimigo e o ataca com arma corpo a corpo leve ou ágil no mesmo turno, pode gastar 2 PM para aumentar seu dano em um passo e receber +5 na margem de ameaça neste ataque.",
+        "efeitos": {
+            "acao_ativavel": {
+                "custo_pm": 2,
+                "tipo_arma": ["leve", "ágil"],
+                "passo_dano": 1,
+                "margem_ameaca_bonus": 5,
+            }
+        }
     },
 
     # ==========================================================================
