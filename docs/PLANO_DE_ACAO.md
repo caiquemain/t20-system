@@ -49,13 +49,22 @@ Todas as **14/14 classes do Livro Básico (T20 JdA)** estão 100% catalogadas em
 
 ---
 
-## ✨ Fase 4 — Poderes Concedidos & Poderes Gerais
+## 📜 Fase 4 — Revisão das 35 Origens do Livro Básico
+> Checklist detalhada: [`docs/checklists/origens-livro-basico.md`](./checklists/origens-livro-basico.md)
+
+- **Auditoria de dados (`dados_origens.py`):** conferir itens iniciais, perícias, lista de poderes e regras especiais (ex.: *Amnésico*) das 35 origens contra o texto oficial do T20 JdA.
+- **Poderes exclusivos (`dados_poderes_origem.py`):** hoje apenas `9/35` possuem `efeitos` declarativos (`26/35` vazios); modelar todos os efeitos mecânicos e conectá-los ao motor (`app/src/regras/`).
+- **Testes dedicados:** criar suíte `app/tests/test_origens*.py` cobrindo seleção de benefícios, itens e efeitos mecânicos de todas as 35 origens.
+
+---
+
+## ✨ Fase 5 — Poderes Concedidos & Poderes Gerais
 - **Poderes Concedidos (`dados_poderes_concedidos.py`):** modelar `efeitos` nos 20 poderes concedidos (hoje `0/20` têm efeitos mecânicos).
 - **Poderes Gerais (`dados_habilidades.py`):** revisar os 68 poderes gerais (de 202) que ainda estão sem `efeitos` declarativos, priorizando os do Livro Básico (Combate, Destino, Magia, Tormenta).
 
 ---
 
-## 🎲 Fase 5 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
+## 🎲 Fase 6 — Rolagens, Polimento de PDF, Roll20 e Qualidade Frontend
 - **Sistema de Rolagens** ([`rolagens.md`](./checklists/rolagens.md)): 1d20 + modificadores em perícias/ataques, histórico e consumo automático de *Engenhosidade*, *Desejos* e *Sorte Salvadora (Hynne)*.
 - **Refinamentos do PDF** ([`pdf.md`](./checklists/pdf.md)): cache do template em memória, multiclasse no cabeçalho, loading no botão, campos pendentes (dinheiro, proficiências, armadura/escudo, CD de magia).
 - **Ponte Roll20** ([`roll20-bridge.md`](./checklists/roll20-bridge.md)): modo "ficha nova" direto da ponte e consolidar envio de monstros/NPCs.
