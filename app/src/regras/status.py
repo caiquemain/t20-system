@@ -162,6 +162,17 @@ def calcular_pv_pm(ficha: Personagem):
                     valor=val
                 )
 
+        # Bravata Audaz (Bucaneiro, T20 p.47): se cumprida, +2 PM por nível de bucaneiro
+        pm_bravata = efeitos.get("pm_por_nivel_se_cumprida")
+        if pm_bravata and "bravata_audaz" in (getattr(ficha, "condicoes_ativas", None) or []):
+            nivel_buc = next((int(c.nivel or 0) for c in (ficha.classes or []) if (c.nome or "") == "Bucaneiro"), nivel_total)
+            if nivel_buc > 0:
+                pm_calc.adicionar_bonus(
+                    fonte=f"Poder: {hab.nome} (+{pm_bravata} PM/nível)",
+                    categoria="Poder",
+                    valor=int(pm_bravata) * nivel_buc
+                )
+
     ficha.status.pm_calc = pm_calc
     ficha.status.pv_calc = pv_calc
     ficha.status.pv.maximo = pv_calc.total
@@ -187,6 +198,10 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
         (catalogo_do_item(item.nome) or {}).get("tipo_armadura") == "Pesada"
         for item in ficha.inventario.equipamentos
     )
+    condicoes_ativas = getattr(ficha, "condicoes_ativas", None) or []
+    tem_liberdade_mov = (not usa_pesada) and ("imovel" not in condicoes_ativas)
+    nivel_total = int(ficha.cabecalho.nivel_total or 1)
+
     if mod_des != 0 and not usa_pesada:
         defesa_calc.adicionar_bonus(
             fonte="Destreza",
@@ -219,10 +234,17 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
         (h.nome == "Pele de Aço") for h in ficha.habilidades
     )
 
+    mapa_attr_def = {
+        "for": "forca", "des": "destreza", "con": "constituicao",
+        "int": "inteligencia", "sab": "sabedoria", "car": "carisma",
+    }
+
     for hab in ficha.habilidades:
-        efeitos = hab.efeitos or {}
+        efeitos = dict(hab.efeitos or {})
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
+
+        exige_lib = bool(efeitos.get("exige_liberdade_movimento"))
 
         val_fixo = efeitos.get("defesa_bonus", 0)
         if val_fixo != 0:
@@ -232,12 +254,62 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 aplicar_defesa = False
             elif hab.nome == "Pele de Aço" and usa_pesada:
                 aplicar_defesa = False
+            elif exige_lib and not tem_liberdade_mov:
+                aplicar_defesa = False
+
             if aplicar_defesa:
+                val_final = int(val_fixo)
+                escala = efeitos.get("escala_nivel")
+                if isinstance(escala, dict) and escala.get("cada"):
+                    inicio = int(escala.get("inicio", 1) or 1)
+                    cada = int(escala.get("cada", 0) or 0)
+                    passo = int(escala.get("bonus", 1) or 1)
+                    classe_esc = escala.get("classe")
+                    nivel_ref = nivel_total
+                    if classe_esc:
+                        nivel_ref = next(
+                            (int(c.nivel or 0) for c in (ficha.classes or []) if (c.nome or "") == classe_esc),
+                            nivel_total,
+                        )
+                    if nivel_ref >= inicio and cada > 0:
+                        val_final = int(val_fixo) + ((nivel_ref - inicio) // cada) * passo
                 defesa_calc.adicionar_bonus(
                     fonte=f"Poder: {hab.nome}",
                     categoria="Poder",
-                    valor=val_fixo
+                    valor=val_final
                 )
+
+        # Soma de atributo na Defesa (ex.: Insolência do Bucaneiro = Car, limitado pelo nível)
+        dsa = efeitos.get("defesa_soma_atributo")
+        if dsa:
+            if isinstance(dsa, dict):
+                attr_cod = str(dsa.get("atributo", "")).lower()[:3]
+                limite_nivel = bool(dsa.get("limite_por_nivel"))
+                exige_lib_dsa = bool(dsa.get("exige_liberdade_movimento", exige_lib))
+            else:
+                attr_cod = str(dsa).lower()[:3]
+                limite_nivel = False
+                exige_lib_dsa = exige_lib
+            if not exige_lib_dsa or tem_liberdade_mov:
+                campo = mapa_attr_def.get(attr_cod)
+                if campo:
+                    mod_val = calcular_modificador(getattr(ficha.atributos, campo, 0))
+                    if limite_nivel:
+                        mod_val = min(mod_val, nivel_total)
+                    if mod_val > 0:
+                        defesa_calc.adicionar_bonus(
+                            fonte=f"Poder: {hab.nome}",
+                            categoria="Poder",
+                            valor=mod_val
+                        )
+
+        # En Garde (Bucaneiro, T20 p.48): +2 Defesa quando postura ativa
+        if (hab.nome or "") == "En Garde" and "en_garde" in condicoes_ativas:
+            defesa_calc.adicionar_bonus(
+                fonte="Poder: En Garde",
+                categoria="Poder",
+                valor=2
+            )
 
         if "defesa_bonus_tormenta" in efeitos:
             defesa_calc.adicionar_bonus(

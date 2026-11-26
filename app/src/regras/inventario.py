@@ -165,6 +165,43 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
         bonus_dano_arma = mod_arma.get("bonus_dano", 0)
         if bonus_dano_arma:
             especial.append(f"{mod_arma.get('fonte_dano', 'Habilidade')} (+{bonus_dano_arma} dano)")
+
+        # Esgrimista (Bucaneiro, T20 p.48): soma Inteligência no dano com armas corpo a corpo
+        # leves ou ágeis (limitado pelo nível).
+        eh_leve_ou_agil = (
+            cat.get("proposito") == "Corpo a Corpo"
+            and (cat.get("empunhadura") == "Leve" or "ágil" in (cat.get("habilidades") or []))
+        )
+        if eh_leve_ou_agil:
+            for hab in ficha.habilidades:
+                d_extra = (hab.efeitos or {}).get("dano_soma_atributo_extra")
+                if isinstance(d_extra, dict) and d_extra.get("atributo"):
+                    attr_cod = str(d_extra["atributo"]).lower()[:3]
+                    val_attr = mod_atributo(ficha, attr_cod)
+                    if d_extra.get("limite_por_nivel", True):
+                        val_attr = min(val_attr, int(ficha.cabecalho.nivel_total or 1))
+                    if val_attr > 0:
+                        bonus_dano_arma += val_attr
+                        especial.append(f"{hab.nome} (+{val_attr} dano)")
+
+        # Pistoleiro (Bucaneiro, T20 p.48): +2 nas rolagens de dano com armas de fogo
+        if categoria_arma == "Fogo":
+            for hab in ficha.habilidades:
+                dbc = (hab.efeitos or {}).get("dano_bonus_condicional")
+                if isinstance(dbc, dict) and dbc.get("tipo") == "arma_fogo" and dbc.get("valor"):
+                    v_fogo = int(dbc["valor"])
+                    bonus_dano_arma += v_fogo
+                    especial.append(f"{hab.nome} (+{v_fogo} dano)")
+
+        # En Garde (Bucaneiro, T20 p.48): +2 margem de ameaça com armas leves/ágeis sob postura
+        conds = getattr(ficha, "condicoes_ativas", None) or []
+        if eh_leve_ou_agil and "en_garde" in conds and any((h.nome or "") == "En Garde" for h in ficha.habilidades):
+            especial.append("En Garde (+2 margem de ameaça)")
+
+        # Bravata Imprudente (Bucaneiro, T20 p.48): +2 ataque e margem de ameaça quando cumprida
+        if "bravata_imprudente" in conds and any((h.nome or "") == "Bravata Imprudente" for h in ficha.habilidades):
+            especial.append("Bravata Imprudente (+2 ataque e margem de ameaça)")
+
         if not proficiente:
             especial.append("-5 ataque (não proficiente)")
         ataques.append(Ataque(
