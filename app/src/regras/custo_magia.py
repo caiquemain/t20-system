@@ -65,7 +65,14 @@ def calcular_cd_magia(ficha: Personagem, magia) -> int:
             elif (hab.nome or "") == "Liturgia Mágica":
                 cd_liturgia += 2
 
-    return cd_base + cd_escola + cd_inspiracao + cd_liturgia
+    # Força da Natureza (Druida 20º, T20 p.62): +2 CD (+4 em terrenos naturais)
+    cd_forca_nat = 0
+    for hab in ficha.habilidades:
+        if (hab.efeitos or {}).get("forca_da_natureza") or (hab.nome or "") == "Força da Natureza":
+            cd_forca_nat += 4 if "terreno_natural" in condicoes else 2
+            break
+
+    return cd_base + cd_escola + cd_inspiracao + cd_liturgia + cd_forca_nat
 
 
 def calcular_custo_magia(ficha: Personagem, magia,
@@ -149,6 +156,14 @@ def calcular_custo_magia(ficha: Personagem, magia,
                         f"Símbolo Sagrado Energizado (−{int(red_simb)} PM)", "Poder", -int(red_simb)
                     )
                     break
+
+    # Força da Natureza (Druida 20º, T20 p.62): -2 PM (-4 PM em terrenos naturais)
+    for hab in ficha.habilidades:
+        if (hab.efeitos or {}).get("forca_da_natureza") or (hab.nome or "") == "Força da Natureza":
+            red_fn = 4 if "terreno_natural" in condicoes else 2
+            total -= red_fn
+            calc.adicionar_bonus(f"Força da Natureza (−{red_fn} PM)", "Poder", -red_fn)
+            break
 
     # Artista Completo (Bardo 20º, T20 p.44): sob Inspiração, custo em PM reduzido
     # pela metade APÓS aplicar aprimoramentos e quaisquer outras reduções.

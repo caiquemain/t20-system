@@ -518,6 +518,20 @@ def atualizar_efeitos_ativos(ficha: Personagem):
             lista_efeitos.append("Prece de Combate: +2 PM para lançar magia divina (padrão) em si mesmo como ação de movimento")
         if efeitos.get("magia_sagrada_profana"):
             lista_efeitos.append("Magia Sagrada/Profana: +1 PM para mudar dano de magia divina para luz ou trevas")
+        if efeitos.get("imunidade_terreno_dificil_natural"):
+            lista_efeitos.append("Caminho dos Ermos: ignora terreno difícil e +10 CD para rastreá-lo em terrenos naturais")
+        if efeitos.get("forca_da_natureza"):
+            lista_efeitos.append("Força da Natureza: -2 PM e +2 CD em magias (-4 PM e +4 CD em terrenos naturais)")
+        if efeitos.get("bonus_dano_dado_frio"):
+            lista_efeitos.append(f"Aspecto do Inverno: +{efeitos['bonus_dano_dado_frio']} dano por dado em magias de frio")
+        if efeitos.get("veneno_cd_bonus"):
+            lista_efeitos.append(f"Coração da Selva: +{efeitos['veneno_cd_bonus']} CD e +{efeitos.get('veneno_dano_por_dado', 1)} perda de vida/dado em venenos")
+        if efeitos.get("magia_em_forma_selvagem"):
+            lista_efeitos.append("Magia Natural: lança magias e empunha catalisadores/esotéricos em forma selvagem")
+        if efeitos.get("armas_naturais_margem_ameaca"):
+            lista_efeitos.append(f"Presas Afiadas: +{efeitos['armas_naturais_margem_ameaca']} margem de ameaça em armas naturais")
+        if efeitos.get("forma_primal"):
+            lista_efeitos.append("Forma Primal: combina benefícios de dois tipos de animais na Forma Selvagem")
 
     ficha.status.efeitos_ativos = sorted(list(set(lista_efeitos)))
 
