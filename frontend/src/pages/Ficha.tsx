@@ -10,7 +10,7 @@ import { CondicoesRaciais } from '../components/CondicoesRaciais';
 import { AbilityConfigModal } from '../components/AbilityConfigModal';
 import { GrimorioModal } from '../components/GrimorioModal';
 import { FullGrimorioModal } from '../components/FullGrimorioModal';
-import { SpellDetailsModal } from '../components/SpellDetailsModal';
+import { SpellDetailsModal, type SpellRollConfig } from '../components/SpellDetailsModal';
 import { SpellSummary } from '../components/SpellSummary';
 import { AttributeCard } from '../components/AttributeCard';
 import { SkillList } from '../components/SkillList';
@@ -98,6 +98,7 @@ function Ficha() {
     const [selectorAtivo, setSelectorAtivo] = useState<'raca' | 'origem' | 'deus' | 'classe' | null>(null);
     const [showFullGrimorio, setShowFullGrimorio] = useState(false);
     const [viewSpell, setViewSpell] = useState<Magia | null>(null);
+    const [spellConfigs, setSpellConfigs] = useState<Record<string, SpellRollConfig>>({});
 
     const [isFlying, setIsFlying] = useState(false);
     const [isAquatic, setIsAquatic] = useState(false);
@@ -471,6 +472,8 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 magia={viewSpell}
                 onClose={() => setViewSpell(null)}
                 onRemove={() => { if (viewSpell) { handleRemoverMagia(viewSpell.nome); setViewSpell(null); } }}
+                configInicial={viewSpell ? spellConfigs[viewSpell.nome] : undefined}
+                onConfigChange={(nomeMagia, cfg) => setSpellConfigs(prev => ({ ...prev, [nomeMagia]: cfg }))}
             />
 
             <PowerSelectorModal
@@ -697,6 +700,11 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             ataques={(ficha.combate.ataques || []).map((a: any) => ({ ...a, teste: a.teste || '—' }))}
                             fluxoDeMana={Boolean(ficha.combate.fluxo_de_mana)}
                             focoVital={Boolean(ficha.combate.foco_vital)}
+                            spellConfigs={spellConfigs}
+                            onOpenSpell={(nomeMagia) => {
+                                const encontrada = (ficha.combate.magias || []).find((m: Magia) => m.nome === nomeMagia);
+                                if (encontrada) setViewSpell(encontrada);
+                            }}
                         />
                         <div className="section-card" style={{ marginTop: '25px' }}>
                             <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
