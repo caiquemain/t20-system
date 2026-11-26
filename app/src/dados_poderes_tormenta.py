@@ -1,113 +1,189 @@
-# app/src/dados_poderes_tormenta.py
+# -*- coding: utf-8 -*-
+# Catálogo completo dos 22 Poderes da Tormenta do Livro Básico (T20 JdA p.136-137)
+# Nota: a perda de Carisma (-1 no 1º poder e -1 a cada 2 outros poderes, respeitando
+# Afinidade com a Tormenta) é calculada centralmente em app/src/regras/atributos.py.
 
 DADOS_PODERES_TORMENTA = {
     "Anatomia_Insana": {
         "nome": "Anatomia Insana",
         "tipo": "Poder da Tormenta",
-        "descricao": "25% chance de ignorar crítico/furtivo. +25% por cada 2 outros poderes Tormenta. (Perde 1 Carisma)",
+        "descricao": "25% de chance (1 em 1d4) de ignorar dano adicional de crítico ou ataque furtivo (+25% para cada dois outros poderes da Tormenta).",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "atributo_bonus": {"car": -1}
-        }
+        "efeitos": {"anatomia_insana": True},
     },
     "Antenas": {
         "nome": "Antenas",
         "tipo": "Poder da Tormenta",
-        "descricao": "+1 Iniciativa, Percepção, Vontade. Aumenta com outros poderes. (Perde 1 Carisma)",
+        "descricao": "+1 em Iniciativa, Percepção e Vontade (+1 para cada dois outros poderes da Tormenta).",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "bonus_pericia_tormenta": ["Iniciativa", "Percepção", "Vontade"],
-            "atributo_bonus": {"car": -1}
-        }
+        "efeitos": {"bonus_pericia_tormenta": ["Iniciativa", "Percepção", "Vontade"]},
+    },
+    "Armamento_Aberrante": {
+        "nome": "Armamento Aberrante",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Movimento e 1 PM: produz arma orgânica corpo a corpo ou de arremesso proficiente pela cena (+1 passo de dano a cada dois outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": ["Outro poder da Tormenta"],
+        "efeitos": {"custo_pm": 1, "armamento_aberrante": True},
+    },
+    "Articulacoes_Flexiveis": {
+        "nome": "Articulações Flexíveis",
+        "tipo": "Poder da Tormenta",
+        "descricao": "+1 em Acrobacia, Furtividade e Reflexos (+1 para cada dois outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": [],
+        "efeitos": {"bonus_pericia_tormenta": ["Acrobacia", "Furtividade", "Reflexos"]},
+    },
+    "Asas_Insetoides": {
+        "nome": "Asas Insetoides",
+        "tipo": "Poder da Tormenta",
+        "descricao": "1 PM: deslocamento de voo 9m até o fim do turno (+1,5m para cada outro poder da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": ["Quatro outros poderes da Tormenta"],
+        "efeitos": {"custo_pm": 1, "asas_insetoides_voo_base": 9},
     },
     "Carapaca": {
         "nome": "Carapaça",
         "tipo": "Poder da Tormenta",
-        "descricao": "+1 Defesa. Aumenta com outros poderes. (Perde 1 Carisma)",
+        "descricao": "Pele recoberta por placas quitinosas: +1 na Defesa (+1 para cada dois outros poderes da Tormenta).",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "defesa_bonus_tormenta": 1,
-            "atributo_bonus": {"car": -1}
-        }
+        "efeitos": {"defesa_bonus_tormenta": 1},
+    },
+    "Corpo_Aberrante": {
+        "nome": "Corpo Aberrante",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Dano desarmado aumenta em +1 passo (+1 passo para cada quatro outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": ["Outro poder da Tormenta"],
+        "efeitos": {"corpo_aberrante_passos": 1},
+    },
+    "Cuspir_Enxame": {
+        "nome": "Cuspir Enxame",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Mágico. Ação completa e 2 PM: cria enxame de insetos rubros (Médio, sustentada, 9m/rodada, 2d6 ácido no fim do turno; +1 PM/+1d6 a cada dois outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": [],
+        "efeitos": {"custo_pm": 2, "magico": True, "cuspir_enxame": True},
     },
     "Dentes_Afiados": {
         "nome": "Dentes Afiados",
         "tipo": "Poder da Tormenta",
-        "descricao": "Arma natural mordida (1d4). Gaste 1 PM para ataque extra. (Perde 1 Carisma)",
+        "descricao": "Arma natural de mordida (1d4, x2, corte). 1x/rodada ao agredir com outra arma, gaste 1 PM para ataque extra com a mordida.",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "atributo_bonus": {"car": -1}
-        }
+        "efeitos": {"arma_natural_mordida": "1d4", "custo_pm": 1},
+    },
+    "Desprezar_Realidade": {
+        "nome": "Desprezar a Realidade",
+        "tipo": "Poder da Tormenta",
+        "descricao": "2 PM: até o início do próximo turno, ignora terreno difícil e impõe 20% de chance de falha contra efeitos (+5% a cada dois outros poderes da Tormenta, máx 50%).",
+        "fonte": "T20 JdA",
+        "requisitos": ["Quatro outros poderes da Tormenta"],
+        "efeitos": {"custo_pm": 2, "desprezar_realidade": True},
     },
     "Empunhadura_Rubra": {
         "nome": "Empunhadura Rubra",
         "tipo": "Poder da Tormenta",
-        "descricao": "Gaste 1 PM para +1 em Luta (aumenta com outros poderes). (Perde 1 Carisma)",
+        "descricao": "1 PM: até o fim da cena, recebe +1 em Luta (+1 para cada dois outros poderes da Tormenta).",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "atributo_bonus": {"car": -1}
-        }
+        "efeitos": {"custo_pm": 1, "empunhadura_rubra": True},
+    },
+    "Fome_de_Mana": {
+        "nome": "Fome de Mana",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Ao passar em teste de resistência contra habilidade mágica de inimigo, recebe 1 PM temporário cumulativo (máximo igual ao nº de poderes da Tormenta por cena).",
+        "fonte": "T20 JdA",
+        "requisitos": [],
+        "efeitos": {"fome_de_mana": True},
+    },
+    "Larva_Explosiva": {
+        "nome": "Larva Explosiva",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Mágico. Criatura que sofreu dano de sua mordida e cai a 0 PV explode causando 4d4 dano de ácido em adjacentes (+2d4 a cada dois outros poderes da Tormenta; você é imune).",
+        "fonte": "T20 JdA",
+        "requisitos": ["Dentes Afiados"],
+        "efeitos": {"magico": True, "larva_explosiva": True},
+    },
+    "Legiao_Aberrante": {
+        "nome": "Legião Aberrante",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Atravessa espaços do tamanho de uma moeda (terreno difícil) e recebe +1 contra manobras e resistências de alvo único (+1 a cada dois outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": ["Anatomia Insana", "Três outros poderes da Tormenta"],
+        "efeitos": {"legiao_aberrante": True},
+    },
+    "Maos_Membranosas": {
+        "nome": "Mãos Membranosas",
+        "tipo": "Poder da Tormenta",
+        "descricao": "+1 em Atletismo, Fortitude e testes de agarrar (+1 para cada dois outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": [],
+        "efeitos": {"bonus_pericia_tormenta": ["Atletismo", "Fortitude"]},
+    },
+    "Membros_Estendidos": {
+        "nome": "Membros Estendidos",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Aumenta alcance natural corpo a corpo em +1,5m (+1,5m para cada quatro outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": [],
+        "efeitos": {"membros_estendidos_alcance_m": 1.5},
     },
     "Membros_Extras": {
         "nome": "Membros Extras",
         "tipo": "Poder da Tormenta",
-        "descricao": "Duas patas insetoides (ataques extras). Pode empunhar armas leves. (Perde 1 Carisma)",
+        "descricao": "Duas patas insetoides (1d4, x2, corte). 1x/rodada ao agredir, 2 PM para ataque extra com cada (pode empunhar armas leves com Ambidestria ou Estilo de Duas Armas, –2 ataques).",
         "fonte": "T20 JdA",
-        "requisitos": ["4 outros poderes Tormenta"],
-        "efeitos": {
-            "atributo_bonus": {"car": -1}
-        }
+        "requisitos": ["Quatro outros poderes da Tormenta"],
+        "efeitos": {"custo_pm": 2, "membros_extras": True},
+    },
+    "Mente_Aberrante": {
+        "nome": "Mente Aberrante",
+        "tipo": "Poder da Tormenta",
+        "descricao": "Mágico. Resistência a efeitos mentais +1 e quem exigir Vontade sofre 1d6 psíquico (+1 resistência e +1d6 dano a cada dois outros poderes da Tormenta).",
+        "fonte": "T20 JdA",
+        "requisitos": [],
+        "efeitos": {"magico": True, "mente_aberrante": True},
     },
     "Olhos_Vermelhos": {
         "nome": "Olhos Vermelhos",
         "tipo": "Poder da Tormenta",
-        "descricao": "Visão no escuro e +1 Intimidação (aumenta com outros poderes). (Perde 1 Carisma)",
+        "descricao": "Visão no escuro e +1 em Intimidação (+1 para cada dois outros poderes da Tormenta).",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "visao_escuro": True,
-            "bonus_pericia_tormenta": ["Intimidação"],
-            "atributo_bonus": {"car": -1}
-        }
+        "efeitos": {"visao_escuro": True, "bonus_pericia_tormenta": ["Intimidação"]},
     },
     "Pele_Corrompida": {
         "nome": "Pele Corrompida",
         "tipo": "Poder da Tormenta",
-        "descricao": "RD 2 a ácido, eletricidade, fogo, frio, luz, trevas. Aumenta +2 para cada outro poder da Tormenta. (Perde 1 Carisma)",
+        "descricao": "RD 2 a ácido, eletricidade, fogo, frio, luz e trevas (+2 para cada dois outros poderes da Tormenta).",
         "fonte": "T20 JdA",
         "requisitos": [],
         "efeitos": {
             "rd_escalavel_tormenta": {
                 "elementos": ["Ácido", "Eletricidade", "Fogo", "Frio", "Luz", "Trevas"],
                 "base": 2,
-                "por_poder": 2
-            },
-            "atributo_bonus": {"car": -1}
-        }
+                "por_poder": 2,
+            }
+        },
     },
     "Sangue_Acido": {
         "nome": "Sangue Ácido",
         "tipo": "Poder da Tormenta",
-        "descricao": "Ao sofrer dano corpo a corpo, atacante sofre 1 dano ácido por poder Tormenta. (Perde 1 Carisma)",
+        "descricao": "Ao sofrer dano corpo a corpo, o atacante sofre 1 ponto de dano de ácido por poder da Tormenta que você possui.",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "atributo_bonus": {"car": -1}
-        }
+        "efeitos": {"sangue_acido": True},
     },
     "Visco_Rubro": {
         "nome": "Visco Rubro",
         "tipo": "Poder da Tormenta",
-        "descricao": "1 PM para +1 dano corpo a corpo (aumenta com outros poderes). (Perde 1 Carisma)",
+        "descricao": "1 PM: até o fim da cena, recebe +1 nas rolagens de dano corpo a corpo (+1 para cada dois outros poderes da Tormenta).",
         "fonte": "T20 JdA",
         "requisitos": [],
-        "efeitos": {
-            "atributo_bonus": {"car": -1}
-        }
-    }
+        "efeitos": {"custo_pm": 1, "visco_rubro": True},
+    },
 }

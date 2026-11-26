@@ -172,6 +172,26 @@ def calcular_atributos_finais(ficha: Personagem):
     else:
         ficha.modificadores_envelhecimento = {}
 
+    # --- PERDA DE CARISMA POR PODERES DA TORMENTA (T20 JdA p.136) ---
+    # 1º poder = -1 Car; para cada 2 outros poderes, -1 Car adicional.
+    # Afinidade com a Tormenta: o 1º poder da Tormenta não conta para perda de Carisma.
+    qtd_tormenta_car = sum(
+        1 for h in ficha.habilidades if h.tipo and "Tormenta" in h.tipo
+    )
+    tem_afinidade = any(
+        (h.efeitos or {}).get("primeiro_poder_tormenta_sem_perda_car")
+        or (h.nome or "") == "Afinidade com a Tormenta"
+        for h in ficha.habilidades
+    )
+    qtd_efetiva_car = max(0, qtd_tormenta_car - (1 if tem_afinidade else 0))
+    if qtd_efetiva_car > 0 and "carisma" in ficha.atributos_calc:
+        perda_car = (qtd_efetiva_car + 1) // 2
+        ficha.atributos_calc["carisma"].adicionar_bonus(
+            fonte=f"Poderes da Tormenta ({qtd_tormenta_car})",
+            categoria="Tormenta",
+            valor=-perda_car,
+        )
+
     # --- SINCRONIZAÇÃO FINAL (Compatibilidade com Frontend) ---
     # Copia os totais calculados para o objeto 'atributos' que o frontend já lê
     for attr_full, stat in ficha.atributos_calc.items():
