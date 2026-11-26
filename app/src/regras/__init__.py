@@ -24,6 +24,7 @@ from .status import (
     calcular_inspiracao,
     calcular_marca_presa,
     calcular_cavaleiro,
+    calcular_clerigo,
 )
 
 # 2. ATUALIZADO: Removemos 'calcular_proficiencias_e_sentidos' daqui (pois movida para status)
@@ -78,6 +79,7 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     ficha.combate.inspiracao_calc = calcular_inspiracao(ficha)
     ficha.combate.marca_presa_calc = calcular_marca_presa(ficha)
     ficha.combate.cavaleiro_calc = calcular_cavaleiro(ficha)
+    ficha.combate.clerigo_calc = calcular_clerigo(ficha)
     sincronizar_ataques(ficha)
     sincronizar_ataques_equipamento(ficha)
     sincronizar_carga(ficha)

@@ -55,7 +55,17 @@ def calcular_cd_magia(ficha: Personagem, magia) -> int:
             elif (hab.nome or "") == "Arte Mágica":
                 cd_inspiracao += 2
 
-    return cd_base + cd_escola + cd_inspiracao
+    # Liturgia Mágica (Clérigo, T20 p.58): +2 CD na próxima habilidade de clérigo
+    cd_liturgia = 0
+    if "liturgia_magica" in condicoes:
+        for hab in ficha.habilidades:
+            v_lit = (hab.efeitos or {}).get("cd_clerigo_liturgia")
+            if v_lit:
+                cd_liturgia += int(v_lit)
+            elif (hab.nome or "") == "Liturgia Mágica":
+                cd_liturgia += 2
+
+    return cd_base + cd_escola + cd_inspiracao + cd_liturgia
 
 
 def calcular_custo_magia(ficha: Personagem, magia,
@@ -122,9 +132,26 @@ def calcular_custo_magia(ficha: Personagem, magia,
         calc.adicionar_bonus(
             f"Poder: Mestre em Escola ({escola})", "Poder", reducao_escola)
 
+    # Símbolo Sagrado Energizado (Clérigo, T20 p.58): -1 PM em magias divinas
+    condicoes = getattr(ficha, "condicoes_ativas", None) or []
+    if "simbolo_energizado" in condicoes:
+        eh_divina = (
+            "divin" in tipo_magia
+            or "universal" in tipo_magia
+            or (not tipo_magia and any((c.nome or "") == "Clérigo" for c in (ficha.classes or [])))
+        )
+        if eh_divina:
+            for hab in ficha.habilidades:
+                red_simb = (hab.efeitos or {}).get("reducao_pm_magias_divinas_energizado")
+                if red_simb:
+                    total -= int(red_simb)
+                    calc.adicionar_bonus(
+                        f"Símbolo Sagrado Energizado (−{int(red_simb)} PM)", "Poder", -int(red_simb)
+                    )
+                    break
+
     # Artista Completo (Bardo 20º, T20 p.44): sob Inspiração, custo em PM reduzido
     # pela metade APÓS aplicar aprimoramentos e quaisquer outras reduções.
-    condicoes = getattr(ficha, "condicoes_ativas", None) or []
     if "inspiracao" in condicoes:
         tem_artista = any(
             (hab.efeitos or {}).get("reducao_custo_inspiracao_metade")

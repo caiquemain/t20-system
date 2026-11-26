@@ -1721,66 +1721,181 @@ DADOS_HABILIDADES_CLASSE = {
     },
 
     # ==========================================================================
-    # CLÉRIGO
+    # CLÉRIGO (T20 JdA, p. 56-58)
     # ==========================================================================
     "CLERIGO_DEVOTO": {
         "nome": "Devoto Fiel",
         "tipo": "Habilidade de Classe",
         "classe": "Clérigo",
         "nivel": 1,
-        "descricao": "Escolha divindade. Ganha 2 Poderes Concedidos (ou Panteão). ",
-        "efeitos": {"escolha_divindade": True, "poderes_concedidos_bonus": 1}
+        "descricao": "Torna-se devoto de um deus maior e recebe dois poderes concedidos (em vez de um). Alternativamente, pode cultuar o Panteão (sem poder concedido; proibição de armas cortantes/perfurantes; arma preferida maça; escolhe energia positiva ou negativa).",
+        "efeitos": {"escolha_divindade": True, "poderes_concedidos_bonus": 1, "permite_panteao": True}
     },
     "CLERIGO_MAGIAS": {
         "nome": "Magias (Clérigo)",
         "tipo": "Habilidade de Classe",
         "classe": "Clérigo",
         "nivel": 1,
-        "descricao": "Lança magias divinas (Sab). Começa com 3 de 1º círculo. ",
+        "descricao": "Lança magias divinas de 1º círculo (+1 círculo a cada 4 níveis: 2º no 5º, 3º no 9º, 4º no 13º, 5º no 17º). Começa com 3 magias de 1º círculo e aprende +1 por nível. Atributo-chave: Sabedoria (soma Sabedoria no total de PM).",
         "efeitos": {"habilita_magia": {"tipo": "Divina", "atributo": "sab", "circulo_max": 1}}
     },
-    # --- PODERES DE CLÉRIGO ---
+    "CLERIGO_MAO_DIVINDADE": {
+        "nome": "Mão da Divindade",
+        "tipo": "Habilidade de Classe",
+        "classe": "Clérigo",
+        "nivel": 20,
+        "descricao": "Ação completa, 15 PM: lança três magias divinas quaisquer (mesmo desconhecidas) como ação livre sem gastar PM (paga aprimoramentos e outros custos). Após usar, fica atordoado por 1d4 rodadas (mesmo se imune).",
+        "efeitos": {
+            "acao_ativavel": {"acao": "completa", "custo_pm": 15, "magias_livres": 3, "atordoado_rodadas": "1d4"},
+            "mao_da_divindade": True,
+        }
+    },
+    # --- PODERES DE CLÉRIGO (18 poderes oficiais, T20 JdA p. 57-58) ---
     "CLERIGO_ABENCOAR_ARMA": {
         "nome": "Abençoar Arma",
         "tipo": "Poder de Clérigo",
         "classe": "Clérigo",
-        "descricao": "Proficiência arma divindade. 3 PM: Arma mágica, +dano, usa Sab no ataque/dano. ",
-        "efeitos": {}
+        "descricao": "Proficiente na arma preferida de sua divindade. Empunhando-a, ação de movimento e 3 PM: até fim da cena, arma mágica que ilumina como tocha, dano +1 passo e usa Sabedoria em ataque e dano (não cumulativo com efeitos que somam Sab).",
+        "efeitos": {
+            "proficiencia_arma_divindade": True,
+            "acao_ativavel": {"acao": "movimento", "custo_pm": 3, "duracao": "cena", "passo_dano": 1, "atributo_ataque_dano": "sab"},
+        }
     },
-    "CLERIGO_CANALIZAR": {
-        "nome": "Canalizar Energia",
+    "CLERIGO_AUMENTO_ATRIBUTO": {
+        "nome": "Aumento de Atributo",
         "tipo": "Poder de Clérigo",
         "classe": "Clérigo",
-        "descricao": "Libera onda de Luz (cura/dano) ou Trevas (dano/cura). ",
-        "efeitos": {}
+        "descricao": "Recebe +1 em um atributo. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+        "efeitos": {"atributo_bonus_escolha": 1}
+    },
+    "CLERIGO_AUTORIDADE_ECLESIASTICA": {
+        "nome": "Autoridade Eclesiástica",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "requisitos": ["Nível 5", "Devoto de um deus maior"],
+        "descricao": "Recebe +5 em Diplomacia ou Intimidação ao lidar com devotos de sua divindade e paga metade do preço de itens alquímicos, poções e serviços em templos de sua divindade.",
+        "efeitos": {"autoridade_eclesiastica": {"bonus_devotos": 5, "desconto_templo": 0.5}}
+    },
+    "CLERIGO_CANALIZAR": {
+        "nome": "Canalizar Energia Positiva/Negativa",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Ação padrão + PM, alcance curto: libera onda de luz (cura 1d6/PM em vivos, 1d6/PM dano luz em mortos-vivos, Vontade CD Sab metade) ou trevas (inverso).",
+        "efeitos": {
+            "acao_ativavel": {
+                "acao": "padrão", "custo_pm": "variavel", "alcance": "curto",
+                "por_pm": "1d6", "resistencia": "Vontade", "atributo_cd": "sab",
+            }
+        }
+    },
+    "CLERIGO_CANALIZAR_AMPLO": {
+        "nome": "Canalizar Amplo",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "requisitos": ["Canalizar Energia Positiva/Negativa"],
+        "descricao": "Ao usar Canalizar Energia, pode gastar +2 PM para aumentar o alcance para médio.",
+        "efeitos": {"canalizar_alcance_medio": True, "custo_pm_extra": 2}
+    },
+    "CLERIGO_COMUNHAO_VITAL": {
+        "nome": "Comunhão Vital",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Ao lançar magia que cure uma criatura, pode pagar +2 PM para outra criatura em alcance curto (ou você mesmo) recuperar metade dos PV da cura original.",
+        "efeitos": {"comunhao_vital": {"custo_pm_extra": 2, "alcance": "curto"}}
     },
     "CLERIGO_CONHECIMENTO_MAGICO": {
         "nome": "Conhecimento Mágico",
         "tipo": "Poder de Clérigo",
         "classe": "Clérigo",
-        "descricao": "Aprende duas magias divinas. ",
-        "efeitos": {"magias_adicionais": 2}
+        "descricao": "Aprende duas magias de qualquer círculo que possa lançar. Pode escolher este poder quantas vezes quiser.",
+        "efeitos": {"magias_adicionais": 2, "multipla_escolha": True}
+    },
+    "CLERIGO_EXPULSAR_COMANDAR": {
+        "nome": "Expulsar/Comandar Mortos-Vivos",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "requisitos": ["Canalizar Energia Positiva/Negativa"],
+        "descricao": "Ação padrão, 3 PM, alcance curto: expulsa (apavorados 1d6 rodadas) ou comanda (não inteligentes Int -4 ou menor por 1 dia até soma ND = nível + 3; inteligentes fascinados 1 rodada) mortos-vivos. Vontade CD Sab anula.",
+        "efeitos": {
+            "acao_ativavel": {
+                "acao": "padrão", "custo_pm": 3, "alcance": "curto",
+                "resistencia": "Vontade", "atributo_cd": "sab",
+            }
+        }
+    },
+    "CLERIGO_LITURGIA_MAGICA": {
+        "nome": "Liturgia Mágica",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Ação de movimento: aumenta em +2 a CD para resistir à sua próxima habilidade de clérigo (usada até o final do próximo turno).",
+        "efeitos": {"cd_clerigo_liturgia": 2}
+    },
+    "CLERIGO_MAGIA_SAGRADA_PROFANA": {
+        "nome": "Magia Sagrada/Profana",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Ao lançar magia divina de dano, pode gastar +1 PM para mudar o tipo de dano para luz (positiva) ou trevas (negativa).",
+        "efeitos": {"magia_sagrada_profana": {"custo_pm_extra": 1}}
+    },
+    "CLERIGO_MESTRE_CELEBRANTE": {
+        "nome": "Mestre Celebrante",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "requisitos": ["Qualquer poder de Missa", "Nível 12"],
+        "descricao": "O número de pessoas afetadas por uma Missa aumenta em dez vezes e os benefícios que elas recebem dobram.",
+        "efeitos": {"mestre_celebrante": True, "missa_pessoas_mult": 10, "missa_beneficio_mult": 2}
+    },
+    "CLERIGO_MISSA_BENCAO_VIDA": {
+        "nome": "Missa: Bênção da Vida",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Missa (1 hora, T$ 25, 1 + Sab pessoas, 1 dia): participantes recebem PV temporários iguais ao seu nível + sua Sabedoria.",
+        "efeitos": {"missa": {"tempo": "1 hora", "custo_to": 25, "duracao": "1 dia", "tipo": "bencao_da_vida"}}
+    },
+    "CLERIGO_MISSA_CHAMADO_ARMAS": {
+        "nome": "Missa: Chamado às Armas",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Missa (1 hora, T$ 25, 1 + Sab pessoas, 1 dia): participantes recebem +1 em testes de ataque e rolagens de dano.",
+        "efeitos": {"missa": {"tempo": "1 hora", "custo_to": 25, "duracao": "1 dia", "tipo": "chamado_as_armas", "bonus_ataque_dano": 1}}
+    },
+    "CLERIGO_MISSA_ELEVACAO_ESPIRITO": {
+        "nome": "Missa: Elevação do Espírito",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Missa (1 hora, T$ 25, 1 + Sab pessoas, 1 dia): participantes recebem PM temporários iguais à sua Sabedoria.",
+        "efeitos": {"missa": {"tempo": "1 hora", "custo_to": 25, "duracao": "1 dia", "tipo": "elevacao_do_espirito"}}
     },
     "CLERIGO_MISSA_ESCUDO": {
         "nome": "Missa: Escudo Divino",
         "tipo": "Poder de Clérigo",
         "classe": "Clérigo",
-        "descricao": "Missa concede +1 Defesa e Resistência por 1 dia. ",
-        "efeitos": {}
+        "descricao": "Missa (1 hora, T$ 25, 1 + Sab pessoas, 1 dia): participantes recebem +1 na Defesa e em testes de resistência.",
+        "efeitos": {"missa": {"tempo": "1 hora", "custo_to": 25, "duracao": "1 dia", "tipo": "escudo_divino", "bonus_defesa_resistencia": 1}}
+    },
+    "CLERIGO_MISSA_SUPERAR_LIMITACOES": {
+        "nome": "Missa: Superar as Limitações",
+        "tipo": "Poder de Clérigo",
+        "classe": "Clérigo",
+        "descricao": "Missa (1 hora, T$ 25, 1 + Sab pessoas, 1 dia): cada participante recebe +1d6 num único teste à escolha (pode usar mesmo após rolar o dado).",
+        "efeitos": {"missa": {"tempo": "1 hora", "custo_to": 25, "duracao": "1 dia", "tipo": "superar_as_limitacoes", "bonus_dado": "1d6"}}
     },
     "CLERIGO_PRECE_COMBATE": {
         "nome": "Prece de Combate",
         "tipo": "Poder de Clérigo",
         "classe": "Clérigo",
-        "descricao": "Lança magia (padrão) como movimento pagando +2 PM. ",
-        "efeitos": {}
+        "descricao": "Ao lançar magia divina (ação padrão) em si mesmo, pode gastar +2 PM para lançá-la como ação de movimento.",
+        "efeitos": {"prece_de_combate": {"custo_pm_extra": 2}}
     },
     "CLERIGO_SIMBOLO_ENERGIZADO": {
         "nome": "Símbolo Sagrado Energizado",
         "tipo": "Poder de Clérigo",
         "classe": "Clérigo",
-        "descricao": "Movimento (1 PM): Símbolo brilha, reduz custo de magias em -1 PM. ",
-        "efeitos": {}
+        "descricao": "Ação de movimento, 1 PM: energiza seu símbolo sagrado até o fim da cena (ilumina como tocha); enquanto empunhá-lo, reduz o custo em PM de suas magias divinas em -1 PM.",
+        "efeitos": {
+            "acao_ativavel": {"acao": "movimento", "custo_pm": 1, "duracao": "cena"},
+            "reducao_pm_magias_divinas_energizado": 1,
+        }
     },
 
     # ==========================================================================
