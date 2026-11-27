@@ -85,3 +85,66 @@ def test_condicoes_itens_avariado_destruido_e_motor():
     atualizar_ficha(f_dest)
     assert f_dest.status.defesa.total == 10
     assert not any(a.nome == "Espada longa" for a in f_dest.combate.ataques)
+
+
+def test_equipamentos_e_itens_magicos_ameacas():
+    from src.dados_equipamentos import (
+        DADOS_ARMAS, DADOS_ARMADURAS, DADOS_GERAIS, DADOS_MELHORIAS, DADOS_MATERIAIS_ESPECIAIS,
+    )
+    from src.dados_equipamentos_ameacas import (
+        DADOS_ITENS_MAGICOS_AMEACAS,
+        RECURSOS_NATURAIS_PATAMAR,
+        RECURSOS_NATURAIS_UNIDADES_TAMANHO,
+        REGRA_OPCIONAL_LANCINANTE_REVISADO,
+    )
+
+    # Catálogos mesclados
+    for arma in ("Porrete", "Zarabatana", "Gládio", "Arcabuz", "Bacamarte", "Pistola-punhal", "Lança de fogo", "Presa de serpente", "Shuriken", "Arpão"):
+        assert arma in DADOS_ARMAS
+    for arm in ("Armadura de ossos", "Veste de teia de aranha", "Armadura de quitina", "Escudo de couro"):
+        assert arm in DADOS_ARMADURAS
+    for item in ("Caixa de voz", "Manto pesado", "Ankh solar", "Pó azul", "Peçonha anciã", "Sashimi de kraken", "Bulette"):
+        assert item in DADOS_GERAIS
+    assert "Multifuncional" in DADOS_MELHORIAS
+    assert "Penetrante" in DADOS_MELHORIAS
+    for mat in ("Casco de monstro", "Couraça de kaiju", "Lanajuste", "Prata", "Quitina razza"):
+        assert mat in DADOS_MATERIAIS_ESPECIAIS
+    assert len(DADOS_ITENS_MAGICOS_AMEACAS) == 8
+    assert RECURSOS_NATURAIS_PATAMAR["Lenda"]["valor"] == 2500
+    assert RECURSOS_NATURAIS_UNIDADES_TAMANHO["Colossal"] == 5
+    assert REGRA_OPCIONAL_LANCINANTE_REVISADO["id"] == "lancinante_revisado"
+
+    # Armadura de quitina: pesada (+7 Def), mas NÃO reduz deslocamento (fica 9m)
+    f_quit = Personagem(
+        cabecalho=Cabecalho(nome="Quitino", raca="Humano", nivel_total=1),
+        classes=[ClasseInfo(nome="Guerreiro", nivel=1, primaria=True)],
+        inventario=Inventario(equipamentos=[Item(nome="Armadura de quitina", equipado=True)]),
+    )
+    atualizar_ficha(f_quit)
+    assert f_quit.status.defesa.total == 17
+    assert f_quit.status.deslocamento == 9
+    assert f_quit.regras_opcionais_ativas == []
+
+    # Veste de teia de aranha (+4 Def, +5 Furtividade) + Fragmento de filactério (+20 PM)
+    f_teia = Personagem(
+        cabecalho=Cabecalho(nome="Sombra", raca="Humano", nivel_total=1),
+        classes=[ClasseInfo(nome="Ladino", nivel=1, primaria=True)],
+        inventario=Inventario(equipamentos=[
+            Item(nome="Veste de teia de aranha", equipado=True),
+            Item(nome="Fragmento de filactério", equipado=True),
+        ]),
+    )
+    atualizar_ficha(f_teia)
+    assert f_teia.status.defesa.total == 14
+    assert f_teia.pericias["Furtividade"].total >= 5
+    assert f_teia.status.pm.maximo == 24  # Ladino nv1 (4 PM) + Fragmento (+20 PM)
+
+    # Armadura de ossos (+3 Def, +1 Intimidação)
+    f_ossos = Personagem(
+        cabecalho=Cabecalho(nome="Ossudo", raca="Humano", nivel_total=1),
+        classes=[ClasseInfo(nome="Guerreiro", nivel=1, primaria=True)],
+        inventario=Inventario(equipamentos=[Item(nome="Armadura de ossos", equipado=True)]),
+    )
+    atualizar_ficha(f_ossos)
+    assert f_ossos.status.defesa.total == 13
+    assert f_ossos.pericias["Intimidação"].total >= 1

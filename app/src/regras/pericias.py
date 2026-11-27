@@ -370,12 +370,20 @@ def inicializar_pericias(ficha: Personagem):
     vestidos_usados = 0
     simbolo_aplicado = False
     for it in (getattr(ficha.inventario, "equipamentos", None) or []):
-        if not it.equipado:
+        if not it.equipado or (getattr(it, "condicao", None) or "").strip() == "Destruído":
             continue
         nome_low = (it.nome or "").strip().lower()
         if nome_low == "armadura acolchoada":
             detalhamento_bonus.setdefault("Fortitude", []).append(
                 {"fonte": "Armadura acolchoada", "valor": 2}
+            )
+        elif nome_low == "armadura de ossos":
+            detalhamento_bonus.setdefault("Intimidação", []).append(
+                {"fonte": "Armadura de ossos", "valor": 1}
+            )
+        elif nome_low == "veste de teia de aranha":
+            detalhamento_bonus.setdefault("Furtividade", []).append(
+                {"fonte": "Veste de teia de aranha", "valor": 5}
             )
         elif nome_low.startswith("símbolo sagrado") and not simbolo_aplicado:
             if (getattr(ficha.cabecalho, "deus", "") or "").strip():

@@ -35,7 +35,8 @@ def test_tabela_3_2_passos_de_dano(base, passos, esperado):
 
 
 def test_tabela_3_3_armas_arremessaveis_com_alcance_curto():
-    assert len(DADOS_ARMAS) == 44  # 40 armas + 4 munições
+    armas_basicas = {k: v for k, v in DADOS_ARMAS.items() if not v.get("fonte")}
+    assert len(armas_basicas) == 44  # 40 armas + 4 munições do T20 JdA
     for arma in ("Adaga", "Lança", "Machadinha", "Tridente"):
         assert DADOS_ARMAS[arma]["alcance"] == "Curto"
         assert DADOS_ARMAS[arma]["arremessavel"] is True
@@ -73,11 +74,12 @@ def test_tabelas_3_7_3_8_3_9_melhorias_e_materiais():
     from src.dados_equipamentos import (
         DADOS_ARMADURAS, PRECO_MELHORIAS, DADOS_MELHORIAS, DADOS_MATERIAIS_ESPECIAIS,
     )
-    assert len(DADOS_ARMADURAS) == 12
+    assert len([k for k, v in DADOS_ARMADURAS.items() if not v.get("fonte")]) == 12
     assert PRECO_MELHORIAS[1] == {"aumento_preco": 300, "aumento_cd": 5}
     assert PRECO_MELHORIAS[4] == {"aumento_preco": 18000, "aumento_cd": 20}
-    assert len(DADOS_MELHORIAS) == 29
-    assert set(DADOS_MATERIAIS_ESPECIAIS.keys()) == {
+    assert len([k for k, v in DADOS_MELHORIAS.items() if not v.get("fonte")]) == 29
+    materiais_basicos = {k for k, v in DADOS_MATERIAIS_ESPECIAIS.items() if not v.get("fonte")}
+    assert materiais_basicos == {
         "Aço-Rubi", "Adamante", "Gelo Eterno", "Madeira Tollon", "Matéria Vermelha", "Mitral"
     }
     assert DADOS_MATERIAIS_ESPECIAIS["Adamante"]["precos"]["Armadura Pesada"] == 18000

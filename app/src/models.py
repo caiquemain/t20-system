@@ -392,6 +392,7 @@ class Personagem(BaseModel):
     classes: List[ClasseInfo] = []
 
     suplementos_ativos: List[str] = Field(default_factory=lambda: list(_LIVROS_PADRAO))
+    regras_opcionais_ativas: List[str] = Field(default_factory=list)
     distincoes: List[DistincaoPersonagem] = Field(default_factory=list)
     complicacoes: List[ComplicacaoPersonagem] = Field(default_factory=list)
 

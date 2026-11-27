@@ -29,12 +29,13 @@ def _achar_hab(f, nome):
 # ===================================================================
 
 def _nomes_reais_de_armas_tridente():
-    """Armas que a regra do livro deve cobrir: azagaias, lanças, tridentes."""
+    """Armas que a regra do livro deve cobrir: azagaias, lanças, tridentes (excluindo arma de fogo híbrida)."""
     from src.dados_equipamentos import DADOS_ARMAS
     palavras = ["azagaia", "lança", "tridente"]
     return [
-        nome for nome in DADOS_ARMAS
+        nome for nome, dados in DADOS_ARMAS.items()
         if any(p in nome.lower() for p in palavras)
+        and "híbrida" not in (dados.get("habilidades") or [])
     ]
 
 
