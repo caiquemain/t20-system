@@ -117,3 +117,48 @@ def test_ser_devoto_druida_tenebra_e_devocao_ampla():
         )
     )
     assert druida_arton.status.pm.maximo == druida_allihanna.status.pm.maximo + 6
+
+
+def test_automacoes_motor_deuses_distincoes_itens_e_melhorias():
+    from src.models import Item
+
+    base = atualizar_ficha(
+        Personagem(
+            cabecalho=Cabecalho(nome="Devoto", raca="Humano", deus="Tanna-Toh"),
+            classes=[ClasseInfo(nome="Frade", nivel=7, primaria=True)],
+            atributos_base=Atributos(sabedoria=4, inteligencia=2),
+        )
+    )
+
+    f = Personagem(
+        cabecalho=Cabecalho(nome="Devoto", raca="Humano", deus="Tanna-Toh"),
+        classes=[ClasseInfo(nome="Frade", nivel=7, primaria=True)],
+        atributos_base=Atributos(sabedoria=4, inteligencia=2),
+        distincoes=[
+            DistincaoPersonagem(nome="Detetive de Tanna-Toh", admitido=True, poderes=[]),
+            DistincaoPersonagem(nome="Guardião da Realidade", admitido=True, poderes=[]),
+            DistincaoPersonagem(nome="Tirano do Terceiro", admitido=True, poderes=["Aspecto de Kallyadranoch"]),
+        ],
+        inventario={
+            "equipamentos": [
+                Item(nome="Sandálias", equipado=True),
+                Item(nome="Cajado Inscrito Canônico", equipado=True),
+            ]
+        },
+    )
+    f = atualizar_ficha(f)
+
+    # Marca Nada Além de Fatos (+5 Intuição e Investigação)
+    assert f.pericias["Intuição"].total == base.pericias["Intuição"].total + 5
+    assert f.pericias["Investigação"].total == base.pericias["Investigação"].total + 5
+    # Marca Escudo da Realidade (+5 TR) + Melhoria Inscrito (+1 TR) = +6 TR
+    assert f.pericias["Fortitude"].total == base.pericias["Fortitude"].total + 6
+    assert f.pericias["Reflexos"].total == base.pericias["Reflexos"].total + 6
+    assert f.pericias["Vontade"].total == base.pericias["Vontade"].total + 6
+    # Poder Aspecto de Kallyadranoch (imunidade)
+    assert "Aura Aterradora de dragões" in f.status.imunidades
+    # Sandálias (+1 PM)
+    assert f.status.pm.maximo == base.status.pm.maximo + 1
+    # Melhoria Canônico (+1 CD)
+    assert f.combate.cd_magias == base.combate.cd_magias + 1
+

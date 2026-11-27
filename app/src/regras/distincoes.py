@@ -50,6 +50,24 @@ EFEITOS_PODERES_DISTINCAO: Dict[str, Dict[str, Any]] = {
     "Aquele Papinho": {
         "bonus_pericia": {"Diplomacia": 1, "Enganação": 1, "Intuição": 1}
     },
+    # Deuses de Arton (Cap. 2)
+    "Aspecto de Kallyadranoch": {"imunidade": ["Aura Aterradora de dragões"]},
+}
+
+# Efeitos passivos reais de Marcas da Distinção (Deuses de Arton, Cap. 2)
+EFEITOS_MARCAS_DISTINCAO: Dict[str, Dict[str, Any]] = {
+    "Chapéu do Bobo": {
+        "bonus_pericia": {"Atuação": 2, "Enganação": 2, "Diplomacia": -2, "Intimidação": -2}
+    },
+    "Nada Além de Fatos": {
+        "bonus_pericia": {"Intuição": 5, "Investigação": 5}
+    },
+    "Ferreiro Sagrado": {
+        "bonus_pericia": {"Ofício": 2}
+    },
+    "Escudo da Realidade": {
+        "bonus_pericia": {"Fortitude": 5, "Reflexos": 5, "Vontade": 5}
+    },
 }
 
 
@@ -109,6 +127,8 @@ def sincronizar_distincoes(
         qtd_poderes = len(poderes_validos)
 
         efeitos_marca = dict(marca_dados.get("efeitos") or {})
+        if marca_dados["nome"] in EFEITOS_MARCAS_DISTINCAO:
+            efeitos_marca.update(EFEITOS_MARCAS_DISTINCAO[marca_dados["nome"]])
         if "pm_por_poder_distincao" in efeitos_marca and qtd_poderes > 0:
             efeitos_marca["pm_max_ini"] = (
                 efeitos_marca.get("pm_max_ini", 0)

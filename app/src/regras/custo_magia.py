@@ -422,6 +422,22 @@ def calcular_cd_magias_ficha(ficha: Personagem) -> Optional[int]:
             valor=2 if (ficha.combate.circulo_maximo or 0) >= 4 else 1,
         )
 
+    # Melhoria Canônico (Deuses de Arton, Tabela 1-4): +1 na CD de magias divinas se devoto
+    if (getattr(ficha.cabecalho, "deus", "") or "").strip():
+        if any(
+            it.equipado and (
+                "canônico" in (it.nome or "").strip().lower()
+                or "canonico" in (it.nome or "").strip().lower()
+                or any((m or "").strip().lower() in {"canônico", "canonico"} for m in (getattr(it, "melhorias", None) or []))
+            )
+            for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+        ):
+            cd_calc.adicionar_bonus(
+                fonte="Melhoria: Canônico (+1 CD)",
+                categoria="Item",
+                valor=1,
+            )
+
     # Magia Pungente (buff ativo)
     for b in ficha.status.buffs:
         if b.origem == "Magia Pungente" and b.atributo == "cd_magias":
