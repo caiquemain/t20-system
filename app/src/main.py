@@ -21,6 +21,10 @@ async def lifespan(app: FastAPI):
             app.state.mongo_client = client
             app.state.db = client.get_database("tormenta20")
             print("✅ Conectado com sucesso!")
+            try:
+                await ameacas.garantir_seed_bestiario(app.state.db)
+            except Exception as seed_err:
+                print(f"⚠️ Aviso ao popular bestiário: {seed_err}")
             last_error = None
             break
         except Exception as e:
