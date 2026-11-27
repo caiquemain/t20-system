@@ -68,11 +68,11 @@ def limpar_habilidades_fixas(ficha: Personagem) -> Dict[str, Dict]:
                     break
 
         # 2. Critérios de Remoção
-        if hab.tipo in ["Racial", "Classe", "Origem", "Raça", "Poder Racial"]:
+        if hab.tipo in ["Racial", "Classe", "Origem", "Raça", "Poder Racial", "Complicação", "Papel no Grupo", "Idade Variada"]:
             deletar = True
         elif is_sub_racial:
             deletar = True
-        elif hab.fonte and "Habilidade:" in hab.fonte:
+        elif hab.fonte and ("Habilidade:" in hab.fonte or hab.fonte.startswith("Complicação:") or hab.fonte.startswith("Regra Opcional:")):
             deletar = True
 
         if deletar:

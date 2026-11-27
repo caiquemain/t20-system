@@ -108,6 +108,17 @@ def calcular_atributos_finais(ficha: Personagem):
     #  (b) teste/motor so passa escolhas_aplicadas = {"atributo": "forca"},
     #      caso em que assumimos +1 se o nome for "Aumento de Atributo".
     # Arcanista tem tratamento proprio em poderes_arcanista.py — pular.
+    # --- REGRA OPCIONAL: IDADES VARIADAS (Heróis de Arton, p. 288–291) ---
+    usa_idades_variadas = "idades_variadas" in (getattr(ficha, "regras_opcionais_ativas", None) or [])
+    faixa_variada = None
+    bloqueia_fisico = False
+    if usa_idades_variadas:
+        from .regras_opcionais_herois import resolver_faixa_etaria_variada
+        from ..dados_regras_opcionais_herois import DADOS_IDADES_VARIADAS
+        faixa_variada = resolver_faixa_etaria_variada(ficha)
+        ficha.descricao.faixa_etaria = faixa_variada
+        bloqueia_fisico = bool((DADOS_IDADES_VARIADAS.get(faixa_variada) or {}).get("bloqueia_aumento_fisico"))
+
     for hab in ficha.habilidades:
         efeitos = (hab.efeitos or {}).copy()
         if hab.escolhas_aplicadas:
@@ -129,6 +140,8 @@ def calcular_atributos_finais(ficha: Personagem):
                 continue
 
         attr_full = MAPA_ATRIBUTOS.get(str(attr_escolhido).lower()[:3], attr_escolhido)
+        if bloqueia_fisico and hab.nome == "Aumento de Atributo" and attr_full in ("forca", "destreza", "constituicao"):
+            continue
         if attr_full in ficha.atributos_calc:
             ficha.atributos_calc[attr_full].adicionar_bonus(
                 fonte=f"Poder: {hab.nome}",
@@ -136,41 +149,53 @@ def calcular_atributos_finais(ficha: Personagem):
                 valor=int(valor)
             )
 
-    # --- ENVELHECIMENTO (T20 JdA p.108) ---
-    # Maduro (45 anos; x2 Anão/Qareen; x5 Dahllan/Elfo/Golem/Osteon/Sílfide): For/Des/Con -1, Int/Sab/Car +1
-    # Velho  (70 anos; cumulativo): For/Des/Con -3, Int/Sab/Car +2
-    _MULT_LONGEVIDADE = {
-        "Anão": 2, "Qareen": 2,
-        "Dahllan": 5, "Elfo": 5, "Golem": 5, "Osteon": 5, "Sílfide": 5,
-    }
-    _MODS_FAIXA = {
-        "Maduro": {"forca": -1, "destreza": -1, "constituicao": -1, "inteligencia": 1, "sabedoria": 1, "carisma": 1},
-        "Velho": {"forca": -3, "destreza": -3, "constituicao": -3, "inteligencia": 2, "sabedoria": 2, "carisma": 2},
-    }
-    raca_env = (ficha.cabecalho.raca or "").strip()
-    mult_env = _MULT_LONGEVIDADE.get(raca_env, 1)
-    faixa = getattr(ficha.descricao, "faixa_etaria", "Adulto") or "Adulto"
-    idade_val = getattr(ficha.descricao, "idade", None)
-    if isinstance(idade_val, int) and idade_val > 0:
-        if idade_val >= 70 * mult_env:
-            faixa = "Velho"
-        elif idade_val >= 45 * mult_env:
-            faixa = "Maduro"
-        else:
-            faixa = "Adulto"
-        ficha.descricao.faixa_etaria = faixa
-
-    if faixa in _MODS_FAIXA:
-        ficha.modificadores_envelhecimento = dict(_MODS_FAIXA[faixa])
-        for attr_full, val_env in _MODS_FAIXA[faixa].items():
+    if usa_idades_variadas:
+        from ..dados_regras_opcionais_herois import DADOS_IDADES_VARIADAS
+        mods_idade = dict((DADOS_IDADES_VARIADAS.get(faixa_variada or "Adulto") or {}).get("mod_atributos") or {})
+        ficha.modificadores_envelhecimento = mods_idade
+        for attr_full, val_env in mods_idade.items():
             if attr_full in ficha.atributos_calc:
                 ficha.atributos_calc[attr_full].adicionar_bonus(
-                    fonte=f"Envelhecimento ({faixa})",
+                    fonte=f"Idades Variadas ({faixa_variada})",
                     categoria="Envelhecimento",
                     valor=val_env,
                 )
     else:
-        ficha.modificadores_envelhecimento = {}
+        # --- ENVELHECIMENTO (T20 JdA p.108) ---
+        # Maduro (45 anos; x2 Anão/Qareen; x5 Dahllan/Elfo/Golem/Osteon/Sílfide): For/Des/Con -1, Int/Sab/Car +1
+        # Velho  (70 anos; cumulativo): For/Des/Con -3, Int/Sab/Car +2
+        _MULT_LONGEVIDADE = {
+            "Anão": 2, "Qareen": 2,
+            "Dahllan": 5, "Elfo": 5, "Golem": 5, "Osteon": 5, "Sílfide": 5,
+        }
+        _MODS_FAIXA = {
+            "Maduro": {"forca": -1, "destreza": -1, "constituicao": -1, "inteligencia": 1, "sabedoria": 1, "carisma": 1},
+            "Velho": {"forca": -3, "destreza": -3, "constituicao": -3, "inteligencia": 2, "sabedoria": 2, "carisma": 2},
+        }
+        raca_env = (ficha.cabecalho.raca or "").strip()
+        mult_env = _MULT_LONGEVIDADE.get(raca_env, 1)
+        faixa = getattr(ficha.descricao, "faixa_etaria", "Adulto") or "Adulto"
+        idade_val = getattr(ficha.descricao, "idade", None)
+        if isinstance(idade_val, int) and idade_val > 0:
+            if idade_val >= 70 * mult_env:
+                faixa = "Velho"
+            elif idade_val >= 45 * mult_env:
+                faixa = "Maduro"
+            else:
+                faixa = "Adulto"
+            ficha.descricao.faixa_etaria = faixa
+
+        if faixa in _MODS_FAIXA:
+            ficha.modificadores_envelhecimento = dict(_MODS_FAIXA[faixa])
+            for attr_full, val_env in _MODS_FAIXA[faixa].items():
+                if attr_full in ficha.atributos_calc:
+                    ficha.atributos_calc[attr_full].adicionar_bonus(
+                        fonte=f"Envelhecimento ({faixa})",
+                        categoria="Envelhecimento",
+                        valor=val_env,
+                    )
+        else:
+            ficha.modificadores_envelhecimento = {}
 
     # --- PERDA DE CARISMA POR PODERES DA TORMENTA (T20 JdA p.136) ---
     # 1º poder = -1 Car; para cada 2 outros poderes, -1 Car adicional.

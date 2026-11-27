@@ -132,7 +132,7 @@ class Descricao(BaseModel):
     @field_validator('faixa_etaria', mode='before')
     @classmethod
     def fallback_faixa_etaria(cls, v):
-        if v in ("Adulto", "Maduro", "Velho"):
+        if v in ("Criança", "Adolescente", "Jovem", "Adulto", "Maduro", "Velho", "Ancião"):
             return v
         return "Adulto"
 
@@ -395,6 +395,8 @@ class Personagem(BaseModel):
     regras_opcionais_ativas: List[str] = Field(default_factory=list)
     distincoes: List[DistincaoPersonagem] = Field(default_factory=list)
     complicacoes: List[ComplicacaoPersonagem] = Field(default_factory=list)
+    papel_grupo: Optional[str] = None
+    objetivo_heroico: Optional[Dict[str, Any]] = None
 
     atributos_base: Atributos = Field(default_factory=Atributos)
     atributos: Atributos = Field(default_factory=Atributos)

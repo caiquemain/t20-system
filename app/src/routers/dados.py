@@ -192,3 +192,10 @@ def get_dados_escolhas():
 async def get_equipamentos():
     """Catálogo de armas (T3-3) e armaduras/escudos (T3-5)."""
     return {"armas": DADOS_ARMAS, "armaduras": DADOS_ARMADURAS, "gerais": DADOS_GERAIS}
+
+
+@router.get("/dados/regras-opcionais", tags=["Dados Estáticos"])
+def get_regras_opcionais():
+    """Catálogo oficial de Regras Opcionais (Heróis de Arton, Cap. 4)."""
+    from src.dados_regras_opcionais_herois import obter_catalogo_regras_opcionais
+    return obter_catalogo_regras_opcionais()

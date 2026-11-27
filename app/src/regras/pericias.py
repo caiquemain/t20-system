@@ -114,8 +114,8 @@ def inicializar_pericias(ficha: Personagem):
             if "pericia_bonus_escolha" not in efeitos and "bonus_pericia_escolha" in efeitos:
                 efeitos["pericia_bonus_escolha"] = efeitos["bonus_pericia_escolha"]
 
-        if "penalidade_armadura" in efeitos:
-            penalidade_armadura += int(efeitos["penalidade_armadura"])
+        # penalidade_armadura de habilidades já está incluída em ficha.status.penalidade_armadura
+        # (via calcular_penalidade_armadura em inventario.py) — evitar dupla contagem.
 
         if "pericia_atributo_opcao" in efeitos and isinstance(efeitos["pericia_atributo_opcao"], dict):
             for p_alvo, novo_attr in efeitos["pericia_atributo_opcao"].items():
@@ -604,7 +604,13 @@ def inicializar_pericias(ficha: Personagem):
             total_automatico += engenhosidade_bonus
             fontes_bonus.append(f"Engenhosidade (+{mod_int} INT)")
 
-        total_final = bonus_metade_nivel + mod_attr + bonus_treino + \
+        sem_metade_nao_treinada = any(
+            (h.efeitos or {}).get("sem_metade_nivel_nao_treinadas")
+            for h in ficha.habilidades
+        )
+        bonus_nivel_efetivo = 0 if (sem_metade_nao_treinada and not esta_treinado) else bonus_metade_nivel
+
+        total_final = bonus_nivel_efetivo + mod_attr + bonus_treino + \
             info_antiga.outros + total_automatico + penalidade_aplicada + engenhosidade_bonus
 
         # Bônus condicionais INATIVOS: linha informativa com total situacional
@@ -625,8 +631,8 @@ def inicializar_pericias(ficha: Personagem):
         ))
         calc.total = mod_attr
 
-        if bonus_metade_nivel != 0:
-            calc.adicionar_bonus(f"Nível (½ de {nivel})", "Nível", bonus_metade_nivel)
+        if bonus_nivel_efetivo != 0:
+            calc.adicionar_bonus(f"Nível (½ de {nivel})", "Nível", bonus_nivel_efetivo)
         if bonus_treino != 0:
             calc.adicionar_bonus("Treinamento", "Treino", bonus_treino)
         if info_antiga.outros != 0:
@@ -645,7 +651,7 @@ def inicializar_pericias(ficha: Personagem):
 
         novas_pericias[nome_pericia] = PericiaInfo(
             treino=1 if esta_treinado else 0,
-            bonus_nivel=bonus_metade_nivel,
+            bonus_nivel=bonus_nivel_efetivo,
             atributo_valor=mod_attr,
             outros=info_antiga.outros,
             total=total_final,
