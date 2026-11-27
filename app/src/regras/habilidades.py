@@ -60,6 +60,23 @@ def limpar_habilidades_fixas(ficha: Personagem) -> Dict[str, Dict]:
     habilidades_mantidas = []
     memoria_escolhas = {}
 
+    # Classes atualmente ativas na ficha (incluindo classe base de variantes, ex.: Atleta -> Lutador)
+    from ..dados_classes import DADOS_CLASSES
+    from ..dados_variantes_herois import MAPA_VARIANTE_PARA_BASE
+    classes_ativas = set()
+    for c in (ficha.classes or []):
+        cn = (c.nome or "").strip()
+        if cn:
+            classes_ativas.add(cn)
+            if cn in MAPA_VARIANTE_PARA_BASE:
+                classes_ativas.add(MAPA_VARIANTE_PARA_BASE[cn])
+
+    # Índice reverso nome_poder -> conjunto de classes que o oferecem (para detectar poderes exclusivos)
+    poderes_por_nome: Dict[str, set] = {}
+    for _d_hc in DADOS_HABILIDADES_CLASSE.values():
+        if isinstance(_d_hc, dict) and _d_hc.get("classe") and "Poder de" in (_d_hc.get("tipo") or ""):
+            poderes_por_nome.setdefault(_d_hc["nome"], set()).add(_d_hc["classe"])
+
     for hab in ficha.habilidades:
         deletar = False
 
@@ -78,6 +95,17 @@ def limpar_habilidades_fixas(ficha: Personagem) -> Dict[str, Dict]:
             deletar = True
         elif hab.fonte and ("Habilidade:" in hab.fonte or hab.fonte.startswith("Complicação:") or hab.fonte.startswith("Regra Opcional:")):
             deletar = True
+        elif classes_ativas and not (hab.fonte or "").startswith(("Escolha:", "Origem")):
+            # Poder exclusivo de uma classe que o personagem não possui mais
+            tipo_hab = (hab.tipo or "").strip()
+            if tipo_hab.startswith("Poder de "):
+                classe_poder = tipo_hab[len("Poder de "):].strip()
+                if classe_poder in DADOS_CLASSES and classe_poder not in classes_ativas:
+                    deletar = True
+            if not deletar and hab.nome in poderes_por_nome and hab.nome != "Aumento de Atributo":
+                classes_do_poder = poderes_por_nome[hab.nome]
+                if classes_do_poder and not (classes_do_poder & classes_ativas):
+                    deletar = True
 
         if deletar:
             if hab.escolhas_aplicadas:
