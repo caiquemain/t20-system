@@ -266,3 +266,10 @@ DADOS_DEUSES = {
         "restricoes_mecanicas": {"proibido_matar_seres_magicos": True},
     },
 }
+
+from .dados_poderes_concedidos_deuses import DADOS_PODERES_CONCEDIDOS_DEUSES
+
+for _nome_pc, _dados_pc in DADOS_PODERES_CONCEDIDOS_DEUSES.items():
+    for _deus_pc in _dados_pc.get("deuses", []):
+        if _deus_pc in DADOS_DEUSES and _nome_pc not in DADOS_DEUSES[_deus_pc]["poderes"]:
+            DADOS_DEUSES[_deus_pc]["poderes"].append(_nome_pc)

@@ -27,7 +27,7 @@ Rastreamento por fase e lote. Documentação arquitetural completa em [`docs/SUP
 
 ## Fase 3 — *Deuses de Arton*
 - [x] **Classe Frade (Cap. 1, p. 38–41):** Características (12/+3 PV, 6 PM/nv + Sab), 6 habilidades fixas, 29 poderes (incl. 8 Sacrários), progressão de magias 1º–5º círculo (`dados_frade_deuses.py`)
-- [ ] **3A:** Expansão dos 20 Deuses Maiores (novos poderes concedidos e regras de devoção)
+- [x] **3A:** Expansão dos 20 Deuses Maiores — 75 novos Poderes Concedidos (Cap. 1, p. 42–47, Tabela 1-2, `dados_poderes_concedidos_deuses.py`)
 - [ ] **3B:** Deuses Menores (catálogo, seletor na ficha/wizard e poderes concedidos)
 - [ ] **3C:** Novas Magias Divinas, Itens Litúrgicos/Mágicos e Distinções Divinas
 
