@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { T20Icon } from './T20Icon';
+import { EntitySelectorModal, type EntityItem } from './EntitySelectorModal';
 
 interface OpcaoEscolha {
     valor: string;
     rotulo: string;
+    bonus?: string;
+    descricao?: string;
+    tooltip?: string;
+    fonte?: string;
 }
 
 interface GatilhoEscolha {
@@ -29,7 +34,9 @@ const FONT_BODY = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 function normalizarOpcoes(lista: Array<string | OpcaoEscolha>): OpcaoEscolha[] {
     return lista.map(it =>
-        typeof it === 'string' ? { valor: it, rotulo: it } : { valor: it.valor, rotulo: it.rotulo }
+        typeof it === 'string'
+            ? { valor: it, rotulo: it }
+            : { valor: it.valor, rotulo: it.rotulo, bonus: it.bonus, descricao: it.descricao, tooltip: it.tooltip, fonte: it.fonte }
     );
 }
 
@@ -37,7 +44,8 @@ function normalizarOpcoes(lista: Array<string | OpcaoEscolha>): OpcaoEscolha[] {
  * Painel genérico guiado por `/dados/escolhas` (PODERES_COM_ESCOLHA).
  * Renderiza automaticamente seletores filtrados conforme as regras oficiais do livro
  * para habilidades raciais, origens regionais e poderes com escolha secundária.
- * Usado tanto no AbilityConfigModal (Ficha) quanto no StepPoderes (Wizard).
+ * Seletores com listas ricas (ex.: Duplo Feérico, Magias, Poderes) abrem o modal
+ * 2 colunas (EntitySelectorModal) com busca e painel lateral de descrição completa.
  */
 export const EscolhasDinamicasPanel: React.FC<EscolhasDinamicasPanelProps> = ({
     ficha,
@@ -49,6 +57,14 @@ export const EscolhasDinamicasPanel: React.FC<EscolhasDinamicasPanelProps> = ({
     onChangeEscolha,
     titulo = 'Escolhas de Raça & Origem',
 }) => {
+    const [modalAtivo, setModalAtivo] = useState<{
+        habNome: string;
+        chave: string;
+        titulo: string;
+        valorAtual: string;
+        opcoes: OpcaoEscolha[];
+    } | null>(null);
+
     const mapaPoderes: Record<string, GatilhoEscolha[]> = dadosEscolhas?.PODERES_COM_ESCOLHA || {};
     const classeAtual = ficha?.classes?.[0]?.nome || '';
 
@@ -57,6 +73,17 @@ export const EscolhasDinamicasPanel: React.FC<EscolhasDinamicasPanelProps> = ({
     );
 
     if (habilidadesConfiguraveis.length === 0) return null;
+
+    const buscarDescricaoHabClasse = (it: any): string => {
+        if (it?.descricao) return String(it.descricao);
+        if (it?.chave_catalogo && dadosHabilidadesClasse?.[it.chave_catalogo]?.descricao) {
+            return String(dadosHabilidadesClasse[it.chave_catalogo].descricao);
+        }
+        const match = Object.values(dadosHabilidadesClasse || {}).find(
+            (h: any) => h?.nome === it?.nome && (!it?.classe || h?.classe === it?.classe)
+        );
+        return match?.descricao ? String(match.descricao) : '';
+    };
 
     const resolverOpcoes = (g: GatilhoEscolha): OpcaoEscolha[] => {
         if (Array.isArray(g.opcoes) && g.opcoes.length > 0) {
@@ -70,7 +97,18 @@ export const EscolhasDinamicasPanel: React.FC<EscolhasDinamicasPanelProps> = ({
                 : [];
             return lista
                 .filter((it: any) => !classeAtual || it.classe !== classeAtual)
-                .map((it: any) => ({ valor: it.valor, rotulo: it.rotulo }));
+                .map((it: any) => {
+                    const desc = buscarDescricaoHabClasse(it);
+                    const sub = `Habilidade de 1º Nível (${it.classe})`;
+                    return {
+                        valor: it.valor,
+                        rotulo: it.rotulo,
+                        bonus: it.classe,
+                        descricao: desc || sub,
+                        tooltip: `${it.rotulo} — ${sub}\n${desc ? `Descrição: ${desc}` : ''}`,
+                        fonte: it.fonte || 'T20 JdA',
+                    };
+                });
         }
 
         if (td === 'magia_1_qualquer' || td === 'magia_1_arcana' || td === 'magia_1_adivinhacao') {
@@ -81,35 +119,74 @@ export const EscolhasDinamicasPanel: React.FC<EscolhasDinamicasPanelProps> = ({
                     if (td === 'magia_1_adivinhacao' && (m?.escola || '').toLowerCase() !== 'adivinhação') return false;
                     return true;
                 })
-                .map((m: any) => ({ valor: m.nome, rotulo: `${m.nome} (${m.escola})` }))
+                .map((m: any) => {
+                    const meta = [m.tipo, m.escola, m.execucao, m.alcance, m.duracao].filter(Boolean).join(' • ');
+                    const desc = m.descricao || '';
+                    return {
+                        valor: m.nome,
+                        rotulo: `${m.nome} (${m.escola})`,
+                        bonus: `${m.tipo || 'Magia'} • ${m.escola || ''}`,
+                        descricao: desc,
+                        tooltip: `${m.nome} — ${meta}\n${m.resistencia ? `Resistência: ${m.resistencia}\n` : ''}${desc ? `Descrição: ${desc}` : ''}`,
+                        fonte: m.fonte || 'T20 JdA',
+                    };
+                })
                 .sort((a, b) => a.rotulo.localeCompare(b.rotulo));
         }
 
         if (td === 'poder_classe_atual') {
             return Object.values(dadosHabilidadesClasse || {})
                 .filter((h: any) => h?.classe === classeAtual && String(h?.tipo || '').includes('Poder de'))
-                .map((h: any) => ({ valor: h.nome, rotulo: h.nome }))
+                .map((h: any) => ({
+                    valor: h.nome,
+                    rotulo: h.nome,
+                    bonus: `Poder de ${classeAtual}`,
+                    descricao: h.descricao || '',
+                    tooltip: `${h.nome} — Poder de ${classeAtual}\n${h.descricao ? `Descrição: ${h.descricao}` : ''}`,
+                    fonte: h.fonte || 'T20 JdA',
+                }))
                 .sort((a, b) => a.rotulo.localeCompare(b.rotulo));
         }
 
         if (td === 'poder_tormenta') {
             return (listaPoderes || [])
                 .filter((p: any) => p?.categoria === 'Tormenta')
-                .map((p: any) => ({ valor: p.nome, rotulo: p.nome }))
+                .map((p: any) => ({
+                    valor: p.nome,
+                    rotulo: p.nome,
+                    bonus: 'Poder da Tormenta',
+                    descricao: p.descricao || '',
+                    tooltip: `${p.nome} — Poder da Tormenta\n${p.descricao ? `Descrição: ${p.descricao}` : ''}`,
+                    fonte: p.fonte || 'T20 JdA',
+                }))
                 .sort((a, b) => a.rotulo.localeCompare(b.rotulo));
         }
 
         if (td === 'poder_combate_ou_tormenta') {
             return (listaPoderes || [])
                 .filter((p: any) => p?.categoria === 'Combate' || p?.categoria === 'Tormenta')
-                .map((p: any) => ({ valor: p.nome, rotulo: `${p.nome} (${p.categoria})` }))
+                .map((p: any) => ({
+                    valor: p.nome,
+                    rotulo: `${p.nome} (${p.categoria})`,
+                    bonus: `Poder de ${p.categoria}`,
+                    descricao: p.descricao || '',
+                    tooltip: `${p.nome} — Poder de ${p.categoria}\n${p.descricao ? `Descrição: ${p.descricao}` : ''}`,
+                    fonte: p.fonte || 'T20 JdA',
+                }))
                 .sort((a, b) => a.rotulo.localeCompare(b.rotulo));
         }
 
         if (td === 'poder_geral_sem_concedido_tormenta') {
             return (listaPoderes || [])
                 .filter((p: any) => p?.is_general && p?.categoria !== 'Tormenta' && p?.categoria !== 'Poder Concedido')
-                .map((p: any) => ({ valor: p.nome, rotulo: `${p.nome} (${p.categoria})` }))
+                .map((p: any) => ({
+                    valor: p.nome,
+                    rotulo: `${p.nome} (${p.categoria})`,
+                    bonus: `Poder Geral • ${p.categoria}`,
+                    descricao: p.descricao || '',
+                    tooltip: `${p.nome} — Poder Geral (${p.categoria})\n${p.descricao ? `Descrição: ${p.descricao}` : ''}`,
+                    fonte: p.fonte || 'T20 JdA',
+                }))
                 .sort((a, b) => a.rotulo.localeCompare(b.rotulo));
         }
 
@@ -182,6 +259,71 @@ export const EscolhasDinamicasPanel: React.FC<EscolhasDinamicasPanelProps> = ({
                                     }
                                     const opcoes = resolverOpcoes(g);
                                     const valorAtual = String(esc[g.chave] || '');
+                                    const usarModal = Boolean(g.tipo_dinamico) || opcoes.length > 8;
+                                    const opcaoAtual = opcoes.find(op => op.valor === valorAtual);
+
+                                    if (usarModal) {
+                                        return (
+                                            <div key={g.chave} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                <label style={{ fontSize: '0.74rem', color: '#a5b4fc', fontWeight: 600 }}>
+                                                    {g.rotulo}
+                                                </label>
+                                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                    <input
+                                                        readOnly
+                                                        value={opcaoAtual ? opcaoAtual.rotulo : valorAtual}
+                                                        placeholder="Clique em Selecionar para ver detalhes..."
+                                                        onClick={() => setModalAtivo({
+                                                            habNome: hab.nome,
+                                                            chave: g.chave,
+                                                            titulo: `${hab.nome} — ${g.rotulo}`,
+                                                            valorAtual,
+                                                            opcoes,
+                                                        })}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '8px 10px',
+                                                            background: '#1c2036',
+                                                            border: valorAtual ? '1px solid #ffd700' : '1px solid #3a4066',
+                                                            borderRadius: 6,
+                                                            color: valorAtual ? '#fff' : '#94a3b8',
+                                                            fontSize: '0.84rem',
+                                                            cursor: 'pointer',
+                                                        }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setModalAtivo({
+                                                            habNome: hab.nome,
+                                                            chave: g.chave,
+                                                            titulo: `${hab.nome} — ${g.rotulo}`,
+                                                            valorAtual,
+                                                            opcoes,
+                                                        })}
+                                                        style={{
+                                                            background: '#ffd700',
+                                                            color: '#111',
+                                                            border: 'none',
+                                                            borderRadius: 6,
+                                                            padding: '8px 14px',
+                                                            fontWeight: 700,
+                                                            fontSize: '0.8rem',
+                                                            cursor: 'pointer',
+                                                            whiteSpace: 'nowrap',
+                                                        }}
+                                                    >
+                                                        Selecionar
+                                                    </button>
+                                                </div>
+                                                {opcaoAtual?.descricao && (
+                                                    <div style={{ fontSize: '0.74rem', color: '#cbd5e1', lineHeight: 1.4, marginTop: 2 }}>
+                                                        {opcaoAtual.descricao}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    }
+
                                     return (
                                         <div key={g.chave} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                             <label style={{ fontSize: '0.74rem', color: '#a5b4fc', fontWeight: 600 }}>
@@ -214,6 +356,35 @@ export const EscolhasDinamicasPanel: React.FC<EscolhasDinamicasPanelProps> = ({
                     );
                 })}
             </div>
+
+            {modalAtivo && (
+                <EntitySelectorModal
+                    aberto={true}
+                    titulo={modalAtivo.titulo}
+                    iconeTitulo="efeito"
+                    selecionado={modalAtivo.opcoes.find(o => o.valor === modalAtivo.valorAtual)?.rotulo || modalAtivo.valorAtual}
+                    permitirVazio={true}
+                    labelVazio="Limpar escolha"
+                    itens={modalAtivo.opcoes.map((op): EntityItem => ({
+                        nome: op.rotulo,
+                        icone: 'efeito',
+                        bonus: op.bonus,
+                        descricao: op.descricao,
+                        tooltip: op.tooltip || `${op.rotulo}\n${op.descricao ? `Descrição: ${op.descricao}` : ''}`,
+                        fonte: op.fonte || 'T20 JdA',
+                    }))}
+                    onConfirm={(rotuloSelecionado) => {
+                        if (!rotuloSelecionado) {
+                            onChangeEscolha(modalAtivo.habNome, modalAtivo.chave, '');
+                        } else {
+                            const encontrado = modalAtivo.opcoes.find(o => o.rotulo === rotuloSelecionado);
+                            onChangeEscolha(modalAtivo.habNome, modalAtivo.chave, encontrado ? encontrado.valor : rotuloSelecionado);
+                        }
+                        setModalAtivo(null);
+                    }}
+                    onFechar={() => setModalAtivo(null)}
+                />
+            )}
         </div>
     );
 };

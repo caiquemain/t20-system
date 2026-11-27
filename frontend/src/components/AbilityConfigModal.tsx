@@ -30,8 +30,10 @@ interface AbilityConfigModalProps {
     setClassPowersEmEdicao: React.Dispatch<React.SetStateAction<string[]>>;
     subclasseEmEdicao: string;
     setSubclasseEmEdicao: (val: string) => void;
-    devocaoEmEdicao: string;
-    setDevocaoEmEdicao: (val: string) => void;
+    devocaoEmEdicao: string[];
+    setDevocaoEmEdicao: React.Dispatch<React.SetStateAction<string[]>>;
+    fundamentalistaEmEdicao: boolean;
+    setFundamentalistaEmEdicao: (val: boolean) => void;
     poderesEscolhasEmEdicao: Record<string, Record<string, any>>;
     linhagemEmEdicao: string;
     setLinhagemEmEdicao: (v: string) => void;
@@ -47,7 +49,8 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     dadosMagias = {}, dadosOrigens = {}, dadosHabilidadesRaciais = {}, dadosEscolhas = {},
     origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao, habilidadesEmEdicao, setHabilidadesEmEdicao,
     classPowersEmEdicao = [], setClassPowersEmEdicao, subclasseEmEdicao, setSubclasseEmEdicao,
-    devocaoEmEdicao, setDevocaoEmEdicao, abrirSeletor,
+    devocaoEmEdicao = [], setDevocaoEmEdicao, fundamentalistaEmEdicao = false, setFundamentalistaEmEdicao,
+    abrirSeletor,
     poderesEscolhasEmEdicao = {}, setPoderesEscolhasEmEdicao,
     linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao
 }) => {
@@ -79,7 +82,7 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     const getBlacklistGlobal = (ignorarValor: string = "") => {
         const blocked = new Set<string>();
         if (ficha?.pericias) Object.entries(ficha.pericias).forEach(([nome, info]: any) => { if (info.treino > 0) blocked.add(nome); });
-        if (devocaoEmEdicao && devocaoEmEdicao !== ignorarValor) blocked.add(devocaoEmEdicao);
+        (devocaoEmEdicao || []).forEach(val => { if (val && val !== ignorarValor) blocked.add(val); });
         origemBeneficiosEmEdicao.forEach(val => { if (val && val !== ignorarValor) blocked.add(val); });
         habilidadesEmEdicao.forEach(hab => {
             if (hab.escolhas_aplicadas) Object.values(hab.escolhas_aplicadas).forEach((val: any) => {
@@ -214,16 +217,116 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                  </div>
              )}
              {/* 2. DEVOÇÃO */}
-                {ficha.cabecalho.deus && infoDeus && (
-                    <div className="origem-box" style={{ borderColor: '#ffd700', background: '#2a2a20', marginBottom: 20 }}>
-                        <h3 className="section-subtitle" style={{ marginTop: 0, color: '#ffd700' }}>Devoção: {ficha.cabecalho.deus}</h3>
-                        <div style={{ marginBottom: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
-                            <label>Poder Concedido:</label>
-                            <input value={devocaoEmEdicao} readOnly className="input-dark" placeholder="Selecione..." style={{ flex: 1 }} />
-                            <button onClick={() => abrirSeletor('poder', `Poderes de ${ficha.cabecalho.deus}`, infoDeus.poderes, undefined, (val) => setDevocaoEmEdicao(val), getBlacklistGlobal(devocaoEmEdicao))} className="btn-action" style={{ background: '#ffd700', color: 'black' }}>Selecionar</button>
+                {ficha.cabecalho.deus && infoDeus && (() => {
+                    const classesComDevotoFiel = ['Clérigo', 'Druida', 'Paladino', 'Frade', 'Ermitão'];
+                    const temDevotoFiel =
+                        classesComDevotoFiel.includes(classeAtual) ||
+                        habilidadesAutomaticas.some((h: any) => (h.nome || '').toLowerCase().includes('devoto fiel')) ||
+                        (ficha.habilidades || []).some((h: any) => (h.nome || '').toLowerCase().includes('devoto fiel'));
+                    const ehPanteao = ['panteão', 'panteao', 'arton', 'bem'].includes((ficha.cabecalho.deus || '').trim().toLowerCase());
+                    const qtdSlotsDevocao = ehPanteao
+                        ? 0
+                        : 1 + (temDevotoFiel ? 1 : 0) + (fundamentalistaEmEdicao ? 1 : 0);
+                    const fontesResumo: string[] = ['1 base'];
+                    if (temDevotoFiel) fontesResumo.push('+1 Devoto Fiel');
+                    if (fundamentalistaEmEdicao) fontesResumo.push('+1 Fundamentalista');
+
+                    return (
+                        <div className="origem-box" style={{ borderColor: '#ffd700', background: '#2a2a20', marginBottom: 20 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                                <h3 className="section-subtitle" style={{ margin: 0, color: '#ffd700' }}>
+                                    Devoção: {ficha.cabecalho.deus}
+                                </h3>
+                                {!ehPanteao && (
+                                    <span style={{ fontSize: '0.76rem', color: '#fde68a', background: 'rgba(255, 215, 0, 0.14)', border: '1px solid rgba(255, 215, 0, 0.35)', borderRadius: 999, padding: '2px 10px', fontWeight: 600 }}>
+                                        {qtdSlotsDevocao} Poder(es) Concedido(s) ({fontesResumo.join(' ')})
+                                    </span>
+                                )}
+                            </div>
+
+                            {!ehPanteao && (
+                                <label
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                        marginBottom: 12,
+                                        padding: '8px 10px',
+                                        borderRadius: 6,
+                                        background: fundamentalistaEmEdicao ? 'rgba(245, 158, 11, 0.18)' : 'rgba(0, 0, 0, 0.25)',
+                                        border: `1px solid ${fundamentalistaEmEdicao ? '#f59e0b' : '#444'}`,
+                                        cursor: 'pointer',
+                                        fontSize: '0.8rem',
+                                        color: fundamentalistaEmEdicao ? '#fde68a' : '#ccc',
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={fundamentalistaEmEdicao}
+                                        onChange={e => {
+                                            const ativo = e.target.checked;
+                                            setFundamentalistaEmEdicao(ativo);
+                                            if (!ativo) {
+                                                const maxNovo = 1 + (temDevotoFiel ? 1 : 0);
+                                                setDevocaoEmEdicao(prev => prev.slice(0, maxNovo));
+                                            }
+                                        }}
+                                    />
+                                    <span>
+                                        <strong>Fundamentalista</strong> <span style={{ color: '#94a3b8' }}>(Deuses de Arton)</span> — Segue as Obrigações &amp; Restrições Fundamentalistas e libera <strong>+1 Poder Concedido</strong>.
+                                    </span>
+                                </label>
+                            )}
+
+                            {Array.from({ length: qtdSlotsDevocao }).map((_, idx) => {
+                                const valorSlot = devocaoEmEdicao[idx] || '';
+                                return (
+                                    <div key={idx} style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+                                        <label style={{ minWidth: 145, fontSize: '0.84rem', color: '#eee' }}>
+                                            Poder Concedido #{idx + 1}:
+                                        </label>
+                                        <input value={valorSlot} readOnly className="input-dark" placeholder="Selecione..." style={{ flex: 1 }} />
+                                        <button
+                                            type="button"
+                                            onClick={() => abrirSeletor(
+                                                'poder',
+                                                `Poderes de ${ficha.cabecalho.deus} (#${idx + 1})`,
+                                                infoDeus.poderes,
+                                                undefined,
+                                                (val) => {
+                                                    setDevocaoEmEdicao(prev => {
+                                                        const next = [...prev];
+                                                        next[idx] = val;
+                                                        return next;
+                                                    });
+                                                },
+                                                getBlacklistGlobal(valorSlot)
+                                            )}
+                                            className="btn-action"
+                                            style={{ background: '#ffd700', color: 'black' }}
+                                        >
+                                            Selecionar
+                                        </button>
+                                        {valorSlot && (
+                                            <button
+                                                type="button"
+                                                title="Limpar poder"
+                                                onClick={() => setDevocaoEmEdicao(prev => {
+                                                    const next = [...prev];
+                                                    next[idx] = '';
+                                                    return next;
+                                                })}
+                                                style={{ background: '#3a2222', color: '#ff8a80', border: '1px solid #663333', borderRadius: 4, padding: '6px 9px', cursor: 'pointer' }}
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
                 {/* 3. ORIGEM */}
                 {(() => {
                     const bloqueioOrigem = habilidadesEmEdicao.find(h => h.efeitos && h.efeitos.sem_origem);

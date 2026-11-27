@@ -62,7 +62,8 @@ export const useFicha = (id: string | undefined) => {
     const [origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao] = useState<string[]>([]);
     const [classPowersEmEdicao, setClassPowersEmEdicao] = useState<string[]>([]);
     const [subclasseEmEdicao, setSubclasseEmEdicao] = useState<string>("");
-    const [devocaoEmEdicao, setDevocaoEmEdicao] = useState<string>("");
+    const [devocaoEmEdicao, setDevocaoEmEdicao] = useState<string[]>([]);
+    const [fundamentalistaEmEdicao, setFundamentalistaEmEdicao] = useState<boolean>(false);
     // [LOTE 1-UI] Escolhas secundárias de poderes (escola, atributo, familiar...)
     const [poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao] = useState<Record<string, Record<string, any>>>({});
     const [linhagemEmEdicao, setLinhagemEmEdicao] = useState<string>("");
@@ -236,11 +237,14 @@ export const useFicha = (id: string | undefined) => {
         setTipoDanoEmEdicao(linhagemHab?.escolhas_aplicadas?.tipo_dano || "");
         const deus = ficha.cabecalho.deus;
         const infoDeus = dadosDeuses[deus];
+        setFundamentalistaEmEdicao(Boolean(ficha.cabecalho.fundamentalista));
         if (deus && infoDeus) {
-            const poder = ficha.habilidades.find(h => infoDeus.poderes.includes(h.nome));
-            setDevocaoEmEdicao(poder ? poder.nome : "");
+            const poderesAtuaisDeus = ficha.habilidades
+                .filter(h => (infoDeus.poderes || []).includes(h.nome) || (h.fonte || '').startsWith('Devoção:'))
+                .map(h => h.nome);
+            setDevocaoEmEdicao(Array.from(new Set(poderesAtuaisDeus)));
         } else {
-            setDevocaoEmEdicao("");
+            setDevocaoEmEdicao([]);
         }
         setShowHabilidadesPanel(true);
     };
@@ -362,11 +366,24 @@ export const useFicha = (id: string | undefined) => {
             } as Habilidade);
         }
         habilidadesFinais.push(...novosPoderesClasse);
-        if (novaFicha.cabecalho.deus && devocaoEmEdicao) {
-            const dPoder = dadosPoderesConcedidos[devocaoEmEdicao];
-            if (dPoder) {
-                habilidadesFinais.push({ nome: dPoder.nome, tipo: "Poder Concedido", descricao: dPoder.descricao, fonte: `Devoção: ${novaFicha.cabecalho.deus}` });
-            }
+        novaFicha.cabecalho = {
+            ...novaFicha.cabecalho,
+            fundamentalista: Boolean(fundamentalistaEmEdicao),
+        };
+        habilidadesFinais = habilidadesFinais.filter(h => !(h.fonte || "").startsWith("Devoção:"));
+        if (novaFicha.cabecalho.deus && Array.isArray(devocaoEmEdicao) && devocaoEmEdicao.length > 0) {
+            const unicos = Array.from(new Set(devocaoEmEdicao.filter(Boolean)));
+            unicos.forEach(nomePoder => {
+                const dPoder = dadosPoderesConcedidos[nomePoder];
+                if (dPoder) {
+                    habilidadesFinais.push({
+                        nome: dPoder.nome,
+                        tipo: "Poder Concedido",
+                        descricao: dPoder.descricao,
+                        fonte: `Devoção: ${novaFicha.cabecalho.deus}`,
+                    });
+                }
+            });
         }
         // 🧹 Troca de escolha racial de perícia remove o treino da antiga
         const CHAVES_PERICIA_ESCOLHA = ["pericia_escolha", "pericia_1", "pericia_2", "memoria_postuma", "pericia_bonus_0", "pericia_bonus_1"];
@@ -401,6 +418,7 @@ export const useFicha = (id: string | undefined) => {
         classPowersEmEdicao, setClassPowersEmEdicao,
         subclasseEmEdicao, setSubclasseEmEdicao,
         devocaoEmEdicao, setDevocaoEmEdicao,
+        fundamentalistaEmEdicao, setFundamentalistaEmEdicao,
         poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
      dadosEscolhas,
         linhagemEmEdicao,
