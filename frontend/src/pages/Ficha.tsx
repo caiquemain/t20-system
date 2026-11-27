@@ -24,6 +24,7 @@ import { AttackList } from '../components/AttackList';
 import { T20Icon, getEfeitoVisual } from '../components/T20Icon';
 import { formatarResumoDeus, formatarTooltipDeus } from '../utils/deusTooltip';
 import { formatarResumoClasse, formatarDescricaoClasse, formatarTooltipClasse } from '../utils/classeTooltip';
+import { formatarResumoOrigem, formatarTooltipOrigem } from '../utils/origemTooltip';
 import { entidadePermitidaPorSuplementos } from '../utils/suplementos';
 import { ToquesFinaisTab, TABELA_TAMANHO_TOOLTIP } from '../components/ToquesFinaisTab';
 import { DistincoesPanel } from '../components/suplementos/DistincoesPanel';
@@ -60,13 +61,15 @@ function Ficha() {
         dadosClasses, dadosOrigens, dadosRacas, dadosEquipamentos, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
         listaDeuses, dadosDeuses, dadosHabilidades,
-        dadosHabilidadesRaciais,
+        dadosHabilidadesRaciais, dadosDistincoes,
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
         classPowersEmEdicao, setClassPowersEmEdicao,
         subclasseEmEdicao, setSubclasseEmEdicao,
-        devocaoEmEdicao, setDevocaoEmEdicao, linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao, poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
+        devocaoEmEdicao, setDevocaoEmEdicao,
+        fundamentalistaEmEdicao, setFundamentalistaEmEdicao,
+        linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao, poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
         dadosEscolhas,
         updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas
     } = useFicha(id);
@@ -328,7 +331,21 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
     };
 
     const poderesDaClasse = ficha ? extrairPoderesDaClasse(dadosHabilidadesClasse, ficha.classes[0].nome) : [];
-    const poderesMistos = [...listaPoderes, ...poderesDaClasse];
+    const poderesDistincoesAdmitidas = ((ficha.cabecalho?.nivel_total || ficha.classes[0]?.nivel || 1) >= 5)
+        ? (ficha.distincoes || [])
+            .filter(d => d.admitido)
+            .flatMap(d => {
+                const info = dadosDistincoes?.[d.nome];
+                return (info?.poderes || []).map((p: any) => ({
+                    nome: p.nome,
+                    tipo: 'Poder de Distinção',
+                    categoria: `Distinção: ${d.nome}`,
+                    descricao: p.descricao || '',
+                    requisitos: p.requisitos || [],
+                }));
+            })
+        : [];
+    const poderesMistos = [...listaPoderes, ...poderesDaClasse, ...poderesDistincoesAdmitidas];
 
     const getDeusesPermitidos = () => {
         if (!ficha) return [];
@@ -417,7 +434,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 onSave={handleSaveEscolhas}
                 ficha={ficha}
                 origemNome={origemNome}
-                qtdEscolhasOrigem={infoOrigem?.qtd_escolhas || 2}
+                qtdEscolhasOrigem={infoOrigem?.qtd_escolhas ?? 2}
                 listaBeneficiosOrigem={infoOrigem?.beneficios_lista || []}
                 classeAtual={ficha.classes[0]?.nome}
                 nivelAtual={ficha.classes[0]?.nivel || 1}
@@ -428,6 +445,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 dadosMagias={dadosMagias}
                 dadosHabilidadesRaciais={dadosHabilidadesRaciais}
              dadosEscolhas={dadosEscolhas}
+             dadosDistincoes={dadosDistincoes}
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}
@@ -438,6 +456,8 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 setSubclasseEmEdicao={setSubclasseEmEdicao}
                 devocaoEmEdicao={devocaoEmEdicao}
                 setDevocaoEmEdicao={setDevocaoEmEdicao}
+                fundamentalistaEmEdicao={fundamentalistaEmEdicao}
+                setFundamentalistaEmEdicao={setFundamentalistaEmEdicao}
              poderesEscolhasEmEdicao={poderesEscolhasEmEdicao}
              setPoderesEscolhasEmEdicao={setPoderesEscolhasEmEdicao}
              linhagemEmEdicao={linhagemEmEdicao}
@@ -786,6 +806,15 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                                 const encontrada = (ficha.combate.magias || []).find((m: Magia) => m.nome === nomeMagia);
                                 if (encontrada) setViewSpell(encontrada);
                             }}
+                            onAplicarCura={(valor, tipo) => {
+                                if (tipo === 'cura') {
+                                    const novoAtual = Math.min(ficha.status.pv.maximo, (ficha.status.pv.atual || 0) + valor);
+                                    updateFicha({ status: { ...ficha.status, pv: { ...ficha.status.pv, atual: novoAtual } } }, true);
+                                } else {
+                                    const novoTemp = Math.max(ficha.status.pv.temporario || 0, valor);
+                                    updateFicha({ status: { ...ficha.status, pv: { ...ficha.status.pv, temporario: novoTemp } } }, true);
+                                }
+                            }}
                         />
                         <div className="section-card" style={{ marginTop: '25px' }}>
                             <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -869,7 +898,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             {!showHistorico && activeTab === 'suplementos' && (
                 <div style={{ padding: '0 20px' }}>
                     <MelhorAmigoPanel ficha={ficha} onUpdate={updateFicha} />
-                    <DistincoesPanel ficha={ficha} onUpdate={updateFicha} />
+                    <DistincoesPanel ficha={ficha} onUpdate={updateFicha} onAbrirPoderes={montarHabilidadesParaPanel} />
                     <RegrasOpcionaisPanel ficha={ficha} onUpdate={updateFicha} />
                 </div>
             )}
@@ -941,12 +970,17 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 selecionado={ficha.cabecalho.origem}
                 itens={listaOrigens
                     .filter(o => entidadePermitidaPorSuplementos((dadosOrigens as any)?.[o]?.fonte, ficha.suplementos_ativos))
-                    .map((o): EntityItem => ({
-                        nome: o,
-                        icone: 'origem',
-                        descricao: (dadosOrigens as any)?.[o]?.descricao,
-                        fonte: (dadosOrigens as any)?.[o]?.fonte || 'T20 JdA',
-                    }))}
+                    .map((o): EntityItem => {
+                        const info = (dadosOrigens as any)?.[o];
+                        return {
+                            nome: o,
+                            icone: 'origem',
+                            bonus: formatarResumoOrigem(info),
+                            descricao: info?.beneficio_texto || info?.descricao,
+                            tooltip: formatarTooltipOrigem(o, info),
+                            fonte: info?.fonte || 'T20 JdA',
+                        };
+                    })}
                 onConfirm={(nome) => handleSelecionarEntidade('origem', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />

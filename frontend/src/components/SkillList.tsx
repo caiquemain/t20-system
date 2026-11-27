@@ -20,12 +20,27 @@ export const SkillList: React.FC<SkillListProps> = ({ ficha, dadosClasses, updat
     const periciasFixas = dadosClasse.pericias_iniciais || dadosClasse.pericias_fixas || [];
     const periciasObrigatoriasSelecao = dadosClasse.pericias_fixas_selecao || [];
     const periciasDaClassePossiveis = dadosClasse.pericias_lista || [];
-    const qtdEscolhasClasse = dadosClasse.pericias_escolha || 0;
+
+    // Perícias fixas de Origens Regionais (Atlas/Heróis) vêm em hab.efeitos.pericia_treino
+    const periciasOrigemRegionais: string[] = [];
+    for (const h of (ficha.habilidades || [])) {
+        if ((h.fonte || '').startsWith('Origem:') && Array.isArray(h.efeitos?.pericia_treino)) {
+            for (const p of h.efeitos.pericia_treino) {
+                if (typeof p === 'string' && !periciasOrigemRegionais.includes(p)) {
+                    periciasOrigemRegionais.push(p);
+                }
+            }
+        }
+    }
+    // Regra oficial (Atlas de Arton, p. 470): se a origem regional treinar uma perícia
+    // na qual você já é treinado pela classe, ganha +1 perícia de classe à escolha.
+    const bonusPericiasSobrepostasOrigem = periciasOrigemRegionais.filter(p => periciasFixas.includes(p)).length;
+    const qtdEscolhasClasse = (dadosClasse.pericias_escolha || 0) + bonusPericiasSobrepostasOrigem;
 
     const intAttr = ficha.atributos.inteligencia || 0;
     const qtdEscolhasInteligencia = Math.max(0, intAttr);
 
-    const periciasOrigem = ficha.escolhas_origem || [];
+    const periciasOrigem = Array.from(new Set([...(ficha.escolhas_origem || []), ...periciasOrigemRegionais]));
     const periciasTreinadas = ficha.pericias || {};
 
     const periciasCompradas = Object.keys(periciasTreinadas).filter(p =>

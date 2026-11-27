@@ -12,6 +12,7 @@ export interface Cabecalho {
     origem: string;
     deus: string;
     divindade?: string;
+    fundamentalista?: boolean;
     nivel_total: number;
     xp: XP;
 }
@@ -196,6 +197,7 @@ custo_arcano_metade?: boolean;
 magias_calc?: any;
 circulo_maximo: number;
     limite_magias: number;
+    limite_magias_por_circulo?: Record<string, number>;
     fluxo_de_mana?: number;
     foco_vital?: number;
     bonus_ataque_arma?: Record<string, number>;

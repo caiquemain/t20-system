@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SelectionModal } from '../SelectionModal';
 import { T20Icon } from '../../T20Icon';
 import { formatarTooltipDeus } from '../../../utils/deusTooltip';
+import { formatarTooltipOrigem } from '../../../utils/origemTooltip';
 import {
     SUPLEMENTOS_OFICIAIS,
     TODOS_SUPLEMENTOS_IDS,
@@ -174,11 +175,26 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 selected={ficha.cabecalho.origem}
                 items={listaOrigens
                     .filter(o => entidadePermitidaPorSuplementos(dadosOrigens[o]?.fonte, suplementosAtivos))
-                    .map(o => ({
-                        nome: o,
-                        descricao: dadosOrigens[o]?.descricao,
-                        fonte: dadosOrigens[o]?.fonte || 'T20 JdA',
-                    }))}
+                    .map(o => {
+                        const info = dadosOrigens[o];
+                        const tags: string[] = [];
+                        if (info?.regional || info?.qtd_escolhas === 0) {
+                            if (info?.regiao) tags.push(info.regiao);
+                            tags.push('Benefício Único');
+                            if (Array.isArray(info?.pericias_fixas) && info.pericias_fixas.length > 0) {
+                                tags.push(...info.pericias_fixas);
+                            }
+                        } else {
+                            tags.push(`Escolha ${info?.qtd_escolhas ?? 2}`);
+                        }
+                        return {
+                            nome: o,
+                            tags,
+                            descricao: info?.beneficio_texto || info?.descricao,
+                            tooltip: formatarTooltipOrigem(o, info),
+                            fonte: info?.fonte || 'T20 JdA',
+                        };
+                    })}
                 onSelect={nome => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: nome }, escolhas_origem: [] }, true)}
             />
             <SelectionModal

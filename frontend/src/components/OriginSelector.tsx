@@ -33,8 +33,31 @@ export const OriginSelector: React.FC<OriginSelectorProps> = ({ ficha, dadosOrig
     }
 
     const beneficiosPossiveis = dados.beneficios_lista || [];
-    const maxEscolhas = dados.qtd_escolhas || 2;
+    const maxEscolhas = dados.qtd_escolhas ?? 2;
     const escolhasAtuais = ficha.escolhas_origem || [];
+
+    if (dados.regional || maxEscolhas === 0) {
+        return (
+            <div className="origin-selector-container">
+                <div style={{
+                    background: 'rgba(46, 125, 50, 0.14)',
+                    border: '1px solid #2e7d32',
+                    borderRadius: 8,
+                    padding: '12px 14px',
+                }}>
+                    <h4 style={{ margin: '0 0 6px', color: '#81c784', fontSize: '0.96rem' }}>
+                        {origemNome} — Benefício Único Regional (Automático)
+                    </h4>
+                    <p style={{ margin: '0 0 6px', color: '#e2e8f0', fontSize: '0.86rem', lineHeight: 1.4 }}>
+                        {dados.beneficio_texto || dados.descricao}
+                    </p>
+                    {dados.itens && (
+                        <small style={{ color: '#94a3b8' }}><strong>Itens iniciais:</strong> {dados.itens}</small>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     // --- LÓGICA DE FILTRAGEM ---
 

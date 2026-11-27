@@ -320,6 +320,8 @@ def _habilidades_classe_nv1() -> list[dict]:
             "rotulo": f"{nome} ({classe})",
             "classe": classe,
             "nome": nome,
+            "descricao": d.get("descricao", ""),
+            "fonte": d.get("fonte", "T20 JdA"),
             "chave_catalogo": chave,
         })
     return sorted(itens, key=lambda x: (x["classe"], x["nome"]))

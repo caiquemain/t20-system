@@ -154,10 +154,17 @@ def calcular_circulo_maximo(classe: str, nivel: int) -> int:
 
 
 def calcular_circulo_maximo_ficha(ficha: Personagem) -> int:
-    """Maior círculo entre todas as classes do personagem (multiclasse)."""
-    return max(
+    """Maior círculo entre todas as classes do personagem (multiclasse) e poderes de magia racial (Glamour)."""
+    circ_classes = max(
         [calcular_circulo_maximo(c.nome, c.nivel) for c in ficha.classes] or [0]
     )
+    nomes_habs = {h.nome for h in (ficha.habilidades or [])}
+    circ_poderes = 0
+    if "Glamour Maior" in nomes_habs:
+        circ_poderes = max(circ_poderes, 2)
+    elif "Glamour" in nomes_habs or "Grande Marca de Wynna" in nomes_habs:
+        circ_poderes = max(circ_poderes, 1)
+    return max(circ_classes, circ_poderes)
 
 
 def _circulo_da_magia(magia: Magia) -> int:
@@ -273,11 +280,72 @@ def calcular_limite_magias_conhecidas(ficha: Personagem):
     return calc.total, calc
 
 
+def _magias_classe_ate_nivel(classe_nome: str, subclasse: str, nivel: int) -> int:
+    """Quantidade de magias concedidas pela progressão da classe até o nível informado."""
+    if nivel <= 0:
+        return 0
+    regra = REGRAS_MAGIAS_CONHECIDAS.get(classe_nome or "")
+    if not regra:
+        return 0
+    regra_sub = REGRAS_MAGIAS_POR_SUBCLASSE.get((subclasse or "").strip(), {})
+    total = int(regra["inicial"]) + int(regra_sub.get("inicial_extra", 0))
+    if regra_sub.get("aprende_apenas_niveis_impares"):
+        total += len(range(3, nivel + 1, 2))
+    elif regra.get("aprende_apenas_niveis_pares"):
+        total += nivel // 2
+    else:
+        total += (nivel - 1) * int(regra.get("por_nivel", 1))
+    extra_circ = int(regra_sub.get("extra_por_circulo_novo", 0))
+    if extra_circ:
+        progressao = PROGRESSAO_CIRCULOS_POR_CLASSE.get(classe_nome or "", {})
+        circulos_novos = len([n for n, c in progressao.items() if c >= 2 and nivel >= n])
+        total += circulos_novos * extra_circ
+    return total
+
+
+def calcular_limite_magias_por_circulo(ficha: Personagem) -> dict[int, int]:
+    """Trava T20 por círculo: no nível N, você só pode ter de círculo >= C
+    as magias ganhas a partir do nível em que sua classe desbloqueou o círculo C
+    (+ bônus de poderes extras como Conhecimento Mágico).
+
+    Ex.: Frade nv 6 (2º círculo libera no nv 5): limite(6)=8, limite(4)=6 → máx 2 magias de 2º círculo.
+    """
+    c_prim = ficha.classes[0] if ficha.classes else None
+    if not c_prim:
+        return {}
+    classe_nome = c_prim.nome or ""
+    if classe_nome not in REGRAS_MAGIAS_CONHECIDAS:
+        return {}
+    nivel = int(c_prim.nivel or 1)
+    subclasse = (c_prim.subclasse or "").strip()
+    progressao = PROGRESSAO_CIRCULOS_POR_CLASSE.get(classe_nome, {})
+    if not progressao:
+        return {}
+
+    total_classe_atual = _magias_classe_ate_nivel(classe_nome, subclasse, nivel)
+    bonus_poderes = sum(
+        int(PODERES_QUE_DAO_MAGIAS.get(h.nome, 0))
+        for h in (ficha.habilidades or [])
+    )
+
+    limites: dict[int, int] = {}
+    for niv_desb, circ in sorted(progressao.items()):
+        if circ < 2:
+            continue
+        if nivel < niv_desb:
+            limites[circ] = 0
+        else:
+            antes = _magias_classe_ate_nivel(classe_nome, subclasse, niv_desb - 1)
+            limites[circ] = max(0, (total_classe_atual - antes) + bonus_poderes)
+    return limites
+
+
 def validar_magias_conhecidas(ficha: Personagem) -> Personagem:
-    """Grava o limite de magias escolhidas na ficha (NÃO remove magias)."""
+    """Grava o limite de magias escolhidas (total e por círculo) na ficha."""
     limite, calc = calcular_limite_magias_conhecidas(ficha)
     ficha.combate.limite_magias = limite
     ficha.combate.magias_calc = calc
+    ficha.combate.limite_magias_por_circulo = calcular_limite_magias_por_circulo(ficha)
     if limite is not None:
         manuais = [
             m for m in ficha.combate.magias

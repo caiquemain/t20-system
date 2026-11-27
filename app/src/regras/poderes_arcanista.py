@@ -277,6 +277,12 @@ def aplicar_poderes_arcanista(ficha: Personagem):
         cd_calc.adicionar_bonus(
             fonte="Poder: Fortalecimento Arcano", categoria="Poder",
             valor=2 if (ficha.combate.circulo_maximo or 0) >= 4 else 1)
+    for h in ficha.habilidades:
+        ef_cd = h.efeitos or {}
+        bonus_cd_arc = ef_cd.get("cd_magias_arcana_bonus")
+        if isinstance(bonus_cd_arc, (int, float)) and bonus_cd_arc:
+            cd_calc.adicionar_bonus(
+                fonte=h.nome, categoria="Origem/Poder", valor=int(bonus_cd_arc))
     for b in ficha.status.buffs:
         if b.origem == "Magia Pungente" and b.atributo == "cd_magias":
             cd_calc.adicionar_bonus(
@@ -508,25 +514,84 @@ def sincronizar_ataques_magicos(ficha: Personagem):
         if a.nome != "Raio Arcano" and not str(a.especial or "").startswith("Magia •")
     ]
 
-    # 2) Sincroniza metadados de rolagem e adiciona magias de dano em combate.ataques
+    # 2) Sincroniza metadados de rolagem e adiciona magias de dano, cura e PV temp em combate.ataques
+    import re as _re
     bonus_dano_mag = int(ficha.combate.bonus_dano_magias or 0)
+    nomes_habs = {h.nome for h in (ficha.habilidades or [])}
+    tem_cura_gentil = "Cura Gentil" in nomes_habs
+    sem_devocao = not (ficha.cabecalho.deus or "").strip()
+    tem_colegio_real = (
+        ("Origem Regional: Estudante do Colégio Real" in nomes_habs or ficha.cabecalho.origem == "Estudante do Colégio Real")
+        and sem_devocao
+    )
+    car_mod = int(ficha.atributos.carisma or 0)
+
     for m in (ficha.combate.magias or []):
         dados_m = DADOS_MAGIAS.get(m.nome) or {}
         if not m.rolagem and dados_m.get("rolagem"):
             m.rolagem = dict(dados_m["rolagem"])
         rol = m.rolagem or dados_m.get("rolagem")
-        if not isinstance(rol, dict) or rol.get("tipo") != "dano":
+        if not isinstance(rol, dict):
+            continue
+        tipo_rol = str(rol.get("tipo") or "").strip().lower()
+        if tipo_rol not in ("dano", "cura", "pv_temp"):
             continue
 
         formula_base = str(rol.get("formula") or "").strip()
         if not formula_base:
             continue
+        custo_pm = calcular_custo_magia(ficha, m).total
+
+        if tipo_rol == "cura":
+            bonus_cura_total = 0
+            dano_fontes: List[str] = [f"Base ({m.nome}): {formula_base}"]
+            if tem_cura_gentil and car_mod > 0:
+                bonus_cura_total += car_mod
+                dano_fontes.append(f"Cura Gentil (Carisma): +{car_mod}")
+            if tem_colegio_real:
+                m_dados = _re.search(r"(\d+)d\d+", formula_base)
+                qtd_dados_cura = int(m_dados.group(1)) if m_dados else 1
+                bonus_col = 2 * qtd_dados_cura
+                bonus_cura_total += bonus_col
+                dano_fontes.append(f"Estudante do Colégio Real (+2/dado × {qtd_dados_cura}): +{bonus_col}")
+            formula_final = f"{formula_base}+{bonus_cura_total}" if bonus_cura_total > 0 else formula_base
+            dano_fontes.append(f"Total: {formula_final}")
+
+            ficha.combate.ataques.append(Ataque(
+                nome=m.nome,
+                bonus_ataque="Cura",
+                dano=formula_final,
+                critico="-",
+                tipo="Cura",
+                alcance=m.alcance or dados_m.get("alcance") or "Toque",
+                teste="Cura",
+                especial=f"Magia • {m.circulo}º Círculo ({custo_pm} PM) • Cura",
+                cd_fontes=["Magia de Cura — recupera PV diretamente (sem teste de resistência)."],
+                dano_fontes=dano_fontes,
+            ))
+            continue
+
+        if tipo_rol == "pv_temp":
+            dano_fontes = [f"Base ({m.nome}): {formula_base}", f"Total: {formula_base}"]
+            ficha.combate.ataques.append(Ataque(
+                nome=m.nome,
+                bonus_ataque="PV Temp",
+                dano=formula_base,
+                critico="-",
+                tipo="PV Temp",
+                alcance=m.alcance or dados_m.get("alcance") or "Pessoal",
+                teste="PV Temp",
+                especial=f"Magia • {m.circulo}º Círculo ({custo_pm} PM) • PV Temporários",
+                cd_fontes=["Magia de PV Temporários — concede PV temporários (não cumulativos)."],
+                dano_fontes=dano_fontes,
+            ))
+            continue
+
         dano_final = f"{formula_base}+{bonus_dano_mag}" if bonus_dano_mag > 0 else formula_base
         tipo_dano = str(rol.get("tipo_dano") or "Essência")
         res_txt = (m.resistencia or dados_m.get("resistencia") or "").strip()
         teste = _extrair_teste_resistencia(res_txt)
         cd = calcular_cd_magia(ficha, m) if (m.atributo_chave or "").strip() else int(ficha.combate.cd_magias or 10)
-        custo_pm = calcular_custo_magia(ficha, m).total
 
         # Auditoria da CD da magia
         cd_fontes: List[str] = []
@@ -557,7 +622,7 @@ def sincronizar_ataques_magicos(ficha: Personagem):
             cd_fontes.append(f"Total: CD {cd}")
 
         # Auditoria dos dados de dano
-        dano_fontes: List[str] = [f"Base ({m.nome}): {formula_base}"]
+        dano_fontes = [f"Base ({m.nome}): {formula_base}"]
         if bonus_dano_mag > 0:
             dano_fontes.append(f"Bônus de dano mágico (poderes/itens): +{bonus_dano_mag}")
         dano_fontes.append(f"Total: {dano_final}")

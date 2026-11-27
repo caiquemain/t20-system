@@ -43,6 +43,11 @@ export const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({
     let poderes: string[] = [];
     let crencas = '';
     let obrigacoes = '';
+    let beneficioUnico = '';
+    let beneficiosDisponiveis: string[] = [];
+    let periciasTreinadas: string[] = [];
+    let itensIniciais = '';
+    let descricaoTexto = '';
     const extras: string[] = [];
 
     linhas.forEach((linha, idx) => {
@@ -82,6 +87,26 @@ export const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({
         }
         if (linha.startsWith('Obrigações & Restrições:')) {
             obrigacoes = linha.replace('Obrigações & Restrições:', '').trim();
+            return;
+        }
+        if (linha.startsWith('Benefício Único:')) {
+            beneficioUnico = linha.replace('Benefício Único:', '').trim();
+            return;
+        }
+        if (linha.startsWith('Benefícios Disponíveis:')) {
+            beneficiosDisponiveis = linha.replace('Benefícios Disponíveis:', '').split(',').map(p => p.trim()).filter(Boolean);
+            return;
+        }
+        if (linha.startsWith('Perícias Treinadas:')) {
+            periciasTreinadas = linha.replace('Perícias Treinadas:', '').split(',').map(p => p.trim()).filter(Boolean);
+            return;
+        }
+        if (linha.startsWith('Itens Iniciais:')) {
+            itensIniciais = linha.replace('Itens Iniciais:', '').trim();
+            return;
+        }
+        if (linha.startsWith('Descrição:')) {
+            descricaoTexto = linha.replace('Descrição:', '').trim();
             return;
         }
         extras.push(linha);
@@ -215,6 +240,92 @@ export const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({
                         </div>
                         <p style={{ margin: 0, color: '#fde68a', fontSize: '0.82rem', lineHeight: 1.55 }}>
                             {obrigacoes}
+                        </p>
+                    </div>
+                )}
+
+                {/* Origens (Benefício Único Regional / Benefícios Básicos / Perícias / Itens) */}
+                {beneficioUnico && (
+                    <div style={{ background: 'rgba(46, 125, 50, 0.14)', border: '1px solid rgba(76, 175, 80, 0.45)', borderRadius: 8, padding: '10px 12px' }}>
+                        <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#81c784', fontWeight: 700, marginBottom: 4 }}>
+                            Benefício Único (Automático)
+                        </div>
+                        <p style={{ margin: 0, color: '#e2e8f0', fontSize: '0.84rem', lineHeight: 1.55 }}>
+                            {beneficioUnico}
+                        </p>
+                    </div>
+                )}
+
+                {periciasTreinadas.length > 0 && (
+                    <div>
+                        <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', fontWeight: 700, marginBottom: 6 }}>
+                            Perícias Treinadas (se repetida, +1 perícia de classe)
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {periciasTreinadas.map((p, i) => (
+                                <span
+                                    key={i}
+                                    style={{
+                                        background: 'rgba(56, 189, 248, 0.14)',
+                                        border: '1px solid rgba(56, 189, 248, 0.35)',
+                                        color: '#bae6fd',
+                                        borderRadius: 999,
+                                        padding: '3px 10px',
+                                        fontSize: '0.76rem',
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {p}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {beneficiosDisponiveis.length > 0 && (
+                    <div>
+                        <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', fontWeight: 700, marginBottom: 6 }}>
+                            Benefícios Disponíveis (Escolha 2)
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {beneficiosDisponiveis.map((b, i) => (
+                                <span
+                                    key={i}
+                                    style={{
+                                        background: 'rgba(245, 158, 11, 0.12)',
+                                        border: '1px solid rgba(245, 158, 11, 0.35)',
+                                        color: '#fde68a',
+                                        borderRadius: 999,
+                                        padding: '3px 10px',
+                                        fontSize: '0.76rem',
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {b}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {itensIniciais && (
+                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #2a2f4a', borderRadius: 8, padding: '9px 11px' }}>
+                        <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', fontWeight: 700, marginBottom: 3 }}>
+                            Itens Iniciais
+                        </div>
+                        <div style={{ color: '#e2e8f0', fontSize: '0.82rem', lineHeight: 1.45 }}>
+                            {itensIniciais}
+                        </div>
+                    </div>
+                )}
+
+                {descricaoTexto && (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid #262b45', borderRadius: 8, padding: '9px 11px' }}>
+                        <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#93c5fd', fontWeight: 700, marginBottom: 3 }}>
+                            Histórico
+                        </div>
+                        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                            {descricaoTexto}
                         </p>
                     </div>
                 )}
