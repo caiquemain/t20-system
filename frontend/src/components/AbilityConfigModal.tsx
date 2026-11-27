@@ -22,6 +22,7 @@ interface AbilityConfigModalProps {
     dadosOrigens?: any;
     dadosHabilidadesRaciais?: any;
     dadosEscolhas?: any;
+    dadosDistincoes?: Record<string, any>;
     origemBeneficiosEmEdicao: string[];
     setOrigemBeneficiosEmEdicao: (vals: string[]) => void;
     habilidadesEmEdicao: any[];
@@ -46,7 +47,7 @@ interface AbilityConfigModalProps {
 export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
     isOpen, onClose, onSave, ficha, origemNome, qtdEscolhasOrigem, listaBeneficiosOrigem = [],
     classeAtual, nivelAtual, dadosHabilidadesClasse, listaPoderesGerais = [], dadosDeuses = {},
-    dadosMagias = {}, dadosOrigens = {}, dadosHabilidadesRaciais = {}, dadosEscolhas = {},
+    dadosMagias = {}, dadosOrigens = {}, dadosHabilidadesRaciais = {}, dadosEscolhas = {}, dadosDistincoes = {},
     origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao, habilidadesEmEdicao, setHabilidadesEmEdicao,
     classPowersEmEdicao = [], setClassPowersEmEdicao, subclasseEmEdicao, setSubclasseEmEdicao,
     devocaoEmEdicao = [], setDevocaoEmEdicao, fundamentalistaEmEdicao = false, setFundamentalistaEmEdicao,
@@ -156,10 +157,24 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
         .filter((h: any) => h.classe === classeAtual && (h.tipo || "").includes("Poder de") && (h.nivel ?? 2) <= nivelAtual)
         .map((h: any) => h.nome);
 
+    // Poderes de Distinções admitidas entram nos slots de nível a partir do 5º nível (regra oficial)
+    const nomesPoderesDistincao: string[] = [];
+    if (nivelAtual >= 5) {
+        (ficha.distincoes || []).forEach((d: any) => {
+            if (!d.admitido) return;
+            const infoDist = dadosDistincoes?.[d.nome];
+            (infoDist?.poderes || []).forEach((p: any) => {
+                if (p?.nome) nomesPoderesDistincao.push(p.nome);
+            });
+        });
+    }
+
     const listaCompletaHabilidadesClasse = Object.values(dadosHabilidadesClasse || {});
     const habilidadesAutomaticas = listaCompletaHabilidadesClasse.filter((h: any) => h.classe === classeAtual && h.tipo === "Habilidade de Classe" && h.nivel <= nivelAtual);
-    const slotsPoderes = Math.max(0, nivelAtual - 1);
-    const nomesPoderesDisponiveisFinais = Array.from(new Set([...nomesPoderesDisponiveis, ...nomesPoderesClasse])).sort();
+    const slotsNivelBase = Math.max(0, nivelAtual - 1);
+    const slotsComplicacoes = (ficha.complicacoes || []).length;
+    const slotsPoderes = slotsNivelBase + slotsComplicacoes;
+    const nomesPoderesDisponiveisFinais = Array.from(new Set([...nomesPoderesDisponiveis, ...nomesPoderesClasse, ...nomesPoderesDistincao])).sort();
     const habilidadeComSubclasse: any = habilidadesAutomaticas.find((h: any) => h.efeitos && h.efeitos.escolha_subclasse);
     const opcoesSubclasse: string[] = habilidadeComSubclasse ? habilidadeComSubclasse.efeitos.escolha_subclasse : [];
 
@@ -456,9 +471,11 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                             return (
                                 <div key={i} style={{ marginBottom: 10 }}>
                                     <div className="power-slot-row" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                                        <div style={{ width: '25px', color: '#666', fontSize: '0.8rem', textAlign: 'right' }}>{i + 2}º</div>
+                                        <div style={{ width: '36px', color: i < slotsNivelBase ? '#666' : '#ffb74d', fontSize: '0.78rem', textAlign: 'right' }}>
+                                            {i < slotsNivelBase ? `${i + 2}º` : 'Comp.'}
+                                        </div>
                                         <input value={valorAtual} readOnly className="input-dark" placeholder="Selecionar Poder..." style={{ flex: 1 }} />
-                                        <button onClick={() => abrirSeletor('poder', `Poder de Nível ${i + 2}`, nomesPoderesDisponiveisFinais, undefined, (v) => {
+                                        <button onClick={() => abrirSeletor('poder', i < slotsNivelBase ? `Poder de Nível ${i + 2}` : 'Poder Geral (Complicação)', nomesPoderesDisponiveisFinais, undefined, (v) => {
                                             const novosPoderes = [...classPowersEmEdicao];
                                             while (novosPoderes.length <= i) novosPoderes.push("");
                                             novosPoderes[i] = v;

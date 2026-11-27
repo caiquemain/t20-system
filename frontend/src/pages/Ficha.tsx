@@ -61,7 +61,7 @@ function Ficha() {
         dadosClasses, dadosOrigens, dadosRacas, dadosEquipamentos, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
         listaDeuses, dadosDeuses, dadosHabilidades,
-        dadosHabilidadesRaciais,
+        dadosHabilidadesRaciais, dadosDistincoes,
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
@@ -331,7 +331,21 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
     };
 
     const poderesDaClasse = ficha ? extrairPoderesDaClasse(dadosHabilidadesClasse, ficha.classes[0].nome) : [];
-    const poderesMistos = [...listaPoderes, ...poderesDaClasse];
+    const poderesDistincoesAdmitidas = ((ficha.cabecalho?.nivel_total || ficha.classes[0]?.nivel || 1) >= 5)
+        ? (ficha.distincoes || [])
+            .filter(d => d.admitido)
+            .flatMap(d => {
+                const info = dadosDistincoes?.[d.nome];
+                return (info?.poderes || []).map((p: any) => ({
+                    nome: p.nome,
+                    tipo: 'Poder de Distinção',
+                    categoria: `Distinção: ${d.nome}`,
+                    descricao: p.descricao || '',
+                    requisitos: p.requisitos || [],
+                }));
+            })
+        : [];
+    const poderesMistos = [...listaPoderes, ...poderesDaClasse, ...poderesDistincoesAdmitidas];
 
     const getDeusesPermitidos = () => {
         if (!ficha) return [];
@@ -431,6 +445,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 dadosMagias={dadosMagias}
                 dadosHabilidadesRaciais={dadosHabilidadesRaciais}
              dadosEscolhas={dadosEscolhas}
+             dadosDistincoes={dadosDistincoes}
                 origemBeneficiosEmEdicao={origemBeneficiosEmEdicao}
                 setOrigemBeneficiosEmEdicao={setOrigemBeneficiosEmEdicao}
                 habilidadesEmEdicao={habilidadesEmEdicao}
@@ -874,7 +889,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
             {!showHistorico && activeTab === 'suplementos' && (
                 <div style={{ padding: '0 20px' }}>
                     <MelhorAmigoPanel ficha={ficha} onUpdate={updateFicha} />
-                    <DistincoesPanel ficha={ficha} onUpdate={updateFicha} />
+                    <DistincoesPanel ficha={ficha} onUpdate={updateFicha} onAbrirPoderes={montarHabilidadesParaPanel} />
                     <RegrasOpcionaisPanel ficha={ficha} onUpdate={updateFicha} />
                 </div>
             )}
