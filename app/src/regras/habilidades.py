@@ -235,12 +235,15 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
             None,
         )
         efeitos_pf = dict(dados_pf.get("efeitos", {})) if dados_pf else {}
+        escolhas_pf = dict(efeitos_pf)
+        if memoria_global and poder_fixo_origem in memoria_global:
+            escolhas_pf.update(memoria_global[poder_fixo_origem])
         novas_habs.append(Habilidade(
             nome=poder_fixo_origem,
             tipo="Origem",
             descricao=dados_pf.get("descricao", "Benefício de Origem") if dados_pf else "Benefício único.",
             fonte=f"Origem: {origem_nome}",
-            escolhas_aplicadas=dict(efeitos_pf),
+            escolhas_aplicadas=escolhas_pf,
             efeitos=efeitos_pf,
         ))
         nomes_existentes.add(poder_fixo_origem)
@@ -372,6 +375,9 @@ def sincronizar_poderes_habilidades(ficha: Personagem, memoria_global: Optional[
 
     if novos_poderes:
         ficha.habilidades.extend(novos_poderes)
+
+    from .escolhas_suplementos import processar_escolhas_suplementos
+    processar_escolhas_suplementos(ficha)
 
 
 def processar_acumulo_habilidades(ficha: Personagem):

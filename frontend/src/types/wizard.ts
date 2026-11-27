@@ -22,6 +22,7 @@ export interface WizardStepProps {
     dadosDeuses: any;
     dadosPoderesConcedidos: any;
     dadosHabilidadesRaciais: any;
+    dadosEscolhas?: any;
     
     // Funções de regra de negócio
     handleAtributoBaseChange: (key: string, valorStr: string) => void;

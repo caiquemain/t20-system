@@ -3,6 +3,7 @@ import '../Ficha.css';
 import { RacialAbilityRow } from './RacialAbilityRow'; // Importação limpa
 import { T20Icon } from './T20Icon';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { EscolhasDinamicasPanel } from './EscolhasDinamicasPanel';
 
 interface AbilityConfigModalProps {
     isOpen: boolean;
@@ -291,12 +292,14 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                     {/* [LOTE 1-UI] Seletores secundários (escola/atributo/familiar) */}
                                     {(((dadosEscolhas?.PODERES_COM_ESCOLHA || {})[valorAtual] || []) || []).map((g: any) => {
                                         const valorEscolha = ((poderesEscolhasEmEdicao || {})[valorAtual] || {})[g.chave] || "";
+                                        const opcoesList = Array.isArray(g.opcoes) ? g.opcoes : [];
+                                        if (opcoesList.length === 0) return null;
                                         return (
                                             <div key={g.chave} style={{ display: 'flex', gap: 10, alignItems: 'center', width: '100%', marginTop: 6, marginLeft: 35 }}>
                                                 <label style={{ fontSize: '0.8rem', color: '#aaa', minWidth: 110 }}>{g.rotulo}:</label>
                                                 <select className="input-dark" value={valorEscolha} onChange={e => updatePoderEscolha(valorAtual, g.chave, e.target.value)} style={{ flex: 1 }}>
                                                     <option value="">Selecionar...</option>
-                                                    {g.opcoes.map((o: any) => {
+                                                    {opcoesList.map((o: any) => {
                                                         const val = typeof o === 'string' ? o : o.valor;
                                                         const rot = typeof o === 'string' ? o : o.rotulo;
                                                         return <option key={val} value={val}>{rot}</option>;
@@ -310,6 +313,37 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                         })}
                     </div>
                 ) : <p className="text-muted">Disponível no nível 2.</p>}
+
+                {/* 7. ESCOLHAS DE RAÇA & ORIGEM REGIONAL (Suplementos) */}
+                <div style={{ marginTop: 20 }}>
+                    <EscolhasDinamicasPanel
+                        ficha={ficha}
+                        habilidades={[
+                            ...(habilidadesEmEdicao || []),
+                            ...((ficha?.habilidades || []).filter(
+                                (h: any) => !(habilidadesEmEdicao || []).some((e: any) => e.nome === h.nome)
+                            )),
+                        ].map((h: any) => ({
+                            ...h,
+                            escolhas_aplicadas: {
+                                ...(h.escolhas_aplicadas || {}),
+                                ...((poderesEscolhasEmEdicao || {})[h.nome] || {}),
+                            },
+                        }))}
+                        dadosEscolhas={dadosEscolhas}
+                        dadosHabilidadesClasse={dadosHabilidadesClasse}
+                        dadosMagias={dadosMagias}
+                        listaPoderes={listaPoderesGerais}
+                        onChangeEscolha={(habNome, chave, valor) => {
+                            updatePoderEscolha(habNome, chave, valor);
+                            const idx = (habilidadesEmEdicao || []).findIndex((h: any) => h.nome === habNome);
+                            if (idx !== -1) {
+                                updateRacialChoice(idx, chave, valor);
+                            }
+                        }}
+                    />
+                </div>
+
                 <button className="btn-apply-changes" onClick={onSave} style={{ marginTop: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                     <T20Icon name="salvar" size={16} /> Salvar Todas as Alterações
                 </button>
