@@ -1081,3 +1081,7 @@ DADOS_HABILIDADES_RACIAIS = {
         "efeitos": {"bonus_pericia": {"Percepção": -5}}
     }
 }
+
+from .dados_habilidades_raciais_ameacas import DADOS_HABILIDADES_RACIAIS_AMEACAS
+
+DADOS_HABILIDADES_RACIAIS.update(DADOS_HABILIDADES_RACIAIS_AMEACAS)
