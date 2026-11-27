@@ -236,3 +236,28 @@ def get_dados_distincoes():
         "regras": REGRAS_DISTINCOES_GERAIS,
         "distincoes": DADOS_DISTINCOES_HEROIS,
     }
+
+
+@router.get("/dados/itens-magicos-herois", tags=["Dados Estáticos"])
+def get_itens_magicos_herois():
+    """Encantos, Itens Mágicos Específicos, Itens Inteligentes e Amaldiçoados — Heróis de Arton (Cap. 3)."""
+    from src.dados_equipamentos_herois import DADOS_ITENS_MAGICOS_HEROIS
+    from src.dados_itens_magicos_herois import (
+        DADOS_ENCANTOS_ACESSORIOS_HEROIS,
+        DADOS_ENCANTOS_ARMADURAS_HEROIS,
+        DADOS_ENCANTOS_ARMAS_HEROIS,
+        DADOS_ENCANTOS_ESOTERICOS_HEROIS,
+        REGRAS_ITENS_AMALDICOADOS_HEROIS,
+        REGRAS_ITENS_INTELIGENTES_HEROIS,
+    )
+    return {
+        "encantos": {
+            "armas": DADOS_ENCANTOS_ARMAS_HEROIS,
+            "armaduras_escudos": DADOS_ENCANTOS_ARMADURAS_HEROIS,
+            "esotericos": DADOS_ENCANTOS_ESOTERICOS_HEROIS,
+            "acessorios": DADOS_ENCANTOS_ACESSORIOS_HEROIS,
+        },
+        "itens_especificos": DADOS_ITENS_MAGICOS_HEROIS,
+        "itens_inteligentes": REGRAS_ITENS_INTELIGENTES_HEROIS,
+        "itens_amaldicoados": REGRAS_ITENS_AMALDICOADOS_HEROIS,
+    }

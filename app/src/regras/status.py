@@ -185,6 +185,18 @@ def calcular_pv_pm(ficha: Personagem):
                 valor=(nivel_total // 2) * int(v_2nv),
             )
 
+    # Armadura de folhas (Heróis de Arton): +2 PM se treinado em Sobrevivência
+    per_sobrev = ficha.pericias.get("Sobrevivência")
+    if per_sobrev and per_sobrev.treino and any(
+        it.equipado and (it.nome or "").strip().lower() == "armadura de folhas"
+        for it in ficha.inventario.equipamentos
+    ):
+        pm_calc.adicionar_bonus(
+            fonte="Armadura de folhas (+2 PM)",
+            categoria="Equipamento",
+            valor=2,
+        )
+
     # Totem Espiritual (T20 p.42): soma SAB no total de PM
     mapa_attr_pm = {
         "for": "forca", "des": "destreza", "con": "constituicao",
@@ -593,6 +605,39 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 categoria="Poder",
                 valor=bonus_carapaca
             )
+
+        # Defesa Armada (Heróis de Arton): +2 na Defesa usando arma corpo a corpo de duas mãos
+        if efeitos.get("defesa_armada_duas_maos"):
+            usa_2m_cac = any(
+                it.equipado
+                and (catalogo_do_item(it.nome) or {}).get("proposito") == "Corpo a Corpo"
+                and (catalogo_do_item(it.nome) or {}).get("empunhadura") == "Duas Mãos"
+                for it in ficha.inventario.equipamentos
+            )
+            if usa_2m_cac:
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Defesa Armada",
+                    categoria="Poder",
+                    valor=2,
+                )
+
+        # Estilo Clássico (Heróis de Arton): +2 na Defesa empunhando espada e escudo
+        if efeitos.get("estilo_classico"):
+            usa_escudo = any(
+                it.equipado and (catalogo_do_item(it.nome) or {}).get("tipo_armadura") == "Escudo"
+                for it in ficha.inventario.equipamentos
+            )
+            usa_espada = any(
+                it.equipado
+                and any(tok in (it.nome or "").lower() for tok in ("espada", "espadim", "florete", "rapieira", "cimitarra", "katana", "montante", "gládio", "khopesh"))
+                for it in ficha.inventario.equipamentos
+            )
+            if usa_escudo and usa_espada:
+                defesa_calc.adicionar_bonus(
+                    fonte="Poder: Estilo Clássico",
+                    categoria="Poder",
+                    valor=2,
+                )
 
         if hab.nome == "Esquiva" and not efeitos.get("defesa_bonus"):
             defesa_calc.adicionar_bonus(
@@ -1595,10 +1640,16 @@ def calcular_reducoes_dano(ficha: Personagem):
                     rd_total = int(rd_max)
                 lista_rd.append(f"geral {rd_total}")
 
-        # ── RD DE ARMADURA PESADA ACUMULATIVA (Bastião + Especialização em Armadura) ──
+        # ── RD DE ARMADURA PESADA ACUMULATIVA (Bastião + Especialização em Armadura + Encastelado) ──
         if usa_pesada_rd:
             if efeitos.get("rd_armadura_pesada"):
                 rd_armadura_pesada_total += int(efeitos["rd_armadura_pesada"])
+            if efeitos.get("encastelado_rd"):
+                outros_enc = sum(
+                    1 for h2 in ficha.habilidades
+                    if (h2.nome or "") in ("Inexpugnável", "Fanático", "Catafractário")
+                )
+                rd_armadura_pesada_total += 2 + outros_enc
             if (hab.nome or "") == "Caminho do Cavaleiro":
                 escolha_cam = (hab.escolhas_aplicadas or {}).get("caminho") or (
                     ficha.classes[0].subclasse if ficha.classes else ""
