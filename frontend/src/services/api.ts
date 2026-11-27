@@ -147,4 +147,67 @@ export const ativarHabilidadePersonagem = async (id: string, nome: string, pm_ex
     return api.post(`/personagens/${id}/ativar`, { nome, pm_extra });
 };
 
+// --- LEVEL-UP & HISTÓRICO (MongoDB ou localStorage) ---
+const lsHistKey = (id: string) => `t20_historico_v1_${id}`;
+
+function lerHistoricoLocal(id: string): any[] {
+    try {
+        const raw = localStorage.getItem(lsHistKey(id));
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+export const subirNivelPersonagem = async (id: string, fichaAtual: Personagem) => {
+    if (IS_LOCAL_STORAGE) {
+        const classes = (fichaAtual.classes || []).map((c, idx) =>
+            idx === 0 ? { ...c, nivel: (c.nivel || 1) + 1 } : c
+        );
+        const novoNivel = classes[0]?.nivel || 2;
+        const atualizadaResp = await updatePersonagem(id, { ...fichaAtual, classes });
+        const novaFicha = atualizadaResp.data;
+        const hist = lerHistoricoLocal(id);
+        const evento = {
+            id: gerarIdLocal(),
+            nivel: novoNivel,
+            tipo: 'level_up',
+            timestamp: new Date().toISOString(),
+            resumo: [`Subiu para o nível ${novoNivel} (${classes[0]?.nome || 'Classe'})`],
+            snapshot: novaFicha,
+        };
+        localStorage.setItem(lsHistKey(id), JSON.stringify([evento, ...hist]));
+        return { data: novaFicha };
+    }
+    return api.post(`/personagens/${id}/level-up`, {});
+};
+
+export const fetchHistoricoPersonagem = async (id: string) => {
+    if (IS_LOCAL_STORAGE) {
+        return { data: lerHistoricoLocal(id) };
+    }
+    return api.get(`/personagens/${id}/historico`);
+};
+
+export const restaurarEventoHistorico = async (id: string, eventoId: string) => {
+    if (IS_LOCAL_STORAGE) {
+        const hist = lerHistoricoLocal(id);
+        const alvo = hist.find((e: any) => e.id === eventoId);
+        if (!alvo?.snapshot) throw new Error('Snapshot não encontrado no histórico local');
+        const restauradaResp = await updatePersonagem(id, alvo.snapshot);
+        const eventoRest = {
+            id: gerarIdLocal(),
+            nivel: alvo.nivel,
+            tipo: 'restauracao',
+            timestamp: new Date().toISOString(),
+            resumo: [`Restaurado para o nível ${alvo.nivel}`],
+            snapshot: restauradaResp.data,
+        };
+        localStorage.setItem(lsHistKey(id), JSON.stringify([eventoRest, ...hist]));
+        return { data: restauradaResp.data };
+    }
+    return api.post(`/personagens/${id}/historico/${eventoId}/restaurar`, {});
+};
+
 export default api;
