@@ -487,4 +487,14 @@ for _k_gh, _v_gh in DADOS_GERAIS_HEROIS.items():
     DADOS_GERAIS.setdefault(_k_gh, _v_gh)
 DADOS_MELHORIAS.update(DADOS_MELHORIAS_HEROIS)
 
+from .dados_equipamentos_deuses import (
+    DADOS_GERAIS_DEUSES,
+    DADOS_MELHORIAS_DEUSES,
+)
+
+for _k_gd, _v_gd in DADOS_GERAIS_DEUSES.items():
+    DADOS_GERAIS.setdefault(_k_gd, _v_gd)
+DADOS_MELHORIAS.update(DADOS_MELHORIAS_DEUSES)
+
+
 

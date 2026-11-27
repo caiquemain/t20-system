@@ -34,3 +34,5 @@ REGRAS_MAGIAS_CONHECIDAS["Bardo"] = {"inicial": 2, "por_nivel": 0, "aprende_apen
 REGRAS_MAGIAS_CONHECIDAS["Druida"] = {"inicial": 2, "por_nivel": 0, "aprende_apenas_niveis_pares": True}
 # Clérigo: 3 iniciais; +1 por nível (igual Arcanista)
 REGRAS_MAGIAS_CONHECIDAS["Clérigo"] = {"inicial": 3, "por_nivel": 1}
+# Frade (Deuses de Arton p. 39): 3 iniciais; +1 por nível
+REGRAS_MAGIAS_CONHECIDAS["Frade"] = {"inicial": 3, "por_nivel": 1}

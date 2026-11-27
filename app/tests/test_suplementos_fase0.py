@@ -57,7 +57,7 @@ def test_enriquecimento_fonte_nos_catalogos():
 
     classes = obter_detalhes_classes()
     assert classes["Guerreiro"]["fonte"] == FONTE_LIVRO_BASICO
-    assert classes["Frade"]["fonte"] == FONTE_HEROIS
+    assert classes["Frade"]["fonte"] == FONTE_DEUSES
     assert classes["Treinador"]["fonte"] == FONTE_HEROIS
 
     deuses = obter_detalhes_deuses()

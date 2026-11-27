@@ -25,7 +25,9 @@ interface Props {
 export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
     const [catalogo, setCatalogo] = useState<Record<string, DistincaoInfo>>({});
     const [busca, setBusca] = useState('');
-    const [selecionada, setSelecionada] = useState('');
+    const [filtroFonte, setFiltroFonte] = useState<'Todas' | 'Heróis de Arton' | 'Deuses de Arton'>('Todas');
+    const [modalAberto, setModalAberto] = useState(false);
+    const [focoModal, setFocoModal] = useState<string>('');
     const [expandida, setExpandida] = useState<Record<string, boolean>>({});
     const [carregando, setCarregando] = useState(true);
 
@@ -38,17 +40,35 @@ export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
 
     const distincoes = ficha.distincoes || [];
     const nivelTotal = ficha.cabecalho?.nivel_total || 1;
+    const totalCatalogo = Object.keys(catalogo).length;
 
     const opcoesDisponiveis = useMemo(() => {
         const jaTem = new Set(distincoes.map(d => d.nome));
         const q = busca.trim().toLowerCase();
         return Object.keys(catalogo)
-            .filter(nome => !jaTem.has(nome) && (!q || nome.toLowerCase().includes(q)))
+            .filter(nome => {
+                if (jaTem.has(nome)) return false;
+                const info = catalogo[nome];
+                if (filtroFonte !== 'Todas' && info?.fonte !== filtroFonte) return false;
+                if (!q) return true;
+                return (
+                    nome.toLowerCase().includes(q) ||
+                    (info?.marca?.nome || '').toLowerCase().includes(q) ||
+                    (info?.poderes || []).some(p => p.nome.toLowerCase().includes(q))
+                );
+            })
             .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-    }, [catalogo, distincoes, busca]);
+    }, [catalogo, distincoes, busca, filtroFonte]);
 
-    const handleAdicionar = () => {
-        const alvo = selecionada || opcoesDisponiveis[0];
+    const itemEmFoco: DistincaoInfo | null = useMemo(() => {
+        if (focoModal && catalogo[focoModal] && opcoesDisponiveis.includes(focoModal)) {
+            return catalogo[focoModal];
+        }
+        return opcoesDisponiveis[0] ? catalogo[opcoesDisponiveis[0]] : null;
+    }, [focoModal, catalogo, opcoesDisponiveis]);
+
+    const handleAdicionar = (nomeAlvo?: string) => {
+        const alvo = nomeAlvo || itemEmFoco?.nome;
         if (!alvo || !catalogo[alvo]) return;
         const info = catalogo[alvo];
         const nova: DistincaoPersonagem = {
@@ -59,8 +79,9 @@ export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
             fonte: info.fonte || 'Heróis de Arton',
         };
         onUpdate({ distincoes: [...distincoes, nova] });
-        setSelecionada('');
+        setModalAberto(false);
         setBusca('');
+        setFocoModal('');
     };
 
     const handleRemover = (nome: string) => {
@@ -92,12 +113,31 @@ export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
     return (
         <div className="section-card" style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-                <h3 className="section-title" style={{ margin: 0 }}>
-                    Distinções ({distincoes.length})
-                </h3>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                    Heróis de Arton · Poderes disponíveis a partir do 5º nível (Patamar Veterano)
-                </span>
+                <div>
+                    <h3 className="section-title" style={{ margin: 0 }}>
+                        Distinções ({distincoes.length})
+                    </h3>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                        Heróis de Arton &amp; Deuses de Arton · Poderes disponíveis a partir do 5º nível (Patamar Veterano)
+                    </span>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setModalAberto(true)}
+                    disabled={carregando || opcoesDisponiveis.length === 0}
+                    style={{
+                        background: '#ffd700',
+                        color: '#111',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '8px 16px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                    }}
+                >
+                    {carregando ? 'Carregando...' : `+ Escolher Distinção (${totalCatalogo})`}
+                </button>
             </div>
 
             {nivelTotal < 5 && (
@@ -106,36 +146,206 @@ export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
                 </div>
             )}
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-                <input
-                    type="text"
-                    value={busca}
-                    onChange={e => setBusca(e.target.value)}
-                    placeholder="Filtrar 36 distinções..."
-                    style={{ flex: '1 1 180px', background: '#141418', border: '1px solid #333', color: '#eee', borderRadius: 4, padding: '6px 10px', fontSize: '0.85rem' }}
-                />
-                <select
-                    value={selecionada}
-                    onChange={e => setSelecionada(e.target.value)}
-                    disabled={carregando || opcoesDisponiveis.length === 0}
-                    style={{ flex: '2 1 220px', background: '#141418', border: '1px solid #333', color: '#eee', borderRadius: 4, padding: '6px 10px', fontSize: '0.85rem' }}
+            {/* MODAL DE SELEÇÃO DE DISTINÇÕES (MESMO MOLDE DE DEUSES / CLASSES) */}
+            {modalAberto && (
+                <div
+                    onClick={() => setModalAberto(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.82)',
+                        zIndex: 10000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 16,
+                    }}
                 >
-                    <option value="">
-                        {carregando ? 'Carregando...' : `Selecione uma distinção (${opcoesDisponiveis.length})`}
-                    </option>
-                    {opcoesDisponiveis.map(nome => (
-                        <option key={nome} value={nome}>{nome}</option>
-                    ))}
-                </select>
-                <button
-                    type="button"
-                    onClick={handleAdicionar}
-                    disabled={carregando || opcoesDisponiveis.length === 0}
-                    style={{ background: '#ffd700', color: '#111', border: 'none', borderRadius: 4, padding: '6px 14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
-                >
-                    + Adicionar
-                </button>
-            </div>
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            width: '100%',
+                            maxWidth: 960,
+                            height: '82vh',
+                            background: '#16161c',
+                            border: '1px solid #ffd700',
+                            borderRadius: 10,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
+                            color: '#eee',
+                        }}
+                    >
+                        <div style={{ padding: '14px 18px', borderBottom: '1px solid #2c2c36', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                            <div>
+                                <h3 style={{ margin: 0, color: '#ffd700' }}>Selecionar Distinção</h3>
+                                <small style={{ color: '#94a3b8' }}>
+                                    Explore a Marca, Admissão e Poderes de cada uma das {totalCatalogo} Distinções oficiais
+                                </small>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setModalAberto(false)}
+                                style={{ background: '#2c2c36', color: '#fff', border: '1px solid #444', borderRadius: 6, padding: '6px 12px', cursor: 'pointer' }}
+                            >
+                                Fechar
+                            </button>
+                        </div>
+
+                        <div style={{ padding: '10px 18px', borderBottom: '1px solid #2c2c36', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <input
+                                type="text"
+                                value={busca}
+                                onChange={e => setBusca(e.target.value)}
+                                placeholder="Buscar por distinção, marca ou poder..."
+                                autoFocus
+                                style={{ flex: '1 1 240px', background: '#101015', border: '1px solid #444', color: '#fff', borderRadius: 6, padding: '8px 12px', fontSize: '0.88rem' }}
+                            />
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                {(['Todas', 'Heróis de Arton', 'Deuses de Arton'] as const).map(f => (
+                                    <button
+                                        key={f}
+                                        type="button"
+                                        onClick={() => setFiltroFonte(f)}
+                                        style={{
+                                            background: filtroFonte === f ? '#ffd700' : '#22222c',
+                                            color: filtroFonte === f ? '#111' : '#ccc',
+                                            border: '1px solid #444',
+                                            borderRadius: 6,
+                                            padding: '6px 10px',
+                                            fontSize: '0.78rem',
+                                            fontWeight: filtroFonte === f ? 'bold' : 'normal',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '290px 1fr', overflow: 'hidden' }}>
+                            {/* Lista esquerda */}
+                            <div style={{ borderRight: '1px solid #2c2c36', overflowY: 'auto', padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {opcoesDisponiveis.length === 0 ? (
+                                    <p style={{ color: '#777', textAlign: 'center', fontSize: '0.85rem', marginTop: 20 }}>
+                                        Nenhuma distinção encontrada.
+                                    </p>
+                                ) : (
+                                    opcoesDisponiveis.map(nome => {
+                                        const d = catalogo[nome];
+                                        const ativo = itemEmFoco?.nome === nome;
+                                        const ehDeuses = d?.fonte === 'Deuses de Arton';
+                                        return (
+                                            <button
+                                                key={nome}
+                                                type="button"
+                                                onClick={() => setFocoModal(nome)}
+                                                style={{
+                                                    textAlign: 'left',
+                                                    background: ativo ? 'rgba(255,215,0,0.14)' : '#1c1c24',
+                                                    border: `1px solid ${ativo ? '#ffd700' : '#2e2e3a'}`,
+                                                    borderRadius: 6,
+                                                    padding: '9px 11px',
+                                                    cursor: 'pointer',
+                                                    color: '#fff',
+                                                }}
+                                            >
+                                                <div style={{ fontWeight: 'bold', fontSize: '0.88rem', color: ativo ? '#ffd700' : '#eee' }}>
+                                                    {nome}
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.72rem', color: '#94a3b8' }}>
+                                                    <span style={{ color: ehDeuses ? '#ce93d8' : '#80deea' }}>
+                                                        {ehDeuses ? 'Deuses de Arton' : 'Heróis de Arton'}
+                                                    </span>
+                                                    <span>{d?.poderes?.length || 0} poderes</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            {/* Detalhes direita */}
+                            <div style={{ overflowY: 'auto', padding: 18 }}>
+                                {itemEmFoco ? (
+                                    <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+                                            <div>
+                                                <h2 style={{ margin: 0, color: '#ffd700', fontSize: '1.25rem' }}>{itemEmFoco.nome}</h2>
+                                                <span style={{ fontSize: '0.78rem', color: itemEmFoco.fonte === 'Deuses de Arton' ? '#ce93d8' : '#80deea' }}>
+                                                    {itemEmFoco.fonte}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAdicionar(itemEmFoco.nome)}
+                                                style={{
+                                                    background: '#ffd700',
+                                                    color: '#111',
+                                                    border: 'none',
+                                                    borderRadius: 6,
+                                                    padding: '9px 18px',
+                                                    fontWeight: 'bold',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.88rem',
+                                                }}
+                                            >
+                                                + Adicionar Distinção
+                                            </button>
+                                        </div>
+
+                                        <div style={{ background: 'rgba(129,199,132,0.08)', border: '1px solid rgba(129,199,132,0.3)', borderRadius: 6, padding: 12, marginBottom: 14 }}>
+                                            <div style={{ fontSize: '0.75rem', color: '#81c784', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 4 }}>
+                                                Marca da Distinção — {itemEmFoco.marca?.nome}
+                                            </div>
+                                            <p style={{ margin: 0, fontSize: '0.84rem', color: '#ddd', lineHeight: 1.5 }}>
+                                                {itemEmFoco.marca?.descricao}
+                                            </p>
+                                        </div>
+
+                                        <div style={{ marginBottom: 16 }}>
+                                            <div style={{ fontSize: '0.76rem', color: '#ffb74d', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 4 }}>
+                                                Admissão
+                                            </div>
+                                            <p style={{ margin: 0, fontSize: '0.82rem', color: '#bbb', lineHeight: 1.5 }}>
+                                                {itemEmFoco.admissao}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <div style={{ fontSize: '0.76rem', color: '#ffd700', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 8 }}>
+                                                Poderes da Distinção ({itemEmFoco.poderes.length})
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                {itemEmFoco.poderes.map(p => (
+                                                    <div key={p.nome} style={{ background: '#1e1e26', border: '1px solid #30303e', borderRadius: 6, padding: 10 }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                            <strong style={{ color: '#fff', fontSize: '0.88rem' }}>{p.nome}</strong>
+                                                            {p.custo_pm && (
+                                                                <span style={{ fontSize: '0.72rem', color: '#ce93d8', background: 'rgba(156,39,176,0.2)', padding: '1px 6px', borderRadius: 4 }}>
+                                                                    {p.custo_pm} PM
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#ccc', lineHeight: 1.45 }}>
+                                                            {p.descricao}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p style={{ color: '#777', textAlign: 'center', marginTop: 40 }}>
+                                        Selecione uma distinção na lista à esquerda para ver os detalhes.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {distincoes.length === 0 ? (
                 <p style={{ color: '#666', fontSize: '0.85rem', margin: 0 }}>

@@ -120,8 +120,50 @@ export const deletePersonagem = async (id: string) => {
 };
 
 // --- AMEAÇAS (BESTIÁRIO) ---
-export const fetchAmeacas = () => api.get('/ameacas/?limite=500');
-export const fetchAmeaca = (id: string) => api.get(`/ameacas/${id}`);
+const LOCAL_AMEACAS_KEY = 't20_ameacas_custom_v1';
+
+const lerAmeacasLocal = (): any[] => {
+    try {
+        const raw = localStorage.getItem(LOCAL_AMEACAS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+};
+
+const salvarAmeacasLocal = (lista: any[]) => {
+    localStorage.setItem(LOCAL_AMEACAS_KEY, JSON.stringify(lista));
+};
+
+export const fetchAmeacas = async () => {
+    const res = await api.get('/ameacas/?limite=500');
+    if (IS_LOCAL_STORAGE) {
+        const custom = lerAmeacasLocal();
+        return { data: [...custom, ...(res.data || [])] };
+    }
+    return res;
+};
+
+export const fetchAmeaca = async (id: string) => {
+    if (IS_LOCAL_STORAGE && id.startsWith('custom-')) {
+        const found = lerAmeacasLocal().find((a: any) => a._id === id);
+        if (found) return { data: found };
+    }
+    return api.get(`/ameacas/${id}`);
+};
+
+export const fetchTabelasConstrutorAmeacas = () => api.get('/ameacas/construtor/tabelas');
+export const gerarAmeacaManual = (payload: Record<string, any>) => api.post('/ameacas/construtor/gerar', payload);
+export const criarAmeaca = async (ameaca: Record<string, any>) => {
+    const res = await api.post('/ameacas/', ameaca);
+    if (IS_LOCAL_STORAGE) {
+        const criada = res.data;
+        const lista = lerAmeacasLocal();
+        salvarAmeacasLocal([criada, ...lista.filter((a: any) => a._id !== criada._id)]);
+        return { data: criada };
+    }
+    return res;
+};
 
 // --- SUPLEMENTOS & ATIVÁVEIS ---
 export const fetchDadosDistincoes = () => api.get('/dados/distincoes');

@@ -1,4 +1,4 @@
-import { gerarPDF, gerarODT } from '../utils/gerarPDF';
+import { gerarPDF, gerarODT, gerarXLSX } from '../utils/gerarPDF';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../Ficha.css';
@@ -8,6 +8,7 @@ import { useFicha } from '../hooks/useFicha';
 import { PowerSelectorModal } from '../components/PowerSelectorModal';
 import { CondicoesRaciais } from '../components/CondicoesRaciais';
 import { AbilityConfigModal } from '../components/AbilityConfigModal';
+import { LevelUpModal } from '../components/LevelUpModal';
 import { GrimorioModal } from '../components/GrimorioModal';
 import { FullGrimorioModal } from '../components/FullGrimorioModal';
 import { SpellDetailsModal, type SpellRollConfig } from '../components/SpellDetailsModal';
@@ -55,7 +56,7 @@ function Ficha() {
     const navigate = useNavigate();
 
     const {
-        ficha, loading,
+        ficha, setFicha, loading,
         dadosClasses, dadosOrigens, dadosRacas, dadosEquipamentos, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
         listaDeuses, dadosDeuses, dadosHabilidades,
@@ -76,6 +77,7 @@ function Ficha() {
     const [showDuendeHelper, setShowDuendeHelper] = useState(false);
 
     const [showGrimorio, setShowGrimorio] = useState(false);
+    const [showLevelUpModal, setShowLevelUpModal] = useState(false);
     const [selectorAtivo, setSelectorAtivo] = useState<'raca' | 'origem' | 'deus' | 'classe' | null>(null);
     const [showFullGrimorio, setShowFullGrimorio] = useState(false);
     const [viewSpell, setViewSpell] = useState<Magia | null>(null);
@@ -85,6 +87,7 @@ function Ficha() {
     const [isAquatic, setIsAquatic] = useState(false);
     const [exportandoPdf, setExportandoPdf] = useState(false);
     const [exportandoOdt, setExportandoOdt] = useState(false);
+    const [exportandoXlsx, setExportandoXlsx] = useState(false);
 
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
@@ -220,22 +223,40 @@ function Ficha() {
     };
 
     
-    // ─── LEVEL-UP ASSISTIDO (grava histórico) ───
-    const handleLevelUp = async () => {
+    // ─── LEVEL-UP ASSISTIDO (modal 2 etapas + grava histórico) ───
+    const handleLevelUp = () => {
         if (!ficha || !id) return;
         const nivelAtual = ficha.classes[0]?.nivel || 1;
         if (nivelAtual >= 20) {
             alert("🎯 Nível 20 é o máximo do T20!");
             return;
         }
-        if (!confirm(`Subir do nível ${nivelAtual} para ${nivelAtual + 1}?\nIsso recalculará a ficha e gravará o evento no histórico.`)) return;
+        setShowLevelUpModal(true);
+    };
 
+    const handleConfirmLevelUp = async () => {
+        if (!ficha || !id) return null;
+        const snapshotAntes = {
+            pvAntes: ficha.status?.pv?.maximo ?? 0,
+            pmAntes: ficha.status?.pm?.maximo ?? 0,
+            circuloAntes: ficha.combate?.circulo_maximo ?? 0,
+            habsAntes: (ficha.habilidades || []).map(h => h.nome),
+        };
         try {
-            const { subirNivelPersonagem } = await import('../services/api');
-            await subirNivelPersonagem(id, ficha);
-            window.location.reload();
+            const { subirNivelPersonagem, fetchPersonagem } = await import('../services/api');
+            const resp = await subirNivelPersonagem(id, ficha);
+            if (resp?.data && resp.data.cabecalho) {
+                setFicha(resp.data);
+            } else {
+                const atualizada = await fetchPersonagem(id);
+                if (atualizada?.data) {
+                    setFicha(atualizada.data);
+                }
+            }
+            return snapshotAntes;
         } catch (err) {
             alert("Erro ao subir de nível: " + (err as Error).message);
+            return null;
         }
     };
 
@@ -380,6 +401,16 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
 
         
  className="ficha-container">
+            <LevelUpModal
+                isOpen={showLevelUpModal}
+                oculto={showHabilidadesPanel || showGrimorio}
+                ficha={ficha}
+                onClose={() => setShowLevelUpModal(false)}
+                onConfirmLevelUp={handleConfirmLevelUp}
+                onAbrirConfigHabilidades={montarHabilidadesParaPanel}
+                onAbrirGrimorio={() => setShowGrimorio(true)}
+            />
+
             <AbilityConfigModal
                 isOpen={showHabilidadesPanel}
                 onClose={() => setShowHabilidadesPanel(false)}
@@ -544,6 +575,34 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             }}
                         >
                             <T20Icon name="pdf" size={15} /> {exportandoOdt ? "Gerando ODT..." : "Baixar ODT"}
+                        </button>
+                        <button
+                            disabled={exportandoXlsx}
+                            title="Exportar planilha Excel auditada com fórmulas automáticas (.xlsx)"
+                            onClick={async () => {
+                                if (exportandoXlsx) return;
+                                setExportandoXlsx(true);
+                                try {
+                                    await gerarXLSX(ficha, id);
+                                } finally {
+                                    setExportandoXlsx(false);
+                                }
+                            }}
+                            style={{
+                                padding: "8px 14px",
+                                backgroundColor: exportandoXlsx ? "#555" : "#2e7d32",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: exportandoXlsx ? "wait" : "pointer",
+                                fontWeight: "bold",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                opacity: exportandoXlsx ? 0.8 : 1,
+                            }}
+                        >
+                            📊 {exportandoXlsx ? "Gerando Excel..." : "Baixar Excel"}
                         </button>
                     </div>
                 </div>
@@ -719,6 +778,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         />
                         <AttackList
                             ataques={(ficha.combate.ataques || []).map((a: any) => ({ ...a, teste: a.teste || '—' }))}
+                            cdMagiasCalc={ficha.combate.cd_magias_calc}
                             fluxoDeMana={Boolean(ficha.combate.fluxo_de_mana)}
                             focoVital={Boolean(ficha.combate.foco_vital)}
                             spellConfigs={spellConfigs}

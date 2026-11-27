@@ -1,17 +1,17 @@
 """Penalidade de armadura em perícias (T20 JdA p.152-153)."""
-from src.models import Personagem, Item
+from src.models import ClasseInfo, Personagem, Item
 from src.regras import atualizar_ficha
 
 
-def _ficha(proficiencias):
-    p = Personagem()
+def _ficha(proficiencias, classe: str = "Arcanista"):
+    p = Personagem(classes=[ClasseInfo(nome=classe, nivel=1, primaria=True)])
     p.proficiencias = proficiencias
-    p.status.proficiencias = proficiencias  # fonte real p/ sync de classe
+    p.status.proficiencias = proficiencias
     return p
 
 
 def test_proficiente_sofre_so_pericias_de_agilidade():
-    p = _ficha(['Armas Marciais', 'Armaduras Pesadas', 'Escudos'])
+    p = _ficha(['Armas Marciais', 'Armaduras Pesadas', 'Escudos'], classe='Guerreiro')
     p.inventario.equipamentos.append(Item(nome='Cota de malha', tipo='Armadura', equipado=True))
     atualizar_ficha(p)
     assert p.status.penalidade_armadura == 2

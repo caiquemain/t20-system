@@ -51,7 +51,7 @@ def test_catalogo_completo_36_distincoes_e_185_poderes():
 def test_endpoint_dados_distincoes():
     resp = get_dados_distincoes()
     assert resp["regras"]["nivel_minimo_poderes"] == 5
-    assert len(resp["distincoes"]) == 36
+    assert len(resp["distincoes"]) == 59  # 36 Heróis de Arton + 23 Deuses de Arton
     assert "Cavaleiro do Corvo" in resp["distincoes"]
     assert "Mago da Ordem do Vazio" in resp["distincoes"]
     assert "Vigarista" in resp["distincoes"]

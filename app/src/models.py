@@ -211,6 +211,8 @@ class Ataque(BaseModel):
     teste: str = "Luta"
     especial: Optional[str] = ""
     fonte: Optional[str] = None  # Origem: "Racial" | "Poder" | "Classe" | None (manual/equipamento)
+    cd_fontes: List[str] = Field(default_factory=list)
+    dano_fontes: List[str] = Field(default_factory=list)
 
 class Magia(BaseModel):
     nome: str
