@@ -222,6 +222,17 @@ def calcular_pv_pm(ficha: Personagem):
             valor=2,
         )
 
+    # Sandálias (Deuses de Arton, Tabela 1-3): +1 PM quando vestidas
+    if any(
+        it.equipado and (it.nome or "").strip().lower() == "sandálias"
+        for it in ficha.inventario.equipamentos
+    ):
+        pm_calc.adicionar_bonus(
+            fonte="Sandálias (+1 PM)",
+            categoria="Equipamento",
+            valor=1,
+        )
+
     # Totem Espiritual (T20 p.42): soma SAB no total de PM
     mapa_attr_pm = {
         "for": "forca", "des": "destreza", "con": "constituicao",
