@@ -80,6 +80,17 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
         return nome.replace(/_/g, " ");
     };
 
+    const PODERES_REPETIVEIS = new Set([
+        'Conhecimento Mágico',
+        'Aumento de Atributo',
+        'Aumentar Repertório',
+        'Segredos da Natureza',
+        'Orar',
+        'Foco em Arma',
+        'Foco em Magia',
+        'Especialização em Arma',
+    ]);
+
     const getBlacklistGlobal = (ignorarValor: string = "") => {
         const blocked = new Set<string>();
         if (ficha?.pericias) Object.entries(ficha.pericias).forEach(([nome, info]: any) => { if (info.treino > 0) blocked.add(nome); });
@@ -91,7 +102,9 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 else if (val && val !== ignorarValor) blocked.add(val);
             });
         });
-        classPowersEmEdicao.forEach(val => { if (val && val !== ignorarValor) blocked.add(val); });
+        classPowersEmEdicao.forEach(val => {
+            if (val && val !== ignorarValor && !PODERES_REPETIVEIS.has(val)) blocked.add(val);
+        });
         return Array.from(blocked);
     };
 
