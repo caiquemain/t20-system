@@ -1,14 +1,16 @@
 import React from 'react';
 import { T20Icon, type IconName } from './T20Icon';
 
-// Espelha o registro do backend (pericias.py)
+// Espelha o registro do backend (pericias.py / custo_magia.py)
 const CONDICAO_POR_HABILIDADE: Record<string, string> = {
     'Conhecimento das Rochas': 'subterraneo',
     'Reptiliano': 'sem_armadura',
+    'Magia Instintiva': 'magia_instintiva_sab',
 };
 const CONDICOES: Record<string, { label: string; icone: IconName; desc: string }> = {
     subterraneo: { label: 'No subterrâneo', icone: 'escalada', desc: '+2 Percepção/Sobrevivência (Conhecimento das Rochas)' },
     sem_armadura: { label: 'Sem armadura ou roupas pesadas', icone: 'voo', desc: '+5 Furtividade (Reptiliano)' },
+    magia_instintiva_sab: { label: 'Usar Sabedoria (Magias Arcanas e Misticismo)', icone: 'magia', desc: 'Troca o atributo-chave de magias arcanas (CD e PM) e Misticismo para SAB' },
 };
 
 interface Props { ficha: any; updateFicha: (d: any) => void; }
@@ -19,7 +21,21 @@ export const CondicoesRaciais: React.FC<Props> = ({ ficha, updateFicha }) => {
     if (relevantes.length === 0) return null;
     const ativas: string[] = ficha.condicoes_ativas || [];
     const toggle = (id: string) => {
-        const nova = ativas.includes(id) ? ativas.filter(x => x !== id) : [...ativas, id];
+        const ligando = !ativas.includes(id);
+        const nova = ligando ? [...ativas, id] : ativas.filter(x => x !== id);
+        if (id === 'magia_instintiva_sab' && ficha.pericias?.Misticismo) {
+            updateFicha({
+                condicoes_ativas: nova,
+                pericias: {
+                    ...ficha.pericias,
+                    Misticismo: {
+                        ...ficha.pericias.Misticismo,
+                        atributo_chave: ligando ? 'sab' : 'int',
+                    },
+                },
+            });
+            return;
+        }
         updateFicha({ condicoes_ativas: nova });
     };
     return (

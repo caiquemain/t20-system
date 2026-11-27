@@ -102,6 +102,14 @@ def calcular_pv_pm(ficha: Personagem):
     elif classe_nome == "Arcanista" and subclasse in ("Bruxo", "Mago"):
         attr_pm = "int"
 
+    # Magia Instintiva (Eiradaan, Heróis de Arton): pode usar Sabedoria como atributo-chave de magias arcanas
+    if (
+        classe_nome in ("Arcanista", "Bardo", "Necromante", "Magimarcialista")
+        and "magia_instintiva_sab" in (getattr(ficha, "condicoes_ativas", None) or [])
+        and any((h.efeitos or {}).get("atributo_magia_arcana_opcao") == "sab" for h in ficha.habilidades)
+    ):
+        attr_pm = "sab"
+
     if attr_pm:
         mod_pm = calcular_modificador(
             getattr(ficha.atributos, mapa_attr.get(str(attr_pm), 'inteligencia'))
