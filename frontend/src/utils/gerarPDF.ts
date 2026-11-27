@@ -1,4 +1,5 @@
 import type { Personagem } from '../types';
+import { API_URL, IS_LOCAL_STORAGE } from '../services/api';
 
 async function baixarFichaFormato(
   ficha: Personagem,
@@ -7,15 +8,22 @@ async function baixarFichaFormato(
 ): Promise<void> {
   const label = formato.toUpperCase();
   try {
-    const id = idDaUrl || ficha._id;
-
-    if (!id) {
-      throw new Error("Ficha sem ID. Salve a ficha primeiro.");
+    let response: Response;
+    if (IS_LOCAL_STORAGE) {
+      response = await fetch(`${API_URL}/personagens/exportar/${formato}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ficha),
+      });
+    } else {
+      const id = idDaUrl || ficha._id;
+      if (!id) {
+        throw new Error("Ficha sem ID. Salve a ficha primeiro.");
+      }
+      response = await fetch(`${API_URL}/personagens/${id}/${formato}`, {
+        method: 'GET',
+      });
     }
-
-    const response = await fetch(`http://localhost:8000/personagens/${id}/${formato}`, {
-      method: 'GET',
-    });
 
     if (!response.ok) {
       const errorText = await response.text();

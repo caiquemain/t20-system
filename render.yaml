@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: t20-system-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./app/Dockerfile
+    dockerContext: ./app
+    envVars:
+      - key: STORAGE_MODE
+        value: stateless
+      - key: PORT
+        value: "8000"
