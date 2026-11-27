@@ -191,9 +191,12 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
                     nome_hab = dados_hab["nome"]
                     fonte_classe = f"{classe.nome} ({nivel_req})"
                     if nome_hab not in nomes_existentes:
+                        esc_classe = dict(dados_hab.get("efeitos", {}))
+                        if memoria_global.get(nome_hab):
+                            esc_classe.update(memoria_global[nome_hab])
                         novas_habs.append(Habilidade(
                             nome=nome_hab, tipo="Classe", descricao=dados_hab.get("descricao", ""),
-                            fonte=fonte_classe, escolhas_aplicadas=dict(dados_hab.get("efeitos", {})),
+                            fonte=fonte_classe, escolhas_aplicadas=esc_classe,
                             efeitos=dict(dados_hab.get("efeitos", {}))
                         ))
                         nomes_existentes.add(nome_hab)

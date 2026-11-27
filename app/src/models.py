@@ -300,6 +300,8 @@ class Combate(BaseModel):
     nobre_calc: Optional[Dict[str, Any]] = None
     # Cálculo de Paladino (T20 p.81-84): Golpe Divino, Cura pelas Mãos, Aura Sagrada, Bênção da Justiça, Vindicação, Virtudes e Vingador Sagrado.
     paladino_calc: Optional[Dict[str, Any]] = None
+    # Cálculo de Treinador (Heróis de Arton p.16-21): Melhor Amigo, Domar Criatura, Treino Especializado, Mascotes e Truques.
+    treinador_calc: Optional[Dict[str, Any]] = None
     # Crítico Brutal (Bárbaro, T20 p.42): soma ao multiplicador de crítico
     # em armas corpo a corpo e de arremesso.
     multiplicador_critico_bonus: int = 0
@@ -397,6 +399,7 @@ class Personagem(BaseModel):
     complicacoes: List[ComplicacaoPersonagem] = Field(default_factory=list)
     papel_grupo: Optional[str] = None
     objetivo_heroico: Optional[Dict[str, Any]] = None
+    melhores_amigos: List[Dict[str, Any]] = Field(default_factory=list)
 
     atributos_base: Atributos = Field(default_factory=Atributos)
     atributos: Atributos = Field(default_factory=Atributos)
