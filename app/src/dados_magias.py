@@ -4026,3 +4026,14 @@ DADOS_MAGIAS= {
     }
 
 }
+
+from .dados_magias_ameacas import (
+    DADOS_MAGIAS_AMEACAS,
+    APRIMORAMENTOS_CONJURAR_MORTOS_VIVOS_AMEACAS,
+)
+
+DADOS_MAGIAS.update(DADOS_MAGIAS_AMEACAS)
+if "Conjurar Mortos-Vivos" in DADOS_MAGIAS:
+    DADOS_MAGIAS["Conjurar Mortos-Vivos"]["aprimoramentos"].extend(
+        APRIMORAMENTOS_CONJURAR_MORTOS_VIVOS_AMEACAS
+    )
