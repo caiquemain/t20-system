@@ -80,6 +80,9 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
 
     # 1. Limpeza Inteligente:
     memoria_escolhas = limpar_habilidades_fixas(ficha)
+    ficha.status.proficiencias = []
+    ficha.status.imunidades = []
+    ficha.status.sentidos = []
 
     # 2. Cálculos Básicos
     ficha.cabecalho.nivel_total = calcular_nivel_personagem(ficha)
