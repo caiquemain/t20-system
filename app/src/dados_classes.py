@@ -142,78 +142,9 @@ DADOS_CLASSES = {
     },
 }
 
-# ------------------- ADIÇÃO DE CLASSES VARIANTES -------------------
-# Mantendo a lógica de herança, mas sobrescrevendo as chaves corretas se necessário
-DADOS_CLASSES["Necromante"] = {
-    **DADOS_CLASSES["Arcanista"],
-    "pericias_iniciais": ["Misticismo", "Vontade"],
-    "pericias_lista": ["Conhecimento", "Diplomacia", "Enganação", "Guerra", "Iniciativa", "Intimidação", "Intuição", "Investigação", "Nobreza", "Ofício", "Percepção"]
-}
-DADOS_CLASSES["Machado de Pedra"] = {
-    **DADOS_CLASSES["Bárbaro"],
-    "pericias_iniciais": ["Fortitude", "Luta"],
-    "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Iniciativa", "Intimidação", "Ofício", "Percepção", "Pontaria", "Sobrevivência", "Vontade"]
-}
-DADOS_CLASSES["Magimarcialista"] = {
-    **DADOS_CLASSES["Bardo"],
-    "pericias_iniciais": ["Atuação", "Reflexos"],
-    "pericias_lista": ["Acrobacia", "Cavalgar", "Conhecimento", "Diplomacia", "Enganação", "Furtividade", "Iniciativa", "Intuição", "Investigação", "Jogatina", "Ladinagem", "Luta", "Misticismo", "Nobreza", "Percepção", "Pontaria", "Vontade"]
-}
-DADOS_CLASSES["Duelista"] = {
-    **DADOS_CLASSES["Bucaneiro"],
-    "pericias_iniciais": ["Reflexos"],
-    "pericias_lista": ["Acrobacia", "Atletismo", "Atuação", "Enganação", "Fortitude", "Furtividade", "Iniciativa", "Intimidação", "Jogatina", "Luta", "Ofício", "Percepção", "Pilotagem", "Pontaria"]
-}
-DADOS_CLASSES["Seteiro"] = {
-    **DADOS_CLASSES["Caçador"],
-    "pericias_iniciais": ["Sobrevivência"],
-    "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Cura", "Fortitude", "Furtividade", "Iniciativa", "Investigação", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos"]
-}
-DADOS_CLASSES["Vassalo"] = {
-    **DADOS_CLASSES["Cavaleiro"],
-    "pericias_iniciais": ["Fortitude", "Luta"],
-    "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Diplomacia", "Guerra", "Iniciativa", "Intimidação", "Nobreza", "Percepção", "Vontade"]
-}
-DADOS_CLASSES["Usurpador"] = {
-    **DADOS_CLASSES["Clérigo"],
-    "pericias_iniciais": ["Religião", "Vontade"],
-    "pericias_lista": ["Conhecimento", "Cura", "Diplomacia", "Fortitude", "Iniciativa", "Intuição", "Luta", "Misticismo", "Nobreza", "Ofício", "Percepção"]
-}
-DADOS_CLASSES["Ermitão"] = {
-    **DADOS_CLASSES["Druida"],
-    "pericias_iniciais": ["Sobrevivência", "Vontade"],
-    "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Conhecimento", "Cura", "Fortitude", "Iniciativa", "Intuição", "Luta", "Misticismo", "Ofício", "Percepção", "Religião"]
-}
-DADOS_CLASSES["Inovador"] = {
-    **DADOS_CLASSES["Guerreiro"],
-    "pericias_iniciais": ["Fortitude"],
-    "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Guerra", "Iniciativa", "Intimidação", "Luta", "Ofício", "Percepção", "Pontaria", "Reflexos", "Vontade"]
-}
-DADOS_CLASSES["Alquimista"] = {
-    **DADOS_CLASSES["Inventor"],
-    "pericias_iniciais": ["Ofício", "Vontade"],
-    "pericias_lista": ["Conhecimento", "Cura", "Diplomacia", "Fortitude", "Iniciativa", "Investigação", "Luta", "Misticismo", "Percepção", "Pilotagem", "Pontaria"]
-}
-DADOS_CLASSES["Ventanista"] = {
-    **DADOS_CLASSES["Ladino"],
-    "pericias_iniciais": ["Ladinagem", "Reflexos"],
-    "pericias_lista": ["Acrobacia", "Atletismo", "Atuação", "Cavalgar", "Conhecimento", "Diplomacia", "Enganação", "Furtividade", "Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Luta", "Ofício", "Percepção", "Pilotagem", "Pontaria"]
-}
-DADOS_CLASSES["Atleta"] = {
-    **DADOS_CLASSES["Lutador"],
-    "pericias_iniciais": ["Fortitude", "Luta"],
-    "pericias_lista": ["Acrobacia", "Adestramento", "Atletismo", "Enganação", "Furtividade", "Iniciativa", "Intimidação", "Ofício", "Percepção", "Pontaria", "Reflexos"]
-}
-DADOS_CLASSES["Burguês"] = {
-    **DADOS_CLASSES["Nobre"],
-    "pericias_iniciais": ["Vontade"],
-    "pericias_lista": ["Adestramento", "Atuação", "Cavalgar", "Conhecimento", "Diplomacia", "Enganação", "Fortitude", "Guerra", "Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Luta", "Nobreza", "Ofício", "Percepção", "Pontaria"]
-}
-DADOS_CLASSES["Santo"] = {
-    **DADOS_CLASSES["Paladino"],
-    "pericias_iniciais": ["Luta", "Vontade"],
-    "pericias_lista": ["Adestramento", "Atletismo", "Cavalgar", "Cura", "Diplomacia", "Fortitude", "Guerra", "Iniciativa", "Intuição", "Nobreza", "Percepção", "Religião"]
-}
+# ------------------- ADIÇÃO DE CLASSES VARIANTES (Heróis de Arton, p. 22–45) -------------------
+from .dados_variantes_herois import DADOS_CLASSES_VARIANTES
+DADOS_CLASSES.update(DADOS_CLASSES_VARIANTES)
 
 
 # ═══════════════════════════════════════════
