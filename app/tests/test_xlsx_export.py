@@ -57,18 +57,22 @@ def test_gerar_xlsx_auditoria_5_abas_e_formulas():
     assert any(v.startswith("=SUM(") for v in valores_ws1)
     assert any("Sandálias (+1 PM)" in v for v in valores_ws1)
     assert any("Canônico" in v for v in valores_ws1)
+    assert any("RESUMO DE ATAQUES" in v for v in valores_ws1)
+    assert any("Ataque Desarmado" in v for v in valores_ws1)
 
     # Confere fórmulas =SUM nas Perícias
     ws2 = wb["Perícias"]
     assert str(ws2.cell(5, 9).value).startswith("=SUM(D5:H5)")
 
-    # Confere auditoria de CD e Dano em Ataques & Magias
+    # Confere auditoria de Ataques (=SUM), CD e Dano em Ataques & Magias
     ws3 = wb["Ataques & Magias"]
     valores_ws3 = [
         str(ws3.cell(r, c).value or "")
         for r in range(1, ws3.max_row + 1)
-        for c in range(1, 10)
+        for c in range(1, 11)
     ]
+    assert any(v.startswith("=SUM(C") for v in valores_ws3)
+    assert any("Ataque Desarmado" in v for v in valores_ws3)
     assert any("Infligir Ferimentos" in v for v in valores_ws3)
     assert any("Base (Infligir Ferimentos)" in v for v in valores_ws3)
 

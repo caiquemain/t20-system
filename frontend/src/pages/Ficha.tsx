@@ -8,6 +8,7 @@ import { useFicha } from '../hooks/useFicha';
 import { PowerSelectorModal } from '../components/PowerSelectorModal';
 import { CondicoesRaciais } from '../components/CondicoesRaciais';
 import { AbilityConfigModal } from '../components/AbilityConfigModal';
+import { LevelUpModal } from '../components/LevelUpModal';
 import { GrimorioModal } from '../components/GrimorioModal';
 import { FullGrimorioModal } from '../components/FullGrimorioModal';
 import { SpellDetailsModal, type SpellRollConfig } from '../components/SpellDetailsModal';
@@ -55,7 +56,7 @@ function Ficha() {
     const navigate = useNavigate();
 
     const {
-        ficha, loading,
+        ficha, setFicha, loading,
         dadosClasses, dadosOrigens, dadosRacas, dadosEquipamentos, dadosHabilidadesClasse, dadosMagias,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes,
         listaDeuses, dadosDeuses, dadosHabilidades,
@@ -76,6 +77,7 @@ function Ficha() {
     const [showDuendeHelper, setShowDuendeHelper] = useState(false);
 
     const [showGrimorio, setShowGrimorio] = useState(false);
+    const [showLevelUpModal, setShowLevelUpModal] = useState(false);
     const [selectorAtivo, setSelectorAtivo] = useState<'raca' | 'origem' | 'deus' | 'classe' | null>(null);
     const [showFullGrimorio, setShowFullGrimorio] = useState(false);
     const [viewSpell, setViewSpell] = useState<Magia | null>(null);
@@ -221,22 +223,40 @@ function Ficha() {
     };
 
     
-    // ─── LEVEL-UP ASSISTIDO (grava histórico) ───
-    const handleLevelUp = async () => {
+    // ─── LEVEL-UP ASSISTIDO (modal 2 etapas + grava histórico) ───
+    const handleLevelUp = () => {
         if (!ficha || !id) return;
         const nivelAtual = ficha.classes[0]?.nivel || 1;
         if (nivelAtual >= 20) {
             alert("🎯 Nível 20 é o máximo do T20!");
             return;
         }
-        if (!confirm(`Subir do nível ${nivelAtual} para ${nivelAtual + 1}?\nIsso recalculará a ficha e gravará o evento no histórico.`)) return;
+        setShowLevelUpModal(true);
+    };
 
+    const handleConfirmLevelUp = async () => {
+        if (!ficha || !id) return null;
+        const snapshotAntes = {
+            pvAntes: ficha.status?.pv?.maximo ?? 0,
+            pmAntes: ficha.status?.pm?.maximo ?? 0,
+            circuloAntes: ficha.combate?.circulo_maximo ?? 0,
+            habsAntes: (ficha.habilidades || []).map(h => h.nome),
+        };
         try {
-            const { subirNivelPersonagem } = await import('../services/api');
-            await subirNivelPersonagem(id, ficha);
-            window.location.reload();
+            const { subirNivelPersonagem, fetchPersonagem } = await import('../services/api');
+            const resp = await subirNivelPersonagem(id, ficha);
+            if (resp?.data && resp.data.cabecalho) {
+                setFicha(resp.data);
+            } else {
+                const atualizada = await fetchPersonagem(id);
+                if (atualizada?.data) {
+                    setFicha(atualizada.data);
+                }
+            }
+            return snapshotAntes;
         } catch (err) {
             alert("Erro ao subir de nível: " + (err as Error).message);
+            return null;
         }
     };
 
@@ -381,6 +401,16 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
 
         
  className="ficha-container">
+            <LevelUpModal
+                isOpen={showLevelUpModal}
+                oculto={showHabilidadesPanel || showGrimorio}
+                ficha={ficha}
+                onClose={() => setShowLevelUpModal(false)}
+                onConfirmLevelUp={handleConfirmLevelUp}
+                onAbrirConfigHabilidades={montarHabilidadesParaPanel}
+                onAbrirGrimorio={() => setShowGrimorio(true)}
+            />
+
             <AbilityConfigModal
                 isOpen={showHabilidadesPanel}
                 onClose={() => setShowHabilidadesPanel(false)}
