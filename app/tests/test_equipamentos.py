@@ -36,7 +36,8 @@ def test_catalogo_armas_completo():
 
 
 def test_catalogo_armaduras_completo():
-    assert len(DADOS_ARMADURAS) == 12
+    assert len(DADOS_ARMADURAS) >= 12
+    assert len([k for k, v in DADOS_ARMADURAS.items() if not v.get("fonte")]) == 12
     c = DADOS_ARMADURAS["Armadura completa"]
     assert c["bonus_defesa"] == 10
     assert c["penalidade_armadura"] == -5

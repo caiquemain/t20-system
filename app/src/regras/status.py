@@ -252,11 +252,15 @@ def calcular_pv_pm(ficha: Personagem):
             categoria="Item",
             valor=1,
         )
-    # Acessórios mágicos de PV/PM (T20 JdA p.342)
+    # Acessórios mágicos de PV/PM (T20 JdA p.342 + Ameaças de Arton p.402-403)
     if "anel da vitalidade" in equipados_low:
         pv_calc.adicionar_bonus(fonte="Item Mágico: Anel da vitalidade", categoria="Item", valor=10)
     if "anel da energia" in equipados_low:
         pm_calc.adicionar_bonus(fonte="Item Mágico: Anel da energia", categoria="Item", valor=5)
+    if "fragmento de filactério" in equipados_low:
+        pm_calc.adicionar_bonus(fonte="Item Mágico: Fragmento de filactério", categoria="Item", valor=20)
+    if "amuleto do abutre" in equipados_low:
+        pm_calc.adicionar_bonus(fonte="Artefato: Amuleto do Abutre", categoria="Item", valor=50)
 
     ficha.status.pm_calc = pm_calc
     ficha.status.pv_calc = pv_calc
@@ -703,8 +707,15 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
             fonte="Poder: Fuga Formidável", categoria="Poder", valor=3
         )
 
-    # Armadura pesada vestida: -3m deslocamento (respeita imunidade)
-    if usa_pesada:
+    # Armadura pesada vestida: -3m deslocamento (respeita imunidade e Armadura de quitina)
+    usa_pesada_com_pen_mov = any(
+        item.equipado
+        and (getattr(item, "condicao", None) or "").strip() != "Destruído"
+        and (catalogo_do_item(item.nome) or {}).get("tipo_armadura") == "Pesada"
+        and not (catalogo_do_item(item.nome) or {}).get("sem_penalidade_deslocamento")
+        for item in ficha.inventario.equipamentos
+    )
+    if usa_pesada_com_pen_mov:
         # Verificar imunidade
         tem_imunidade = any(
             "imunidade_penalidade_mov" in (h.efeitos or {})
