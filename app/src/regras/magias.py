@@ -154,10 +154,17 @@ def calcular_circulo_maximo(classe: str, nivel: int) -> int:
 
 
 def calcular_circulo_maximo_ficha(ficha: Personagem) -> int:
-    """Maior círculo entre todas as classes do personagem (multiclasse)."""
-    return max(
+    """Maior círculo entre todas as classes do personagem (multiclasse) e poderes de magia racial (Glamour)."""
+    circ_classes = max(
         [calcular_circulo_maximo(c.nome, c.nivel) for c in ficha.classes] or [0]
     )
+    nomes_habs = {h.nome for h in (ficha.habilidades or [])}
+    circ_poderes = 0
+    if "Glamour Maior" in nomes_habs:
+        circ_poderes = max(circ_poderes, 2)
+    elif "Glamour" in nomes_habs or "Grande Marca de Wynna" in nomes_habs:
+        circ_poderes = max(circ_poderes, 1)
+    return max(circ_classes, circ_poderes)
 
 
 def _circulo_da_magia(magia: Magia) -> int:

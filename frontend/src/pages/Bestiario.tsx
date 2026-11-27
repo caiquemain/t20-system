@@ -12,6 +12,7 @@ const Bestiario: React.FC = () => {
     const [busca, setBusca] = useState('');
     const [filtroND, setFiltroND] = useState('');
     const [filtroTipo, setFiltroTipo] = useState('');
+    const [agruparPorTema, setAgruparPorTema] = useState(true);
     const [abrirConstrutor, setAbrirConstrutor] = useState(false);
 
     useEffect(() => {
@@ -37,23 +38,56 @@ const Bestiario: React.FC = () => {
         [ameacas]
     );
 
-    const tiposUnicos = useMemo(
-        () => Array.from(new Set(ameacas.map(a => a.tipo))).sort(),
-        [ameacas]
-    );
+    const obterTema = (a: Ameaca): string => {
+        if ((a._id || '').startsWith('custom-')) return 'Criaturas Customizadas';
+        return (a.tipo || 'Outros').trim();
+    };
+
+    const temasComContagem = useMemo(() => {
+        const map = new Map<string, number>();
+        ameacas.forEach(a => {
+            const t = obterTema(a);
+            map.set(t, (map.get(t) || 0) + 1);
+        });
+        return Array.from(map.entries()).sort((a, b) => {
+            if (a[0] === 'Criaturas Customizadas') return -1;
+            if (b[0] === 'Criaturas Customizadas') return 1;
+            return a[0].localeCompare(b[0], 'pt-BR');
+        });
+    }, [ameacas]);
 
     const ameacasFiltradas = useMemo(() => {
+        const q = busca.trim().toLowerCase();
         return ameacas.filter(a => {
-            const matchBusca = a.nome.toLowerCase().includes(busca.toLowerCase());
+            const tema = obterTema(a);
+            const matchBusca = !q
+                || a.nome.toLowerCase().includes(q)
+                || (a.tipo || '').toLowerCase().includes(q)
+                || (a.subtipo || '').toLowerCase().includes(q)
+                || tema.toLowerCase().includes(q);
             const matchND = filtroND ? a.nd === filtroND : true;
-            const matchTipo = filtroTipo ? a.tipo === filtroTipo : true;
+            const matchTipo = filtroTipo ? tema === filtroTipo : true;
             return matchBusca && matchND && matchTipo;
         });
     }, [ameacas, busca, filtroND, filtroTipo]);
 
+    const gruposPorTema = useMemo(() => {
+        const map = new Map<string, Ameaca[]>();
+        ameacasFiltradas.forEach(a => {
+            const t = obterTema(a);
+            if (!map.has(t)) map.set(t, []);
+            map.get(t)!.push(a);
+        });
+        return Array.from(map.entries()).sort((a, b) => {
+            if (a[0] === 'Criaturas Customizadas') return -1;
+            if (b[0] === 'Criaturas Customizadas') return 1;
+            return a[0].localeCompare(b[0], 'pt-BR');
+        });
+    }, [ameacasFiltradas]);
+
     return (
         <div style={{ width: '100%', maxWidth: '2200px', margin: '0 auto', padding: '0 40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', marginTop: '40px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', marginTop: '40px', flexWrap: 'wrap', gap: '12px' }}>
                 <h1 style={{ color: '#d32f2f', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
                     <T20Icon name="bestiario" size={28} /> Bestiário de Arton
                 </h1>
@@ -88,95 +122,166 @@ const Bestiario: React.FC = () => {
                 />
             )}
 
-            {/* Filtros (mesmo estilo do Grimório) */}
+            {/* Barra de Pesquisa + Filtros + Agrupamento por Tema */}
             <div style={{
-                display: 'flex',
-                gap: '15px',
-                marginBottom: '30px',
+                marginBottom: '26px',
                 padding: '15px 20px',
                 background: '#1a1a1a',
                 borderRadius: '8px',
                 border: '1px solid #333',
-                flexWrap: 'wrap',
-                alignItems: 'center'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
             }}>
-                <input
-                    type="text"
-                    placeholder="Buscar monstro pelo nome..."
-                    value={busca}
-                    onChange={e => setBusca(e.target.value)}
-                    style={{
-                        flex: '2 1 250px',
-                        minWidth: '250px',
-                        padding: '12px',
-                        background: '#252525',
-                        border: '1px solid #444',
-                        color: '#fff',
-                        borderRadius: '6px',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                    }}
-                />
-                <select
-                    value={filtroND}
-                    onChange={e => setFiltroND(e.target.value)}
-                    style={{
-                        flex: '1 1 160px',
-                        minWidth: '160px',
-                        padding: '12px',
-                        background: '#252525',
-                        border: '1px solid #444',
-                        color: '#fff',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                    }}
-                >
-                    <option value="">Todos os NDs</option>
-                    {ndsUnicos.map(nd => <option key={nd} value={nd}>ND {nd}</option>)}
-                </select>
-                <select
-                    value={filtroTipo}
-                    onChange={e => setFiltroTipo(e.target.value)}
-                    style={{
-                        flex: '1 1 200px',
-                        minWidth: '200px',
-                        padding: '12px',
-                        background: '#252525',
-                        border: '1px solid #444',
-                        color: '#fff',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                    }}
-                >
-                    <option value="">Todos os Tipos</option>
-                    {tiposUnicos.map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
-                </select>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input
+                        type="text"
+                        placeholder="Buscar monstro por nome, tipo ou tema..."
+                        value={busca}
+                        onChange={e => setBusca(e.target.value)}
+                        style={{
+                            flex: '2 1 250px',
+                            minWidth: '250px',
+                            padding: '12px',
+                            background: '#252525',
+                            border: '1px solid #444',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            outline: 'none',
+                            boxSizing: 'border-box'
+                        }}
+                    />
+                    <select
+                        value={filtroND}
+                        onChange={e => setFiltroND(e.target.value)}
+                        style={{
+                            flex: '1 1 150px',
+                            minWidth: '150px',
+                            padding: '12px',
+                            background: '#252525',
+                            border: '1px solid #444',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            outline: 'none',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <option value="">Todos os NDs</option>
+                        {ndsUnicos.map(nd => <option key={nd} value={nd}>ND {nd}</option>)}
+                    </select>
+                    <select
+                        value={filtroTipo}
+                        onChange={e => setFiltroTipo(e.target.value)}
+                        style={{
+                            flex: '1 1 190px',
+                            minWidth: '190px',
+                            padding: '12px',
+                            background: '#252525',
+                            border: '1px solid #444',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            outline: 'none',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <option value="">Todos os Temas / Tipos</option>
+                        {temasComContagem.map(([tema, qtd]) => (
+                            <option key={tema} value={tema}>{tema} ({qtd})</option>
+                        ))}
+                    </select>
+                    <button
+                        type="button"
+                        onClick={() => setAgruparPorTema(v => !v)}
+                        style={{
+                            padding: '11px 14px',
+                            borderRadius: '6px',
+                            border: `1px solid ${agruparPorTema ? '#d32f2f' : '#444'}`,
+                            background: agruparPorTema ? 'rgba(211, 47, 47, 0.2)' : '#252525',
+                            color: agruparPorTema ? '#ffcdd2' : '#ccc',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {agruparPorTema ? '📂 Agrupado por Tema' : '📋 Lista Corrida'}
+                    </button>
+                </div>
+
+                {/* Chips rápidos de Tema */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button
+                        type="button"
+                        onClick={() => setFiltroTipo('')}
+                        style={{
+                            fontSize: '0.76rem',
+                            padding: '4px 10px',
+                            borderRadius: 999,
+                            border: `1px solid ${filtroTipo === '' ? '#ffd700' : '#444'}`,
+                            background: filtroTipo === '' ? 'rgba(255, 215, 0, 0.16)' : '#222',
+                            color: filtroTipo === '' ? '#ffd700' : '#aaa',
+                            cursor: 'pointer',
+                            fontWeight: filtroTipo === '' ? 700 : 400,
+                        }}
+                    >
+                        Todos ({ameacas.length})
+                    </button>
+                    {temasComContagem.map(([tema, qtd]) => {
+                        const ativo = filtroTipo === tema;
+                        return (
+                            <button
+                                key={tema}
+                                type="button"
+                                onClick={() => setFiltroTipo(ativo ? '' : tema)}
+                                style={{
+                                    fontSize: '0.76rem',
+                                    padding: '4px 10px',
+                                    borderRadius: 999,
+                                    border: `1px solid ${ativo ? '#d32f2f' : '#3a3a3a'}`,
+                                    background: ativo ? 'rgba(211, 47, 47, 0.25)' : '#222',
+                                    color: ativo ? '#ffcdd2' : '#bbb',
+                                    cursor: 'pointer',
+                                    fontWeight: ativo ? 700 : 400,
+                                }}
+                            >
+                                {tema} ({qtd})
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {loading ? (
-                <p style={{ textAlign: 'center', color: '#888', marginTop: '50px' }}>Invocando criaturas...</p>
+                <p style={{ color: '#888' }}>Carregando monstros...</p>
             ) : ameacasFiltradas.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#888', marginTop: '50px' }}>Nenhum monstro encontrado com esses filtros.</p>
+                <p style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>Nenhuma criatura encontrada com esses filtros.</p>
+            ) : agruparPorTema && !filtroTipo ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '50px' }}>
+                    {gruposPorTema.map(([tema, lista]) => (
+                        <section key={tema}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                borderBottom: '1px solid #333',
+                                paddingBottom: '6px',
+                                marginBottom: '14px',
+                            }}>
+                                <h2 style={{ margin: 0, color: tema === 'Criaturas Customizadas' ? '#ffd700' : '#ef9a9a', fontSize: '1.15rem' }}>
+                                    {tema} <span style={{ color: '#888', fontSize: '0.85rem', fontWeight: 'normal' }}>({lista.length})</span>
+                                </h2>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '20px' }}>
+                                {lista.map(a => <MonsterCard key={a._id || a.nome} ameaca={a} />)}
+                            </div>
+                        </section>
+                    ))}
+                </div>
             ) : (
-                <>
-                    <p style={{ color: '#888', marginBottom: '15px', fontSize: '0.9rem' }}>
-                        {ameacasFiltradas.length} criatura(s) encontrada(s)
-                    </p>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '15px',
-                        paddingBottom: '40px'
-                    }}>
-                        {ameacasFiltradas.map(a => (
-                            <MonsterCard key={a._id} ameaca={a} />
-                        ))}
-                    </div>
-                </>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '20px', paddingBottom: '50px' }}>
+                    {ameacasFiltradas.map(a => <MonsterCard key={a._id || a.nome} ameaca={a} />)}
+                </div>
             )}
         </div>
     );

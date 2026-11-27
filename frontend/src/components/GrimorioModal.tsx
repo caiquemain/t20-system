@@ -67,14 +67,52 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
         return null;
     };
 
+    // Regra oficial: Feiticeiro de Linhagem Abençoada (Deuses de Arton, p. 33)
+    const habLinhagemAbencoada = (ficha?.habilidades || []).find(
+        (h: any) => (h.nome || '').trim().toLowerCase() === 'linhagem abençoada'
+    );
+    const circulosDivinosAbencoado: number[] | null = habLinhagemAbencoada
+        ? (
+            Array.isArray(habLinhagemAbencoada.efeitos?.circulos_divinos_feiticeiro)
+                ? habLinhagemAbencoada.efeitos.circulos_divinos_feiticeiro
+                : (ficha?.habilidades || []).some((h: any) => h.nome === 'Herança Superior')
+                    ? [1, 2, 3, 4, 5]
+                    : (ficha?.habilidades || []).some((h: any) => h.nome === 'Herança Aprimorada')
+                        ? [1, 2, 3]
+                        : [1]
+        )
+        : null;
+    const maxCirculoDivinoAbencoado = circulosDivinosAbencoado ? Math.max(...circulosDivinosAbencoado) : 0;
+
+    const motivoBloqueioDivinaAbencoado = (m: Magia): string | null => {
+        if (!circulosDivinosAbencoado) return null;
+        const tipoM = (m.tipo || 'Universal').toLowerCase();
+        if (tipoM !== 'divina') return null;
+        const circ = m.circulo || 1;
+        if (!circulosDivinosAbencoado.includes(circ)) {
+            const req = circ <= 3 ? 'Herança Aprimorada' : 'Herança Superior';
+            return `Linhagem Abençoada permite magias divinas até o ${maxCirculoDivinoAbencoado}º círculo. Para aprender ${m.nome} (${circ}º círculo divina), é necessário o poder ${req}.`;
+        }
+        return null;
+    };
+
     const todasMagias = Object.values(dadosMagias);
     const magiasFiltradas = todasMagias.filter(m => {
         const matchNome = m.nome.toLowerCase().includes(busca.toLowerCase());
         const matchCirculo = filtroCirculo === 'todos' || m.circulo === filtroCirculo;
         const tipoAtual = m.tipo || 'Universal';
-        const matchTipo = filtroTipo === 'todos' || tipoAtual === filtroTipo;
+        const matchTipo =
+            filtroTipo === 'todos'
+                ? true
+                : filtroTipo === 'Universal'
+                    ? tipoAtual === 'Universal'
+                    : tipoAtual === filtroTipo || tipoAtual === 'Universal';
         const naoConhecida = !magiasConhecidas.some(k => k.nome === m.nome);
-        const acessivel = !filtroAcessiveis || ((m.circulo || 1) <= circuloAtual && !motivoBloqueioCotaCirculo(m.circulo || 1));
+        const acessivel = !filtroAcessiveis || (
+            (m.circulo || 1) <= circuloAtual
+            && !motivoBloqueioCotaCirculo(m.circulo || 1)
+            && !motivoBloqueioDivinaAbencoado(m)
+        );
         return matchNome && matchCirculo && matchTipo && naoConhecida && acessivel;
     }).sort((a, b) => a.circulo - b.circulo || a.nome.localeCompare(b.nome));
 
@@ -83,6 +121,11 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
         const circulo = magiaSelecionada.circulo || 1;
         if (circulo > circuloAtual) {
             alert(`${magiaSelecionada.nome} é uma magia de ${circulo}º círculo.\nSeu círculo máximo atual é ${circuloAtual}º (definido pela sua classe e nível).`);
+            return;
+        }
+        const erroDivina = motivoBloqueioDivinaAbencoado(magiaSelecionada);
+        if (erroDivina) {
+            alert(erroDivina);
             return;
         }
         const erroCota = motivoBloqueioCotaCirculo(circulo);
@@ -98,8 +141,13 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
         setMagiaSelecionada(null);
     };
 
+    const erroDivinaSelecionada = magiaSelecionada ? motivoBloqueioDivinaAbencoado(magiaSelecionada) : null;
     const erroCotaSelecionada = magiaSelecionada ? motivoBloqueioCotaCirculo(magiaSelecionada.circulo || 1) : null;
-    const magiaEhIlegal = !!magiaSelecionada && ((magiaSelecionada.circulo || 1) > circuloAtual || Boolean(erroCotaSelecionada));
+    const magiaEhIlegal = !!magiaSelecionada && (
+        (magiaSelecionada.circulo || 1) > circuloAtual
+        || Boolean(erroCotaSelecionada)
+        || Boolean(erroDivinaSelecionada)
+    );
     const botaoBloqueado = !magiaSelecionada || magiaEhIlegal || limiteAtingido;
     const selectedTypeColor = getTypeColor(magiaSelecionada?.tipo);
     const selectedSchoolColor = getSchoolColor(magiaSelecionada?.escola);
@@ -191,6 +239,22 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                             </span>
                         );
                     })}
+                    {circulosDivinosAbencoado && (
+                        <span
+                            title="Linhagem Abençoada (Deuses de Arton p. 33): Básica = divinas de 1º círculo; Aprimorada = até 3º; Superior = até 5º."
+                            style={{
+                                fontSize: '0.76rem',
+                                padding: '4px 9px',
+                                borderRadius: 999,
+                                background: 'rgba(255, 215, 0, 0.14)',
+                                border: '1px solid rgba(255, 215, 0, 0.45)',
+                                color: '#fde68a',
+                                fontWeight: 600,
+                            }}
+                        >
+                            ✨ Abençoada: Divinas até {maxCirculoDivinoAbencoado}º círc.
+                        </span>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -204,7 +268,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                 const isSelected = magiaSelecionada?.nome === m.nome;
                                 const schoolColor = getSchoolColor(m.escola);
                                 const circulo = m.circulo || 1;
-                                const travadaCirculo = circulo > circuloAtual || Boolean(motivoBloqueioCotaCirculo(circulo));
+                                const travadaCirculo = circulo > circuloAtual || Boolean(motivoBloqueioCotaCirculo(circulo)) || Boolean(motivoBloqueioDivinaAbencoado(m));
 
                                 return (
                                     <div
