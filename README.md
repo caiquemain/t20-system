@@ -18,7 +18,7 @@ nunca "mente".
 | **Banco** | MongoDB 7.0 |
 | **Frontend** | React 19 · TypeScript 5.9 · Vite 7 · react-router-dom 7 · axios |
 | **Infra** | Docker Compose (api + web + db) |
-| **Testes** | pytest (80 arquivos, 1.033 testes do motor de regras, suplementos e exportações) |
+| **Testes** | pytest (82 arquivos, 1.040 testes do motor de regras, suplementos e exportações) |
 | **Extras** | Extensão de browser `t20-roll20-bridge` (Manifest V3) |
 
 ---
@@ -35,7 +35,7 @@ nunca "mente".
 
 ### Suplementos Oficiais ([`docs/SUPLEMENTOS.md`](./docs/SUPLEMENTOS.md))
 - **Ameaças de Arton:** 40 raças jogáveis (incl. 12 Moreau), regras adicionais (Armas Naturais, condições `Avariado`/`Destruído`), equipamentos, materiais especiais, recursos naturais, itens mágicos, artefatos e 7 magias.
-- **Heróis de Arton:** 5 raças (Duende com criação completa + *Sonhos Malucos*, Eiradaan, Galokk, Meio-Elfo, Sátiro), classe **Treinador** com motor completo do **Melhor Amigo**, **14 Classes Variantes**, **30 Origens Especiais** e **Regras Opcionais opt-in** (73 Complicações, 7 Idades Variadas, 9 Papéis no Grupo, 7 Objetivos Heroicos, Defesa Épica).
+- **Heróis de Arton:** 5 raças (Duende com criação completa + *Sonhos Malucos*, Eiradaan, Galokk, Meio-Elfo, Sátiro), classe **Treinador** com motor completo do **Melhor Amigo**, **14 Classes Variantes**, **30 Origens Especiais**, **288 novos poderes de classe** (+ 7 efeitos de *Golpe Pessoal*), **155 novos poderes gerais** (25 Combate, 13 Destino, 14 Magia, 6 Tormenta, 77 Raça, 20 Grupo) e **Regras Opcionais opt-in** (73 Complicações, 7 Idades Variadas, 9 Papéis no Grupo, 7 Objetivos Heroicos, Defesa Épica).
 - **Atlas de Arton:** 66 Origens Regionais com benefício único automático e escolhas interativas (*Duplo Feérico*, *Aspirante a Herói*, *Futura Lenda*, *Cosmopolita*, etc.).
 - **Deuses de Arton:** fundação pronta para os próximos lotes.
 
@@ -119,7 +119,7 @@ t20-system/
 │   │       ├── inventario.py              # equipamentos
 │   │       ├── historico.py               # level-up assistido
 │   │       └── utils.py
-│   └── tests/                             # suíte pytest (80 arquivos, 1.033 testes)
+│   └── tests/                             # suíte pytest (82 arquivos, 1.040 testes)
 ├── frontend/                              # Frontend (imagem t20-system-web)
 │   ├── Dockerfile                         # Node 22 + Vite dev server :5173
 │   ├── public/fonts/Tormenta.ttf          # fonte oficial T20
@@ -188,32 +188,99 @@ Estado detalhado por raça em `docs/checklists/racas-e2e.md`.
 
 ---
 
-## 🏃 Como rodar
+## 🏃 Como rodar do zero
 
+### Opção A — Com Docker Compose (recomendado)
+
+**Pré-requisitos:** [Git](https://git-scm.com/) e [Docker](https://docs.docker.com/get-docker/) com Docker Compose (`docker compose version`).
+
+**1. Clone o repositório e entre na pasta:**
 ```bash
-# Subir tudo (API :8000 + Web :5173 + Mongo :27017)
+git clone https://github.com/caiquemain/t20-system.git
+cd t20-system
+```
+
+**2. Construa e suba todos os serviços** (`MongoDB :27017` + `API FastAPI :8000` + `Frontend Vite :5173`):
+```bash
 docker compose up -d --build
 ```
+> O `docker-compose.yml` já configura healthcheck no MongoDB (`t20_db`) e só inicia a API (`t20_api`) quando o banco estiver saudável, além de retry automático de conexão na inicialização.
 
-- App: http://localhost:5173 (`/` home · `/wizard` criação · `/ficha/:id` ficha · `/bestiario` bestiário · `/grimorio` grimório)
-- Docs interativas da API: http://localhost:8000/docs
-
-### Testes
-
+**3. Verifique se os 3 containers estão de pé:**
 ```bash
+docker compose ps
+# Esperado: t20_db (healthy), t20_api (Up), t20_web (Up)
+```
+
+**4. Acesse no navegador:**
+- **Aplicação Web:** http://localhost:5173
+  - `/` Home · `/wizard` Criação de Personagem · `/ficha/:id` Ficha · `/bestiario` Bestiário · `/grimorio` Grimório Global
+- **Documentação interativa da API (Swagger):** http://localhost:8000/docs
+
+**Comandos úteis do Docker:**
+```bash
+docker compose logs -f api        # acompanhar logs do backend
+docker compose logs -f web        # acompanhar logs do frontend
+docker compose down               # parar e remover containers (mantém o banco)
+docker compose down -v            # parar e APAGAR o volume do MongoDB (reset total)
+```
+
+> **Solução rápida de rede/DNS no Docker:** se a API exibir `Temporary failure in name resolution` ao tentar conectar em `db:27017` (comum quando uma rede antiga fica órfã no Docker Desktop), recrie os containers e a rede com:
+> ```bash
+> docker compose down --remove-orphans && docker network prune -f && docker compose up -d --force-recreate
+> ```
+
+---
+
+### Opção B — Rodando localmente sem Docker (dev nativo)
+
+**Pré-requisitos:** Python 3.11+, [Poetry](https://python-poetry.org/docs/#installation), Node.js 22+ (`npm`) e MongoDB 7.0 rodando na porta `27017`.
+
+**1. Suba o MongoDB** (localmente ou apenas o container do banco):
+```bash
+docker compose up -d db
+```
+
+**2. Instale e inicie o Backend (FastAPI na porta `8000`):**
+```bash
+cd app
+poetry install
+MONGO_URI=mongodb://localhost:27017/tormenta20 poetry run uvicorn src.main:app --reload --port 8000
+```
+
+**3. Em outro terminal, instale e inicie o Frontend (Vite na porta `5173`):**
+```bash
+cd frontend
+npm install
+VITE_API_URL=http://localhost:8000 npm run dev
+```
+
+---
+
+### Testes e Build
+
+**Backend (82 arquivos · 1.040 testes):**
+```bash
+# Via Docker:
 docker compose exec -T api python -m pytest tests/ -q
-# 80 arquivos, 1.033 testes do motor de regras, suplementos e exportações
+
+# Ou localmente via Poetry:
+cd app && poetry run pytest -q
 ```
 
-> ⚠️ Os testes rodam **dentro do container** (`docker compose exec api`) ou via `poetry run pytest tests/ -q` em `app/`.
-
-### Diagnóstico rápido
-
+**Frontend (verificação TypeScript + build de produção + lint):**
 ```bash
-docker compose ps          # 3 serviços esperados: t20_db, t20_api, t20_web
+cd frontend
+npm run build
+npm run lint
 ```
 
-Guia passo a passo para Linux: `COMO_RODAR_LINUX.md`.
+### Extensão Roll20 (`t20-roll20-bridge/`)
+1. Abra `chrome://extensions` (Chrome, Edge ou Brave).
+2. Ative o **Modo do desenvolvedor** no canto superior direito.
+3. Clique em **Carregar sem compactação** e selecione a pasta `t20-roll20-bridge/`.
+
+Guia detalhado para Linux: [`COMO_RODAR_LINUX.md`](./COMO_RODAR_LINUX.md).
 
 ---
 
