@@ -304,16 +304,27 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
         if cond_item == "Avariado":
             bonus_atq_item -= 5
             especial.append("Avariado (-5 ataque)")
+        dano_base_arma = cat.get("dano") or "-"
+        dano_final_arma = f"{dano_base_arma}+{bonus_dano_arma}" if bonus_dano_arma and cat.get("dano") else dano_base_arma
+        dano_fontes_arma = [f"Dado base ({item.nome}): {dano_base_arma}"]
+        for esp_item in especial:
+            if "dano" in esp_item.lower():
+                dano_fontes_arma.append(esp_item)
+        if bonus_dano_arma and len(dano_fontes_arma) == 1:
+            dano_fontes_arma.append(f"Bônus de dano: +{bonus_dano_arma}")
+        dano_fontes_arma.append(f"Total: {dano_final_arma}")
+
         ataques.append(Ataque(
             nome=item.nome,
             bonus_ataque=f"+{bonus_atq_item}" if bonus_atq_item >= 0 else str(bonus_atq_item),
-            dano=(f"{cat['dano']}+{bonus_dano_arma}" if bonus_dano_arma and cat.get("dano") else cat.get("dano") or "-"),
+            dano=dano_final_arma,
             critico=cat.get("critico", "x2"),
             tipo=cat.get("tipo") or "-",
             alcance=cat.get("alcance") or "Curto",
             teste=teste,
             especial="; ".join(especial),
             fonte="Equipamento",
+            dano_fontes=dano_fontes_arma,
         ))
     return ataques
 
