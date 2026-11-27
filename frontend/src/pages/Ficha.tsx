@@ -806,6 +806,15 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                                 const encontrada = (ficha.combate.magias || []).find((m: Magia) => m.nome === nomeMagia);
                                 if (encontrada) setViewSpell(encontrada);
                             }}
+                            onAplicarCura={(valor, tipo) => {
+                                if (tipo === 'cura') {
+                                    const novoAtual = Math.min(ficha.status.pv.maximo, (ficha.status.pv.atual || 0) + valor);
+                                    updateFicha({ status: { ...ficha.status, pv: { ...ficha.status.pv, atual: novoAtual } } }, true);
+                                } else {
+                                    const novoTemp = Math.max(ficha.status.pv.temporario || 0, valor);
+                                    updateFicha({ status: { ...ficha.status, pv: { ...ficha.status.pv, temporario: novoTemp } } }, true);
+                                }
+                            }}
                         />
                         <div className="section-card" style={{ marginTop: '25px' }}>
                             <h3 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
