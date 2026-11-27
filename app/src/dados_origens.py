@@ -256,5 +256,7 @@ DADOS_ORIGENS = {
 }
 
 from .dados_origens_atlas import DADOS_ORIGENS_ATLAS
+from .dados_origens_herois import DADOS_ORIGENS_HEROIS
 
 DADOS_ORIGENS.update(DADOS_ORIGENS_ATLAS)
+DADOS_ORIGENS.update(DADOS_ORIGENS_HEROIS)

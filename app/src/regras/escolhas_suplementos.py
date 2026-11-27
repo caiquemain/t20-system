@@ -347,5 +347,39 @@ def processar_escolhas_suplementos(ficha: Personagem) -> None:
                         efeitos={"atributo_bonus": {"int": 1}},
                     )
 
+        # ── HERÓIS: ORIGEM ESPECIAL — MENESTREL (Música de Bardo) ──
+        elif hab.nome == "Origem Especial: Menestrel":
+            mus = str(esc.get("musica_bardo") or "").strip()
+            if mus in ("Balada Fascinante", "Canção Assustadora", "Melodia Curativa"):
+                d_mus = _buscar_poder_catalogo(f"Música: {mus}") or _buscar_poder_catalogo(mus)
+                _injetar(
+                    nome=(d_mus or {}).get("nome", f"Música: {mus}"),
+                    tipo="Origem",
+                    descricao=(d_mus or {}).get("descricao", f"Poder de Música concedido por Menestrel: {mus}."),
+                    origem_hab=hab.nome,
+                    efeitos=dict((d_mus or {}).get("efeitos") or {}),
+                )
+
+        # ── HERÓIS: ORIGEM ESPECIAL — ESPIÃO (1 perícia com Carisma) ──
+        elif hab.nome == "Origem Especial: Espião":
+            p_car = str(esc.get("pericia_carisma") or "").strip()
+            if p_car and p_car not in ("Luta", "Pontaria"):
+                pao = dict(ef.get("pericia_atributo_opcao") or {})
+                pao[p_car] = "car"
+                ef["pericia_atributo_opcao"] = pao
+                hab.efeitos = ef
+
+    # Escriba concede Lendas e Histórias automaticamente (sem precisar de escolha)
+    for hab in list(ficha.habilidades):
+        if hab.nome == "Origem Especial: Escriba":
+            d_lh = _buscar_poder_catalogo("Lendas e Histórias")
+            _injetar(
+                nome="Lendas e Histórias",
+                tipo="Origem",
+                descricao=(d_lh or {}).get("descricao", "Concedido pela origem Escriba."),
+                origem_hab=hab.nome,
+                efeitos=dict((d_lh or {}).get("efeitos") or {}),
+            )
+
     if extras:
         ficha.habilidades.extend(extras)

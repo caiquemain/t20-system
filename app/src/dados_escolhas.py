@@ -207,7 +207,29 @@ PODERES_COM_ESCOLHA = {
     "Lorde": [
         {"chave": "caminho_lorde", "rotulo": "Caminho do Lorde (9º nível)", "catalogo": "CAMINHOS_LORDE_VASSALO"},
     ],
+
+    # Heróis de Arton (Novas Origens Especiais, p. 46–53)
+    "Origem Especial: Menestrel": [
+        {"chave": "musica_bardo", "rotulo": "Poder de Música de Bardo", "catalogo": "MUSICAS_MENESTREL"},
+    ],
+    "Origem Especial: Espião": [
+        {"chave": "pericia_carisma", "rotulo": "Perícia com Carisma (exceto Luta/Pontaria)", "catalogo": "PERICIAS_ESPIAO"},
+    ],
 }
+
+MUSICAS_MENESTREL = [
+    {"valor": "Balada Fascinante", "rotulo": "Música: Balada Fascinante"},
+    {"valor": "Canção Assustadora", "rotulo": "Música: Canção Assustadora"},
+    {"valor": "Melodia Curativa", "rotulo": "Música: Melodia Curativa"},
+]
+
+PERICIAS_ESPIAO = [
+    "Acrobacia", "Adestramento", "Atletismo", "Atuação", "Cavalgar", "Conhecimento",
+    "Cura", "Diplomacia", "Enganação", "Fortitude", "Furtividade", "Guerra",
+    "Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina",
+    "Ladinagem", "Misticismo", "Nobreza", "Ofício", "Percepção", "Pilotagem",
+    "Reflexos", "Religião", "Sobrevivência", "Vontade",
+]
 
 ESCOLAS_DUELO = [
     {"valor": "Escola Ambidestra", "rotulo": "Escola Ambidestra (+2 Def e Reflexos com 2 armas, 1 leve)"},
