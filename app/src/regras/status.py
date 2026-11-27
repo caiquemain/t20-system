@@ -193,6 +193,23 @@ def calcular_pv_pm(ficha: Personagem):
                 valor=(nivel_total // 2) * int(v_2nv),
             )
 
+    # Nova Regra: Devoção Ampla (Deuses de Arton, Cap. 1, p. 11)
+    # Clérigos e frades do Panteão, druidas de Arton e paladinos do bem recebem +2 PM por patamar.
+    _deus_norm = (ficha.cabecalho.deus or "").strip().lower()
+    _nomes_classes = {(c.nome or "").strip() for c in ficha.classes}
+    _devocao_ampla_auto = (
+        (_deus_norm in {"panteão", "panteao"} and bool(_nomes_classes & {"Clérigo", "Frade"}))
+        or (_deus_norm == "arton" and "Druida" in _nomes_classes)
+        or (_deus_norm in {"bem", "o bem"} and "Paladino" in _nomes_classes)
+    )
+    if _devocao_ampla_auto or "devocao_ampla" in (getattr(ficha, "regras_opcionais_ativas", None) or []):
+        pm_calc.adicionar_bonus(
+            fonte=f"Devoção Ampla (+2 PM × {patamares} patamar{'es' if patamares > 1 else ''})",
+            categoria="Devoção",
+            valor=2 * patamares,
+        )
+
+
     # Armadura de folhas (Heróis de Arton): +2 PM se treinado em Sobrevivência
     per_sobrev = ficha.pericias.get("Sobrevivência")
     if per_sobrev and per_sobrev.treino and any(

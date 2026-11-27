@@ -3,8 +3,14 @@
 from typing import Any, Dict, Optional
 
 from ..dados_distincoes_herois import DADOS_DISTINCOES_HEROIS
+from ..dados_distincoes_deuses import DADOS_DISTINCOES_DEUSES
 from .inventario import catalogo_do_item
 from ..models import Habilidade, Personagem
+
+DADOS_DISTINCOES_COMPLETO: Dict[str, Dict[str, Any]] = {
+    **DADOS_DISTINCOES_HEROIS,
+    **DADOS_DISTINCOES_DEUSES,
+}
 
 
 # Efeitos passivos reais de Poderes de Distinção (100% conforme texto oficial)
@@ -88,7 +94,7 @@ def sincronizar_distincoes(
     for dist in ficha.distincoes:
         if not dist.admitido:
             continue
-        dados = DADOS_DISTINCOES_HEROIS.get(dist.nome)
+        dados = DADOS_DISTINCOES_COMPLETO.get(dist.nome)
         if not dados:
             continue
 

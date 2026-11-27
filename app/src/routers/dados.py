@@ -194,13 +194,15 @@ def get_dados_escolhas():
 
 @router.get("/dados/equipamentos", tags=["Dados Estáticos"])
 async def get_equipamentos():
-    """Catálogo de armas (T3-3), armaduras/escudos (T3-5), itens gerais e itens mágicos de suplementos."""
+    """Catálogo de armas (T3-3), armaduras/escudos (T3-5), itens gerais, itens mágicos e litúrgicos de suplementos."""
     from src.dados_equipamentos_herois import DADOS_ITENS_MAGICOS_HEROIS
+    from src.dados_equipamentos_deuses import DADOS_ITENS_LITURGICOS_DEUSES
     return {
         "armas": DADOS_ARMAS,
         "armaduras": DADOS_ARMADURAS,
         "gerais": DADOS_GERAIS,
         "itens_magicos_herois": DADOS_ITENS_MAGICOS_HEROIS,
+        "itens_liturgicos_deuses": DADOS_ITENS_LITURGICOS_DEUSES,
     }
 
 
@@ -227,14 +229,15 @@ def get_dados_treinador():
 
 @router.get("/dados/distincoes", tags=["Dados Estáticos"])
 def get_dados_distincoes():
-    """Catálogo oficial das 36 Distinções — Heróis de Arton (Cap. 2, p. 104–211)."""
+    """Catálogo oficial das 59 Distinções — Heróis de Arton (36) + Deuses de Arton (23)."""
     from src.dados_distincoes_herois import (
         DADOS_DISTINCOES_HEROIS,
         REGRAS_DISTINCOES_GERAIS,
     )
+    from src.dados_distincoes_deuses import DADOS_DISTINCOES_DEUSES
     return {
         "regras": REGRAS_DISTINCOES_GERAIS,
-        "distincoes": DADOS_DISTINCOES_HEROIS,
+        "distincoes": {**DADOS_DISTINCOES_HEROIS, **DADOS_DISTINCOES_DEUSES},
     }
 
 
