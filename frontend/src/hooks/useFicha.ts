@@ -3,7 +3,7 @@ import {
     fetchRacas, fetchClasses, fetchOrigens, fetchPericias, fetchPoderes, fetchDeuses,
     fetchDadosClasses, fetchDadosOrigens, fetchDadosRacas, fetchDadosHabilidadesClasse,
     fetchDadosMagias, fetchDadosHabilidades, fetchDadosDeuses, fetchDadosPoderesConcedidos,
-    fetchDadosHabilidadesRaciais, fetchDadosEscolhas, fetchDadosEquipamentos,
+    fetchDadosHabilidadesRaciais, fetchDadosEscolhas, fetchDadosEquipamentos, fetchDadosDistincoes,
     fetchPersonagem, updatePersonagem, createPersonagem
 } from '../services/api';
 import type { Personagem, Habilidade } from '../types';
@@ -56,6 +56,7 @@ export const useFicha = (id: string | undefined) => {
     const [dadosPoderesConcedidos, setDadosPoderesConcedidos] = useState<any>({});
     const [dadosHabilidadesRaciais, setDadosHabilidadesRaciais] = useState<any>({});
     const [dadosEscolhas, setDadosEscolhas] = useState<any>({});
+    const [dadosDistincoes, setDadosDistincoes] = useState<Record<string, any>>({});
 
     const [showHabilidadesPanel, setShowHabilidadesPanel] = useState(false);
     const [habilidadesEmEdicao, setHabilidadesEmEdicao] = useState<any[]>([]);
@@ -87,7 +88,8 @@ export const useFicha = (id: string | undefined) => {
                     fetchDadosPoderesConcedidos().catch(() => ({ data: {} })),
                     fetchDadosHabilidadesRaciais().catch(() => ({ data: {} })),
                 fetchDadosEscolhas().catch(() => ({ data: {} })),
-                fetchDadosEquipamentos().catch(() => ({ data: { armas: {}, armaduras: {}, gerais: {} } }))
+                fetchDadosEquipamentos().catch(() => ({ data: { armas: {}, armaduras: {}, gerais: {} } })),
+                fetchDadosDistincoes().catch(() => ({ data: { distincoes: {} } })),
                 ]);
                 setListaRacas(results[0].data);
                 setListaClasses(results[1].data);
@@ -106,6 +108,7 @@ export const useFicha = (id: string | undefined) => {
                 setDadosHabilidadesRaciais(results[14].data);
              setDadosEscolhas(results[15]?.data || {});
              setDadosEquipamentos(results[16]?.data || { armas: {}, armaduras: {} });
+             setDadosDistincoes(results[17]?.data?.distincoes || {});
 
                 const idValido = id && id !== 'novo' && id !== 'null' && id !== 'undefined';
                 if (idValido) {
@@ -223,7 +226,9 @@ export const useFicha = (id: string | undefined) => {
                 || tipo === 'Poder da Tormenta'
             );
         };
-        const poderesAtuais = ficha.habilidades.filter(ehPoderDeSlotClasse).map(h => h.nome);
+        const poderesAtuaisClasse = ficha.habilidades.filter(ehPoderDeSlotClasse).map(h => h.nome);
+        const poderesAtuaisDist = (ficha.distincoes || []).flatMap(d => d.poderes || []);
+        const poderesAtuais = Array.from(new Set([...poderesAtuaisClasse, ...poderesAtuaisDist]));
         setClassPowersEmEdicao(poderesAtuais);
         // [LOTE 1-UI] Recarrega as escolhas secundárias dos poderes salvos
         const escolhasPoderes: Record<string, Record<string, any>> = {};
@@ -342,7 +347,21 @@ export const useFicha = (id: string | undefined) => {
                 }
             }
         });
-        const novosPoderesClasse: Habilidade[] = classPowersEmEdicao.filter(Boolean).map(nome => {
+        // Sincroniza Poderes de Distinção escolhidos nos slots de nível com ficha.distincoes
+        const nomesPoderesDistincaoCatalogo = new Set<string>();
+        const distincoesAtualizadas = (novaFicha.distincoes || []).map(d => {
+            const infoDist = dadosDistincoes?.[d.nome];
+            const catalogoNomes = new Set<string>((infoDist?.poderes || []).map((p: any) => p.nome));
+            catalogoNomes.forEach(n => nomesPoderesDistincaoCatalogo.add(n));
+            if (!d.admitido) return d;
+            const escolhidosDessaDist = classPowersEmEdicao.filter(n => n && catalogoNomes.has(n));
+            return { ...d, poderes: Array.from(new Set(escolhidosDessaDist)) };
+        });
+        novaFicha.distincoes = distincoesAtualizadas;
+
+        const novosPoderesClasse: Habilidade[] = classPowersEmEdicao
+            .filter(nome => Boolean(nome) && !nomesPoderesDistincaoCatalogo.has(nome))
+            .map(nome => {
             let d = Object.values(dadosHabilidadesClasse).find((x: any) => x.nome === nome) as any;
             if (!d) d = Object.values(dadosHabilidades).find((x: any) => x.nome === nome);
             return {
@@ -411,7 +430,7 @@ export const useFicha = (id: string | undefined) => {
         ficha, setFicha, loading, salvando, error,
         listaRacas, listaClasses, listaOrigens, listaTodasPericias, listaPoderes, listaDeuses,
         dadosClasses, dadosOrigens, dadosRacas, dadosEquipamentos, dadosHabilidadesClasse, dadosMagias,
-        dadosHabilidades, dadosDeuses, dadosPoderesConcedidos, dadosHabilidadesRaciais,
+        dadosHabilidades, dadosDeuses, dadosPoderesConcedidos, dadosHabilidadesRaciais, dadosDistincoes,
         showHabilidadesPanel, setShowHabilidadesPanel,
         habilidadesEmEdicao, setHabilidadesEmEdicao,
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,

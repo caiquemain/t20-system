@@ -20,9 +20,10 @@ interface DistincaoInfo {
 interface Props {
     ficha: Personagem;
     onUpdate: (dados: Partial<Personagem>) => void;
+    onAbrirPoderes?: () => void;
 }
 
-export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
+export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate, onAbrirPoderes }) => {
     const [catalogo, setCatalogo] = useState<Record<string, DistincaoInfo>>({});
     const [busca, setBusca] = useState('');
     const [filtroFonte, setFiltroFonte] = useState<'Todas' | 'Heróis de Arton' | 'Deuses de Arton'>('Todas');
@@ -93,20 +94,6 @@ export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
             distincoes: distincoes.map(d =>
                 d.nome === nome ? { ...d, admitido: !d.admitido } : d
             ),
-        });
-    };
-
-    const handleTogglePoder = (distNome: string, poderNome: string) => {
-        onUpdate({
-            distincoes: distincoes.map(d => {
-                if (d.nome !== distNome) return d;
-                const atual = d.poderes || [];
-                const existe = atual.includes(poderNome);
-                return {
-                    ...d,
-                    poderes: existe ? atual.filter(p => p !== poderNome) : [...atual, poderNome],
-                };
-            }),
         });
     };
 
@@ -406,48 +393,70 @@ export const DistincoesPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
 
                                 {info?.poderes && (
                                     <div style={{ marginTop: 10 }}>
-                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase' }}>
-                                            Poderes da Distinção ({poderesEscolhidos.size}/{info.poderes.length})
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase' }}>
+                                                Poderes da Distinção ({poderesEscolhidos.size}/{info.poderes.length}) — escolhidos no lugar de um Poder de Classe ao subir de nível
+                                            </div>
+                                            {dist.admitido && nivelTotal >= 5 && onAbrirPoderes && (
+                                                <button
+                                                    type="button"
+                                                    onClick={onAbrirPoderes}
+                                                    style={{
+                                                        background: '#ffd700',
+                                                        color: '#111',
+                                                        border: 'none',
+                                                        borderRadius: 5,
+                                                        padding: '5px 11px',
+                                                        fontWeight: 'bold',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.76rem',
+                                                    }}
+                                                >
+                                                    ⚙ Escolher nos Poderes de Nível
+                                                </button>
+                                            )}
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 6 }}>
                                             {info.poderes.map(p => {
                                                 const marcado = poderesEscolhidos.has(p.nome);
                                                 return (
-                                                    <label
+                                                    <div
                                                         key={p.nome}
                                                         title={p.descricao}
                                                         style={{
                                                             display: 'flex',
-                                                            alignItems: 'flex-start',
-                                                            gap: 6,
-                                                            padding: '6px 8px',
-                                                            borderRadius: 4,
-                                                            cursor: dist.admitido ? 'pointer' : 'not-allowed',
-                                                            opacity: dist.admitido ? 1 : 0.5,
+                                                            flexDirection: 'column',
+                                                            gap: 4,
+                                                            padding: '8px 10px',
+                                                            borderRadius: 5,
+                                                            opacity: dist.admitido ? 1 : 0.55,
                                                             background: marcado ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.03)',
-                                                            border: marcado ? '1px solid rgba(255,215,0,0.45)' : '1px solid #2a2a32',
+                                                            border: marcado ? '1px solid rgba(255,215,0,0.5)' : '1px solid #2a2a32',
                                                             fontSize: '0.8rem',
                                                         }}
                                                     >
-                                                        <input
-                                                            type="checkbox"
-                                                            disabled={!dist.admitido}
-                                                            checked={marcado}
-                                                            onChange={() => handleTogglePoder(dist.nome, p.nome)}
-                                                            style={{ marginTop: 2 }}
-                                                        />
-                                                        <div>
-                                                            <div style={{ fontWeight: 'bold', color: marcado ? '#ffd700' : '#e0e0e0' }}>
-                                                                {p.nome}
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                                                            <span style={{ fontWeight: 'bold', color: marcado ? '#ffd700' : '#e0e0e0' }}>
+                                                                {marcado ? '✓ ' : ''}{p.nome}
                                                                 {p.custo_pm ? (
                                                                     <span style={{ marginLeft: 6, fontSize: '0.7rem', color: '#ce93d8' }}>{p.custo_pm} PM</span>
                                                                 ) : null}
-                                                            </div>
-                                                            <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 2 }}>
-                                                                {p.descricao.length > 120 ? `${p.descricao.slice(0, 120)}…` : p.descricao}
-                                                            </div>
+                                                            </span>
+                                                            <span style={{
+                                                                fontSize: '0.68rem',
+                                                                padding: '1px 6px',
+                                                                borderRadius: 999,
+                                                                background: marcado ? 'rgba(76,175,80,0.2)' : 'rgba(148,163,184,0.12)',
+                                                                color: marcado ? '#81c784' : '#94a3b8',
+                                                                whiteSpace: 'nowrap',
+                                                            }}>
+                                                                {marcado ? 'Adquirido' : 'Slot de Nível'}
+                                                            </span>
                                                         </div>
-                                                    </label>
+                                                        <div style={{ fontSize: '0.73rem', color: '#94a3b8', lineHeight: 1.4 }}>
+                                                            {p.descricao}
+                                                        </div>
+                                                    </div>
                                                 );
                                             })}
                                         </div>
