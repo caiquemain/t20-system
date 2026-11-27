@@ -610,6 +610,43 @@ def inicializar_pericias(ficha: Personagem):
         )
         bonus_nivel_efetivo = 0 if (sem_metade_nao_treinada and not esta_treinado) else bonus_metade_nivel
 
+        # Herói dos Sete Instrumentos (Heróis de Arton): +1 em perícias não treinadas (+2 nv 7, +3 nv 15)
+        if not esta_treinado and any(
+            (h.efeitos or {}).get("bonus_pericia_nao_treinada_escalavel")
+            for h in ficha.habilidades
+        ):
+            bonus_sete = 3 if nivel >= 15 else (2 if nivel >= 7 else 1)
+            total_automatico += bonus_sete
+            fontes_bonus.append(f"Herói dos Sete Instrumentos (+{bonus_sete})")
+
+        # Defesa Armada (Heróis de Arton): +2 em Fortitude usando arma corpo a corpo de duas mãos
+        if nome_pericia == "Fortitude" and any(
+            (h.efeitos or {}).get("defesa_armada_duas_maos")
+            for h in ficha.habilidades
+        ):
+            from .inventario import catalogo_do_item
+            usa_2m_cac = any(
+                it.equipado
+                and (catalogo_do_item(it.nome) or {}).get("proposito") == "Corpo a Corpo"
+                and (catalogo_do_item(it.nome) or {}).get("empunhadura") == "Duas Mãos"
+                for it in ficha.inventario.equipamentos
+            )
+            if usa_2m_cac:
+                total_automatico += 2
+                fontes_bonus.append("Defesa Armada (+2)")
+
+        # Armaduras de Heróis de Arton com bônus/penalidade passiva de perícia
+        for it in ficha.inventario.equipamentos:
+            if not it.equipado:
+                continue
+            it_low = (it.nome or "").strip().lower()
+            if it_low == "cota de moedas" and nome_pericia == "Diplomacia":
+                total_automatico += 2
+                fontes_bonus.append("Cota de moedas (+2)")
+            elif it_low == "armadura de engenhoqueiro goblin" and nome_pericia == "Furtividade":
+                total_automatico -= 5
+                fontes_bonus.append("Armadura de engenhoqueiro goblin (-5)")
+
         total_final = bonus_nivel_efetivo + mod_attr + bonus_treino + \
             info_antiga.outros + total_automatico + penalidade_aplicada + engenhosidade_bonus
 
