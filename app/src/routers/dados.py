@@ -264,3 +264,19 @@ def get_itens_magicos_herois():
         "itens_inteligentes": REGRAS_ITENS_INTELIGENTES_HEROIS,
         "itens_amaldicoados": REGRAS_ITENS_AMALDICOADOS_HEROIS,
     }
+
+
+@router.get("/dados/deuses-menores", tags=["Dados Estáticos"])
+def get_deuses_menores():
+    """Catálogo oficial dos 60 Deuses Menores e seus Poderes Concedidos (Guia de Deuses Menores)."""
+    from src.dados_deuses_menores import (
+        DADOS_DEUSES_MENORES,
+        DADOS_PODERES_CONCEDIDOS_MENORES,
+        FONTE_DEUSES_MENORES,
+    )
+    return {
+        "fonte": FONTE_DEUSES_MENORES,
+        "deuses": DADOS_DEUSES_MENORES,
+        "poderes": DADOS_PODERES_CONCEDIDOS_MENORES,
+    }
+
