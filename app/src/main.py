@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -11,18 +12,35 @@ MONGO_URL = os.getenv("MONGO_URI", "mongodb://db:27017/tormenta20")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print(f"🔄 Conectando ao MongoDB em: {MONGO_URL} ...")
+    client = None
+    last_error = None
+    for tentativa in range(1, 6):
+        try:
+            client = AsyncIOMotorClient(MONGO_URL, serverSelectionTimeoutMS=5000)
+            await client.server_info()
+            app.state.mongo_client = client
+            app.state.db = client.get_database("tormenta20")
+            print("✅ Conectado com sucesso!")
+            last_error = None
+            break
+        except Exception as e:
+            last_error = e
+            print(f"⚠️ Tentativa {tentativa}/5 falhou ao conectar no Banco: {e}")
+            if client:
+                client.close()
+                client = None
+            if tentativa < 5:
+                await asyncio.sleep(2)
+
+    if last_error is not None:
+        print(f"❌ Erro ao conectar no Banco após 5 tentativas: {last_error}")
+
     try:
-        client = AsyncIOMotorClient(MONGO_URL)
-        await client.server_info()
-        app.state.mongo_client = client
-        app.state.db = client.get_database("tormenta20")
-        print("✅ Conectado com sucesso!")
         yield
-        client.close()
-        print("🛑 Desconectado do MongoDB")
-    except Exception as e:
-        print(f"❌ Erro ao conectar no Banco: {e}")
-        yield
+    finally:
+        if client:
+            client.close()
+            print("🛑 Desconectado do MongoDB")
 
 app = FastAPI(title="Tormenta 20 API", lifespan=lifespan)
 

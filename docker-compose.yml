@@ -2,18 +2,27 @@ services:
   db:
     image: mongo:7.0
     container_name: t20_db
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   api:
     build: ./app
     container_name: t20_api
+    restart: unless-stopped
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - MONGO_URI=mongodb://db:27017/tormenta20
     volumes:
@@ -22,8 +31,11 @@ services:
   web:
     build: ./frontend
     container_name: t20_web
+    restart: unless-stopped
     ports:
       - "5173:5173"
+    depends_on:
+      - api
     volumes:
       - ./frontend:/app
       - /app/node_modules  # <--- ESSA LINHA SALVA O SEU VITE!
