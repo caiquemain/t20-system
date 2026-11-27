@@ -60,7 +60,12 @@ SUPLEMENTOS_CATALOGO = [
 
 # Mapeamento de fallback para entradas de suplementos já existentes nos catálogos
 _RACAS_HEROIS = {"Duende", "Eiradaan", "Galokk", "Meio-Elfo", "Sátiro"}
-_CLASSES_HEROIS = {"Frade", "Treinador"}
+_CLASSES_HEROIS = {
+    "Frade", "Treinador",
+    "Alquimista", "Atleta", "Burguês", "Duelista", "Ermitão",
+    "Inovador", "Machado de Pedra", "Magimarcialista", "Necromante",
+    "Santo", "Seteiro", "Usurpador", "Vassalo", "Ventanista",
+}
 
 
 def inferir_fonte(tipo: str, nome: str, dados: Dict[str, Any]) -> str:

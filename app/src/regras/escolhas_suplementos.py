@@ -300,5 +300,52 @@ def processar_escolhas_suplementos(ficha: Personagem) -> None:
                         efeitos=dict(dados_m.get("efeitos") or {}),
                     )
 
+        # ── HERÓIS: ERMITÃO — SÍTIO SAGRADO + TEMPERADO PELO CLIMA (nv 11) ──
+        elif hab.nome == "Sítio Sagrado":
+            terreno = str(esc.get("terreno") or "").strip()
+            nv_erm = sum(int(c.nivel or 0) for c in (ficha.classes or []) if (c.nome or "") == "Ermitão")
+            if terreno and nv_erm >= 11:
+                from ..dados_variantes_herois import TERRENOS_SITIO_SAGRADO_RD
+                tipo_dano_rd = TERRENOS_SITIO_SAGRADO_RD.get(terreno)
+                if tipo_dano_rd:
+                    _injetar(
+                        nome=f"Temperado pelo Clima ({terreno})",
+                        tipo="Classe",
+                        descricao=f"RD 5 contra {tipo_dano_rd} pelo terreno associado ({terreno}).",
+                        origem_hab=hab.nome,
+                        efeitos={"resistencia_rd": {tipo_dano_rd: 5}},
+                    )
+
+        # ── HERÓIS: VASSALO — LORDE (CAMINHO DO SOLDADO / GOVERNANTE) ──
+        elif hab.nome == "Lorde":
+            caminho = str(esc.get("caminho_lorde") or "").strip()
+            nv_vas = sum(int(c.nivel or 0) for c in (ficha.classes or []) if (c.nome or "") == "Vassalo")
+            if caminho == "Caminho do Soldado":
+                if nv_vas >= 11:
+                    _injetar(
+                        nome="Visconde (Caminho do Soldado)",
+                        tipo="Classe",
+                        descricao="+1 PV por nível de vassalo.",
+                        origem_hab=hab.nome,
+                        efeitos={"pv_max_ini": nv_vas},
+                    )
+                if nv_vas >= 13:
+                    _injetar(
+                        nome="Marquês (Caminho do Soldado)",
+                        tipo="Classe",
+                        descricao="RD 5 e +2 na Defesa.",
+                        origem_hab=hab.nome,
+                        efeitos={"resistencia_rd": {"geral": 5}, "defesa_bonus": 2},
+                    )
+            elif caminho == "Caminho do Governante":
+                if nv_vas >= 11:
+                    _injetar(
+                        nome="Visconde (Caminho do Governante)",
+                        tipo="Classe",
+                        descricao="+1 em Inteligência.",
+                        origem_hab=hab.nome,
+                        efeitos={"atributo_bonus": {"int": 1}},
+                    )
+
     if extras:
         ficha.habilidades.extend(extras)

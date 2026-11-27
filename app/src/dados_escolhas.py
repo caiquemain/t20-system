@@ -196,7 +196,41 @@ PODERES_COM_ESCOLHA = {
     "Mascote": [
         {"chave": "mascote", "rotulo": "Mascote do Treinador", "catalogo": "MASCOTES_TREINADOR"},
     ],
+
+    # Heróis de Arton (Classes Variantes, p. 22–45)
+    "Escola de Duelo": [
+        {"chave": "escola_duelo", "rotulo": "Escola de Duelo (2º nível)", "catalogo": "ESCOLAS_DUELO"},
+    ],
+    "Sítio Sagrado": [
+        {"chave": "terreno", "rotulo": "Terreno Associado ao Sítio Sagrado", "catalogo": "TERRENOS_SITIO_SAGRADO"},
+    ],
+    "Lorde": [
+        {"chave": "caminho_lorde", "rotulo": "Caminho do Lorde (9º nível)", "catalogo": "CAMINHOS_LORDE_VASSALO"},
+    ],
 }
+
+ESCOLAS_DUELO = [
+    {"valor": "Escola Ambidestra", "rotulo": "Escola Ambidestra (+2 Def e Reflexos com 2 armas, 1 leve)"},
+    {"valor": "Escola Clássica", "rotulo": "Escola Clássica (+2 dano com 1 arma e mão livre)"},
+    {"valor": "Escola de Tiro", "rotulo": "Escola de Tiro (proficiência armas de fogo leves e de uma mão)"},
+]
+
+TERRENOS_SITIO_SAGRADO = [
+    {"valor": "Aquático", "rotulo": "Aquático (RD Eletricidade 5 no 11º)"},
+    {"valor": "Ártico", "rotulo": "Ártico (RD Frio 5 no 11º)"},
+    {"valor": "Colina", "rotulo": "Colina (RD Impacto 5 no 11º)"},
+    {"valor": "Deserto", "rotulo": "Deserto (RD Fogo 5 no 11º)"},
+    {"valor": "Floresta", "rotulo": "Floresta (RD Corte 5 no 11º)"},
+    {"valor": "Montanha", "rotulo": "Montanha (RD Perfuração 5 no 11º)"},
+    {"valor": "Pântano", "rotulo": "Pântano (RD Ácido 5 no 11º)"},
+    {"valor": "Planície", "rotulo": "Planície (RD Luz 5 no 11º)"},
+    {"valor": "Subterrâneo", "rotulo": "Subterrâneo (RD Trevas 5 no 11º)"},
+]
+
+CAMINHOS_LORDE_VASSALO = [
+    {"valor": "Caminho do Soldado", "rotulo": "Caminho do Soldado (Guerreiro; +1 PV/nv no 11º; RD 5 +2 Def no 13º)"},
+    {"valor": "Caminho do Governante", "rotulo": "Caminho do Governante (Nobre; +1 Int no 11º; +Car em TR no 13º)"},
+]
 
 TREINOS_ESPECIALIZADOS_TREINADOR = [
     {"valor": "Conquistar pelos Números", "rotulo": "Conquistar pelos Números (2º Melhor Amigo; 3 PM ação padrão extra)"},
