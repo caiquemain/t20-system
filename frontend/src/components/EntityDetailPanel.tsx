@@ -1,5 +1,6 @@
 import React from 'react';
 import { T20Icon, type IconName } from './T20Icon';
+import { obterInfoSuplemento } from '../utils/suplementos';
 
 interface EntityDetailPanelProps {
     nome: string;
@@ -7,6 +8,7 @@ interface EntityDetailPanelProps {
     bonus?: string;
     descricao?: string;
     tooltip?: string;
+    fonte?: string;
     bloqueado?: boolean;
     motivoBloqueio?: string;
     selecionado?: boolean;
@@ -26,11 +28,13 @@ export const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({
     bonus,
     descricao,
     tooltip,
+    fonte,
     bloqueado,
     motivoBloqueio,
     selecionado,
     onConfirm,
 }) => {
+    const infoFonte = fonte ? obterInfoSuplemento(fonte) : null;
     const linhas = (tooltip || '').split('\n').map(l => l.trim()).filter(Boolean);
 
     let subtitulo = '';
@@ -99,11 +103,25 @@ export const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({
             <div style={{ padding: '18px 18px 14px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {/* Título */}
                 <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         {icone && <T20Icon name={icone} size={20} color="#ffd700" />}
                         <h3 style={{ margin: 0, color: '#ffd700', fontSize: '1.2rem', fontFamily: 'Tormenta, serif', letterSpacing: '0.03em' }}>
                             {nome}
                         </h3>
+                        {infoFonte && (
+                            <span style={{
+                                fontSize: '0.68rem',
+                                fontWeight: 700,
+                                padding: '2px 7px',
+                                borderRadius: 999,
+                                background: `${infoFonte.cor}33`,
+                                border: `1px solid ${infoFonte.cor}`,
+                                color: '#f1f5f9',
+                                marginLeft: 'auto',
+                            }}>
+                                {infoFonte.sigla}
+                            </span>
+                        )}
                     </div>
                     {subtitulo && (
                         <div style={{ color: '#a5b4fc', fontSize: '0.85rem', fontWeight: 600, marginTop: 3 }}>

@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { SelectionModal } from '../SelectionModal';
 import { T20Icon } from '../../T20Icon';
 import { formatarTooltipDeus } from '../../../utils/deusTooltip';
+import {
+    SUPLEMENTOS_OFICIAIS,
+    TODOS_SUPLEMENTOS_IDS,
+    entidadePermitidaPorSuplementos,
+} from '../../../utils/suplementos';
 import type { WizardStepProps } from '../../../types/wizard';
 
 type ModalAberto = 'raca' | 'origem' | 'deus' | null;
@@ -9,18 +14,33 @@ type ModalAberto = 'raca' | 'origem' | 'deus' | null;
 export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, listaDeuses, dadosRacas, dadosOrigens, dadosDeuses }: WizardStepProps) {
     const [modal, setModal] = useState<ModalAberto>(null);
 
+    const suplementosAtivos = (ficha.suplementos_ativos && ficha.suplementos_ativos.length > 0)
+        ? ficha.suplementos_ativos
+        : TODOS_SUPLEMENTOS_IDS;
+
+    const toggleSuplemento = (id: string) => {
+        if (id === 'T20 JdA') return;
+        const existe = suplementosAtivos.includes(id);
+        const novos = existe
+            ? suplementosAtivos.filter(s => s !== id)
+            : [...suplementosAtivos, id];
+        updateFicha({ suplementos_ativos: novos }, true);
+    };
+
     const getDeusesPermitidos = () => {
         const raca = ficha.cabecalho.raca;
         const classe = ficha.classes[0]?.nome;
-        if (raca === 'Humano' || classe === 'Clérigo') return listaDeuses;
-        return listaDeuses.filter(nomeDeus => {
-            const dados = dadosDeuses[nomeDeus];
-            if (!dados) return false;
-            const permitidos = dados.devotos || [];
-            if (permitidos.includes("Todos") || permitidos.includes("Quaisquer") || permitidos.includes(raca) || permitidos.includes(classe)) return true;
-            if (nomeDeus === "Thwor" && ["Goblin", "Hobgoblin", "Bugbear", "Orc", "Ogro"].includes(raca)) return true;
-            return false;
-        });
+        const base = (raca === 'Humano' || classe === 'Clérigo')
+            ? listaDeuses
+            : listaDeuses.filter(nomeDeus => {
+                const dados = dadosDeuses[nomeDeus];
+                if (!dados) return false;
+                const permitidos = dados.devotos || [];
+                if (permitidos.includes("Todos") || permitidos.includes("Quaisquer") || permitidos.includes(raca) || permitidos.includes(classe)) return true;
+                if (nomeDeus === "Thwor" && ["Goblin", "Hobgoblin", "Bugbear", "Orc", "Ogro"].includes(raca)) return true;
+                return false;
+            });
+        return base.filter(d => entidadePermitidaPorSuplementos(dadosDeuses[d]?.fonte, suplementosAtivos));
     };
 
     const ehGolem = (ficha.cabecalho.raca || '').toLowerCase() === 'golem';
@@ -51,9 +71,55 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
             <h2 style={{ color: '#ffd700', marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                 <T20Icon name="nota" size={22} /> Passo 1: Conceito do Personagem
             </h2>
-            <p style={{ color: '#aaa', marginBottom: '30px' }}>
+            <p style={{ color: '#aaa', marginBottom: '22px' }}>
                 Defina a identidade básica do seu herói. Clique nos cards para abrir a seleção.
             </p>
+
+            {/* Toggle de Livros / Suplementos Ativos na Ficha */}
+            <div style={{
+                maxWidth: 700,
+                marginBottom: 20,
+                padding: '12px 14px',
+                background: 'rgba(22, 24, 41, 0.7)',
+                border: '1px solid #32385a',
+                borderRadius: 10,
+                fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+                textTransform: 'none',
+            }}>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 8, fontWeight: 600, letterSpacing: '0.03em' }}>
+                    LIVROS PERMITIDOS NA FICHA
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {SUPLEMENTOS_OFICIAIS.map(sup => {
+                        const ativo = suplementosAtivos.includes(sup.id);
+                        return (
+                            <button
+                                key={sup.id}
+                                type="button"
+                                disabled={sup.basico}
+                                onClick={() => toggleSuplemento(sup.id)}
+                                style={{
+                                    fontSize: '0.76rem',
+                                    padding: '4px 10px',
+                                    borderRadius: 999,
+                                    cursor: sup.basico ? 'default' : 'pointer',
+                                    border: `1px solid ${ativo ? sup.cor : '#334155'}`,
+                                    background: ativo ? `${sup.cor}38` : 'transparent',
+                                    color: ativo ? '#f8fafc' : '#64748b',
+                                    fontWeight: ativo ? 700 : 500,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 5,
+                                    opacity: sup.basico ? 0.9 : 1,
+                                }}
+                            >
+                                {ativo && <T20Icon name="check" size={11} color="#ffd700" />}
+                                {sup.sigla}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: 700 }}>
                 <div>
@@ -90,11 +156,14 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 title="Escolha sua Raça"
                 icon="raca"
                 selected={ficha.cabecalho.raca}
-                items={listaRacas.map(r => ({
-                    nome: r,
-                    descricao: dadosRacas[r]?.descricao,
-                    tags: Object.entries(dadosRacas[r]?.attrs || {}).map(([k, v]: any) => `${k} ${v > 0 ? '+' + v : v}`)
-                }))}
+                items={listaRacas
+                    .filter(r => entidadePermitidaPorSuplementos(dadosRacas[r]?.fonte, suplementosAtivos))
+                    .map(r => ({
+                        nome: r,
+                        descricao: dadosRacas[r]?.descricao,
+                        fonte: dadosRacas[r]?.fonte || 'T20 JdA',
+                        tags: Object.entries(dadosRacas[r]?.attrs || {}).map(([k, v]: any) => `${k} ${v > 0 ? '+' + v : v}`),
+                    }))}
                 onSelect={nome => updateFicha({ cabecalho: { ...ficha.cabecalho, raca: nome }, escolhas_atributos_raciais: [] }, true)}
             />
             <SelectionModal
@@ -103,7 +172,13 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                 title="Escolha sua Origem"
                 icon="origem"
                 selected={ficha.cabecalho.origem}
-                items={listaOrigens.map(o => ({ nome: o, descricao: dadosOrigens[o]?.descricao }))}
+                items={listaOrigens
+                    .filter(o => entidadePermitidaPorSuplementos(dadosOrigens[o]?.fonte, suplementosAtivos))
+                    .map(o => ({
+                        nome: o,
+                        descricao: dadosOrigens[o]?.descricao,
+                        fonte: dadosOrigens[o]?.fonte || 'T20 JdA',
+                    }))}
                 onSelect={nome => updateFicha({ cabecalho: { ...ficha.cabecalho, origem: nome }, escolhas_origem: [] }, true)}
             />
             <SelectionModal
@@ -125,6 +200,7 @@ export function StepConceito({ ficha, updateFicha, listaRacas, listaOrigens, lis
                             tags,
                             descricao: info?.crencas || info?.descricao,
                             tooltip: formatarTooltipDeus(d, info),
+                            fonte: info?.fonte || 'T20 JdA',
                         };
                     })
                 ]}

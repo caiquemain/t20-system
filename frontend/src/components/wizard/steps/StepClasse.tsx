@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SelectionModal } from '../SelectionModal';
 import { T20Icon } from '../../T20Icon';
+import { entidadePermitidaPorSuplementos } from '../../../utils/suplementos';
 import type { WizardStepProps } from '../../../types/wizard';
 
 export function StepClasse({ ficha, updateFicha, listaClasses, dadosClasses }: WizardStepProps) {
@@ -124,11 +125,14 @@ export function StepClasse({ ficha, updateFicha, listaClasses, dadosClasses }: W
                 title="Escolha sua Classe"
                 icon="classe"
                 selected={classeNome}
-                items={listaClasses.map(c => ({
-                    nome: c,
-                    descricao: dadosClasses[c]?.descricao,
-                    tags: [`PV ${dadosClasses[c]?.pv_inicial}`, `PM ${dadosClasses[c]?.pm_inicial}`]
-                }))}
+                items={listaClasses
+                    .filter(c => entidadePermitidaPorSuplementos(dadosClasses[c]?.fonte, ficha.suplementos_ativos))
+                    .map(c => ({
+                        nome: c,
+                        descricao: dadosClasses[c]?.descricao,
+                        fonte: dadosClasses[c]?.fonte || 'T20 JdA',
+                        tags: [`PV ${dadosClasses[c]?.pv_inicial}`, `PM ${dadosClasses[c]?.pm_inicial}`],
+                    }))}
                 onSelect={nome => {
                     const nc = [...ficha.classes];
                     nc[0] = { ...nc[0], nome: nome, subclasse: undefined };

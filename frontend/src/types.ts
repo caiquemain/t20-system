@@ -254,6 +254,21 @@ export interface Habilidade {
     modificadores?: { atributo: string; valor: number; }[];
 }
 
+export interface DistincaoPersonagem {
+    nome: string;
+    admitido: boolean;
+    marca?: string;
+    poderes: string[];
+    fonte?: string;
+}
+
+export interface ComplicacaoPersonagem {
+    nome: string;
+    descricao?: string;
+    poder_bonus?: string;
+    fonte?: string;
+}
+
 export interface Personagem {
     _id?: string;
     usuario_id: string;
@@ -261,6 +276,10 @@ export interface Personagem {
     cabecalho: Cabecalho;
     classes: ClasseInfo[];
     descricao: Descricao;
+
+    suplementos_ativos?: string[];
+    distincoes?: DistincaoPersonagem[];
+    complicacoes?: ComplicacaoPersonagem[];
 
     atributos_base: Atributos;
     atributos: Atributos;
@@ -289,6 +308,7 @@ export interface DadosRaca {
     escolhas: number;
     tamanho: string;
     habilidades: string[];
+    fonte?: string;
 }
 
 export interface DadosClasse {
@@ -301,6 +321,7 @@ export interface DadosClasse {
     qtd_escolhas: number;
     proficiencias: string[];
     habilidades: string[];
+    fonte?: string;
 }
 
 export interface DadosOrigem {
@@ -309,6 +330,7 @@ export interface DadosOrigem {
     qtd_escolhas: number;
     pericias_fixas: string[];
     beneficios_lista: string[];
+    fonte?: string;
 }
 
 export interface DadosHabilidade {

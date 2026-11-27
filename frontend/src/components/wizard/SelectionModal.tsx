@@ -1,13 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { T20Icon, type IconName } from '../T20Icon';
 import { EntityDetailPanel } from '../EntityDetailPanel';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { obterInfoSuplemento } from '../../utils/suplementos';
 
 export interface SelectionItem {
     nome: string;
     descricao?: string;
     tags?: string[];
     tooltip?: string;
+    fonte?: string;
 }
 
 interface SelectionModalProps {
@@ -27,18 +29,39 @@ const normalizar = (s: string) =>
 
 export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco', items, selected }: SelectionModalProps) {
     const [busca, setBusca] = useState('');
+    const [filtroFonte, setFiltroFonte] = useState<string>('TODOS');
     const [hoveredItem, setHoveredItem] = useState<SelectionItem | null>(null);
     useEscapeKey(isOpen, onClose);
 
+    useEffect(() => {
+        if (!isOpen) {
+            setBusca('');
+            setFiltroFonte('TODOS');
+            setHoveredItem(null);
+        }
+    }, [isOpen]);
+
+    const fontesDisponiveis = useMemo(() => {
+        const set = new Set<string>();
+        items.forEach(it => {
+            if (it.fonte) set.add(it.fonte);
+        });
+        return Array.from(set);
+    }, [items]);
+
     const filtrados = useMemo(() => {
         const termo = normalizar(busca);
-        if (!termo) return items;
-        return items.filter(i =>
-            normalizar(i.nome).includes(termo) ||
-            normalizar(i.descricao || '').includes(termo) ||
-            normalizar(i.tooltip || '').includes(termo)
-        );
-    }, [busca, items]);
+        return items.filter(i => {
+            if (filtroFonte !== 'TODOS' && i.nome !== '' && (i.fonte || 'T20 JdA') !== filtroFonte) return false;
+            if (!termo) return true;
+            return (
+                normalizar(i.nome).includes(termo) ||
+                normalizar(i.descricao || '').includes(termo) ||
+                normalizar(i.tooltip || '').includes(termo) ||
+                normalizar(i.fonte || '').includes(termo)
+            );
+        });
+    }, [busca, items, filtroFonte]);
 
     const temDetalhesRicos = useMemo(
         () => items.some(it => Boolean(it.tooltip)),
@@ -99,6 +122,62 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco'
                     </button>
                 </div>
 
+                {/* Barra de Filtro por Livro */}
+                {fontesDisponiveis.length > 1 && (
+                    <div style={{
+                        padding: '8px 18px',
+                        borderBottom: '1px solid #222742',
+                        display: 'flex',
+                        gap: 6,
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        background: 'rgba(10, 12, 22, 0.45)',
+                        fontFamily: FONT_BODY,
+                        textTransform: 'none',
+                    }}>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginRight: 4 }}>Livro:</span>
+                        <button
+                            type="button"
+                            onClick={() => setFiltroFonte('TODOS')}
+                            style={{
+                                fontSize: '0.72rem',
+                                padding: '3px 10px',
+                                borderRadius: 999,
+                                cursor: 'pointer',
+                                border: filtroFonte === 'TODOS' ? '1px solid #ffd700' : '1px solid #32385a',
+                                background: filtroFonte === 'TODOS' ? 'rgba(255,215,0,0.18)' : 'transparent',
+                                color: filtroFonte === 'TODOS' ? '#ffd700' : '#cbd5e1',
+                                fontWeight: filtroFonte === 'TODOS' ? 700 : 500,
+                            }}
+                        >
+                            Todos
+                        </button>
+                        {fontesDisponiveis.map(f => {
+                            const info = obterInfoSuplemento(f);
+                            const ativo = filtroFonte === f;
+                            return (
+                                <button
+                                    key={f}
+                                    type="button"
+                                    onClick={() => setFiltroFonte(f)}
+                                    style={{
+                                        fontSize: '0.72rem',
+                                        padding: '3px 10px',
+                                        borderRadius: 999,
+                                        cursor: 'pointer',
+                                        border: `1px solid ${ativo ? info.cor : '#32385a'}`,
+                                        background: ativo ? `${info.cor}44` : 'transparent',
+                                        color: ativo ? '#fff' : '#cbd5e1',
+                                        fontWeight: ativo ? 700 : 500,
+                                    }}
+                                >
+                                    {info.sigla}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
                 {/* Corpo Master-Detail */}
                 <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <div style={{
@@ -111,6 +190,7 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco'
                         {filtrados.map(item => {
                             const isSel = selected === item.nome;
                             const isHover = itemEmFoco?.nome === item.nome;
+                            const infoFonte = item.fonte && item.fonte !== 'T20 JdA' ? obterInfoSuplemento(item.fonte) : null;
                             return (
                                 <button
                                     key={item.nome}
@@ -138,8 +218,25 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco'
                                         transition: 'border-color 0.15s, background 0.15s',
                                     }}
                                 >
-                                    <div style={{ color: isSel ? '#ffd700' : '#f1f5f9', fontWeight: 700, fontSize: '0.96rem', fontFamily: 'Tormenta, serif' }}>
-                                        {item.nome}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+                                        <span style={{ color: isSel ? '#ffd700' : '#f1f5f9', fontWeight: 700, fontSize: '0.96rem', fontFamily: 'Tormenta, serif' }}>
+                                            {item.nome || 'Sem seleção'}
+                                        </span>
+                                        {infoFonte && (
+                                            <span style={{
+                                                marginLeft: 'auto',
+                                                fontSize: '0.62rem',
+                                                fontWeight: 700,
+                                                padding: '1px 6px',
+                                                borderRadius: 999,
+                                                background: `${infoFonte.cor}33`,
+                                                border: `1px solid ${infoFonte.cor}`,
+                                                color: '#e2e8f0',
+                                                flexShrink: 0,
+                                            }}>
+                                                {infoFonte.sigla}
+                                            </span>
+                                        )}
                                     </div>
                                     {item.descricao && (
                                         <div style={{ color: '#94a3b8', fontSize: '0.76rem', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -171,6 +268,7 @@ export function SelectionModal({ isOpen, onClose, onSelect, title, icon = 'arco'
                             icone={icon}
                             descricao={itemEmFoco.descricao}
                             tooltip={itemEmFoco.tooltip}
+                            fonte={itemEmFoco.fonte}
                             selecionado={selected === itemEmFoco.nome}
                             onConfirm={() => { onSelect(itemEmFoco.nome); onClose(); }}
                         />
