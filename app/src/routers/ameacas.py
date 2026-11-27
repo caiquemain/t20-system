@@ -57,6 +57,23 @@ async def listar_ameacas(
     limite: int = Query(500, ge=1, le=1000),
 ):
     db = get_db(request)
+    if db is None:
+        docs = carregar_seed_bestiario()
+        out = []
+        for idx, d in enumerate(docs):
+            if nd is not None and str(d.get("nd")) != str(nd):
+                continue
+            if tipo is not None and d.get("tipo") != tipo:
+                continue
+            if papel is not None and d.get("papel") != papel:
+                continue
+            item = dict(d)
+            item["_id"] = f"seed-{idx}"
+            out.append(item)
+            if len(out) >= limite:
+                break
+        return out
+
     filtro: dict = {}
     if nd is not None:
         filtro["nd"] = nd
@@ -70,6 +87,18 @@ async def listar_ameacas(
 @router.get("/{ameaca_id}", response_model=Ameaca)
 async def obter_ameaca(ameaca_id: str, request: Request):
     db = get_db(request)
+    if db is None:
+        docs = carregar_seed_bestiario()
+        if ameaca_id.startswith("seed-"):
+            try:
+                idx = int(ameaca_id.split("-", 1)[1])
+                if 0 <= idx < len(docs):
+                    item = dict(docs[idx])
+                    item["_id"] = ameaca_id
+                    return Ameaca.model_validate(item)
+            except ValueError:
+                pass
+        raise HTTPException(status_code=404, detail="Ameaça não encontrada")
     ameaca = await db["ameacas"].find_one({"_id": _parse_id(ameaca_id)})
     if ameaca is None:
         raise HTTPException(status_code=404, detail="Ameaça não encontrada")

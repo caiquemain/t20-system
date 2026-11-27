@@ -858,3 +858,52 @@ async def gerar_odt(personagem_id: str, db=Depends(get_db)):
     except Exception as e:
         logger.error(f"Erro ao gerar ODT: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Erro ao gerar ODT: {str(e)}")
+
+
+@router.post("/exportar/pdf")
+async def exportar_pdf_stateless(personagem: Personagem):
+    """Gera PDF diretamente a partir do JSON da ficha (modo localStorage / stateless)."""
+    try:
+        pdf_bytes = preencher_pdf_bytes(atualizar_ficha(personagem))
+        nome_slug = _sanitizar_nome_arquivo(personagem.cabecalho.nome)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=ficha-{nome_slug}.pdf"},
+        )
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF stateless: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar PDF: {str(e)}")
+
+
+@router.post("/exportar/odg")
+async def exportar_odg_stateless(personagem: Personagem):
+    """Gera ODG diretamente a partir do JSON da ficha (modo localStorage / stateless)."""
+    try:
+        odg_bytes = gerar_odg_bytes(atualizar_ficha(personagem))
+        nome_slug = _sanitizar_nome_arquivo(personagem.cabecalho.nome)
+        return Response(
+            content=odg_bytes,
+            media_type=_ODG_MIMETYPE,
+            headers={"Content-Disposition": f"attachment; filename=ficha-{nome_slug}.odg"},
+        )
+    except Exception as e:
+        logger.error(f"Erro ao gerar ODG stateless: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar ODG: {str(e)}")
+
+
+@router.post("/exportar/odt")
+async def exportar_odt_stateless(personagem: Personagem):
+    """Gera ODT diretamente a partir do JSON da ficha (modo localStorage / stateless)."""
+    from ..odt_export import ODT_MIMETYPE, gerar_odt_bytes
+    try:
+        odt_bytes = gerar_odt_bytes(atualizar_ficha(personagem))
+        nome_slug = _sanitizar_nome_arquivo(personagem.cabecalho.nome)
+        return Response(
+            content=odt_bytes,
+            media_type=ODT_MIMETYPE,
+            headers={"Content-Disposition": f"attachment; filename=ficha-{nome_slug}.odt"},
+        )
+    except Exception as e:
+        logger.error(f"Erro ao gerar ODT stateless: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar ODT: {str(e)}")

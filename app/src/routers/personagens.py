@@ -8,6 +8,31 @@ from src.dependencies import get_db
 
 router = APIRouter(prefix="/personagens", tags=["Personagens"])
 
+@router.post("/calcular", response_model=Personagem)
+async def calcular_personagem_stateless(personagem: Personagem):
+    """Recalcula a ficha inteira no motor de regras sem precisar de banco de dados (modo localStorage)."""
+    return atualizar_ficha(personagem)
+
+
+@router.post("/ativar-stateless")
+async def ativar_habilidade_stateless(payload: dict):
+    """Executa uma habilidade ativável sem banco de dados, retornando resultado + ficha recalculada."""
+    from src.regras.ativaveis import ativar_habilidade
+    raw_p = payload.get("personagem")
+    if not isinstance(raw_p, dict):
+        raise HTTPException(status_code=400, detail="Campo 'personagem' obrigatório")
+    ficha = atualizar_ficha(Personagem.model_validate(raw_p))
+    nome = str(payload.get("nome") or "").strip()
+    pm_extra = int(payload.get("pm_extra") or 0)
+    res = ativar_habilidade(ficha, nome, pm_extra=pm_extra)
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("erro", "Falha ao ativar habilidade"))
+    pm_apos = ficha.status.pm.atual
+    ficha = atualizar_ficha(ficha)
+    ficha.status.pm.atual = min(pm_apos, ficha.status.pm.maximo)
+    return {"resultado": res, "personagem": ficha}
+
+
 @router.post("/", response_model=Personagem, status_code=status.HTTP_201_CREATED)
 async def criar_personagem(personagem: Personagem, request: Request):
     db = get_db(request)
