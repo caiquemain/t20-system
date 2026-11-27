@@ -23,7 +23,7 @@ def test_catalogo_20_deuses_completo_e_valido():
         assert d["descricao"]
         assert d["simbolo"]
         assert d["energia"] in {"Positiva", "Negativa", "Qualquer"}
-        assert len(d["poderes"]) == 4, f"{nome} deve ter 4 poderes concedidos"
+        assert len(d["poderes"]) >= 7, f"{nome} deve ter 4 poderes base + poderes de Deuses de Arton"
         assert d["obrigacoes"], f"{nome} deve ter Obrigações & Restrições"
         assert len(d["devotos"]) > 0
 
