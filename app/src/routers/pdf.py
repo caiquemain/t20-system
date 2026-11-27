@@ -910,11 +910,10 @@ async def exportar_odt_stateless(personagem: Personagem):
 
 
 @router.get("/{personagem_id}/xlsx")
-async def exportar_xlsx_personagem(personagem_id: str, request: Request):
+async def exportar_xlsx_personagem(personagem_id: str, db=Depends(get_db)):
     """Gera planilha Excel (.xlsx) auditada com fórmulas automáticas a partir do MongoDB."""
     from ..xlsx_export import XLSX_MIMETYPE, gerar_xlsx_bytes
     try:
-        db = get_db(request)
         if db is None:
             raise HTTPException(status_code=400, detail="Use POST /personagens/exportar/xlsx no modo stateless.")
         try:
