@@ -193,10 +193,15 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                  <div style={{ marginBottom: 20, padding: 15, background: '#3b2530', borderRadius: 6, border: '1px solid #ce93d8' }}>
                      <h3 className="section-subtitle" style={{ marginTop: 0, color: '#ce93d8' }}>Linhagem Sobrenatural</h3>
                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                         {["Dracônica", "Feérica", "Rubra"].map(l => (
-                             <button key={l} onClick={() => setLinhagemEmEdicao(l)} className={`btn-action ${linhagemEmEdicao === l ? 'selected' : ''}`} style={{ flex: 1, background: linhagemEmEdicao === l ? '#4caf50' : '#333', border: linhagemEmEdicao === l ? '1px solid #fff' : '1px solid #555', color: 'white' }}>{l}</button>
+                         {["Dracônica", "Feérica", "Rubra", "Abençoada"].map(l => (
+                             <button key={l} onClick={() => setLinhagemEmEdicao(l)} className={`btn-action ${linhagemEmEdicao === l ? 'selected' : ''}`} style={{ flex: 1, minWidth: 100, background: linhagemEmEdicao === l ? '#4caf50' : '#333', border: linhagemEmEdicao === l ? '1px solid #fff' : '1px solid #555', color: 'white' }}>{l}</button>
                          ))}
                      </div>
+                     {linhagemEmEdicao === "Abençoada" && (
+                         <p style={{ margin: '10px 0 0', fontSize: '0.78rem', color: '#f3d5ff' }}>
+                             <strong>Deuses de Arton:</strong> Escolha um deus maior (Básica: +1 magia divina de 1º círculo e 1 poder concedido no 2º nv sem precisar ser devoto; Aprimorada: –1 PM em magias divinas de círculo ≤ Sab e 2º–3º círculos; Superior: +1 Sab e 4º–5º círculos).
+                         </p>
+                     )}
                      {linhagemEmEdicao === "Dracônica" && (
                          <div style={{ marginTop: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
                              <label style={{ fontSize: '0.8rem', color: '#aaa' }}>Tipo de dano:</label>

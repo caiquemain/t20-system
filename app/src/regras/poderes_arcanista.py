@@ -413,6 +413,40 @@ def aplicar_poderes_arcanista(ficha: Personagem):
                 categoria="Poder", valor=4 * qtd_tormenta)
             ficha.status.pm.maximo = ficha.status.pm_calc.total
 
+    # ── Linhagem Abençoada (Deuses de Arton, Cap. 1, p. 33) ──
+    linhagem_abencoada = any(h.nome == "Linhagem Abençoada" for h in ficha.habilidades)
+    if linhagem_abencoada:
+        hab_abenc = next((h for h in ficha.habilidades if h.nome == "Linhagem Abençoada"), None)
+        if hab_abenc is not None:
+            if not isinstance(hab_abenc.efeitos, dict):
+                hab_abenc.efeitos = {}
+            circulos_divinos = [1]
+            if heranca_aprimorada:
+                circulos_divinos = [1, 2, 3]
+                hab_abenc.efeitos["linhagem_abencoada_aprimorada"] = True
+            if heranca_superior:
+                circulos_divinos = [1, 2, 3, 4, 5]
+            hab_abenc.efeitos["circulos_divinos_feiticeiro"] = circulos_divinos
+            hab_abenc.efeitos["poder_concedido_nivel_2"] = True
+
+        # Básica: aprende 1 magia divina de 1º círculo
+        if ficha.combate.magias_calc:
+            ficha.combate.limite_magias = (ficha.combate.limite_magias or 3) + 1
+
+        # Superior: +1 Sabedoria + 1 magia divina por círculo acessível (limitado por Sab)
+        if heranca_superior:
+            ficha.atributos.sabedoria += 1
+            if "sabedoria" in ficha.atributos_calc:
+                ficha.atributos_calc["sabedoria"].adicionar_bonus(
+                    fonte="Linhagem Abençoada (superior)",
+                    categoria="Poder",
+                    valor=1,
+                )
+            if ficha.combate.magias_calc:
+                sab_atual = max(0, getattr(ficha.atributos, "sabedoria", 0) or 0)
+                if sab_atual > 0:
+                    ficha.combate.limite_magias = (ficha.combate.limite_magias or 3) + min(5, sab_atual)
+
     # ═══════════════════════════════════════
     # ENVOLTO EM MISTÉRIO
     # ═══════════════════════════════════════

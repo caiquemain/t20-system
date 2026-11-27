@@ -208,6 +208,16 @@ def calcular_custo_magia(ficha: Personagem, magia,
         or "universal" in tipo_magia
         or (not tipo_magia and any((c.nome or "") == "Clérigo" for c in (ficha.classes or [])))
     )
+
+    # Linhagem Abençoada Aprimorada (Deuses de Arton p. 33): magias divinas de círculo <= Sabedoria custam -1 PM
+    if eh_divina and any(
+        (h.nome or "") == "Linhagem Abençoada" and (h.efeitos or {}).get("linhagem_abencoada_aprimorada")
+        for h in ficha.habilidades
+    ):
+        sab_val = getattr(ficha.atributos, "sabedoria", 0) or 0
+        if (magia.circulo or 1) <= sab_val:
+            total -= 1
+            calc.adicionar_bonus("Linhagem Abençoada Aprimorada (-1 PM)", "Reducao", -1)
     eh_arcana = "arcan" in tipo_magia or "universal" in tipo_magia
     if "cajado do poder" in equipados_low and eh_arcana:
         total -= 1
