@@ -187,3 +187,6 @@ DADOS_PODERES_TORMENTA = {
         "efeitos": {"custo_pm": 1, "visco_rubro": True},
     },
 }
+
+from .dados_poderes_gerais_herois import DADOS_PODERES_TORMENTA_HEROIS
+DADOS_PODERES_TORMENTA.update(DADOS_PODERES_TORMENTA_HEROIS)

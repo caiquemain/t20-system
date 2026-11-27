@@ -31,7 +31,7 @@ def _paladino_com_poderes(nivel: int, chaves_poderes, car: int = 4, condicoes=No
 
 
 def test_catalogo_paladino_completo_30_entradas():
-    pal_entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Paladino"]
+    pal_entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Paladino" and v.get("fonte", "T20 JdA") == "T20 JdA"]
     fixas = [v for v in pal_entries if v.get("tipo") == "Habilidade de Classe"]
     poderes = [v for v in pal_entries if v.get("tipo") == "Poder de Paladino"]
     assert len(fixas) == 7

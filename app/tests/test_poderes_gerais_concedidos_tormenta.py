@@ -39,7 +39,7 @@ def test_catalogos_completos_e_todos_com_efeitos():
         for p in dados_deus["poderes"]:
             assert p in DADOS_PODERES_CONCEDIDOS, f"Poder '{p}' de {nome_deus} ausente em DADOS_PODERES_CONCEDIDOS"
 
-    assert len(DADOS_PODERES_TORMENTA) == 22
+    assert len(DADOS_PODERES_TORMENTA) == 28
     assert all(v.get("efeitos") for v in DADOS_PODERES_TORMENTA.values())
 
     for tipo in ("Poder Geral (Combate)", "Poder Geral (Destino)", "Poder Geral (Magia)"):

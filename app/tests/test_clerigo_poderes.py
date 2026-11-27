@@ -129,7 +129,7 @@ PODERES_ESPERADOS = {
 
 
 def test_catalogo_clerigo_completo_21_entradas():
-    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Clérigo"]
+    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Clérigo" and v.get("fonte", "T20 JdA") == "T20 JdA"]
     fixas = {v["nome"]: v.get("nivel") for v in entries if v.get("tipo") == "Habilidade de Classe"}
     poderes = {v["nome"] for v in entries if v.get("tipo") == "Poder de Clérigo"}
 
@@ -144,7 +144,7 @@ def test_missas_seguem_regra_base():
         v for v in DADOS_HABILIDADES_CLASSE.values()
         if v.get("classe") == "Clérigo" and v["nome"].startswith("Missa:")
     ]
-    assert len(missas) == 5
+    assert len(missas) == 8
     for m in missas:
         dm = m["efeitos"]["missa"]
         assert dm["tempo"] == "1 hora"

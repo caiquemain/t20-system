@@ -143,7 +143,8 @@ FIXAS_ESPERADAS = {
 
 def test_catalogo_bardo_completo_24_entradas():
     bardo_entries = [
-        v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Bardo"
+        v for v in DADOS_HABILIDADES_CLASSE.values()
+        if v.get("classe") == "Bardo" and v.get("fonte", "T20 JdA") == "T20 JdA"
     ]
     fixas = {v["nome"]: v.get("nivel") for v in bardo_entries if v.get("tipo") == "Habilidade de Classe"}
     poderes = {v["nome"] for v in bardo_entries if v.get("tipo") == "Poder de Bardo"}

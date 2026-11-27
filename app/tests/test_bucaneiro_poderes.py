@@ -198,7 +198,7 @@ PODERES_ESPERADOS = {
 
 
 def test_catalogo_bucaneiro_completo_26_entradas():
-    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Bucaneiro"]
+    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Bucaneiro" and v.get("fonte", "T20 JdA") == "T20 JdA"]
     fixas = {v["nome"]: v.get("nivel") for v in entries if v.get("tipo") == "Habilidade de Classe"}
     poderes = {v["nome"] for v in entries if v.get("tipo") == "Poder de Bucaneiro"}
 

@@ -107,7 +107,7 @@ PODERES_ESPERADOS = {
 
 
 def test_catalogo_guerreiro_completo_23_entradas():
-    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Guerreiro"]
+    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Guerreiro" and v.get("fonte", "T20 JdA") == "T20 JdA"]
     fixas = {v["nome"]: v.get("nivel") for v in entries if v.get("tipo") == "Habilidade de Classe"}
     poderes = {v["nome"] for v in entries if v.get("tipo") == "Poder de Guerreiro"}
 

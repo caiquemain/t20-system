@@ -112,6 +112,10 @@ def listar_poderes_categorizados():
                 categoria = "Magia"
             elif "Tormenta" in tipo:
                 categoria = "Tormenta"
+            elif "Raça" in tipo:
+                categoria = "Raça"
+            elif "Grupo" in tipo:
+                categoria = "Grupo"
             lista_poderes.append({
                 "nome": dados["nome"],
                 "categoria": categoria,
