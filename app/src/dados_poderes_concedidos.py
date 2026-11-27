@@ -588,3 +588,8 @@ DADOS_PODERES_CONCEDIDOS = {
         "efeitos": {"custo_pm": 3, "magico": True, "zumbificar": True},
     },
 }
+
+from .dados_poderes_concedidos_deuses import DADOS_PODERES_CONCEDIDOS_DEUSES
+
+DADOS_PODERES_CONCEDIDOS.update(DADOS_PODERES_CONCEDIDOS_DEUSES)
+

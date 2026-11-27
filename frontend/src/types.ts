@@ -183,6 +183,11 @@ export interface Combate {
     ataques: Ataque[];
     magias: Magia[];
     cd_magias: number;
+    cd_magias_calc?: {
+        base: number;
+        total: number;
+        fontes: { fonte: string; categoria?: string; valor: number; descricao?: string }[];
+    };
     bba: number;
     iniciativa: number;
                     bonus_dano_dado_tipo?: Record<string, number>;

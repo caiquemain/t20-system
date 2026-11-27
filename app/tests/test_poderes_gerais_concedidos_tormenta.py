@@ -31,7 +31,7 @@ def _ficha(nivel: int = 1, forca: int = 1, des: int = 1, con: int = 1, int_: int
 
 
 def test_catalogos_completos_e_todos_com_efeitos():
-    assert len(DADOS_PODERES_CONCEDIDOS) == 72
+    assert len(DADOS_PODERES_CONCEDIDOS) == 147  # 72 base + 75 Deuses de Arton
     assert all(v.get("efeitos") for v in DADOS_PODERES_CONCEDIDOS.values())
 
     # Todo poder listado nos 20 deuses existe em DADOS_PODERES_CONCEDIDOS

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { fetchAmeacas } from '../services/api';
 import type { Ameaca } from '../types';
 import { MonsterCard } from '../components/MonsterCard';
+import { ConstrutorAmeacaModal } from '../components/ConstrutorAmeacaModal';
 import { Link } from 'react-router-dom';
 import { T20Icon } from '../components/T20Icon';
 
@@ -11,6 +12,7 @@ const Bestiario: React.FC = () => {
     const [busca, setBusca] = useState('');
     const [filtroND, setFiltroND] = useState('');
     const [filtroTipo, setFiltroTipo] = useState('');
+    const [abrirConstrutor, setAbrirConstrutor] = useState(false);
 
     useEffect(() => {
         fetchAmeacas()
@@ -51,14 +53,40 @@ const Bestiario: React.FC = () => {
 
     return (
         <div style={{ width: '100%', maxWidth: '2200px', margin: '0 auto', padding: '0 40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', marginTop: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', marginTop: '40px', flexWrap: 'wrap', gap: '12px' }}>
                 <h1 style={{ color: '#d32f2f', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
                     <T20Icon name="bestiario" size={28} /> Bestiário de Arton
                 </h1>
-                <Link to="/" style={{ color: '#aaa', textDecoration: 'none', padding: '10px', border: '1px solid #444', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <T20Icon name="voltar" size={16} /> Voltar para Home
-                </Link>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button
+                        onClick={() => setAbrirConstrutor(true)}
+                        style={{
+                            background: '#d32f2f',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '10px 16px',
+                            borderRadius: '8px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        + Criar Ameaça (Manual Oficial)
+                    </button>
+                    <Link to="/" style={{ color: '#aaa', textDecoration: 'none', padding: '10px', border: '1px solid #444', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <T20Icon name="voltar" size={16} /> Voltar para Home
+                    </Link>
+                </div>
             </div>
+
+            {abrirConstrutor && (
+                <ConstrutorAmeacaModal
+                    onClose={() => setAbrirConstrutor(false)}
+                    onCreated={(nova) => {
+                        setAmeacas(prev => [nova, ...prev]);
+                        setAbrirConstrutor(false);
+                    }}
+                />
+            )}
 
             {/* Filtros (mesmo estilo do Grimório) */}
             <div style={{

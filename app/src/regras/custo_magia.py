@@ -208,6 +208,16 @@ def calcular_custo_magia(ficha: Personagem, magia,
         or "universal" in tipo_magia
         or (not tipo_magia and any((c.nome or "") == "Clérigo" for c in (ficha.classes or [])))
     )
+
+    # Linhagem Abençoada Aprimorada (Deuses de Arton p. 33): magias divinas de círculo <= Sabedoria custam -1 PM
+    if eh_divina and any(
+        (h.nome or "") == "Linhagem Abençoada" and (h.efeitos or {}).get("linhagem_abencoada_aprimorada")
+        for h in ficha.habilidades
+    ):
+        sab_val = getattr(ficha.atributos, "sabedoria", 0) or 0
+        if (magia.circulo or 1) <= sab_val:
+            total -= 1
+            calc.adicionar_bonus("Linhagem Abençoada Aprimorada (-1 PM)", "Reducao", -1)
     eh_arcana = "arcan" in tipo_magia or "universal" in tipo_magia
     if "cajado do poder" in equipados_low and eh_arcana:
         total -= 1
@@ -347,10 +357,11 @@ ATRIBUTO_CHAVE_POR_CLASSE = {
     "Bardo": "carisma",
     "Clérigo": "sabedoria",
     "Druida": "sabedoria",
+    "Frade": "sabedoria",
 }
 
 CLASSES_CONJURADORAS_ARCANAS = {"Arcanista", "Bardo", "Bruxo", "Mago", "Feiticeiro"}
-CLASSES_CONJURADORAS_DIVINAS = {"Clérigo", "Druida"}
+CLASSES_CONJURADORAS_DIVINAS = {"Clérigo", "Druida", "Frade"}
 
 
 def obter_atributo_chave_magia(ficha: Personagem, classe_nome: Optional[str] = None) -> Optional[str]:
@@ -410,6 +421,22 @@ def calcular_cd_magias_ficha(ficha: Personagem) -> Optional[int]:
             categoria="Poder",
             valor=2 if (ficha.combate.circulo_maximo or 0) >= 4 else 1,
         )
+
+    # Melhoria Canônico (Deuses de Arton, Tabela 1-4): +1 na CD de magias divinas se devoto
+    if (getattr(ficha.cabecalho, "deus", "") or "").strip():
+        if any(
+            it.equipado and (
+                "canônico" in (it.nome or "").strip().lower()
+                or "canonico" in (it.nome or "").strip().lower()
+                or any((m or "").strip().lower() in {"canônico", "canonico"} for m in (getattr(it, "melhorias", None) or []))
+            )
+            for it in (getattr(ficha.inventario, "equipamentos", None) or [])
+        ):
+            cd_calc.adicionar_bonus(
+                fonte="Melhoria: Canônico (+1 CD)",
+                categoria="Item",
+                valor=1,
+            )
 
     # Magia Pungente (buff ativo)
     for b in ficha.status.buffs:

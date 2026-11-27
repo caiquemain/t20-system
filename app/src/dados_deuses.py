@@ -208,7 +208,7 @@ DADOS_DEUSES = {
         "simbolo": "Estrela negra de cinco pontas",
         "energia": "Negativa",
         "arma": "Adaga",
-        "devotos": ["Anão", "Medusa", "Qareen", "Osteon", "Suraggel (Sulfure)", "Trog", "Arcanista", "Bardo", "Ladino"],
+        "devotos": ["Anão", "Medusa", "Qareen", "Osteon", "Suraggel (Sulfure)", "Trog", "Arcanista", "Bardo", "Druida", "Ladino"],
         "poderes": ["Carícia Sombria", "Manto da Penumbra", "Visão nas Trevas", "Zumbificar"],
         "obrigacoes": "Proibida de ser tocada por Azgher: deve se cobrir inteiramente durante o dia, sem expor ao sol nenhum pedaço de pele.",
         "restricoes_mecanicas": {"cobrir_pele_dia": True},
@@ -266,3 +266,10 @@ DADOS_DEUSES = {
         "restricoes_mecanicas": {"proibido_matar_seres_magicos": True},
     },
 }
+
+from .dados_poderes_concedidos_deuses import DADOS_PODERES_CONCEDIDOS_DEUSES
+
+for _nome_pc, _dados_pc in DADOS_PODERES_CONCEDIDOS_DEUSES.items():
+    for _deus_pc in _dados_pc.get("deuses", []):
+        if _deus_pc in DADOS_DEUSES and _nome_pc not in DADOS_DEUSES[_deus_pc]["poderes"]:
+            DADOS_DEUSES[_deus_pc]["poderes"].append(_nome_pc)

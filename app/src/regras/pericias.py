@@ -392,12 +392,17 @@ def inicializar_pericias(ficha: Personagem):
                     detalhamento_bonus.setdefault(p_res, []).append(
                         {"fonte": "Símbolo sagrado", "valor": 1}
                     )
-        elif nome_low == "símbolo abençoado" and not simbolo_aplicado:
+        elif (
+            nome_low == "símbolo abençoado"
+            or "inscrito" in nome_low
+            or any((m or "").strip().lower() == "inscrito" for m in (getattr(it, "melhorias", None) or []))
+        ) and not simbolo_aplicado:
             if (getattr(ficha.cabecalho, "deus", "") or "").strip():
                 simbolo_aplicado = True
+                fonte_simb = "Símbolo abençoado" if nome_low == "símbolo abençoado" else f"Inscrito ({it.nome})"
                 for p_res in ("Fortitude", "Reflexos", "Vontade"):
                     detalhamento_bonus.setdefault(p_res, []).append(
-                        {"fonte": "Símbolo abençoado", "valor": 1}
+                        {"fonte": fonte_simb, "valor": 1}
                     )
         elif nome_low in _VESTUARIO_PERICIAS and vestidos_usados < limite_vestidos:
             vestidos_usados += 1

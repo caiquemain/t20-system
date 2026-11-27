@@ -3,7 +3,7 @@ import { API_URL, IS_LOCAL_STORAGE } from '../services/api';
 
 async function baixarFichaFormato(
   ficha: Personagem,
-  formato: 'pdf' | 'odg' | 'odt',
+  formato: 'pdf' | 'odg' | 'odt' | 'xlsx',
   idDaUrl?: string,
 ): Promise<void> {
   const label = formato.toUpperCase();
@@ -34,7 +34,8 @@ async function baixarFichaFormato(
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ficha-${ficha.cabecalho.nome || 'personagem'}.${formato}`;
+    const prefix = formato === 'xlsx' ? 'ficha-auditoria' : 'ficha';
+    link.download = `${prefix}-${ficha.cabecalho.nome || 'personagem'}.${formato}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -55,4 +56,8 @@ export async function gerarODG(ficha: Personagem, idDaUrl?: string): Promise<voi
 
 export async function gerarODT(ficha: Personagem, idDaUrl?: string): Promise<void> {
   return baixarFichaFormato(ficha, 'odt', idDaUrl);
+}
+
+export async function gerarXLSX(ficha: Personagem, idDaUrl?: string): Promise<void> {
+  return baixarFichaFormato(ficha, 'xlsx', idDaUrl);
 }
