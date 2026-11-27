@@ -486,6 +486,10 @@ def calcular_cd_magias_ficha(ficha: Personagem) -> Optional[int]:
         elif any(n in equipados_cd for n in ("cajado arcano", "varinha arcana", "orbe cristalino")):
             nome_eso = next(n for n in ("Cajado arcano", "Varinha arcana", "Orbe cristalino") if n.lower() in equipados_cd)
             cd_calc.adicionar_bonus(fonte=f"Esotérico: {nome_eso}", categoria="Item", valor=1)
+        for hab in ficha.habilidades:
+            bonus_cd_arc = (hab.efeitos or {}).get("cd_magias_arcana_bonus")
+            if isinstance(bonus_cd_arc, (int, float)) and bonus_cd_arc:
+                cd_calc.adicionar_bonus(fonte=hab.nome, categoria="Origem/Poder", valor=int(bonus_cd_arc))
 
     ficha.combate.cd_magias_calc = cd_calc
     ficha.combate.cd_magias = cd_calc.total

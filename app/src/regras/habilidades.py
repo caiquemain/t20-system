@@ -283,6 +283,10 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
         ))
         nomes_existentes.add(poder_fixo_origem)
 
+    # Origens Regionais (Atlas/Heróis) concedem benefício único automático (qtd_escolhas = 0)
+    if dados_orig.get("regional"):
+        ficha.escolhas_origem = []
+
     if ficha.escolhas_origem:
         for escolha in ficha.escolhas_origem:
             if escolha in DADOS_PERICIAS or escolha.startswith("Ofício"):

@@ -1745,7 +1745,8 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
 
         keys_prof = [
             "proficiencia_add", "proficiencia_simples", "proficiencia_marcial",
-            "proficiencia_exotica", "proficiencia_armadura", "proficiencia_escudo",
+            "proficiencia_marciais", "proficiencia_exotica", "proficiencia_armadura",
+            "proficiencia_escudo", "proficiencia_escudos", "proficiencia_fogo",
             "proficiencia_adicional"
         ]
 
@@ -1760,8 +1761,12 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
                     nome_legivel = k.replace("proficiencia_", "").capitalize()
                     if nome_legivel == "Simples":
                         nome_legivel = "Armas Simples"
-                    if nome_legivel == "Marcial":
+                    elif nome_legivel in ("Marcial", "Marciais"):
                         nome_legivel = "Armas Marciais"
+                    elif nome_legivel in ("Escudo", "Escudos"):
+                        nome_legivel = "Escudos"
+                    elif nome_legivel == "Fogo":
+                        nome_legivel = "Armas de Fogo"
                     proficiencias.add(nome_legivel)
 
         if "imunidade" in efeitos:
