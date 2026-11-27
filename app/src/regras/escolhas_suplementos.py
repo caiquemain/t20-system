@@ -273,5 +273,17 @@ def processar_escolhas_suplementos(ficha: Personagem) -> None:
                 ef["pericia_treino"] = [p1]
                 hab.efeitos = ef
 
+        # ── HERÓIS: DUENDE — SONHOS MALUCOS (+2 PM) ──
+        elif hab.nome == "Limitações de Duende":
+            sm = esc.get("sonhos_malucos")
+            if sm is True or str(sm or "").strip().lower() in ("sim", "true", "1"):
+                _injetar(
+                    nome="Sonhos Malucos",
+                    tipo="Racial",
+                    descricao="Duende criado de forma aleatória (1d3, 1d4, 2d6, 3d12): recebe +2 PM de Nimb.",
+                    origem_hab=hab.nome,
+                    efeitos={"pm_max_ini": 2},
+                )
+
     if extras:
         ficha.habilidades.extend(extras)

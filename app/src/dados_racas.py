@@ -139,18 +139,19 @@ DADOS_RACAS = {
         "habilidades": ["Mau_Cheiro_Trog", "Mordida_Trog", "Reptiliano_Trog", "Sangue_Frio_Trog"]
     },
 
-    # -- Heróis de Arton) ---
+    # -- Heróis de Arton (p. 8–15) ---
     "Duende": {
         "attrs": {},
         "escolhas": 0,
-        "tamanho": TamanhoEnum.PEQUENO, 
+        "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
+        "devotos": ["Allihanna", "Hyninn", "Nimb", "Wynna"],
         "habilidades": [
             "Natureza_Duende",
-            "Tamanho_Duende",       
-            "Dons_Duende",          
-            "Presentes_Duende",     
-            "Limitacoes_Duende"     
+            "Tamanho_Duende",
+            "Dons_Duende",
+            "Presentes_Duende",
+            "Limitacoes_Duende"
         ]
     },
     "Eiradaan": {
@@ -158,6 +159,8 @@ DADOS_RACAS = {
         "escolhas": 0,
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
+        "longevidade": 5,
+        "devotos": ["Allihanna", "Lena", "Thyatis", "Wynna"],
         "habilidades": [
             "Essencia_Feerica_Eiradaan",
             "Magia_Instintiva_Eiradaan",
@@ -170,13 +173,16 @@ DADOS_RACAS = {
         "escolhas": 1,
         "tamanho": TamanhoEnum.GRANDE,
         "deslocamento": 9,
+        "devotos": ["Allihanna", "Arsenal", "Megalokk"],
         "habilidades": ["Forca_Titas_Galokk", "Meio_Gigante_Galokk", "Infancia_Pequenos_Galokk"]
     },
     "Meio-Elfo": {
         "attrs": {"int": 1},
         "escolhas": 2,
+        "escolhas_exceto": ["con"],
         "tamanho": TamanhoEnum.MEDIO,
         "deslocamento": 9,
+        "longevidade": 2,
         "habilidades": [
             "Ambicao_Herdada_MeioElfo",
             "Entre_Dois_Mundos_MeioElfo",
@@ -187,7 +193,8 @@ DADOS_RACAS = {
         "attrs": {"car": 2, "des": 1, "sab": -1},
         "escolhas": 0,
         "tamanho": TamanhoEnum.MEDIO,
-        "deslocamento": 12, 
+        "deslocamento": 12,
+        "devotos": ["Allihanna", "Hyninn", "Marah", "Nimb", "Wynna"],
         "habilidades": [
             "Festeiro_Feerico_Satiro",
             "Instrumentista_Magico_Satiro",

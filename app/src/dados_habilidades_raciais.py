@@ -788,10 +788,11 @@ DADOS_HABILIDADES_RACIAIS = {
     "Natureza_Mineral_Duende": {
         "nome": "Natureza Mineral",
         "tipo": "Racial",
-        "descricao": "Feito de rocha ou cristal. Imune a efeitos de metabolismo, RD 5 (Corte, Fogo, Perfuração), mas não come.",
+        "descricao": "Você é feito de material inorgânico (argila, rocha, cristal ou vidro). Recebe imunidade a efeitos de metabolismo e redução de corte, fogo e perfuração 5, mas não se beneficia de itens da categoria alimentação.",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "imunidade": ["Metabolismo", "Veneno", "Doença", "Sono", "Fome", "Sede"],
+            "imunidade": ["Metabolismo"],
+            "sem_beneficio_alimentacao": True,
             "resistencia_rd": {"Corte": 5, "Fogo": 5, "Perfuração": 5}
         }
     },
@@ -799,7 +800,7 @@ DADOS_HABILIDADES_RACIAIS = {
     "Tamanho_Duende": {
         "nome": "Tamanho",
         "tipo": "Racial",
-        "descricao": "Escolha seu tamanho (Minúsculo, Pequeno, Médio, Grande).",
+        "descricao": "Escolha seu tamanho entre Minúsculo, Pequeno, Médio ou Grande.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "poder_escolha": [
@@ -812,30 +813,31 @@ DADOS_HABILIDADES_RACIAIS = {
     "Tamanho_Minusculo_Duende": {
         "nome": "Minúsculo",
         "tipo": "Racial",
-        "descricao": "+5 Furtividade, -5 Manobras, usa armas reduzidas. Deslocamento 6m, For -1.",
+        "descricao": "Você é Minúsculo (+5 em Furtividade, -5 em manobras de combate, usa armas reduzidas), possui deslocamento base 6m e sofre -1 em Força.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "tamanho": "Minúsculo",
             "deslocamento": 6,
             "atributo_bonus": {"for": -1},
-            "bonus_pericia": {"Furtividade": 5}
+            "penalidade_manobras": -5,
+            "armas_reduzidas": True
         }
     },
     "Tamanho_Pequeno_Duende": {
         "nome": "Pequeno",
         "tipo": "Racial",
-        "descricao": "+2 Furtividade, -2 Manobras. Deslocamento 6m.",
+        "descricao": "Você é Pequeno (+2 em Furtividade, -2 em manobras de combate) e possui deslocamento base 6m.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "tamanho": "Pequeno",
             "deslocamento": 6,
-            "bonus_pericia": {"Furtividade": 2}
+            "penalidade_manobras": -2
         }
     },
     "Tamanho_Medio_Duende": {
         "nome": "Médio",
         "tipo": "Racial",
-        "descricao": "Tamanho padrão, deslocamento 9m.",
+        "descricao": "Você é Médio (sem modificadores por tamanho) e possui deslocamento base 9m.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "tamanho": "Médio",
@@ -845,30 +847,31 @@ DADOS_HABILIDADES_RACIAIS = {
     "Tamanho_Grande_Duende": {
         "nome": "Grande",
         "tipo": "Racial",
-        "descricao": "-2 Furtividade, +2 Manobras, usa armas aumentadas. Deslocamento 9m, Des -1.",
+        "descricao": "Você é Grande (-2 em Furtividade, +2 em manobras de combate, usa armas aumentadas), possui deslocamento base 9m e sofre -1 em Destreza.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "tamanho": "Grande",
             "deslocamento": 9,
             "atributo_bonus": {"des": -1},
-            "bonus_pericia": {"Furtividade": -2}
+            "bonus_manobras": 2,
+            "armas_aumentadas": True
         }
     },
 
     "Dons_Duende": {
         "nome": "Dons",
         "tipo": "Racial",
-        "descricao": "Escolha dois atributos diferentes para receber +1.",
+        "descricao": "Escolha dois atributos diferentes. Você recebe +1 em cada atributo escolhido (não pode colocar +2 no mesmo atributo; se for Natureza Animal, pode acumular com o +1 da natureza).",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "atributo_bonus_escolha": 2  # O sistema pedirá 2 escolhas
+            "atributos_diferentes_escolha": 2
         }
     },
 
     "Presentes_Duende": {
         "nome": "Presentes de Magia e Caos",
         "tipo": "Racial",
-        "descricao": "Escolha três poderes da lista de presentes.",
+        "descricao": "Escolha três poderes mágicos da lista de presentes (CD Car, salvo indicação). Uma vez por patamar, você pode escolher um presente no lugar de um poder de classe.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "poder_escolha": [
@@ -885,7 +888,7 @@ DADOS_HABILIDADES_RACIAIS = {
     "Afinidade_Agua_Duende": {
         "nome": "Afinidade Elemental (Água)",
         "tipo": "Racial",
-        "descricao": "Deslocamento de natação igual ao base. Magias: Criar Elementos (água) e Névoa (CD Car).",
+        "descricao": "Deslocamento de natação igual ao seu deslocamento base. Pode lançar Criar Elementos (apenas água) e Névoa (atributo-chave Car; -1 PM se aprender novamente).",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "magias_conhecidas": ["Criar Elementos", "Névoa"],
@@ -897,7 +900,7 @@ DADOS_HABILIDADES_RACIAIS = {
     "Afinidade_Fogo_Duende": {
         "nome": "Afinidade Elemental (Fogo)",
         "tipo": "Racial",
-        "descricao": "RD Fogo 5. Magias: Criar Elementos (fogo) e Explosão de Chamas (CD Car).",
+        "descricao": "Redução de fogo 5. Pode lançar Criar Elementos (apenas fogo) e Explosão de Chamas (atributo-chave Car; -1 PM se aprender novamente).",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "magias_conhecidas": ["Criar Elementos", "Explosão de Chamas"],
@@ -909,7 +912,7 @@ DADOS_HABILIDADES_RACIAIS = {
     "Afinidade_Veg_Duende": {
         "nome": "Afinidade Elemental (Vegetação)",
         "tipo": "Racial",
-        "descricao": "Ignora terreno difícil natural. Magias: Armamento da Natureza e Controlar Plantas (CD Car).",
+        "descricao": "Atravessa terrenos difíceis naturais sem redução de deslocamento. Pode lançar Armamento da Natureza e Controlar Plantas (atributo-chave Car; -1 PM se aprender novamente).",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "magias_conhecidas": ["Armamento da Natureza", "Controlar Plantas"],
@@ -921,60 +924,62 @@ DADOS_HABILIDADES_RACIAIS = {
     "Encantar_Objetos_Duende": {
         "nome": "Encantar Objetos",
         "tipo": "Racial",
-        "descricao": "Gaste 3 PM para colocar um encanto temporário em um item (sem pré-requisitos).",
+        "descricao": "Gaste uma ação de movimento e 3 PM para tocar um item e colocar nele um encanto pertinente sem pré-requisitos até o fim da cena (ou até usar novamente).",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "habilidade_ativavel": {"custo": 3, "descricao": "Encantar item temporariamente."}
+            "habilidade_ativavel": {"custo": 3, "descricao": "Encantar item temporariamente (ação de movimento)."}
         }
     },
     "Enfeiticar_Duende": {
         "nome": "Enfeitiçar (Poder)",
         "tipo": "Racial",
-        "descricao": "Você pode lançar Enfeitiçar como um arcanista de seu nível (CD Car).",
+        "descricao": "Você pode lançar Enfeitiçar e usar seus aprimoramentos como se tivesse acesso aos mesmos círculos de magia que um arcanista de seu nível (CD Car).",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "magias_conhecidas": ["Enfeitiçar"],
-            "atributo_magia_fixo": "car"
+            "atributo_magia_fixo": "car",
+            "circulos_como_arcanista": True
         }
     },
     "Invisibilidade_Duende": {
         "nome": "Invisibilidade (Poder)",
         "tipo": "Racial",
-        "descricao": "Você pode lançar Invisibilidade como um arcanista de seu nível (CD Car).",
+        "descricao": "Você pode lançar Invisibilidade e usar seus aprimoramentos como se tivesse acesso aos mesmos círculos de magia que um arcanista de seu nível (CD Car).",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "magias_conhecidas": ["Invisibilidade"],
-            "atributo_magia_fixo": "car"
+            "atributo_magia_fixo": "car",
+            "circulos_como_arcanista": True
         }
     },
     "Lingua_Natureza_Duende": {
         "nome": "Língua da Natureza",
         "tipo": "Racial",
-        "descricao": "+2 em Adestramento e Sobrevivência. Fala com animais e plantas (Voz Divina constante).",
+        "descricao": "Recebe +2 em Adestramento e Sobrevivência e pode falar com animais e plantas (como Voz Divina).",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "bonus_pericia": {"Adestramento": 2, "Sobrevivência": 2},
-            "magias_duradouras": ["Voz Divina"]  # Efeito narrativo similar
+            "magias_duradouras": ["Voz Divina"]
         }
     },
     "Maldicao_Duende": {
         "nome": "Maldição",
         "tipo": "Racial",
-        "descricao": "Gaste 3 PM para amaldiçoar criatura em alcance curto (CD Car, Fort ou Von). Efeitos variados (Apatia, Verrugas, etc).",
+        "descricao": "Ação padrão e 3 PM: amaldiçoa 1 criatura em alcance curto (CD Car; Fortitude ou Vontade escolhida na aquisição). Permanente até cancelar (livre) ou Purificação +7 PM; máx. 1 ativa. Efeitos: Apatia Profunda, Coração de Geleia, Envelhecimento Súbito, Loucura do Verão, Mil Verrugas ou Ruína do Corpo.",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "habilidade_ativavel": {"custo": 3, "descricao": "Amaldiçoar criatura (efeito permanente até cancelado)."}
+            "habilidade_ativavel": {"custo": 3, "descricao": "Amaldiçoar criatura em alcance curto (permanente até cancelada)."}
         }
     },
     "Mais_La_Duende": {
         "nome": "Mais Lá do que Aqui",
         "tipo": "Racial",
-        "descricao": "Gaste 2 PM para desaparecer parcialmente. Recebe camuflagem leve e +5 em Furtividade.",
+        "descricao": "Ação padrão e 2 PM: faz seu corpo (exceto uma parte) desaparecer pela cena, recebendo camuflagem leve e +5 em Furtividade.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "habilidade_ativavel": {
                 "custo": 2,
-                "descricao": "Camuflagem leve e +5 Furtividade.",
+                "descricao": "Camuflagem leve e +5 Furtividade pela cena.",
                 "modificadores": [{"atributo": "Furtividade", "valor": 5}]
             }
         }
@@ -982,56 +987,56 @@ DADOS_HABILIDADES_RACIAIS = {
     "Metamorfose_Duende": {
         "nome": "Metamorfose Animal",
         "tipo": "Racial",
-        "descricao": "Gaste 3 PM para assumir forma selvagem (básica) de Druida, mas mantendo fala e magias.",
+        "descricao": "Escolha uma forma selvagem básica do druida. Gaste ação completa e 3 PM para assumir essa forma, mantendo capacidade de falar e lançar magias.",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "habilidade_ativavel": {"custo": 3, "descricao": "Assumir Forma Selvagem (básica)."}
+            "habilidade_ativavel": {"custo": 3, "descricao": "Assumir Forma Selvagem básica (mantém fala e magias)."}
         }
     },
     "Sonhos_Profeticos_Duende": {
         "nome": "Sonhos Proféticos",
         "tipo": "Racial",
-        "descricao": "Uma vez por cena, gaste 3 PM para substituir um teste d20 de alguém próximo por um d20 seu.",
+        "descricao": "Uma vez por cena, gaste 3 PM e role 1d20; até o fim da cena, pode substituir o d20 de um teste de qualquer criatura em alcance curto pelo resultado rolado.",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "habilidade_ativavel": {"custo": 3, "descricao": "Substituir teste d20 alheio."}
+            "habilidade_ativavel": {"custo": 3, "descricao": "Substituir d20 de teste em alcance curto."}
         }
     },
     "Velocidade_Duende": {
         "nome": "Velocidade do Pensamento",
         "tipo": "Racial",
-        "descricao": "Gaste 2 PM no primeiro turno para ação padrão extra (perde turno seguinte).",
+        "descricao": "No seu primeiro turno em cada cena, gaste 2 PM para realizar uma ação padrão adicional (você pula seu turno na segunda rodada).",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "habilidade_ativavel": {"custo": 2, "descricao": "Ação padrão extra na 1ª rodada."}
+            "habilidade_ativavel": {"custo": 2, "descricao": "Ação padrão adicional na 1ª rodada (pula 2ª rodada)."}
         }
     },
     "Visao_Feerica_Duende": {
         "nome": "Visão Feérica",
         "tipo": "Racial",
-        "descricao": "Visão na penumbra e ver o invisível (Visão Mística constante).",
+        "descricao": "Recebe visão na penumbra e está permanentemente sob efeito de Visão Mística com o aprimoramento de enxergar criaturas e objetos invisíveis.",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "visao_penumbra": True,
+            "enxergar_invisivel": True,
             "magias_duradouras": ["Visão Mística"]
         }
     },
     "Voo_Duende": {
         "nome": "Voo",
         "tipo": "Racial",
-        "descricao": "Flutua 1,5m (+3m desl). Gaste 1 PM/rodada para voar (+6m desl).",
+        "descricao": "Flutua 1,5m acima do chão com deslocamento igual ao deslocamento base +3m (ignora terreno difícil e imune a dano por queda enquanto consciente). Pode gastar 1 PM/rodada para voar com deslocamento base +6m.",
         "fonte": "Heróis de Arton",
         "efeitos": {
-            "imunidade": ["Dano de Queda"],
-            "deslocamento": 12,  # Base 9 + 3
+            "imunidade": ["Dano de Queda", "Terreno Difícil"],
+            "deslocamento_bonus": 3,
             "habilidade_ativavel": {
                 "custo": 1,
                 "nome_ativacao": "Voar Alto",
                 "duracao": "Rodada",
                 "modificadores": [
-                    # 12 + 3 = 15 (9 base + 6)
                     {"atributo": "deslocamento", "valor": 3},
-                    {"atributo": "Voo", "valor": 1}  # Flag visual
+                    {"atributo": "Voo", "valor": 1}
                 ]
             }
         }
@@ -1041,7 +1046,7 @@ DADOS_HABILIDADES_RACIAIS = {
     "Limitacoes_Duende": {
         "nome": "Limitações de Duende",
         "tipo": "Racial",
-        "descricao": "Aversão a Ferro, Sinos e um Tabu.",
+        "descricao": "Aversão a Ferro (+1 dano/dado de ferro ou aço; 1d6/rodada ao empunhar ou vestir ferro/aço), Aversão a Sinos (alquebrado e esmorecido até o fim da cena; 1 em 1d6 em cidades/aldeias) e Tabu (-5 em Diplomacia, Iniciativa, Luta ou Percepção; desrespeitar: dia 1 fatigado incurável, dia 2 exausto, dia 3 morte).",
         "fonte": "Heróis de Arton",
         "efeitos": {
             "poder_escolha": [
@@ -1049,7 +1054,9 @@ DADOS_HABILIDADES_RACIAIS = {
                 "Tabu_Luta", "Tabu_Percepcao"
             ],
             "qtd_escolhas": 1,
-            "descricao_extra": "⚠️ Aversão a Ferro: +1 dano sofrido de ferro, 1d6 dano/rodada se usar item de ferro.\n🔔 Aversão a Sinos: Alquebrado se ouvir sino."
+            "aversao_ferro": True,
+            "aversao_sinos": True,
+            "descricao_extra": "⚠️ Aversão a Ferro: +1 dano/dado de armas de ferro/aço; 1d6 dano/rodada se usar item de ferro/aço.\n🔔 Aversão a Sinos: Alquebrado e esmorecido até o fim da cena (1 em 1d6 em cidades/aldeias)."
         }
     },
     "Tabu_Diplomacia": {

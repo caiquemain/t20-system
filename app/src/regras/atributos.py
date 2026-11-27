@@ -241,6 +241,31 @@ def calcular_atributos_finais(ficha: Personagem):
                 valor=val_ac,
             )
 
+    # Dons do Duende (Heróis de Arton, p. 9): +1 em dois atributos DIFERENTES
+    # (não pode colocar +2 no mesmo atributo; Natureza Animal soma separadamente).
+    for hab in ficha.habilidades:
+        efeitos = (hab.efeitos or {}).copy()
+        esc = hab.escolhas_aplicadas or {}
+        if efeitos.get("atributos_diferentes_escolha") or hab.nome == "Dons":
+            escolhidos_raw = []
+            if isinstance(esc.get("atributos"), list):
+                escolhidos_raw.extend(esc["atributos"])
+            for k in ("atributo_1", "atributo_2"):
+                if esc.get(k):
+                    escolhidos_raw.append(esc[k])
+            vistos_dons = set()
+            for attr_raw in escolhidos_raw:
+                attr_full = MAPA_ATRIBUTOS.get(str(attr_raw).lower()[:3], str(attr_raw).lower())
+                if attr_full in ficha.atributos_calc and attr_full not in vistos_dons:
+                    vistos_dons.add(attr_full)
+                    ficha.atributos_calc[attr_full].adicionar_bonus(
+                        fonte=f"Poder: {hab.nome}",
+                        categoria="Racial",
+                        valor=1,
+                    )
+                    if len(vistos_dons) >= int(efeitos.get("atributos_diferentes_escolha") or 2):
+                        break
+
     # --- SINCRONIZAÇÃO FINAL (Compatibilidade com Frontend) ---
     # Copia os totais calculados para o objeto 'atributos' que o frontend já lê
     for attr_full, stat in ficha.atributos_calc.items():
@@ -248,7 +273,7 @@ def calcular_atributos_finais(ficha: Personagem):
             setattr(ficha.atributos, attr_full, stat.total)
 
 def aplicar_escolhas_atributos_raciais(ficha: Personagem):
-    """Escolhas variáveis de atributos raciais (Humano/Lefou/Osteon/Sereia: +1x3).
+    """Escolhas variáveis de atributos raciais (Humano/Lefou/Osteon/Sereia/Meio-Elfo: +1xN).
 
     Deve rodar DEPOIS de calcular_atributos_finais: o rebuild do
     atributos_calc apagava bônus aplicados antes dele.
@@ -256,10 +281,12 @@ def aplicar_escolhas_atributos_raciais(ficha: Personagem):
     raca_nome = ficha.cabecalho.raca
     dados_raca = DADOS_RACAS.get(raca_nome) or {}
     bonus = int(dados_raca.get("bonus_por_escolha", 1))
+    exceto_raw = dados_raca.get("escolhas_exceto") or []
+    exceto = {MAPA_ATRIBUTOS.get(str(x).lower()[:3], str(x).lower()) for x in exceto_raw}
     for key_escolha in ficha.escolhas_atributos_raciais or []:
         # Normaliza chave curta ('for') -> chave do modelo ('forca')
-        chave = MAPA_ATRIBUTOS.get(str(key_escolha), str(key_escolha))
-        if chave not in ficha.atributos_calc:
+        chave = MAPA_ATRIBUTOS.get(str(key_escolha).lower()[:3], str(key_escolha).lower())
+        if chave not in ficha.atributos_calc or chave in exceto:
             continue
         ficha.atributos_calc[chave].adicionar_bonus(
             fonte=f"Escolha Racial ({raca_nome})",
