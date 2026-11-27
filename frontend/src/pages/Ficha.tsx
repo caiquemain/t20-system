@@ -24,6 +24,7 @@ import { AttackList } from '../components/AttackList';
 import { T20Icon, getEfeitoVisual } from '../components/T20Icon';
 import { formatarResumoDeus, formatarTooltipDeus } from '../utils/deusTooltip';
 import { formatarResumoClasse, formatarDescricaoClasse, formatarTooltipClasse } from '../utils/classeTooltip';
+import { formatarResumoOrigem, formatarTooltipOrigem } from '../utils/origemTooltip';
 import { entidadePermitidaPorSuplementos } from '../utils/suplementos';
 import { ToquesFinaisTab, TABELA_TAMANHO_TOOLTIP } from '../components/ToquesFinaisTab';
 import { DistincoesPanel } from '../components/suplementos/DistincoesPanel';
@@ -941,12 +942,17 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 selecionado={ficha.cabecalho.origem}
                 itens={listaOrigens
                     .filter(o => entidadePermitidaPorSuplementos((dadosOrigens as any)?.[o]?.fonte, ficha.suplementos_ativos))
-                    .map((o): EntityItem => ({
-                        nome: o,
-                        icone: 'origem',
-                        descricao: (dadosOrigens as any)?.[o]?.descricao,
-                        fonte: (dadosOrigens as any)?.[o]?.fonte || 'T20 JdA',
-                    }))}
+                    .map((o): EntityItem => {
+                        const info = (dadosOrigens as any)?.[o];
+                        return {
+                            nome: o,
+                            icone: 'origem',
+                            bonus: formatarResumoOrigem(info),
+                            descricao: info?.beneficio_texto || info?.descricao,
+                            tooltip: formatarTooltipOrigem(o, info),
+                            fonte: info?.fonte || 'T20 JdA',
+                        };
+                    })}
                 onConfirm={(nome) => handleSelecionarEntidade('origem', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
