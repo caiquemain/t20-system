@@ -67,7 +67,9 @@ function Ficha() {
         origemBeneficiosEmEdicao, setOrigemBeneficiosEmEdicao,
         classPowersEmEdicao, setClassPowersEmEdicao,
         subclasseEmEdicao, setSubclasseEmEdicao,
-        devocaoEmEdicao, setDevocaoEmEdicao, linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao, poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
+        devocaoEmEdicao, setDevocaoEmEdicao,
+        fundamentalistaEmEdicao, setFundamentalistaEmEdicao,
+        linhagemEmEdicao, setLinhagemEmEdicao, tipoDanoEmEdicao, setTipoDanoEmEdicao, poderesEscolhasEmEdicao, setPoderesEscolhasEmEdicao,
         dadosEscolhas,
         updateFicha, handleAtributoBaseChange, montarHabilidadesParaPanel, handleSaveEscolhas
     } = useFicha(id);
@@ -439,6 +441,8 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 setSubclasseEmEdicao={setSubclasseEmEdicao}
                 devocaoEmEdicao={devocaoEmEdicao}
                 setDevocaoEmEdicao={setDevocaoEmEdicao}
+                fundamentalistaEmEdicao={fundamentalistaEmEdicao}
+                setFundamentalistaEmEdicao={setFundamentalistaEmEdicao}
              poderesEscolhasEmEdicao={poderesEscolhasEmEdicao}
              setPoderesEscolhasEmEdicao={setPoderesEscolhasEmEdicao}
              linhagemEmEdicao={linhagemEmEdicao}

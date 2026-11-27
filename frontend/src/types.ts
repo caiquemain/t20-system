@@ -12,6 +12,7 @@ export interface Cabecalho {
     origem: string;
     deus: string;
     divindade?: string;
+    fundamentalista?: boolean;
     nivel_total: number;
     xp: XP;
 }

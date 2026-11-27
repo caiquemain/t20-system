@@ -78,6 +78,7 @@ class Cabecalho(BaseModel):
     raca: str = ""
     origem: str = ""
     deus: str = ""
+    fundamentalista: bool = False
     nivel_total: int = 1
     xp: XP = Field(default_factory=XP)
 
