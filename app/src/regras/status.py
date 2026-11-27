@@ -299,9 +299,12 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
             valor=mod_des
         )
     
-    # Armadura vestida e escudo empunhado
+    # Armadura vestida e escudo empunhado (respeitando Avariado / Destruído — Ameaças de Arton p. 375)
     for item in ficha.inventario.equipamentos:
         if not item.equipado:
+            continue
+        cond_item = (getattr(item, "condicao", None) or "").strip()
+        if cond_item == "Destruído":
             continue
         cat = catalogo_do_item(item.nome)
         if not cat:
@@ -314,6 +317,12 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                     fonte=f"Equipamento: {item.nome}",
                     categoria="Equipamento",
                     valor=bonus_def
+                )
+            if cond_item == "Avariado":
+                defesa_calc.adicionar_bonus(
+                    fonte=f"Avariado: {item.nome}",
+                    categoria="Condição de Item",
+                    valor=-5
                 )
 
     qtd_tormenta = sum(
