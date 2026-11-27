@@ -333,6 +333,11 @@ def calcular_penalidade_armadura(ficha: Personagem) -> int:
             pen += abs(cat.get("penalidade_armadura", 0))
         elif (item.nome or "").strip().lower() == "casaco longo":
             pen += 2
+    # Penalidade de armadura intrínseca de habilidades (ex.: Chassi do Golem, Peças Metálicas do Yidishan)
+    for hab in (ficha.habilidades or []):
+        pen_hab = (hab.efeitos or {}).get("penalidade_armadura", 0)
+        if pen_hab:
+            pen += abs(int(pen_hab))
     # Sobrecarga: -5 (regra p.141: "penalidade de armadura -5")
     if ficha.inventario.sobrecargado:
         pen += 5
