@@ -4037,3 +4037,6 @@ if "Conjurar Mortos-Vivos" in DADOS_MAGIAS:
     DADOS_MAGIAS["Conjurar Mortos-Vivos"]["aprimoramentos"].extend(
         APRIMORAMENTOS_CONJURAR_MORTOS_VIVOS_AMEACAS
     )
+
+from .dados_magias_herois import DADOS_MAGIAS_HEROIS
+DADOS_MAGIAS.update(DADOS_MAGIAS_HEROIS)

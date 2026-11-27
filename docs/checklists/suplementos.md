@@ -20,12 +20,13 @@ Rastreamento por fase e lote. Documentação arquitetural completa em [`docs/SUP
 - [x] **Cap. 1 (Classe Treinador, p. 16–21):** 6 habilidades fixas, 21 poderes, 8 mascotes, 5 tipos e 22 truques do Melhor Amigo + motor `treinador_calc` (`GET /dados/treinador`)
 - [x] **Cap. 1 (14 Classes Variantes, p. 22–45):** Alquimista, Atleta, Burguês, Duelista, Ermitão, Inovador, Machado de Pedra, Magimarcialista, Necromante (+ *Ritual do Lich*), Santo, Seteiro, Usurpador, Vassalo, Ventanista
 - [x] **Cap. 1 (30 Novas Origens Especiais, p. 46–53):** Todas as 30 origens com efeitos mecânicos e escolhas interativas
-- [ ] **Cap. 1 (Classe Frade):** Características, habilidades fixas, poderes de Frade e progressão de magias
 - [x] **Cap. 1 (Novos Poderes, p. 54–95):** 288 novos poderes para as 14 classes básicas (+ 7 novos efeitos de *Golpe Pessoal*) e 155 novos poderes gerais (25 Combate, 13 Destino, 14 Magia, 6 Tormenta, 77 Raça, 20 Grupo) + categorias `Raça` e `Grupo` em `GET /poderes`
 - [x] **Cap. 2 (Distinções, p. 104–211):** Catálogo completo das 36 Distinções, 36 Marcas e 185 Poderes exclusivos (`dados_distincoes_herois.py`), motor `regras/distincoes.py` e endpoint `GET /dados/distincoes`
-- [ ] **Cap. 3 (Equipamentos, Itens e Bases):** Novos equipamentos, melhorias, itens alquímicos e sistema de Bases
+- [x] **Cap. 3 (Equipamentos, Melhorias, Magias e Itens Mágicos):** 37 armas, 14 armaduras/escudos, 136 itens gerais/munições/aparatos/bebidas/veículos, 12 melhorias, 22 novas magias arcanas/universais e 95 itens mágicos específicos (`dados_equipamentos_herois.py`, `dados_magias_herois.py`)
+- [ ] **Cap. 3 (Sistema de Bases):** Regras e painel de Bases de aventureiros (pendente)
 
 ## Fase 3 — *Deuses de Arton*
+- [ ] **Classe Frade:** Características, habilidades fixas, poderes de Frade e progressão de magias
 - [ ] **3A:** Expansão dos 20 Deuses Maiores (novos poderes concedidos e regras de devoção)
 - [ ] **3B:** Deuses Menores (catálogo, seletor na ficha/wizard e poderes concedidos)
 - [ ] **3C:** Novas Magias Divinas, Itens Litúrgicos/Mágicos e Distinções Divinas

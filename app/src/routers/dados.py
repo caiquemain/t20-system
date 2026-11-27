@@ -194,8 +194,14 @@ def get_dados_escolhas():
 
 @router.get("/dados/equipamentos", tags=["Dados Estáticos"])
 async def get_equipamentos():
-    """Catálogo de armas (T3-3) e armaduras/escudos (T3-5)."""
-    return {"armas": DADOS_ARMAS, "armaduras": DADOS_ARMADURAS, "gerais": DADOS_GERAIS}
+    """Catálogo de armas (T3-3), armaduras/escudos (T3-5), itens gerais e itens mágicos de suplementos."""
+    from src.dados_equipamentos_herois import DADOS_ITENS_MAGICOS_HEROIS
+    return {
+        "armas": DADOS_ARMAS,
+        "armaduras": DADOS_ARMADURAS,
+        "gerais": DADOS_GERAIS,
+        "itens_magicos_herois": DADOS_ITENS_MAGICOS_HEROIS,
+    }
 
 
 @router.get("/dados/regras-opcionais", tags=["Dados Estáticos"])

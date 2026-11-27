@@ -45,13 +45,15 @@ DADOS_HABILIDADES_RACIAIS = {
         "efeitos": {
             "proficiencia_simples": [
                 "machadinha", "machado de batalha", "machado de guerra",
-                "machado anão", "machado táurico",
-                "martelo de guerra", "marreta", "picareta"
+                "machado anão", "machado táurico", "machado de haste",
+                "martelo de guerra", "martelo leve", "martelo longo",
+                "marreta", "picareta"
             ],
             "bonus_ataque_arma": {
                 "machadinha": 2, "machado de batalha": 2, "machado de guerra": 2,
-                "machado anão": 2, "machado táurico": 2,
-                "martelo de guerra": 2, "marreta": 2, "picareta": 2
+                "machado anão": 2, "machado táurico": 2, "machado de haste": 2,
+                "martelo de guerra": 2, "martelo leve": 2, "martelo longo": 2,
+                "marreta": 2, "picareta": 2
             }
         }
     },
@@ -443,7 +445,10 @@ DADOS_HABILIDADES_RACIAIS = {
         "fonte": "T20 JdA",
         "efeitos": {
             "proficiencia_simples": ["tridente"],
-            "bonus_dano_arma": {"azagaia": 2, "lança": 2, "lança montada": 2, "tridente": 2}
+            "bonus_dano_arma": {
+                "azagaia": 2, "lança": 2, "lança montada": 2,
+                "lança de justa": 2, "lança de falange": 2, "tridente": 2
+            }
         }
     },
     "Transf_Anfibia_Sereia": {
