@@ -297,9 +297,16 @@ def ataques_de_equipamento(ficha: Personagem) -> List[Ataque]:
 
         if not proficiente:
             especial.append("-5 ataque (não proficiente)")
+        cond_item = (getattr(item, "condicao", None) or "").strip()
+        if cond_item == "Destruído":
+            continue
+        bonus_atq_item = 0
+        if cond_item == "Avariado":
+            bonus_atq_item -= 5
+            especial.append("Avariado (-5 ataque)")
         ataques.append(Ataque(
             nome=item.nome,
-            bonus_ataque="+0",
+            bonus_ataque=f"+{bonus_atq_item}" if bonus_atq_item >= 0 else str(bonus_atq_item),
             dano=(f"{cat['dano']}+{bonus_dano_arma}" if bonus_dano_arma and cat.get("dano") else cat.get("dano") or "-"),
             critico=cat.get("critico", "x2"),
             tipo=cat.get("tipo") or "-",
@@ -323,6 +330,8 @@ def calcular_penalidade_armadura(ficha: Personagem) -> int:
     pen = 0
     for item in ficha.inventario.equipamentos:
         if not item.equipado:
+            continue
+        if (getattr(item, "condicao", None) or "").strip() == "Destruído":
             continue
         cat = catalogo_do_item(item.nome)
         if not cat:

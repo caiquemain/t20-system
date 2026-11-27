@@ -340,6 +340,7 @@ class Item(BaseModel):
     descricao: str = ""
     tipo: str = "Geral"
     equipado: bool = False
+    condicao: Optional[str] = None  # None | "Avariado" | "Destruído" (Ameaças de Arton, p. 375)
 
 class Inventario(BaseModel):
     dinheiro: Dinheiro = Field(default_factory=Dinheiro)
