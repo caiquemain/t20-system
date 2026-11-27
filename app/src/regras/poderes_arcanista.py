@@ -528,6 +528,40 @@ def sincronizar_ataques_magicos(ficha: Personagem):
         cd = calcular_cd_magia(ficha, m) if (m.atributo_chave or "").strip() else int(ficha.combate.cd_magias or 10)
         custo_pm = calcular_custo_magia(ficha, m).total
 
+        # Auditoria da CD da magia
+        cd_fontes: List[str] = []
+        if teste != "Automático":
+            if (m.atributo_chave or "").strip():
+                nv_metade = (ficha.cabecalho.nivel_total or 1) // 2
+                attr_cod = (m.atributo_chave or "").strip().lower()[:3]
+                attr_nomes = {"for": "Força", "des": "Destreza", "con": "Constituição", "int": "Inteligência", "sab": "Sabedoria", "car": "Carisma"}
+                attr_map = {
+                    "for": ficha.atributos.forca, "des": ficha.atributos.destreza,
+                    "con": ficha.atributos.constituicao, "int": ficha.atributos.inteligencia,
+                    "sab": ficha.atributos.sabedoria, "car": ficha.atributos.carisma,
+                }
+                val_attr = attr_map.get(attr_cod, 0)
+                cd_fontes.append("Base: 10")
+                if nv_metade:
+                    cd_fontes.append(f"Metade do nível: +{nv_metade}")
+                cd_fontes.append(f"Atributo-chave ({attr_nomes.get(attr_cod, attr_cod.upper())}): {val_attr:+d}")
+                extra_cd = cd - (10 + nv_metade + val_attr)
+                if extra_cd:
+                    cd_fontes.append(f"Poderes / Escola / Itens: {extra_cd:+d}")
+            elif ficha.combate.cd_magias_calc:
+                cd_fontes.append(f"Base: {ficha.combate.cd_magias_calc.base}")
+                for b in ficha.combate.cd_magias_calc.fontes:
+                    cd_fontes.append(f"{b.fonte}: {b.valor:+d}")
+            else:
+                cd_fontes.append(f"CD de Magias: {cd}")
+            cd_fontes.append(f"Total: CD {cd}")
+
+        # Auditoria dos dados de dano
+        dano_fontes: List[str] = [f"Base ({m.nome}): {formula_base}"]
+        if bonus_dano_mag > 0:
+            dano_fontes.append(f"Bônus de dano mágico (poderes/itens): +{bonus_dano_mag}")
+        dano_fontes.append(f"Total: {dano_final}")
+
         ficha.combate.ataques.append(Ataque(
             nome=m.nome,
             bonus_ataque="Auto" if teste == "Automático" else f"CD {cd}",
@@ -537,6 +571,8 @@ def sincronizar_ataques_magicos(ficha: Personagem):
             alcance=m.alcance or dados_m.get("alcance") or "Curto",
             teste=teste,
             especial=f"Magia • {m.circulo}º Círculo ({custo_pm} PM) • {res_txt or 'Sem resistência'}",
+            cd_fontes=cd_fontes,
+            dano_fontes=dano_fontes,
         ))
 
     # 3) Raio Arcano (apenas se possuir o poder)
@@ -580,6 +616,11 @@ def sincronizar_ataques_magicos(ficha: Personagem):
         alcance=alcance,
         teste="Reflexos",
         especial=especial,
+        dano_fontes=[
+            f"Círculo máximo ({qtd_dados} dado{'s' if qtd_dados > 1 else ''}): {qtd_dados}{tipo_dado}",
+            *(["Raio Poderoso: dado sobe de d8 para d12"] if poderoso else []),
+            f"Total: {dano}",
+        ],
     ))
     return ficha
 

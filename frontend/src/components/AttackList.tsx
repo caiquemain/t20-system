@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 import { T20Icon } from './T20Icon';
+import { PortalTooltip, type TooltipLinha } from './PortalTooltip';
 import { rolarAtaqueD20, rolarExpressao, type ResultadoD20, type ResultadoExpressao } from '../utils/diceRoller';
 import type { SpellRollConfig } from './SpellDetailsModal';
+
+interface StatCalcView {
+    base: number;
+    total: number;
+    fontes?: { fonte: string; valor: number }[];
+}
 
 interface AtaqueView {
     nome: string; bonus_ataque: string; dano: string; critico: string;
     tipo: string; alcance: string; teste: string; especial?: string;
+    cd_fontes?: string[];
+    dano_fontes?: string[];
 }
 
 interface AttackListProps {
     ataques: AtaqueView[];
+    cdMagiasCalc?: StatCalcView;
     fluxoDeMana?: boolean;
     focoVital?: boolean;
     spellConfigs?: Record<string, SpellRollConfig>;
@@ -30,7 +40,7 @@ interface RollAtaqueState {
 const ehPenalidade = (t: string) => /-\d/.test(t) || /não proficiente|penalidade|desbalanceada/i.test(t);
 const ehBuff = (t: string) => /\+\d/.test(t) || /conta como/i.test(t);
 
-export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, focoVital, spellConfigs, onOpenSpell }) => {
+export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, fluxoDeMana, focoVital, spellConfigs, onOpenSpell }) => {
     const [ultimoRoll, setUltimoRoll] = useState<RollAtaqueState | null>(null);
 
     const handleRolarAtaque = (a: AtaqueView) => {
@@ -58,26 +68,88 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
         }
     };
 
+    const montarLinhasCdOuAtaque = (a: AtaqueView, ehMagia: boolean): TooltipLinha[] => {
+        if (ehMagia) {
+            if ((a.bonus_ataque || '').trim().toLowerCase() === 'auto') {
+                return [{ texto: 'Acerto automático (sem teste de resistência).', cor: '#ce93d8' }];
+            }
+            if (a.cd_fontes && a.cd_fontes.length > 0) {
+                return a.cd_fontes.map((f, idx) => ({
+                    texto: f,
+                    cor: idx === a.cd_fontes!.length - 1 ? '#ffd700' : f.includes('-') ? '#ff8a80' : '#ce93d8',
+                    negrito: idx === a.cd_fontes!.length - 1,
+                    separador: idx === a.cd_fontes!.length - 1 && a.cd_fontes!.length > 1,
+                }));
+            }
+            if (cdMagiasCalc) {
+                const linhas: TooltipLinha[] = [{ texto: `Base: ${cdMagiasCalc.base}`, cor: '#ccc' }];
+                for (const b of cdMagiasCalc.fontes || []) {
+                    linhas.push({
+                        texto: `${b.fonte}: ${b.valor >= 0 ? `+${b.valor}` : b.valor}`,
+                        cor: b.valor < 0 ? '#ff8a80' : '#ce93d8',
+                    });
+                }
+                linhas.push({ texto: `Total: ${a.bonus_ataque}`, cor: '#ffd700', negrito: true, separador: true });
+                return linhas;
+            }
+            return [{ texto: `Teste de resistência: ${a.teste} (${a.bonus_ataque})`, cor: '#ce93d8' }];
+        }
+
+        // Arma / Ataque físico
+        const linhas: TooltipLinha[] = [{ texto: `Perícia usada: ${a.teste || 'Luta'}`, cor: '#80deea' }];
+        if (a.especial) {
+            for (const parte of a.especial.split('; ')) {
+                if (/ataque|não proficiente|avariado/i.test(parte)) {
+                    linhas.push({
+                        texto: parte,
+                        cor: ehPenalidade(parte) ? '#ff8a80' : '#81c784',
+                        negrito: true,
+                    });
+                }
+            }
+        }
+        linhas.push({ texto: `Bônus exibido: ${a.bonus_ataque}`, cor: '#ffd700', negrito: true, separador: true });
+        return linhas;
+    };
+
+    const montarLinhasDano = (a: AtaqueView, ehMagia: boolean, cfg?: SpellRollConfig): TooltipLinha[] => {
+        const danoExibido = cfg?.formulaEfetiva || a.dano;
+        const linhas: TooltipLinha[] = [];
+
+        if (a.dano_fontes && a.dano_fontes.length > 0) {
+            const semTotal = a.dano_fontes.filter(f => !f.startsWith('Total:'));
+            for (const f of semTotal) {
+                linhas.push({
+                    texto: f,
+                    cor: f.startsWith('Base') || f.startsWith('Dado base') ? '#ffcc80' : '#81c784',
+                });
+            }
+        } else {
+            linhas.push({
+                texto: `${ehMagia ? 'Base da magia' : 'Dado base'} (${a.nome}): ${a.dano}`,
+                cor: '#ffcc80',
+            });
+        }
+
+        if (ehMagia && cfg && cfg.formulaEfetiva && cfg.formulaEfetiva !== a.dano) {
+            linhas.push({
+                texto: `Aprimoramentos aplicados (${cfg.custoTotalPm} PM): ${cfg.formulaEfetiva}`,
+                cor: '#ce93d8',
+                negrito: true,
+            });
+        }
+
+        linhas.push({
+            texto: `Total: ${danoExibido} (${a.tipo})`,
+            cor: '#ffd700',
+            negrito: true,
+            separador: true,
+        });
+        return linhas;
+    };
+
     return (
         <div className="section-card" style={{ marginTop: 25 }}>
-            <style>{`
-                .ataque-tooltip {
-                    visibility: hidden; opacity: 0;
-                    position: absolute; bottom: 100%; left: 0;
-                    transform: translateY(0);
-                    width: 260px; background-color: #1a1a1a;
-                    border: 1px solid #ffd700; border-radius: 6px;
-                    padding: 10px; z-index: 9999;
-                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.9);
-                    transition: opacity 0.2s, transform 0.2s;
-                    pointer-events: none; margin-bottom: 6px;
-                    text-transform: none;
-                }
-                .tooltip-container:hover .ataque-tooltip {
-                    visibility: visible; opacity: 1;
-                    transform: translateY(-6px);
-                }
-            `}</style>
             <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <h3 className="section-title" style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <T20Icon name="ataque" size={18} /> Ataques
@@ -172,58 +244,67 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                             const ehMagia = strEhMagia(a.especial);
                             const cfg = ehMagia ? spellConfigs?.[a.nome] : undefined;
                             const danoExibido = cfg?.formulaEfetiva || a.dano;
+                            const linhasEspecial: TooltipLinha[] = a.especial
+                                ? a.especial.split('; ').map(t => ({
+                                    texto: t,
+                                    cor: ehPenalidade(t) ? '#ff8a80' : ehBuff(t) ? '#80deea' : '#ccc',
+                                    negrito: ehPenalidade(t) || ehBuff(t),
+                                }))
+                                : [];
+
                             return (
                                 <tr key={i} style={{ borderBottom: '1px solid #252525' }}>
-                                    <td style={{ padding: '8px', minWidth: 190 }} className="tooltip-container">
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 6px' }}>
-                                            <strong
-                                                onClick={() => ehMagia && onOpenSpell && onOpenSpell(a.nome)}
-                                                title={ehMagia && onOpenSpell ? 'Clique para abrir aprimoramentos da magia' : undefined}
-                                                style={{ color: ehMagia ? '#ce93d8' : '#e0e0e0', cursor: ehMagia && onOpenSpell ? 'pointer' : 'default', lineHeight: 1.25 }}
-                                            >
-                                                {a.nome}
-                                            </strong>
-                                            {(cfg || a.especial) && (
-                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                                    {cfg && (
-                                                        <span style={{ fontSize: '0.7rem', color: '#ce93d8', background: 'rgba(156,39,176,0.18)', border: '1px solid rgba(206,147,216,0.45)', borderRadius: 4, padding: '1px 6px', whiteSpace: 'nowrap', lineHeight: 1.25 }}>
-                                                            {cfg.custoTotalPm} PM
-                                                        </span>
-                                                    )}
-                                                    {a.especial && (
-                                                        <span
-                                                            style={{ cursor: 'help', display: 'inline-flex', alignItems: 'center' }}
-                                                            title={ehPenalidade(a.especial) ? 'Há penalidades neste ataque' : 'Efeitos especiais'}
-                                                        >
-                                                            <T20Icon
-                                                                name={ehPenalidade(a.especial) ? 'alerta' : ehMagia ? 'grimorio' : 'efeito'}
-                                                                size={13}
-                                                                color={ehPenalidade(a.especial) ? '#ffb74d' : ehMagia ? '#ce93d8' : '#80deea'}
-                                                            />
-                                                        </span>
-                                                    )}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {a.especial && (
-                                            <div className="ataque-tooltip">
-                                                {a.especial.split('; ').map((t, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="tooltip-row"
-                                                        style={{
-                                                            color: ehPenalidade(t) ? '#ff8a80' : ehBuff(t) ? '#80deea' : '#ccc',
-                                                            fontWeight: (ehPenalidade(t) || ehBuff(t)) ? 'bold' : 'normal',
-                                                        }}
-                                                    >
-                                                        {t}
-                                                    </div>
-                                                ))}
+                                    <td style={{ padding: '8px', minWidth: 190 }}>
+                                        <PortalTooltip titulo={a.nome} linhas={linhasEspecial}>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 6px' }}>
+                                                <strong
+                                                    onClick={() => ehMagia && onOpenSpell && onOpenSpell(a.nome)}
+                                                    title={ehMagia && onOpenSpell ? 'Clique para abrir aprimoramentos da magia' : undefined}
+                                                    style={{ color: ehMagia ? '#ce93d8' : '#e0e0e0', cursor: ehMagia && onOpenSpell ? 'pointer' : 'default', lineHeight: 1.25 }}
+                                                >
+                                                    {a.nome}
+                                                </strong>
+                                                {(cfg || a.especial) && (
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                        {cfg && (
+                                                            <span style={{ fontSize: '0.7rem', color: '#ce93d8', background: 'rgba(156,39,176,0.18)', border: '1px solid rgba(206,147,216,0.45)', borderRadius: 4, padding: '1px 6px', whiteSpace: 'nowrap', lineHeight: 1.25 }}>
+                                                                {cfg.custoTotalPm} PM
+                                                            </span>
+                                                        )}
+                                                        {a.especial && (
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                                                <T20Icon
+                                                                    name={ehPenalidade(a.especial) ? 'alerta' : ehMagia ? 'grimorio' : 'efeito'}
+                                                                    size={13}
+                                                                    color={ehPenalidade(a.especial) ? '#ffb74d' : ehMagia ? '#ce93d8' : '#80deea'}
+                                                                />
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                )}
                                             </div>
-                                        )}
+                                        </PortalTooltip>
                                     </td>
-                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: ehMagia ? '#ce93d8' : '#ccc', fontWeight: ehMagia ? 'bold' : 'normal' }}>{a.bonus_ataque}</td>
-                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ffcc80', fontWeight: 'bold' }}>{danoExibido}</td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: ehMagia ? '#ce93d8' : '#ccc', fontWeight: ehMagia ? 'bold' : 'normal' }}>
+                                        <PortalTooltip
+                                            titulo={ehMagia ? `Auditoria da CD — ${a.nome}` : `Auditoria de Ataque — ${a.nome}`}
+                                            linhas={montarLinhasCdOuAtaque(a, ehMagia)}
+                                        >
+                                            <span style={{ borderBottom: '1px dotted rgba(206,147,216,0.55)' }}>
+                                                {a.bonus_ataque}
+                                            </span>
+                                        </PortalTooltip>
+                                    </td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ffcc80', fontWeight: 'bold' }}>
+                                        <PortalTooltip
+                                            titulo={`Auditoria de Dano — ${a.nome}`}
+                                            linhas={montarLinhasDano(a, ehMagia, cfg)}
+                                        >
+                                            <span style={{ borderBottom: '1px dotted rgba(255,204,128,0.55)' }}>
+                                                {danoExibido}
+                                            </span>
+                                        </PortalTooltip>
+                                    </td>
                                     <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.critico}</td>
                                     <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.tipo}</td>
                                     <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.alcance}</td>

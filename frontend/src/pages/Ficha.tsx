@@ -719,6 +719,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         />
                         <AttackList
                             ataques={(ficha.combate.ataques || []).map((a: any) => ({ ...a, teste: a.teste || '—' }))}
+                            cdMagiasCalc={ficha.combate.cd_magias_calc}
                             fluxoDeMana={Boolean(ficha.combate.fluxo_de_mana)}
                             focoVital={Boolean(ficha.combate.foco_vital)}
                             spellConfigs={spellConfigs}
