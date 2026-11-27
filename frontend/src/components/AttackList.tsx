@@ -24,27 +24,33 @@ interface AttackListProps {
     focoVital?: boolean;
     spellConfigs?: Record<string, SpellRollConfig>;
     onOpenSpell?: (nomeMagia: string) => void;
+    onAplicarCura?: (valor: number, tipo: 'cura' | 'pv_temp', nomeMagia: string) => void;
 }
 
 interface RollAtaqueState {
     nome: string;
     ehMagia: boolean;
+    modo: 'dano' | 'cura' | 'pv_temp';
     cdTexto?: string;
     custoPm?: number;
     ataque?: ResultadoD20;
     dano: ResultadoExpressao | null;
     tipoDano: string;
+    aplicado?: boolean;
 }
 
 // Classificação visual dos efeitos (mesmo idioma de cores do sistema)
 const ehPenalidade = (t: string) => /-\d/.test(t) || /não proficiente|penalidade|desbalanceada/i.test(t);
 const ehBuff = (t: string) => /\+\d/.test(t) || /conta como/i.test(t);
 
-export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, fluxoDeMana, focoVital, spellConfigs, onOpenSpell }) => {
+export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, fluxoDeMana, focoVital, spellConfigs, onOpenSpell, onAplicarCura }) => {
     const [ultimoRoll, setUltimoRoll] = useState<RollAtaqueState | null>(null);
 
     const handleRolarAtaque = (a: AtaqueView) => {
-        const ehMagia = /^CD\s+\d+|^Auto$/i.test((a.bonus_ataque || '').trim());
+        const ehCura = a.tipo === 'Cura' || a.bonus_ataque === 'Cura';
+        const ehPvTemp = a.tipo === 'PV Temp' || a.bonus_ataque === 'PV Temp';
+        const modo: 'dano' | 'cura' | 'pv_temp' = ehCura ? 'cura' : ehPvTemp ? 'pv_temp' : 'dano';
+        const ehMagia = ehCura || ehPvTemp || /^CD\s+\d+|^Auto$/i.test((a.bonus_ataque || '').trim());
         const cfg = spellConfigs?.[a.nome];
         const danoFormula = (ehMagia && cfg?.formulaEfetiva) ? cfg.formulaEfetiva : a.dano;
         const danoRes = rolarExpressao(danoFormula);
@@ -52,15 +58,24 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
             setUltimoRoll({
                 nome: a.nome,
                 ehMagia: true,
-                cdTexto: a.bonus_ataque === 'Auto' ? 'Acerto Automático' : `${a.teste} ${a.bonus_ataque}`,
+                modo,
+                cdTexto: ehCura
+                    ? 'Cura de PV'
+                    : ehPvTemp
+                        ? 'PV Temporários'
+                        : a.bonus_ataque === 'Auto'
+                            ? 'Acerto Automático'
+                            : `${a.teste} ${a.bonus_ataque}`,
                 custoPm: cfg?.custoTotalPm,
                 dano: danoRes,
                 tipoDano: a.tipo,
+                aplicado: false,
             });
         } else {
             setUltimoRoll({
                 nome: a.nome,
                 ehMagia: false,
+                modo: 'dano',
                 ataque: rolarAtaqueD20(a.bonus_ataque),
                 dano: danoRes,
                 tipoDano: a.tipo,
@@ -208,13 +223,50 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                         )}
                         {ultimoRoll.dano && (
                             <span>
-                                Dano ({ultimoRoll.tipoDano}):{' '}
-                                <strong style={{ color: '#ffcc80' }}>{ultimoRoll.dano.total}</strong>{' '}
+                                {ultimoRoll.modo === 'cura'
+                                    ? '💚 Cura: '
+                                    : ultimoRoll.modo === 'pv_temp'
+                                        ? '🛡️ PV Temporários: '
+                                        : `Dano (${ultimoRoll.tipoDano}): `}
+                                <strong style={{ color: ultimoRoll.modo === 'cura' ? '#81c784' : ultimoRoll.modo === 'pv_temp' ? '#64b5f6' : '#ffcc80' }}>
+                                    {ultimoRoll.dano.total}
+                                </strong>{' '}
                                 <span style={{ color: '#888', fontSize: '0.75rem' }}>
                                     ({ultimoRoll.dano.detalhes.map(d => `${d.dado}[${d.rolagens.join(',')}]`).join(' + ')}
                                     {ultimoRoll.dano.bonus !== 0 ? (ultimoRoll.dano.bonus > 0 ? `+${ultimoRoll.dano.bonus}` : ultimoRoll.dano.bonus) : ''})
                                 </span>
                             </span>
+                        )}
+                        {ultimoRoll.dano && (ultimoRoll.modo === 'cura' || ultimoRoll.modo === 'pv_temp') && onAplicarCura && (
+                            <button
+                                type="button"
+                                disabled={ultimoRoll.aplicado}
+                                onClick={() => {
+                                    if (!ultimoRoll.dano) return;
+                                    onAplicarCura(ultimoRoll.dano.total, ultimoRoll.modo as 'cura' | 'pv_temp', ultimoRoll.nome);
+                                    setUltimoRoll(prev => prev ? { ...prev, aplicado: true } : null);
+                                }}
+                                style={{
+                                    background: ultimoRoll.aplicado
+                                        ? '#2a332a'
+                                        : ultimoRoll.modo === 'cura'
+                                            ? '#2e7d32'
+                                            : '#1565c0',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 4,
+                                    padding: '4px 10px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 'bold',
+                                    cursor: ultimoRoll.aplicado ? 'default' : 'pointer',
+                                }}
+                            >
+                                {ultimoRoll.aplicado
+                                    ? '✓ Aplicado ao PV'
+                                    : ultimoRoll.modo === 'cura'
+                                        ? `+ Aplicar +${ultimoRoll.dano.total} PV`
+                                        : `+ Aplicar ${ultimoRoll.dano.total} PV Temp`}
+                            </button>
                         )}
                     </div>
                     <button
@@ -234,7 +286,7 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead>
                         <tr style={{ color: '#888', textTransform: 'uppercase', fontSize: '0.7rem' }}>
-                            {['Arma / Magia', 'Bônus / CD', 'Dano', 'Crít.', 'Tipo', 'Alcance', 'Teste', ''].map(h => (
+                            {['Arma / Magia', 'Bônus / CD', 'Dano / Cura', 'Crít.', 'Tipo', 'Alcance', 'Teste', ''].map(h => (
                                 <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #333', whiteSpace: 'nowrap' }}>{h}</th>
                             ))}
                         </tr>
@@ -242,6 +294,8 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                     <tbody>
                         {ataques.map((a, i) => {
                             const ehMagia = strEhMagia(a.especial);
+                            const ehCura = a.tipo === 'Cura' || a.bonus_ataque === 'Cura';
+                            const ehPvTemp = a.tipo === 'PV Temp' || a.bonus_ataque === 'PV Temp';
                             const cfg = ehMagia ? spellConfigs?.[a.nome] : undefined;
                             const danoExibido = cfg?.formulaEfetiva || a.dano;
                             const linhasEspecial: TooltipLinha[] = a.especial
@@ -260,7 +314,11 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                                                 <strong
                                                     onClick={() => ehMagia && onOpenSpell && onOpenSpell(a.nome)}
                                                     title={ehMagia && onOpenSpell ? 'Clique para abrir aprimoramentos da magia' : undefined}
-                                                    style={{ color: ehMagia ? '#ce93d8' : '#e0e0e0', cursor: ehMagia && onOpenSpell ? 'pointer' : 'default', lineHeight: 1.25 }}
+                                                    style={{
+                                                        color: ehCura ? '#81c784' : ehPvTemp ? '#64b5f6' : ehMagia ? '#ce93d8' : '#e0e0e0',
+                                                        cursor: ehMagia && onOpenSpell ? 'pointer' : 'default',
+                                                        lineHeight: 1.25,
+                                                    }}
                                                 >
                                                     {a.nome}
                                                 </strong>
@@ -274,9 +332,9 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                                                         {a.especial && (
                                                             <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                                                                 <T20Icon
-                                                                    name={ehPenalidade(a.especial) ? 'alerta' : ehMagia ? 'grimorio' : 'efeito'}
+                                                                    name={ehPenalidade(a.especial) ? 'alerta' : ehCura ? 'hp' : ehMagia ? 'grimorio' : 'efeito'}
                                                                     size={13}
-                                                                    color={ehPenalidade(a.especial) ? '#ffb74d' : ehMagia ? '#ce93d8' : '#80deea'}
+                                                                    color={ehPenalidade(a.especial) ? '#ffb74d' : ehCura ? '#81c784' : ehPvTemp ? '#64b5f6' : ehMagia ? '#ce93d8' : '#80deea'}
                                                                 />
                                                             </span>
                                                         )}
@@ -287,26 +345,36 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                                     </td>
                                     <td style={{ padding: '8px', whiteSpace: 'nowrap', color: ehMagia ? '#ce93d8' : '#ccc', fontWeight: ehMagia ? 'bold' : 'normal' }}>
                                         <PortalTooltip
-                                            titulo={ehMagia ? `Auditoria da CD — ${a.nome}` : `Auditoria de Ataque — ${a.nome}`}
+                                            titulo={ehCura ? `Magia de Cura — ${a.nome}` : ehPvTemp ? `PV Temporários — ${a.nome}` : ehMagia ? `Auditoria da CD — ${a.nome}` : `Auditoria de Ataque — ${a.nome}`}
                                             linhas={montarLinhasCdOuAtaque(a, ehMagia)}
                                         >
-                                            <span style={{ borderBottom: '1px dotted rgba(206,147,216,0.55)' }}>
-                                                {a.bonus_ataque}
-                                            </span>
+                                            {ehCura ? (
+                                                <span style={{ fontSize: '0.72rem', background: 'rgba(76,175,80,0.18)', border: '1px solid rgba(129,199,132,0.5)', color: '#81c784', borderRadius: 4, padding: '2px 7px', fontWeight: 'bold' }}>
+                                                    💚 CURA
+                                                </span>
+                                            ) : ehPvTemp ? (
+                                                <span style={{ fontSize: '0.72rem', background: 'rgba(33,150,243,0.18)', border: '1px solid rgba(100,181,246,0.5)', color: '#64b5f6', borderRadius: 4, padding: '2px 7px', fontWeight: 'bold' }}>
+                                                    🛡️ PV TEMP
+                                                </span>
+                                            ) : (
+                                                <span style={{ borderBottom: '1px dotted rgba(206,147,216,0.55)' }}>
+                                                    {a.bonus_ataque}
+                                                </span>
+                                            )}
                                         </PortalTooltip>
                                     </td>
-                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ffcc80', fontWeight: 'bold' }}>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: ehCura ? '#81c784' : ehPvTemp ? '#64b5f6' : '#ffcc80', fontWeight: 'bold' }}>
                                         <PortalTooltip
-                                            titulo={`Auditoria de Dano — ${a.nome}`}
+                                            titulo={`${ehCura ? 'Auditoria de Cura' : ehPvTemp ? 'Auditoria de PV Temp' : 'Auditoria de Dano'} — ${a.nome}`}
                                             linhas={montarLinhasDano(a, ehMagia, cfg)}
                                         >
-                                            <span style={{ borderBottom: '1px dotted rgba(255,204,128,0.55)' }}>
+                                            <span style={{ borderBottom: `1px dotted ${ehCura ? 'rgba(129,199,132,0.55)' : ehPvTemp ? 'rgba(100,181,246,0.55)' : 'rgba(255,204,128,0.55)'}` }}>
                                                 {danoExibido}
                                             </span>
                                         </PortalTooltip>
                                     </td>
                                     <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.critico}</td>
-                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.tipo}</td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: ehCura ? '#81c784' : ehPvTemp ? '#64b5f6' : '#ccc' }}>{a.tipo}</td>
                                     <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.alcance}</td>
                                     <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.teste}</td>
                                     <td style={{ padding: '8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -315,9 +383,15 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                                             onClick={() => handleRolarAtaque(a)}
                                             title={`Rolar ${a.nome} (${danoExibido})`}
                                             style={{
-                                                background: ehMagia ? 'rgba(156, 39, 176, 0.2)' : 'rgba(255, 193, 7, 0.12)',
-                                                color: ehMagia ? '#ce93d8' : '#ffd54f',
-                                                border: `1px solid ${ehMagia ? 'rgba(206, 147, 216, 0.45)' : 'rgba(255, 213, 79, 0.35)'}`,
+                                                background: ehCura
+                                                    ? 'rgba(76, 175, 80, 0.2)'
+                                                    : ehPvTemp
+                                                        ? 'rgba(33, 150, 243, 0.2)'
+                                                        : ehMagia
+                                                            ? 'rgba(156, 39, 176, 0.2)'
+                                                            : 'rgba(255, 193, 7, 0.12)',
+                                                color: ehCura ? '#81c784' : ehPvTemp ? '#64b5f6' : ehMagia ? '#ce93d8' : '#ffd54f',
+                                                border: `1px solid ${ehCura ? 'rgba(129, 199, 132, 0.5)' : ehPvTemp ? 'rgba(100, 181, 246, 0.5)' : ehMagia ? 'rgba(206, 147, 216, 0.45)' : 'rgba(255, 213, 79, 0.35)'}`,
                                                 borderRadius: 4,
                                                 padding: '3px 8px',
                                                 cursor: 'pointer',
@@ -328,7 +402,7 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, cdMagiasCalc, f
                                                 whiteSpace: 'nowrap',
                                             }}
                                         >
-                                            <T20Icon name="dado" size={12} /> Rolar
+                                            <T20Icon name="dado" size={12} /> {ehCura ? 'Curar' : 'Rolar'}
                                         </button>
                                     </td>
                                 </tr>
