@@ -18,15 +18,17 @@ def _ficha_origem(origem: str, escolhas=None, nivel: int = 1, forca: int = 1) ->
 
 
 def test_catalogo_35_origens_e_35_poderes_com_efeitos():
-    assert len(DADOS_ORIGENS) == 35
-    assert len(DADOS_PODERES_ORIGEM) == 35
+    origens_basicas = {k: v for k, v in DADOS_ORIGENS.items() if not v.get("regional")}
+    poderes_basicos = {k: v for k, v in DADOS_PODERES_ORIGEM.items() if v.get("fonte", "T20 JdA") == "T20 JdA"}
+    assert len(origens_basicas) == 35
+    assert len(poderes_basicos) == 35
 
-    # Todos os 35 poderes exclusivos possuem efeitos declarativos
-    sem_efeitos = [k for k, v in DADOS_PODERES_ORIGEM.items() if not v.get("efeitos")]
+    # Todos os 35 poderes exclusivos do Livro Básico possuem efeitos declarativos
+    sem_efeitos = [k for k, v in poderes_basicos.items() if not v.get("efeitos")]
     assert sem_efeitos == []
 
     # Nenhuma origem do T20 JdA concede perícias fixas fora das 2 escolhas
-    for nome_origem, dados in DADOS_ORIGENS.items():
+    for nome_origem, dados in origens_basicas.items():
         assert dados["pericias_fixas"] == [], f"{nome_origem} não deve ter pericias_fixas"
         assert dados["qtd_escolhas"] == 2
 
@@ -35,6 +37,8 @@ def test_todos_poderes_unicos_batem_exatamente_com_beneficios_lista():
     # Garante que não haja divergência de maiúsculas/minúsculas (ex.: Quebra-Galho vs Quebra-galho)
     nomes_beneficios = {
         b for dados in DADOS_ORIGENS.values() for b in dados["beneficios_lista"]
+    } | {
+        dados["poder_fixo"] for dados in DADOS_ORIGENS.values() if dados.get("poder_fixo")
     }
     for chave, poder in DADOS_PODERES_ORIGEM.items():
         assert poder["nome"] in nomes_beneficios, (

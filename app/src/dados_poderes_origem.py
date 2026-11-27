@@ -285,3 +285,7 @@ DADOS_PODERES_ORIGEM = {
         "efeitos": {"bonus_pericia_estendida": 2},
     },
 }
+
+from .dados_origens_atlas import DADOS_PODERES_ORIGEM_ATLAS
+
+DADOS_PODERES_ORIGEM.update(DADOS_PODERES_ORIGEM_ATLAS)

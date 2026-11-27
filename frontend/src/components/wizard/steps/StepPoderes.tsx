@@ -148,7 +148,36 @@ export function StepPoderes({
                         </span>
                     )}
                 </div>
-                {beneficiosOrigem.length === 0 ? (
+                {infoOrigem?.regional ? (
+                    <div style={{
+                        background: 'rgba(46, 125, 50, 0.14)',
+                        border: '1px solid #2e7d32',
+                        borderRadius: 8,
+                        padding: '12px 14px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6,
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ color: '#81c784', fontWeight: 700, fontSize: '0.88rem' }}>
+                                Benefício Único Regional (Automático)
+                            </span>
+                            {infoOrigem.regiao && (
+                                <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: 999, background: 'rgba(46,125,50,0.35)', color: '#dcedc8' }}>
+                                    {infoOrigem.regiao}
+                                </span>
+                            )}
+                        </div>
+                        <p style={{ color: '#e2e8f0', fontSize: '0.85rem', margin: 0, lineHeight: 1.45 }}>
+                            {infoOrigem.beneficio_texto || infoOrigem.descricao}
+                        </p>
+                        {infoOrigem.itens && (
+                            <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: 0 }}>
+                                <strong>Itens iniciais:</strong> {infoOrigem.itens}
+                            </p>
+                        )}
+                    </div>
+                ) : beneficiosOrigem.length === 0 ? (
                     <p style={{ color: '#94a3b8', fontSize: '0.86rem', margin: 0 }}>
                         {origemNome === 'Amnésico'
                             ? 'Amnésico recebe Lembranças Graduais automaticamente e escolhe benefícios com o mestre.'
