@@ -208,7 +208,7 @@ DADOS_DEUSES = {
         "simbolo": "Estrela negra de cinco pontas",
         "energia": "Negativa",
         "arma": "Adaga",
-        "devotos": ["Anão", "Medusa", "Qareen", "Osteon", "Suraggel (Sulfure)", "Trog", "Arcanista", "Bardo", "Ladino"],
+        "devotos": ["Anão", "Medusa", "Qareen", "Osteon", "Suraggel (Sulfure)", "Trog", "Arcanista", "Bardo", "Druida", "Ladino"],
         "poderes": ["Carícia Sombria", "Manto da Penumbra", "Visão nas Trevas", "Zumbificar"],
         "obrigacoes": "Proibida de ser tocada por Azgher: deve se cobrir inteiramente durante o dia, sem expor ao sol nenhum pedaço de pele.",
         "restricoes_mecanicas": {"cobrir_pele_dia": True},

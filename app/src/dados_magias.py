@@ -4040,3 +4040,7 @@ if "Conjurar Mortos-Vivos" in DADOS_MAGIAS:
 
 from .dados_magias_herois import DADOS_MAGIAS_HEROIS
 DADOS_MAGIAS.update(DADOS_MAGIAS_HEROIS)
+
+from .dados_magias_deuses import DADOS_MAGIAS_DEUSES
+DADOS_MAGIAS.update(DADOS_MAGIAS_DEUSES)
+
