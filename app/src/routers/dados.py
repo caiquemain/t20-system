@@ -14,18 +14,29 @@ from src.dados_poderes_concedidos import DADOS_PODERES_CONCEDIDOS
 from src.dados_habilidades_raciais import DADOS_HABILIDADES_RACIAIS
 from src.dados_poderes_tormenta import DADOS_PODERES_TORMENTA
 from src.dados_equipamentos import DADOS_ARMAS, DADOS_ARMADURAS, DADOS_GERAIS
+from src.dados_suplementos import (
+    FONTE_LIVRO_BASICO,
+    SUPLEMENTOS_CATALOGO,
+    enriquecer_catalogo_com_fonte,
+    inferir_fonte,
+)
 
 router = APIRouter(tags=["Dados"])
 
-FONTE_LIVRO_BASICO = "T20 JdA"
+
+@router.get("/dados/suplementos", tags=["Dados Estáticos"])
+def listar_suplementos():
+    """Catálogo oficial de livros e suplementos suportados."""
+    return SUPLEMENTOS_CATALOGO
 
 
 def _filtrar_racas(incluir_suplementos: bool = False, fonte: Optional[str] = None) -> Dict:
+    enriquecidas = enriquecer_catalogo_com_fonte(DADOS_RACAS, "raca")
     if fonte:
-        return {k: v for k, v in DADOS_RACAS.items() if v.get("fonte") == fonte}
+        return {k: v for k, v in enriquecidas.items() if v.get("fonte") == fonte}
     if incluir_suplementos:
-        return DADOS_RACAS
-    return {k: v for k, v in DADOS_RACAS.items() if v.get("fonte") == FONTE_LIVRO_BASICO}
+        return enriquecidas
+    return {k: v for k, v in enriquecidas.items() if v.get("fonte") == FONTE_LIVRO_BASICO}
 
 
 @router.get("/racas")
@@ -42,7 +53,7 @@ def listar_nomes_classes():
 
 @router.get("/dados/classes", tags=["Dados Estáticos"])
 def obter_detalhes_classes():
-    return DADOS_CLASSES
+    return enriquecer_catalogo_com_fonte(DADOS_CLASSES, "classe")
 
 @router.get("/origens")
 def listar_nomes_origens():
@@ -50,7 +61,7 @@ def listar_nomes_origens():
 
 @router.get("/dados/origens", tags=["Dados Estáticos"])
 def listar_detalhes_origens():
-    return DADOS_ORIGENS
+    return enriquecer_catalogo_com_fonte(DADOS_ORIGENS, "origem")
 
 @router.get("/pericias")
 def listar_nomes_pericias():
@@ -58,11 +69,11 @@ def listar_nomes_pericias():
 
 @router.get("/dados/habilidades", tags=["Dados Estáticos"])
 def listar_detalhes_habilidades():
-    return HABILIDADES_GERAIS
+    return enriquecer_catalogo_com_fonte(HABILIDADES_GERAIS, "habilidade")
 
 @router.get("/dados/habilidades-classe", tags=["Dados Estáticos"])
 def listar_habilidades_classe():
-    return DADOS_HABILIDADES_CLASSE
+    return enriquecer_catalogo_com_fonte(DADOS_HABILIDADES_CLASSE, "habilidade_classe")
 
 @router.get("/dados/magias", response_model=Dict[str, Magia], tags=["Dados Estáticos"])
 def get_magias():
@@ -78,11 +89,11 @@ def listar_nomes_deuses():
 
 @router.get("/dados/deuses", tags=["Dados Estáticos"])
 def obter_detalhes_deuses():
-    return DADOS_DEUSES
+    return enriquecer_catalogo_com_fonte(DADOS_DEUSES, "deus")
 
 @router.get("/dados/poderes-concedidos", tags=["Dados Estáticos"])
 def listar_poderes_concedidos():
-    return DADOS_PODERES_CONCEDIDOS
+    return enriquecer_catalogo_com_fonte(DADOS_PODERES_CONCEDIDOS, "poder_concedido")
 
 @router.get("/poderes")
 def listar_poderes_categorizados():
@@ -106,7 +117,8 @@ def listar_poderes_categorizados():
                 "categoria": categoria,
                 "descricao": dados.get("descricao", ""),
                 "requisitos": dados.get("requisitos", []),
-                "is_general": True
+                "is_general": True,
+                "fonte": inferir_fonte("habilidade", chave, dados),
             })
             nomes_adicionados.add(dados["nome"])
 
@@ -117,7 +129,8 @@ def listar_poderes_categorizados():
                 "categoria": "Poder Concedido",
                 "descricao": dados.get("descricao", ""),
                 "requisitos": [],
-                "is_general": False
+                "is_general": False,
+                "fonte": inferir_fonte("poder_concedido", nome, dados),
             })
             nomes_adicionados.add(dados["nome"])
 
@@ -128,13 +141,15 @@ def listar_poderes_categorizados():
                 "categoria": "Tormenta",
                 "descricao": dados.get("descricao", ""),
                 "requisitos": dados.get("requisitos", []),
-                "is_general": True
+                "is_general": True,
+                "fonte": inferir_fonte("poder_tormenta", nome, dados),
             })
             nomes_adicionados.add(dados["nome"])
 
     for raca_nome, raca_dados in DADOS_RACAS.items():
         if raca_nome == "Osteon":
             continue
+        fonte_raca = inferir_fonte("raca", raca_nome, raca_dados)
         habilidades_keys = raca_dados.get("habilidades", [])
         for hab_key in habilidades_keys:
             dados = DADOS_HABILIDADES_RACIAIS.get(hab_key) or HABILIDADES_GERAIS.get(hab_key)
@@ -145,7 +160,8 @@ def listar_poderes_categorizados():
                     "categoria": f"Raça: {raca_nome}",
                     "descricao": dados.get("descricao", ""),
                     "requisitos": [],
-                    "is_general": False
+                    "is_general": False,
+                    "fonte": fonte_raca,
                 })
     return sorted(lista_poderes, key=lambda x: x["nome"])
 

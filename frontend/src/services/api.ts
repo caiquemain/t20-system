@@ -9,14 +9,17 @@ export const api = axios.create({
 });
 
 // --- DADOS ESTÁTICOS ---
-export const fetchRacas = () => api.get('/racas');
+export const fetchSuplementos = () => api.get('/dados/suplementos');
+export const fetchRacas = (incluirSuplementos = true) =>
+    api.get(`/racas?incluir_suplementos=${incluirSuplementos}`);
 export const fetchClasses = () => api.get('/classes');
 export const fetchOrigens = () => api.get('/origens');
 export const fetchPericias = () => api.get('/pericias');
 export const fetchPoderes = () => api.get('/poderes');
 
 // Detalhes Completos
-export const fetchDadosRacas = () => api.get('/dados/racas');
+export const fetchDadosRacas = (incluirSuplementos = true) =>
+    api.get(`/dados/racas?incluir_suplementos=${incluirSuplementos}`);
 export const fetchDadosClasses = () => api.get('/dados/classes');
 export const fetchDadosOrigens = () => api.get('/dados/origens');
 export const fetchDadosHabilidades = () => api.get('/dados/habilidades');

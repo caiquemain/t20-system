@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { T20Icon, type IconName } from './T20Icon';
 import { EntityDetailPanel } from './EntityDetailPanel';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { obterInfoSuplemento } from '../utils/suplementos';
 
 export interface EntityItem {
     nome: string;
@@ -9,6 +10,7 @@ export interface EntityItem {
     icone?: IconName;
     descricao?: string;
     bonus?: string;  // ex: "+2 FOR, +1 CON" ou "Benefícios: 2 escolhas"
+    fonte?: string;  // ex: "T20 JdA", "Ameaças de Arton", "Heróis de Arton"
     bloqueado?: boolean;  // ex: origem bloqueada pelo Golem
     motivoBloqueio?: string;
 }
@@ -32,6 +34,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
     onConfirm, onFechar, permitirVazio = false, labelVazio = 'Nenhum'
 }) => {
     const [busca, setBusca] = useState('');
+    const [filtroFonte, setFiltroFonte] = useState<string>('TODOS');
     const [hoveredItem, setHoveredItem] = useState<EntityItem | null>(null);
 
     useEscapeKey(aberto, onFechar);
@@ -39,19 +42,32 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
     useEffect(() => {
         if (!aberto) {
             setBusca('');
+            setFiltroFonte('TODOS');
             setHoveredItem(null);
         }
     }, [aberto]);
 
+    const fontesDisponiveis = useMemo(() => {
+        const set = new Set<string>();
+        itens.forEach(it => {
+            if (it.fonte) set.add(it.fonte);
+        });
+        return Array.from(set);
+    }, [itens]);
+
     const itensFiltrados = useMemo(() => {
-        if (!busca.trim()) return itens;
-        const q = busca.toLowerCase();
-        return itens.filter(it =>
-            it.nome.toLowerCase().includes(q) ||
-            (it.descricao || '').toLowerCase().includes(q) ||
-            (it.bonus || '').toLowerCase().includes(q)
-        );
-    }, [itens, busca]);
+        const q = busca.trim().toLowerCase();
+        return itens.filter(it => {
+            if (filtroFonte !== 'TODOS' && (it.fonte || 'T20 JdA') !== filtroFonte) return false;
+            if (!q) return true;
+            return (
+                it.nome.toLowerCase().includes(q) ||
+                (it.descricao || '').toLowerCase().includes(q) ||
+                (it.bonus || '').toLowerCase().includes(q) ||
+                (it.fonte || '').toLowerCase().includes(q)
+            );
+        });
+    }, [itens, busca, filtroFonte]);
 
     const temDetalhesRicos = useMemo(
         () => itens.some(it => Boolean(it.tooltip)),
@@ -116,6 +132,63 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                     ><T20Icon name="fechar" size={16} /></button>
                 </div>
 
+                {/* Barra de Filtro por Livro (exibida automaticamente quando há 2+ livros) */}
+                {fontesDisponiveis.length > 1 && (
+                    <div style={{
+                        padding: '8px 20px',
+                        borderBottom: '1px solid #222742',
+                        display: 'flex',
+                        gap: 6,
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        background: 'rgba(10, 12, 22, 0.45)',
+                        fontFamily: FONT_BODY,
+                        textTransform: 'none',
+                    }}>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginRight: 4 }}>Livro:</span>
+                        <button
+                            type="button"
+                            onClick={() => setFiltroFonte('TODOS')}
+                            style={{
+                                fontSize: '0.72rem',
+                                padding: '3px 10px',
+                                borderRadius: 999,
+                                cursor: 'pointer',
+                                border: filtroFonte === 'TODOS' ? '1px solid #ffd700' : '1px solid #32385a',
+                                background: filtroFonte === 'TODOS' ? 'rgba(255,215,0,0.18)' : 'transparent',
+                                color: filtroFonte === 'TODOS' ? '#ffd700' : '#cbd5e1',
+                                fontWeight: filtroFonte === 'TODOS' ? 700 : 500,
+                            }}
+                        >
+                            Todos ({itens.length})
+                        </button>
+                        {fontesDisponiveis.map(f => {
+                            const info = obterInfoSuplemento(f);
+                            const ativo = filtroFonte === f;
+                            const qtd = itens.filter(it => (it.fonte || 'T20 JdA') === f).length;
+                            return (
+                                <button
+                                    key={f}
+                                    type="button"
+                                    onClick={() => setFiltroFonte(f)}
+                                    style={{
+                                        fontSize: '0.72rem',
+                                        padding: '3px 10px',
+                                        borderRadius: 999,
+                                        cursor: 'pointer',
+                                        border: `1px solid ${ativo ? info.cor : '#32385a'}`,
+                                        background: ativo ? `${info.cor}44` : 'transparent',
+                                        color: ativo ? '#fff' : '#cbd5e1',
+                                        fontWeight: ativo ? 700 : 500,
+                                    }}
+                                >
+                                    {info.sigla} ({qtd})
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
                 {/* Corpo Master-Detail */}
                 <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     {/* Coluna Esquerda: Grid de Cards */}
@@ -149,6 +222,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                         {itensFiltrados.map(it => {
                             const isSel = selecionado === it.nome;
                             const isHover = itemEmFoco?.nome === it.nome;
+                            const infoFonte = it.fonte && it.fonte !== 'T20 JdA' ? obterInfoSuplemento(it.fonte) : null;
                             return (
                                 <div
                                     key={it.nome}
@@ -182,7 +256,22 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                                         }}>
                                             {it.nome}
                                         </span>
-                                        {isSel && <span style={{ marginLeft: 'auto', color: '#ffd700' }}><T20Icon name="check" size={15} /></span>}
+                                        {infoFonte && (
+                                            <span style={{
+                                                marginLeft: 'auto',
+                                                fontSize: '0.62rem',
+                                                fontWeight: 700,
+                                                padding: '1px 6px',
+                                                borderRadius: 999,
+                                                background: `${infoFonte.cor}33`,
+                                                border: `1px solid ${infoFonte.cor}`,
+                                                color: '#e2e8f0',
+                                                flexShrink: 0,
+                                            }}>
+                                                {infoFonte.sigla}
+                                            </span>
+                                        )}
+                                        {isSel && <span style={{ marginLeft: infoFonte ? 4 : 'auto', color: '#ffd700' }}><T20Icon name="check" size={15} /></span>}
                                     </div>
                                     {it.bonus && (
                                         <div style={{ color: '#7dd3fc', fontSize: '0.76rem', fontWeight: 500, lineHeight: 1.35 }}>
@@ -220,6 +309,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                             bonus={itemEmFoco.bonus}
                             descricao={itemEmFoco.descricao}
                             tooltip={itemEmFoco.tooltip}
+                            fonte={itemEmFoco.fonte}
                             bloqueado={itemEmFoco.bloqueado}
                             motivoBloqueio={itemEmFoco.motivoBloqueio}
                             selecionado={selecionado === itemEmFoco.nome}

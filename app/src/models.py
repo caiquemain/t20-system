@@ -353,6 +353,33 @@ class ClasseInfo(BaseModel):
     nivel: int = 1
     primaria: bool = False
     subclasse: str = ""
+    variante: Optional[str] = None
+
+
+class DistincaoPersonagem(BaseModel):
+    """Distinção obtida pelo personagem (Heróis de Arton / Deuses de Arton)."""
+    nome: str
+    admitido: bool = True
+    marca: str = ""
+    poderes: List[str] = Field(default_factory=list)
+    fonte: str = ""
+
+
+class ComplicacaoPersonagem(BaseModel):
+    """Complicação escolhida pelo personagem (Heróis de Arton — concede 1 poder geral bônus)."""
+    nome: str
+    descricao: str = ""
+    poder_bonus: str = ""
+    fonte: str = ""
+
+
+_LIVROS_PADRAO = [
+    "T20 JdA",
+    "Ameaças de Arton",
+    "Heróis de Arton",
+    "Deuses de Arton",
+    "Atlas de Arton",
+]
 
 # --- MODELO PRINCIPAL ---
 
@@ -362,6 +389,10 @@ class Personagem(BaseModel):
 
     cabecalho: Cabecalho = Field(default_factory=Cabecalho)
     classes: List[ClasseInfo] = []
+
+    suplementos_ativos: List[str] = Field(default_factory=lambda: list(_LIVROS_PADRAO))
+    distincoes: List[DistincaoPersonagem] = Field(default_factory=list)
+    complicacoes: List[ComplicacaoPersonagem] = Field(default_factory=list)
 
     atributos_base: Atributos = Field(default_factory=Atributos)
     atributos: Atributos = Field(default_factory=Atributos)

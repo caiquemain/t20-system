@@ -22,6 +22,7 @@ import { EquipamentoCard } from '../components/EquipamentoCard';
 import { AttackList } from '../components/AttackList';
 import { T20Icon, getEfeitoVisual } from '../components/T20Icon';
 import { formatarResumoDeus, formatarTooltipDeus } from '../utils/deusTooltip';
+import { entidadePermitidaPorSuplementos } from '../utils/suplementos';
 import { ToquesFinaisTab, TABELA_TAMANHO_TOOLTIP } from '../components/ToquesFinaisTab';
 
 // Tipos
@@ -30,32 +31,6 @@ import type { Magia } from '../types';
 const PONTOS_INICIAIS = 10;
 const MAPA_ATTR_KEY: Record<string, string> = { 'forca': 'for', 'destreza': 'des', 'constituicao': 'con', 'inteligencia': 'int', 'sabedoria': 'sab', 'carisma': 'car' };
 const TABELA_CUSTO: Record<string, number> = { "-1": -1, "0": 0, "1": 1, "2": 2, "3": 4, "4": 7 };
-
-const RACAS_METADATA: Record<string, { attrs: Record<string, number>, escolhas: number }> = {
-    "Anão": { attrs: { con: 2, sab: 1, des: -1 }, escolhas: 0 },
-    "Dahllan": { attrs: { sab: 2, des: 1, int: -1 }, escolhas: 0 },
-    "Duende": { attrs: {}, escolhas: 2 },
-    "Eiradaan": { attrs: { sab: 2, car: 1, for: -1 }, escolhas: 0 },
-    "Elfo": { attrs: { int: 2, des: 1, con: -1 }, escolhas: 0 },
-    "Galokk": { attrs: { for: 1, con: 1, car: -1 }, escolhas: 1 },
-    "Goblin": { attrs: { des: 2, int: 1, car: -1 }, escolhas: 0 },
-    "Humano": { attrs: {}, escolhas: 3 },
-    "Lefou": { attrs: { car: -1 }, escolhas: 3 },
-    "Minotauro": { attrs: { for: 2, con: 1, sab: -1 }, escolhas: 0 },
-    "Qareen": { attrs: { car: 2, int: 1, sab: -1 }, escolhas: 0 },
-    "Golem": { attrs: { for: 2, con: 1, car: -1 }, escolhas: 0 },
-    "Hynne": { attrs: { des: 2, car: 1, for: -1 }, escolhas: 0 },
-    "Kliren": { attrs: { int: 2, car: 1, for: -1 }, escolhas: 0 },
-    "Medusa": { attrs: { des: 2, car: 1, sab: -1 }, escolhas: 0 },
-    "Meio-Elfo": { attrs: { int: 1 }, escolhas: 2 },
-    "Osteon": { attrs: { con: -1 }, escolhas: 3 },
-    "Sereia/Tritão": { attrs: {}, escolhas: 3 },
-    "Sátiro": { attrs: { car: 2, des: 1, sab: -1 }, escolhas: 0 },
-    "Sílfide": { attrs: { car: 2, des: 1, for: -2 }, escolhas: 0 },
-    "Suraggel (Aggelus)": { attrs: { sab: 2, car: 1 }, escolhas: 0 },
-    "Suraggel (Sulfure)": { attrs: { des: 2, int: 1 }, escolhas: 0 },
-    "Trog": { attrs: { con: 2, for: 1, int: -1 }, escolhas: 0 }
-};
 
 const extrairPoderesDaClasse = (dadosHabilidadesClasse: any, nomeClasse: string) => {
     return Object.values(dadosHabilidadesClasse || {})
@@ -316,7 +291,7 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
     const pontosRestantes = PONTOS_INICIAIS - calcularPontosGastos();
 
     const racaNome = ficha.cabecalho.raca;
-    const infoRacaAtual = dadosRacas?.[racaNome] || RACAS_METADATA[racaNome] || { attrs: {}, escolhas: 0 };
+    const infoRacaAtual = dadosRacas?.[racaNome] || { attrs: {}, escolhas: 0 };
     const qtdEscolhasRacial = infoRacaAtual.escolhas || 0;
 
     const toggleRacialChoice = (attrKey: string) => {
@@ -846,15 +821,23 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 titulo="Escolha sua Raça"
                 iconeTitulo="raca"
                 selecionado={ficha.cabecalho.raca}
-                itens={listaRacas.map((r): EntityItem => {
-                    const meta: any = (dadosRacas as any)?.[r] || (RACAS_METADATA as any)?.[r] || {};
-                    const attrs = meta.attrs || {};
-                    const bonus = Object.entries(attrs)
-                        .filter(([, v]: any) => v !== 0)
-                        .map(([k, v]: any) => `${v > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
-                        .join(', ');
-                    return { nome: r, icone: 'raca', bonus: bonus || undefined };
-                })}
+                itens={listaRacas
+                    .filter(r => entidadePermitidaPorSuplementos((dadosRacas as any)?.[r]?.fonte, ficha.suplementos_ativos))
+                    .map((r): EntityItem => {
+                        const meta: any = (dadosRacas as any)?.[r] || {};
+                        const attrs = meta.attrs || {};
+                        const bonus = Object.entries(attrs)
+                            .filter(([, v]: any) => v !== 0)
+                            .map(([k, v]: any) => `${v > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
+                            .join(', ');
+                        const escolhasTxt = meta.escolhas ? `${bonus ? ', ' : ''}+1 em ${meta.escolhas} atrib.` : '';
+                        return {
+                            nome: r,
+                            icone: 'raca',
+                            bonus: (bonus + escolhasTxt) || undefined,
+                            fonte: meta.fonte || 'T20 JdA',
+                        };
+                    })}
                 onConfirm={(nome) => handleSelecionarEntidade('raca', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
@@ -864,7 +847,14 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 titulo="Escolha sua Origem"
                 iconeTitulo="origem"
                 selecionado={ficha.cabecalho.origem}
-                itens={listaOrigens.map((o): EntityItem => ({ nome: o, icone: 'origem' }))}
+                itens={listaOrigens
+                    .filter(o => entidadePermitidaPorSuplementos((dadosOrigens as any)?.[o]?.fonte, ficha.suplementos_ativos))
+                    .map((o): EntityItem => ({
+                        nome: o,
+                        icone: 'origem',
+                        descricao: (dadosOrigens as any)?.[o]?.descricao,
+                        fonte: (dadosOrigens as any)?.[o]?.fonte || 'T20 JdA',
+                    }))}
                 onConfirm={(nome) => handleSelecionarEntidade('origem', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
@@ -876,16 +866,19 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 selecionado={ficha.cabecalho.deus || ''}
                 permitirVazio={true}
                 labelVazio="Sem Devoção"
-                itens={deusesDisponiveis.map((d): EntityItem => {
-                    const info = (dadosDeuses as any)?.[d];
-                    return {
-                        nome: d,
-                        icone: 'deus',
-                        bonus: formatarResumoDeus(info),
-                        descricao: info?.crencas || info?.descricao,
-                        tooltip: formatarTooltipDeus(d, info),
-                    };
-                })}
+                itens={deusesDisponiveis
+                    .filter(d => entidadePermitidaPorSuplementos((dadosDeuses as any)?.[d]?.fonte, ficha.suplementos_ativos))
+                    .map((d): EntityItem => {
+                        const info = (dadosDeuses as any)?.[d];
+                        return {
+                            nome: d,
+                            icone: 'deus',
+                            bonus: formatarResumoDeus(info),
+                            descricao: info?.crencas || info?.descricao,
+                            tooltip: formatarTooltipDeus(d, info),
+                            fonte: info?.fonte || 'T20 JdA',
+                        };
+                    })}
                 onConfirm={(nome) => handleSelecionarEntidade('deus', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
@@ -895,7 +888,13 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 titulo="Escolha sua Classe"
                 iconeTitulo="classe"
                 selecionado={ficha.classes[0]?.nome}
-                itens={listaClasses.map((c): EntityItem => ({ nome: c, icone: 'classe' }))}
+                itens={listaClasses
+                    .filter(c => entidadePermitidaPorSuplementos((dadosClasses as any)?.[c]?.fonte, ficha.suplementos_ativos))
+                    .map((c): EntityItem => ({
+                        nome: c,
+                        icone: 'classe',
+                        fonte: (dadosClasses as any)?.[c]?.fonte || 'T20 JdA',
+                    }))}
                 onConfirm={(nome) => handleSelecionarEntidade('classe', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
