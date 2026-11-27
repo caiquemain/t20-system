@@ -21,7 +21,7 @@ Rastreamento por fase e lote. Documentação arquitetural completa em [`docs/SUP
 - [x] **Cap. 1 (14 Classes Variantes, p. 22–45):** Alquimista, Atleta, Burguês, Duelista, Ermitão, Inovador, Machado de Pedra, Magimarcialista, Necromante (+ *Ritual do Lich*), Santo, Seteiro, Usurpador, Vassalo, Ventanista
 - [x] **Cap. 1 (30 Novas Origens Especiais, p. 46–53):** Todas as 30 origens com efeitos mecânicos e escolhas interativas
 - [ ] **Cap. 1 (Classe Frade):** Características, habilidades fixas, poderes de Frade e progressão de magias
-- [ ] **Cap. 1/2 (Novos Poderes):** Novos poderes de classe e poderes gerais de *Heróis de Arton*
+- [x] **Cap. 1 (Novos Poderes, p. 54–95):** 288 novos poderes para as 14 classes básicas (+ 7 novos efeitos de *Golpe Pessoal*) e 155 novos poderes gerais (25 Combate, 13 Destino, 14 Magia, 6 Tormenta, 77 Raça, 20 Grupo) + categorias `Raça` e `Grupo` em `GET /poderes`
 - [ ] **Cap. 2 (Distinções):** Catálogo de Distinções, marcas, admissão e poderes exclusivos
 - [ ] **Cap. 3 (Equipamentos, Itens e Bases):** Novos equipamentos, melhorias, itens alquímicos e sistema de Bases
 

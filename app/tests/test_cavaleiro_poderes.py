@@ -144,7 +144,7 @@ PODERES_ESPERADOS = {
 
 
 def test_catalogo_cavaleiro_completo_26_entradas():
-    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Cavaleiro"]
+    entries = [v for v in DADOS_HABILIDADES_CLASSE.values() if v.get("classe") == "Cavaleiro" and v.get("fonte", "T20 JdA") == "T20 JdA"]
     fixas = {v["nome"]: v.get("nivel") for v in entries if v.get("tipo") == "Habilidade de Classe"}
     poderes = {v["nome"] for v in entries if v.get("tipo") == "Poder de Cavaleiro"}
 
@@ -159,7 +159,7 @@ def test_posturas_de_combate_seguem_regra_base():
         v for v in DADOS_HABILIDADES_CLASSE.values()
         if v.get("classe") == "Cavaleiro" and v["nome"].startswith("Postura de Combate:")
     ]
-    assert len(posturas) == 6
+    assert len(posturas) == 9
     for p in posturas:
         pc = p["efeitos"]["postura_combate"]
         assert pc["acao"] == "movimento"
