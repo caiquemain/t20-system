@@ -13,24 +13,40 @@
 /* --- HEADER --- */
 .ficha-header {
     background: #1e1e1e;
-    padding: 20px;
+    padding: 16px 20px;
     border-radius: 8px;
     border: 1px solid #333;
     margin-bottom: 20px;
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.header-top-row {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
     flex-wrap: wrap;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .btn-back {
     background: transparent;
     border: 1px solid #555;
     color: #aaa;
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .btn-back:hover {
@@ -44,17 +60,19 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-width: 300px;
+    min-width: 240px;
 }
 
 .input-nome {
     background: transparent;
     border: none;
+    border-bottom: 1px solid transparent;
     color: #d32f2f;
     /* Accent Color (Vermelho T20) */
     font-size: 2rem;
     font-weight: 800;
-    width: 100%;
+    flex: 1;
+    min-width: 180px;
 }
 
 .input-nome:focus {
@@ -65,9 +83,12 @@
 .header-sub {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     color: #888;
     flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px solid #2b2b2b;
+    width: 100%;
 }
 
 .select-header {

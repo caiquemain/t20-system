@@ -22,6 +22,7 @@ import { EquipamentoCard } from '../components/EquipamentoCard';
 import { AttackList } from '../components/AttackList';
 import { T20Icon, getEfeitoVisual } from '../components/T20Icon';
 import { formatarResumoDeus, formatarTooltipDeus } from '../utils/deusTooltip';
+import { formatarResumoClasse, formatarDescricaoClasse, formatarTooltipClasse } from '../utils/classeTooltip';
 import { entidadePermitidaPorSuplementos } from '../utils/suplementos';
 import { ToquesFinaisTab, TABELA_TAMANHO_TOOLTIP } from '../components/ToquesFinaisTab';
 
@@ -483,67 +484,11 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
 
             {/* --- HEADER --- */}
             <header className="ficha-header">
-                <button className="btn-back" onClick={() => navigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                    <T20Icon name="voltar" size={15} /> Voltar
-                </button>
-                <button
-                    disabled={exportandoPdf}
-                    onClick={async () => {
-                        if (exportandoPdf) return;
-                        setExportandoPdf(true);
-                        try {
-                            await gerarPDF(ficha, id);
-                        } finally {
-                            setExportandoPdf(false);
-                        }
-                    }}
-                    style={{
-                        padding: "8px 16px",
-                        backgroundColor: exportandoPdf ? "#555" : "#2e7d32",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: exportandoPdf ? "wait" : "pointer",
-                        fontWeight: "bold",
-                        marginLeft: "8px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        opacity: exportandoPdf ? 0.8 : 1,
-                    }}
-                >
-                    <T20Icon name="pdf" size={15} /> {exportandoPdf ? "Gerando PDF..." : "Baixar PDF"}
-                </button>
-                <button
-                    disabled={exportandoOdt}
-                    title="Exportar ficha editável para LibreOffice Writer (.odt)"
-                    onClick={async () => {
-                        if (exportandoOdt) return;
-                        setExportandoOdt(true);
-                        try {
-                            await gerarODT(ficha, id);
-                        } finally {
-                            setExportandoOdt(false);
-                        }
-                    }}
-                    style={{
-                        padding: "8px 14px",
-                        backgroundColor: exportandoOdt ? "#555" : "#1565c0",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: exportandoOdt ? "wait" : "pointer",
-                        fontWeight: "bold",
-                        marginLeft: "6px",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        opacity: exportandoOdt ? 0.8 : 1,
-                    }}
-                >
-                    <T20Icon name="pdf" size={15} /> {exportandoOdt ? "Gerando ODT..." : "Baixar ODT"}
-                </button>
-                <div className="header-inputs">
+                <div className="header-top-row">
+                    <button className="btn-back" onClick={() => navigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <T20Icon name="voltar" size={15} /> Voltar
+                    </button>
+
                     <input
                         className="input-nome"
                         placeholder="Nome do Personagem"
@@ -551,73 +496,135 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                         onChange={e => updateFicha({ cabecalho: { ...ficha.cabecalho, nome: e.target.value } })}
                     />
 
-                    <div className="header-sub">
+                    <div className="header-actions">
                         <button
-                            className="select-header"
-                            onClick={() => setSelectorAtivo('raca')}
-                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                            title="Clique para trocar de raça"
+                            disabled={exportandoPdf}
+                            onClick={async () => {
+                                if (exportandoPdf) return;
+                                setExportandoPdf(true);
+                                try {
+                                    await gerarPDF(ficha, id);
+                                } finally {
+                                    setExportandoPdf(false);
+                                }
+                            }}
+                            style={{
+                                padding: "8px 14px",
+                                backgroundColor: exportandoPdf ? "#555" : "#2e7d32",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: exportandoPdf ? "wait" : "pointer",
+                                fontWeight: "bold",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                opacity: exportandoPdf ? 0.8 : 1,
+                            }}
                         >
-                            <T20Icon name="raca" size={14} /> {ficha.cabecalho.raca} ▾
+                            <T20Icon name="pdf" size={15} /> {exportandoPdf ? "Gerando PDF..." : "Baixar PDF"}
                         </button>
-                        <span>•</span>
                         <button
-                            className="select-header"
-                            onClick={() => !origemBloqueada && setSelectorAtivo('origem')}
-                            disabled={origemBloqueada}
-                            style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f', display: 'inline-flex', alignItems: 'center', gap: '5px' } : { cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                            title={origemBloqueada ? 'Raça bloqueia origem (Golem)' : 'Clique para trocar de origem'}
+                            disabled={exportandoOdt}
+                            title="Exportar ficha editável para LibreOffice Writer (.odt)"
+                            onClick={async () => {
+                                if (exportandoOdt) return;
+                                setExportandoOdt(true);
+                                try {
+                                    await gerarODT(ficha, id);
+                                } finally {
+                                    setExportandoOdt(false);
+                                }
+                            }}
+                            style={{
+                                padding: "8px 14px",
+                                backgroundColor: exportandoOdt ? "#555" : "#1565c0",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: exportandoOdt ? "wait" : "pointer",
+                                fontWeight: "bold",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                opacity: exportandoOdt ? 0.8 : 1,
+                            }}
                         >
-                            <T20Icon name="origem" size={14} /> {origemBloqueada ? 'Sem Origem' : (ficha.cabecalho.origem || 'Selecionar...')} ▾
+                            <T20Icon name="pdf" size={15} /> {exportandoOdt ? "Gerando ODT..." : "Baixar ODT"}
                         </button>
-                        <span>•</span>
+                    </div>
+                </div>
+
+                <div className="header-sub">
+                    <button
+                        className="select-header"
+                        onClick={() => setSelectorAtivo('raca')}
+                        style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                        title="Clique para trocar de raça"
+                    >
+                        <T20Icon name="raca" size={14} /> {ficha.cabecalho.raca} ▾
+                    </button>
+                    <span>•</span>
+                    <button
+                        className="select-header"
+                        onClick={() => !origemBloqueada && setSelectorAtivo('origem')}
+                        disabled={origemBloqueada}
+                        style={origemBloqueada ? { opacity: 0.6, cursor: 'not-allowed', color: '#ff5252', border: '1px solid #d32f2f', display: 'inline-flex', alignItems: 'center', gap: '5px' } : { cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                        title={origemBloqueada ? 'Raça bloqueia origem (Golem)' : 'Clique para trocar de origem'}
+                    >
+                        <T20Icon name="origem" size={14} /> {origemBloqueada ? 'Sem Origem' : (ficha.cabecalho.origem || 'Selecionar...')} ▾
+                    </button>
+                    <span>•</span>
+                    <button
+                        className="select-header"
+                        onClick={() => setSelectorAtivo('deus')}
+                        style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', color: '#ffd700', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                        title={
+                            ficha.cabecalho.deus
+                                ? formatarTooltipDeus(ficha.cabecalho.deus, (dadosDeuses as any)?.[ficha.cabecalho.deus]) || 'Clique para trocar de devoção'
+                                : 'Clique para escolher uma devoção'
+                        }
+                    >
+                        <T20Icon name="deus" size={14} /> {ficha.cabecalho.deus || 'Sem Devoção'} ▾
+                    </button>
+                    <span>•</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <button
                             className="select-header"
-                            onClick={() => setSelectorAtivo('deus')}
-                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', color: '#ffd700', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                            onClick={() => setSelectorAtivo('classe')}
+                            style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', color: '#90caf9', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                             title={
-                                ficha.cabecalho.deus
-                                    ? formatarTooltipDeus(ficha.cabecalho.deus, (dadosDeuses as any)?.[ficha.cabecalho.deus]) || 'Clique para trocar de devoção'
-                                    : 'Clique para escolher uma devoção'
+                                ficha.classes[0]?.nome
+                                    ? formatarTooltipClasse(ficha.classes[0].nome, (dadosClasses as any)?.[ficha.classes[0].nome]) || 'Clique para trocar de classe'
+                                    : 'Clique para trocar de classe'
                             }
                         >
-                            <T20Icon name="deus" size={14} /> {ficha.cabecalho.deus || 'Sem Devoção'} ▾
+                            <T20Icon name="classe" size={14} /> {ficha.classes[0]?.nome || 'Selecionar...'} ▾
                         </button>
-                        <span>•</span>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <button
-                                className="select-header"
-                                onClick={() => setSelectorAtivo('classe')}
-                                style={{ cursor: 'pointer', textAlign: 'left', background: 'rgba(30,30,50,0.6)', border: '1px solid #555', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                                title="Clique para trocar de classe"
-                            >
-                                <T20Icon name="classe" size={14} /> {ficha.classes[0]?.nome || 'Selecionar...'} ▾
-                            </button>
-                            {ficha.classes[0]?.subclasse && <span className="subclass-badge" title="Caminho / Subclasse">{ficha.classes[0].subclasse}</span>}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 10 }}>
-                            <label style={{ fontSize: '0.8rem', color: '#888' }}>NV</label>
-                            <input className="input-nivel" type="number" min={1} max={20} value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
-                            <button
-                                onClick={handleLevelUp}
-                                style={{ padding: "4px 10px", backgroundColor: "#9c27b0", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "5px" }}
-                                title="Sobe 1 nível e grava no histórico (level-up assistido)"
-                            >
-                                <T20Icon name="xp" size={14} /> Level Up
-                            </button>
-                        </div>
+                        {ficha.classes[0]?.subclasse && <span className="subclass-badge" title="Caminho / Subclasse">{ficha.classes[0].subclasse}</span>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 6 }}>
+                        <label style={{ fontSize: '0.8rem', color: '#888' }}>NV</label>
+                        <input className="input-nivel" type="number" min={1} max={20} value={ficha.classes[0]?.nivel} onChange={e => { const nc = [...ficha.classes]; nc[0].nivel = parseInt(e.target.value); updateFicha({ classes: nc }, true); }} />
+                        <button
+                            onClick={handleLevelUp}
+                            style={{ padding: "4px 10px", backgroundColor: "#9c27b0", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                            title="Sobe 1 nível e grava no histórico (level-up assistido)"
+                        >
+                            <T20Icon name="xp" size={14} /> Level Up
+                        </button>
+                    </div>
 
-                        <div className="header-divider">|</div>
-                        <div className="header-info-tag" title={TABELA_TAMANHO_TOOLTIP[ficha.descricao.tamanho || 'Médio'] || 'Tamanho'}>
-                            <span className="tag-label">TAM</span>
-                            <span className="tag-value" style={{ color: ficha.descricao.tamanho === 'Médio' ? '#fff' : '#ffeb3b' }}>
-                                {ficha.descricao.tamanho || "Médio"}
-                            </span>
-                        </div>
-                        <div className="header-info-tag" title="Deslocamento">
-                            <span className="tag-label">DESL</span>
-                            <span className="tag-value">{ficha.status.deslocamento}m</span>
-                        </div>
+                    <div className="header-divider">|</div>
+                    <div className="header-info-tag" title={TABELA_TAMANHO_TOOLTIP[ficha.descricao.tamanho || 'Médio'] || 'Tamanho'}>
+                        <span className="tag-label">TAM</span>
+                        <span className="tag-value" style={{ color: ficha.descricao.tamanho === 'Médio' ? '#fff' : '#ffeb3b' }}>
+                            {ficha.descricao.tamanho || "Médio"}
+                        </span>
+                    </div>
+                    <div className="header-info-tag" title="Deslocamento">
+                        <span className="tag-label">DESL</span>
+                        <span className="tag-value">{ficha.status.deslocamento}m</span>
                     </div>
                 </div>
             </header>
@@ -890,11 +897,17 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 selecionado={ficha.classes[0]?.nome}
                 itens={listaClasses
                     .filter(c => entidadePermitidaPorSuplementos((dadosClasses as any)?.[c]?.fonte, ficha.suplementos_ativos))
-                    .map((c): EntityItem => ({
-                        nome: c,
-                        icone: 'classe',
-                        fonte: (dadosClasses as any)?.[c]?.fonte || 'T20 JdA',
-                    }))}
+                    .map((c): EntityItem => {
+                        const info = (dadosClasses as any)?.[c];
+                        return {
+                            nome: c,
+                            icone: 'classe',
+                            bonus: formatarResumoClasse(info),
+                            descricao: formatarDescricaoClasse(info),
+                            tooltip: formatarTooltipClasse(c, info),
+                            fonte: info?.fonte || 'T20 JdA',
+                        };
+                    })}
                 onConfirm={(nome) => handleSelecionarEntidade('classe', nome)}
                 onFechar={() => setSelectorAtivo(null)}
             />
