@@ -160,11 +160,13 @@ def test_aprimoramentos_limite_pm_truque_prerequisitos_e_contramagica():
 
 def test_catalogo_198_magias_tabela_4_1_e_ataques_magicos():
     from src.dados_magias import DADOS_MAGIAS
-    assert len(DADOS_MAGIAS) == 198
+    basicas = {k: v for k, v in DADOS_MAGIAS.items() if not v.get("fonte")}
+    assert len(basicas) == 198
+    assert len(DADOS_MAGIAS) >= 198
     for nome, m in DADOS_MAGIAS.items():
         assert m["custo_pm"] == CUSTO_POR_CIRCULO[m["circulo"]], f"{nome}: custo_pm inválido"
     com_rolagem = [k for k, m in DADOS_MAGIAS.items() if m.get("rolagem")]
-    assert len(com_rolagem) == 46
+    assert len(com_rolagem) >= 46
 
     # Magias de dano entram automaticamente em combate.ataques; cura/utilidade não
     mago = Personagem(

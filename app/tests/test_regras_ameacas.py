@@ -148,3 +148,42 @@ def test_equipamentos_e_itens_magicos_ameacas():
     atualizar_ficha(f_ossos)
     assert f_ossos.status.defesa.total == 13
     assert f_ossos.pericias["Intimidação"].total >= 1
+
+
+def test_magias_ameacas():
+    from src.dados_magias import DADOS_MAGIAS
+    from src.models import Magia
+
+    esperadas = {
+        "Açoite Flamejante": (1, 1, "2d6"),
+        "Dardo Gélido": (1, 1, "2d6"),
+        "Invocar Fagulha Elemental": (2, 3, None),
+        "Jato Corrosivo": (1, 1, "2d6"),
+        "Katana Celestial": (5, 15, "12d8"),
+        "Momento de Tormenta": (2, 3, "6d4"),
+        "Transformação em Dragão": (4, 10, "8d6+8"),
+    }
+    for nome, (circ, pm, formula) in esperadas.items():
+        assert nome in DADOS_MAGIAS
+        m = DADOS_MAGIAS[nome]
+        assert m["fonte"] == "Ameaças de Arton"
+        assert m["circulo"] == circ
+        assert m["custo_pm"] == pm
+        if formula:
+            assert m["rolagem"]["formula"] == formula
+
+    # Aprimoramentos opcionais de Conjurar Mortos-Vivos presentes
+    aprim_cmv = DADOS_MAGIAS["Conjurar Mortos-Vivos"]["aprimoramentos"]
+    assert any("soterrados" in a["descricao"].lower() for a in aprim_cmv)
+    assert any("fúrias de tauron" in a["descricao"].lower() for a in aprim_cmv)
+    assert any("guerreiros perpétuos" in a["descricao"].lower() for a in aprim_cmv)
+    assert any("zumbis peçonha" in a["descricao"].lower() for a in aprim_cmv)
+
+    # Magia de dano de Ameaças entra automaticamente em combate.ataques
+    f = Personagem(
+        cabecalho=Cabecalho(nome="Arcano", raca="Humano", nivel_total=1),
+        classes=[ClasseInfo(nome="Arcanista", nivel=1, primaria=True, subclasse="Mago")],
+    )
+    f.combate.magias.append(Magia(**DADOS_MAGIAS["Dardo Gélido"]))
+    atualizar_ficha(f)
+    assert any(a.nome == "Dardo Gélido" and "2d6" in a.dano for a in f.combate.ataques)
