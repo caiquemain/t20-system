@@ -227,8 +227,11 @@ export const useFicha = (id: string | undefined) => {
             );
         };
         const poderesAtuaisClasse = ficha.habilidades.filter(ehPoderDeSlotClasse).map(h => h.nome);
-        const poderesAtuaisDist = (ficha.distincoes || []).flatMap(d => d.poderes || []);
-        const poderesAtuais = Array.from(new Set([...poderesAtuaisClasse, ...poderesAtuaisDist]));
+        const setPoderesClasse = new Set(poderesAtuaisClasse);
+        const poderesAtuaisDist = (ficha.distincoes || [])
+            .flatMap(d => d.poderes || [])
+            .filter(n => !setPoderesClasse.has(n));
+        const poderesAtuais = [...poderesAtuaisClasse, ...poderesAtuaisDist];
         setClassPowersEmEdicao(poderesAtuais);
         // [LOTE 1-UI] Recarrega as escolhas secundárias dos poderes salvos
         const escolhasPoderes: Record<string, Record<string, any>> = {};
@@ -359,16 +362,21 @@ export const useFicha = (id: string | undefined) => {
         });
         novaFicha.distincoes = distincoesAtualizadas;
 
+        const classeAtualNome = novaFicha.classes[0]?.nome || '';
         const novosPoderesClasse: Habilidade[] = classPowersEmEdicao
             .filter(nome => Boolean(nome) && !nomesPoderesDistincaoCatalogo.has(nome))
             .map(nome => {
-            let d = Object.values(dadosHabilidadesClasse).find((x: any) => x.nome === nome) as any;
+            let d = Object.values(dadosHabilidadesClasse).find(
+                (x: any) => x.nome === nome && x.classe === classeAtualNome
+            ) as any;
+            if (!d) d = Object.values(dadosHabilidadesClasse).find((x: any) => x.nome === nome) as any;
             if (!d) d = Object.values(dadosHabilidades).find((x: any) => x.nome === nome);
+            const ehPoderDeClasse = Boolean(d?.classe);
             return {
                 nome: nome,
-                tipo: d?.tipo || 'Poder de Classe',
+                tipo: ehPoderDeClasse ? `Poder de ${classeAtualNome || d.classe}` : (d?.tipo || 'Poder de Classe'),
                 descricao: d?.descricao || 'Poder selecionado',
-                fonte: d?.classe || novaFicha.classes[0]?.nome || 'Classe',
+                fonte: ehPoderDeClasse ? (classeAtualNome || d.classe) : (d?.fonte || classeAtualNome || 'Classe'),
                 efeitos: d?.efeitos || {},
                 escolhas_aplicadas: poderesEscolhasEmEdicao[nome] || {}
             };
