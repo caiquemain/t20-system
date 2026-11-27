@@ -241,7 +241,48 @@ def gerar_xlsx_bytes(ficha: Personagem) -> bytes:
     if ficha.combate.cd_magias_calc or (ficha.combate.cd_magias or 0) > 0:
         row = _escrever_bloco_stat_calc(ws1, row, "6. CD DE MAGIAS", ficha.combate.cd_magias_calc, ficha.combate.cd_magias)
 
-    _auto_fit(ws1, [34, 22, 18, 34, 42])
+    # Prepara lista consolidada de ataques (armas, magias ofensivas e Ataque Desarmado)
+    ataques_consolidados = list(ficha.combate.ataques or [])
+    tem_ataque_fisico = any(
+        not str(a.bonus_ataque or "").strip().upper().startswith("CD")
+        and str(a.bonus_ataque or "").strip().lower() != "auto"
+        for a in ataques_consolidados
+    )
+    if not tem_ataque_fisico:
+        from .models import Ataque
+        mod_for = getattr(ficha.atributos, "forca", 0) or 0
+        per_luta = (ficha.pericias or {}).get("Luta")
+        luta_tot = per_luta.total if per_luta else mod_for
+        dano_des = f"1d3{mod_for:+d}" if mod_for else "1d3"
+        ataques_consolidados.insert(
+            0,
+            Ataque(
+                nome="Ataque Desarmado",
+                bonus_ataque=f"{luta_tot:+d}",
+                dano=dano_des,
+                critico="x2",
+                tipo="Impacto",
+                alcance="Corpo a corpo",
+                teste="Luta",
+                especial="Não letal (padrão T20)",
+                dano_fontes=[f"Dado base: 1d3", *( [f"Força: {mod_for:+d}"] if mod_for else [] ), f"Total: {dano_des}"],
+            ),
+        )
+
+    # 7. Resumo de Ataques na primeira aba
+    row = _set_section(ws1, row, f"7. RESUMO DE ATAQUES ({len(ataques_consolidados)})", 5)
+    row = _set_headers(ws1, row, ["Arma / Magia", "Bônus / CD", "Dano", "Crít. / Tipo", "Auditoria Rápida"], ["left", "center", "center", "center", "left"])
+    for idx, atq in enumerate(ataques_consolidados):
+        ws1.cell(row=row, column=1, value=atq.nome).font = _FONT_BOLD
+        ws1.cell(row=row, column=2, value=atq.bonus_ataque).alignment = Alignment(horizontal="center")
+        ws1.cell(row=row, column=3, value=atq.dano).alignment = Alignment(horizontal="center")
+        ws1.cell(row=row, column=4, value=f"{atq.critico} · {atq.tipo}").alignment = Alignment(horizontal="center")
+        aud = " | ".join(atq.dano_fontes or atq.cd_fontes or []) or (atq.especial or "—")
+        ws1.cell(row=row, column=5, value=aud).alignment = Alignment(wrap_text=True)
+        _style_row(ws1, row, 5, zebra=(idx % 2 == 1))
+        row += 1
+
+    _auto_fit(ws1, [34, 22, 18, 34, 46])
     ws1.freeze_panes = "A4"
 
     # ═══════════════════════════════════════════════════════════════
@@ -292,35 +333,60 @@ def gerar_xlsx_bytes(ficha: Personagem) -> bytes:
     # ABA 3: ATAQUES & MAGIAS
     # ═══════════════════════════════════════════════════════════════
     ws3 = wb.create_sheet("Ataques & Magias")
-    row = _set_banner(ws3, f"ATAQUES & MAGIAS — {cab.nome or 'Personagem'}", "Auditoria completa de CD, dados de dano, bônus e grimório", 9)
+    row = _set_banner(ws3, f"ATAQUES & MAGIAS — {cab.nome or 'Personagem'}", "Auditoria completa de bônus de ataque, CD, dados de dano e grimório", 10)
 
-    row = _set_section(ws3, row, "1. ATAQUES & MAGIAS OFENSIVAS", 9)
+    row = _set_section(ws3, row, f"1. ATAQUES & MAGIAS OFENSIVAS ({len(ataques_consolidados)})", 10)
     row = _set_headers(
         ws3,
         row,
-        ["Arma / Magia", "Bônus / CD", "Dano", "Crítico", "Tipo", "Alcance", "Teste", "Auditoria CD / Ataque", "Auditoria Dano / Efeitos"],
-        ["left", "center", "center", "center", "center", "center", "center", "left", "left"],
+        ["Arma / Magia", "Perícia / Teste", "Bônus Perícia", "Bônus Arma / CD", "Total Ataque (=SUM)", "Dano", "Crítico", "Tipo / Alcance", "Auditoria CD / Ataque", "Auditoria Dano / Efeitos"],
+        ["left", "center", "right", "center", "center", "center", "center", "center", "left", "left"],
     )
-    for idx, atq in enumerate(ficha.combate.ataques or []):
+    for idx, atq in enumerate(ataques_consolidados):
+        eh_magia_atq = str(atq.bonus_ataque or "").strip().upper().startswith("CD") or str(atq.bonus_ataque or "").strip().lower() == "auto"
+        per_obj = (ficha.pericias or {}).get(atq.teste or "Luta")
+        per_val = per_obj.total if (per_obj and not eh_magia_atq) else None
+
         ws3.cell(row=row, column=1, value=atq.nome).font = _FONT_BOLD
-        ws3.cell(row=row, column=2, value=atq.bonus_ataque).alignment = Alignment(horizontal="center")
-        ws3.cell(row=row, column=3, value=atq.dano).alignment = Alignment(horizontal="center")
-        ws3.cell(row=row, column=4, value=atq.critico).alignment = Alignment(horizontal="center")
-        ws3.cell(row=row, column=5, value=atq.tipo).alignment = Alignment(horizontal="center")
-        ws3.cell(row=row, column=6, value=atq.alcance).alignment = Alignment(horizontal="center")
-        ws3.cell(row=row, column=7, value=atq.teste).alignment = Alignment(horizontal="center")
-        ws3.cell(row=row, column=8, value=" | ".join(atq.cd_fontes or []) or (atq.especial or "—")).alignment = Alignment(wrap_text=True)
-        ws3.cell(row=row, column=9, value=" | ".join(atq.dano_fontes or []) or (atq.especial or "—")).alignment = Alignment(wrap_text=True)
-        _style_row(ws3, row, 9, zebra=(idx % 2 == 1))
+        ws3.cell(row=row, column=2, value=atq.teste or "—").alignment = Alignment(horizontal="center")
+
+        if eh_magia_atq:
+            ws3.cell(row=row, column=3, value="—").alignment = Alignment(horizontal="center")
+            ws3.cell(row=row, column=4, value=atq.bonus_ataque).alignment = Alignment(horizontal="center")
+            ws3.cell(row=row, column=5, value=atq.bonus_ataque).alignment = Alignment(horizontal="center")
+        else:
+            try:
+                bonus_item_num = int(str(atq.bonus_ataque or "0").replace("+", "").strip())
+            except ValueError:
+                bonus_item_num = 0
+            # Se bonus_ataque já veio igual ao total da perícia (ex.: Ataque Desarmado), não soma duas vezes
+            bonus_extra = 0 if (atq.nome == "Ataque Desarmado" and per_val is not None) else bonus_item_num
+            cp = ws3.cell(row=row, column=3, value=per_val if per_val is not None else 0)
+            cp.number_format = _FMT_SIGNED
+            cp.alignment = Alignment(horizontal="right")
+            cb = ws3.cell(row=row, column=4, value=bonus_extra)
+            cb.number_format = _FMT_SIGNED
+            cb.alignment = Alignment(horizontal="center")
+            ct = ws3.cell(row=row, column=5, value=f"=SUM(C{row}:D{row})")
+            ct.number_format = _FMT_SIGNED
+            ct.alignment = Alignment(horizontal="center")
+            ct.font = _FONT_BOLD
+
+        ws3.cell(row=row, column=6, value=atq.dano).alignment = Alignment(horizontal="center")
+        ws3.cell(row=row, column=7, value=atq.critico).alignment = Alignment(horizontal="center")
+        ws3.cell(row=row, column=8, value=f"{atq.tipo} / {atq.alcance}").alignment = Alignment(horizontal="center")
+        ws3.cell(row=row, column=9, value=" | ".join(atq.cd_fontes or []) or (atq.especial or "—")).alignment = Alignment(wrap_text=True)
+        ws3.cell(row=row, column=10, value=" | ".join(atq.dano_fontes or []) or (atq.especial or "—")).alignment = Alignment(wrap_text=True)
+        _style_row(ws3, row, 10, zebra=(idx % 2 == 1))
         row += 1
     row += 2
 
-    row = _set_section(ws3, row, f"2. GRIMÓRIO — MAGIAS CONHECIDAS ({len(ficha.combate.magias or [])})", 9)
+    row = _set_section(ws3, row, f"2. GRIMÓRIO — MAGIAS CONHECIDAS ({len(ficha.combate.magias or [])})", 10)
     row = _set_headers(
         ws3,
         row,
-        ["Magia", "Círculo", "Escola", "Tipo", "Custo PM", "Execução", "Alcance", "Resistência", "Descrição"],
-        ["left", "center", "center", "center", "right", "center", "center", "center", "left"],
+        ["Magia", "Círculo", "Escola", "Tipo", "Custo PM", "Execução", "Alcance", "Resistência", "Descrição", ""],
+        ["left", "center", "center", "center", "right", "center", "center", "center", "left", "left"],
     )
     for idx, m in enumerate(ficha.combate.magias or []):
         ws3.cell(row=row, column=1, value=m.nome).font = _FONT_BOLD
@@ -333,11 +399,12 @@ def gerar_xlsx_bytes(ficha: Personagem) -> bytes:
         ws3.cell(row=row, column=6, value=m.execucao or "—").alignment = Alignment(horizontal="center")
         ws3.cell(row=row, column=7, value=m.alcance or "—").alignment = Alignment(horizontal="center")
         ws3.cell(row=row, column=8, value=m.resistencia or "Nenhuma").alignment = Alignment(horizontal="center")
-        ws3.cell(row=row, column=9, value=(m.descricao or "")[:400]).alignment = Alignment(wrap_text=True)
-        _style_row(ws3, row, 9, zebra=(idx % 2 == 1))
+        ws3.merge_cells(start_row=row, start_column=9, end_row=row, end_column=10)
+        ws3.cell(row=row, column=9, value=(m.descricao or "")[:450]).alignment = Alignment(wrap_text=True)
+        _style_row(ws3, row, 10, zebra=(idx % 2 == 1))
         row += 1
 
-    _auto_fit(ws3, [24, 12, 14, 10, 13, 12, 13, 36, 48])
+    _auto_fit(ws3, [24, 14, 13, 15, 16, 13, 10, 18, 36, 44])
     ws3.freeze_panes = "A5"
 
     # ═══════════════════════════════════════════════════════════════
