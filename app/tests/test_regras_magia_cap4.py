@@ -192,8 +192,10 @@ def test_catalogo_198_magias_tabela_4_1_e_ataques_magicos():
     assert nomes_atq["Seta Infalível de Talude"].bonus_ataque == "Auto"
     assert nomes_atq["Seta Infalível de Talude"].dano == "2d4+2"
 
-    # Curar Ferimentos não entra em ataques, mas recebe rolagem para rolar no modal
-    assert "Curar Ferimentos" not in nomes_atq
+    # Curar Ferimentos agora entra na barra de ataques como Cura e mantém rolagem no modal
+    assert "Curar Ferimentos" in nomes_atq
+    assert nomes_atq["Curar Ferimentos"].tipo == "Cura"
+    assert nomes_atq["Curar Ferimentos"].dano == "2d8+2"
     cura = next(m for m in mago.combate.magias if m.nome == "Curar Ferimentos")
     assert cura.rolagem == {"formula": "2d8+2", "tipo": "cura", "tipo_dano": "Luz"}
 
