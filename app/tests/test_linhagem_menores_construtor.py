@@ -82,3 +82,28 @@ def test_manual_criacao_ameacas_tabelas_e_gerador():
     assert esp6.pontos_de_vida == 168
     assert esp6.cd_magias == 24
     assert esp6.pontos_de_mana is not None and esp6.pontos_de_mana >= 18
+
+
+def test_proficiencias_reset_ao_trocar_classe_e_multiclasse():
+    # Cria como Guerreiro (ganha Armas Marciais, Armaduras Pesadas, Escudos)
+    f = Personagem(
+        cabecalho=Cabecalho(nome="Mago", raca="Humano"),
+        classes=[ClasseInfo(nome="Guerreiro", nivel=1, primaria=True)],
+        atributos_base=Atributos(inteligencia=3),
+    )
+    f = atualizar_ficha(f)
+    assert set(f.status.proficiencias) == {"Armaduras Pesadas", "Armas Marciais", "Escudos"}
+
+    # Troca para Arcanista -> NÃO pode reter proficiências antigas de Guerreiro
+    f.classes = [ClasseInfo(nome="Arcanista", nivel=1, primaria=True, subclasse="Mago")]
+    f = atualizar_ficha(f)
+    assert f.status.proficiencias == []
+
+    # Multiclasse Arcanista (primária) + Guerreiro (secundária) -> sem proficiências de Guerreiro (T20 JdA p. 32)
+    f.classes = [
+        ClasseInfo(nome="Arcanista", nivel=2, primaria=True, subclasse="Mago"),
+        ClasseInfo(nome="Guerreiro", nivel=1, primaria=False),
+    ]
+    f = atualizar_ficha(f)
+    assert f.status.proficiencias == []
+

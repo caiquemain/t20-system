@@ -1721,12 +1721,11 @@ def calcular_proficiencias_e_extras(ficha: Personagem):
     sentidos = set()
 
     if ficha.classes:
-        for c in ficha.classes:
-            dc = DADOS_CLASSES.get(c.nome or "", {})
-            lista_prof = dc.get("proficiencias", []) or dc.get(
-                "proficiencias_iniciais", [])
-            for p in lista_prof:
-                proficiencias.add(p)
+        classe_primaria = next((c for c in ficha.classes if getattr(c, "primaria", False)), ficha.classes[0])
+        dc = DADOS_CLASSES.get(classe_primaria.nome or "", {})
+        lista_prof = dc.get("proficiencias", []) or dc.get("proficiencias_iniciais", [])
+        for p in lista_prof:
+            proficiencias.add(p)
 
     for hab in ficha.habilidades:
         efeitos = hab.efeitos or {}
