@@ -24,6 +24,9 @@ PODERES_QUE_DAO_MAGIAS = {
     "Aspecto da Primavera": 1,
     "Aspecto do Verão": 1,
     "Orar": 1,
+    "Glamour": 3,
+    "Glamour Maior": 3,
+    "Grande Marca de Wynna": 1,
 }
 
 

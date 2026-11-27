@@ -165,6 +165,23 @@ export const criarAmeaca = async (ameaca: Record<string, any>) => {
     return res;
 };
 
+export const updateAmeaca = async (id: string, ameaca: Record<string, any>) => {
+    if (IS_LOCAL_STORAGE && id.startsWith('custom-')) {
+        const atualizada = { ...ameaca, _id: id };
+        const lista = lerAmeacasLocal();
+        salvarAmeacasLocal([atualizada, ...lista.filter((a: any) => a._id !== id)]);
+        return { data: atualizada };
+    }
+    const res = await api.put(`/ameacas/${id}`, ameaca);
+    if (IS_LOCAL_STORAGE) {
+        const atualizada = res.data;
+        const lista = lerAmeacasLocal();
+        salvarAmeacasLocal([atualizada, ...lista.filter((a: any) => a._id !== atualizada._id)]);
+        return { data: atualizada };
+    }
+    return res;
+};
+
 // --- SUPLEMENTOS & ATIVÁVEIS ---
 export const fetchDadosDistincoes = () => api.get('/dados/distincoes');
 export const fetchDadosTreinador = () => api.get('/dados/treinador');
