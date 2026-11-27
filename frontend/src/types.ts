@@ -278,8 +278,12 @@ export interface Personagem {
     descricao: Descricao;
 
     suplementos_ativos?: string[];
+    regras_opcionais_ativas?: string[];
     distincoes?: DistincaoPersonagem[];
     complicacoes?: ComplicacaoPersonagem[];
+    papel_grupo?: string | null;
+    objetivo_heroico?: Record<string, any> | null;
+    melhores_amigos?: Record<string, any>[];
 
     atributos_base: Atributos;
     atributos: Atributos;

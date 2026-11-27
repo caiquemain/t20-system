@@ -65,3 +65,49 @@ async def deletar_personagem(personagem_id: str, request: Request):
     if resultado.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Personagem não encontrado")
     return None
+
+
+@router.get("/{personagem_id}/ativaveis")
+async def listar_ativaveis_personagem(personagem_id: str, request: Request):
+    """Lista todas as habilidades ativáveis do personagem com custo PM, ação, duração e disponibilidade."""
+    from src.regras.ativaveis import listar_habilidades_ativaveis
+    db = get_db(request)
+    try:
+        query_id = ObjectId(personagem_id)
+    except Exception:
+        query_id = personagem_id
+    doc = await db["personagens"].find_one({"_id": query_id})
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Personagem não encontrado")
+    ficha = atualizar_ficha(Personagem.model_validate(doc))
+    return {"personagem_id": personagem_id, "ativaveis": listar_habilidades_ativaveis(ficha)}
+
+
+@router.post("/{personagem_id}/ativar")
+async def executar_habilidade_personagem(personagem_id: str, payload: dict, request: Request):
+    """Executa uma habilidade ativável no motor (desconta PM e aplica buff temporário quando aplicável)."""
+    from src.regras.ativaveis import ativar_habilidade
+    db = get_db(request)
+    try:
+        query_id = ObjectId(personagem_id)
+    except Exception:
+        query_id = personagem_id
+    doc = await db["personagens"].find_one({"_id": query_id})
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Personagem não encontrado")
+    ficha = atualizar_ficha(Personagem.model_validate(doc))
+    nome = str(payload.get("nome") or "").strip()
+    pm_extra = int(payload.get("pm_extra") or 0)
+    res = ativar_habilidade(ficha, nome, pm_extra=pm_extra)
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("erro", "Falha ao ativar habilidade"))
+    pm_apos = ficha.status.pm.atual
+    ficha = atualizar_ficha(ficha)
+    ficha.status.pm.atual = min(pm_apos, ficha.status.pm.maximo)
+    ficha_dict = ficha.model_dump(by_alias=True, mode="json", exclude={"id"})
+    await db["personagens"].find_one_and_update(
+        {"_id": query_id},
+        {"$set": ficha_dict},
+        return_document=ReturnDocument.AFTER,
+    )
+    return {"resultado": res, "personagem": ficha}

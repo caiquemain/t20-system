@@ -25,6 +25,10 @@ import { formatarResumoDeus, formatarTooltipDeus } from '../utils/deusTooltip';
 import { formatarResumoClasse, formatarDescricaoClasse, formatarTooltipClasse } from '../utils/classeTooltip';
 import { entidadePermitidaPorSuplementos } from '../utils/suplementos';
 import { ToquesFinaisTab, TABELA_TAMANHO_TOOLTIP } from '../components/ToquesFinaisTab';
+import { DistincoesPanel } from '../components/suplementos/DistincoesPanel';
+import { MelhorAmigoPanel } from '../components/suplementos/MelhorAmigoPanel';
+import { RegrasOpcionaisPanel } from '../components/suplementos/RegrasOpcionaisPanel';
+import { DuendeHelperModal } from '../components/suplementos/DuendeHelperModal';
 
 // Tipos
 import type { Magia } from '../types';
@@ -68,7 +72,8 @@ function Ficha() {
 
     const [escolhasRaciais, setEscolhasRaciais] = useState<string[]>([]);
     const [showRacialModal, setShowRacialModal] = useState(false);
-    const [activeTab, setActiveTab] = useState<'atributos' | 'efeitos' | 'descricao'>('atributos');
+    const [activeTab, setActiveTab] = useState<'atributos' | 'efeitos' | 'descricao' | 'suplementos'>('atributos');
+    const [showDuendeHelper, setShowDuendeHelper] = useState(false);
 
     const [showGrimorio, setShowGrimorio] = useState(false);
     const [selectorAtivo, setSelectorAtivo] = useState<'raca' | 'origem' | 'deus' | 'classe' | null>(null);
@@ -652,12 +657,28 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                     <T20Icon name="nota" size={15} /> DESCRIÇÃO
                 </button>
                 <button
+                    className={`tab-btn ${activeTab === 'suplementos' && !showHistorico ? 'active' : ''}`}
+                    onClick={() => { setActiveTab('suplementos'); setShowHistorico(false); }}
+                    style={{ background: 'transparent', border: 'none', color: activeTab === 'suplementos' && !showHistorico ? '#ce93d8' : '#888', borderBottom: activeTab === 'suplementos' && !showHistorico ? '2px solid #ce93d8' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                    SUPLEMENTOS
+                </button>
+                <button
                     className={`tab-btn ${showHistorico ? 'active' : ''}`}
                     onClick={handleMostrarHistorico}
                     style={{ background: 'transparent', border: 'none', color: showHistorico ? '#9c27b0' : '#888', borderBottom: showHistorico ? '2px solid #9c27b0' : 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
                     <T20Icon name="historico" size={15} /> HISTÓRICO
                 </button>
+                {ficha.cabecalho?.raca === 'Duende' && (
+                    <button
+                        type="button"
+                        onClick={() => setShowDuendeHelper(true)}
+                        style={{ marginLeft: 'auto', alignSelf: 'center', background: 'rgba(156,39,176,0.2)', border: '1px solid #ce93d8', color: '#f3e5f5', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 'bold' }}
+                    >
+                        ✨ Sonhos Malucos (Duende)
+                    </button>
+                )}
             </div>
 
             {!showHistorico && activeTab === 'atributos' && (
@@ -795,6 +816,22 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                 <div style={{ padding: '0 20px' }}>
                     <ToquesFinaisTab ficha={ficha} onUpdate={updateFicha} />
                 </div>
+            )}
+
+            {!showHistorico && activeTab === 'suplementos' && (
+                <div style={{ padding: '0 20px' }}>
+                    <MelhorAmigoPanel ficha={ficha} onUpdate={updateFicha} />
+                    <DistincoesPanel ficha={ficha} onUpdate={updateFicha} />
+                    <RegrasOpcionaisPanel ficha={ficha} onUpdate={updateFicha} />
+                </div>
+            )}
+
+            {showDuendeHelper && (
+                <DuendeHelperModal
+                    ficha={ficha}
+                    onUpdate={updateFicha}
+                    onClose={() => setShowDuendeHelper(false)}
+                />
             )}
 
             {/* --- SEÇÃO GRIMÓRIO (SEMPRE VISÍVEL) --- */}

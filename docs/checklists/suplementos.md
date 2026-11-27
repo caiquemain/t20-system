@@ -36,8 +36,9 @@ Rastreamento por fase e lote. Documentação arquitetural completa em [`docs/SUP
 - [ ] **4B:** Equipamentos & Regras Regionais
 
 ## Fase 5 — UX Dedicada & Polimento
-- [ ] **Helper passo a passo para criação de Duende** (5 passos + botão *Sonhos Malucos*)
-- [ ] **Painel interativo do Melhor Amigo** na Ficha do Treinador
-- [ ] **Painel de Regras Opcionais / Complicações / Papel no Grupo** na Ficha e Wizard
-- [ ] **Painel de Distinções** na Ficha
+- [x] **Helper passo a passo para criação de Duende** (`DuendeHelperModal.tsx` + botão *Sonhos Malucos*)
+- [x] **Painel interativo do Melhor Amigo** (`MelhorAmigoPanel.tsx`) na Ficha do Treinador
+- [x] **Painel de Regras Opcionais / Complicações / Papel no Grupo** (`RegrasOpcionaisPanel.tsx`) na Ficha
+- [x] **Painel de Distinções** (`DistincoesPanel.tsx`) na Ficha
+- [x] **Motor executável de habilidades ativáveis** (`regras/ativaveis.py`, `GET /personagens/{id}/ativaveis`, `POST /personagens/{id}/ativar`)
 - [ ] **Atualizar exportações (PDF, ODT, ODG, Roll20)** com os novos campos de suplementos

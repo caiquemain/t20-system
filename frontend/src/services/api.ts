@@ -45,3 +45,13 @@ export const fetchDadosEquipamentos = () => api.get('/dados/equipamentos');
 // --- AMEAÇAS (BESTIÁRIO) ---
 export const fetchAmeacas = () => api.get('/ameacas/?limite=500');
 export const fetchAmeaca = (id: string) => api.get(`/ameacas/${id}`);
+
+// --- SUPLEMENTOS & ATIVÁVEIS ---
+export const fetchDadosDistincoes = () => api.get('/dados/distincoes');
+export const fetchDadosTreinador = () => api.get('/dados/treinador');
+export const fetchDadosRegrasOpcionais = () => api.get('/dados/regras-opcionais');
+export const rolarDuendeSonhosMalucos = (seed?: number) =>
+    api.get(seed !== undefined ? `/dados/duende/sonhos-malucos?seed=${seed}` : '/dados/duende/sonhos-malucos');
+export const fetchAtivaveisPersonagem = (id: string) => api.get(`/personagens/${id}/ativaveis`);
+export const ativarHabilidadePersonagem = (id: string, nome: string, pm_extra = 0) =>
+    api.post(`/personagens/${id}/ativar`, { nome, pm_extra });
