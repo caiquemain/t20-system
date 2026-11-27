@@ -168,6 +168,15 @@ def calcular_pv_pm(ficha: Personagem):
                 categoria="Poder",
                 valor=int(v_pat) * patamares,
             )
+        v_pv_pat = ef_pm.get("pv_por_patamar", 0)
+        if not v_pv_pat and (hab.nome or "") == "Bom de Garfo":
+            v_pv_pat = 3
+        if v_pv_pat:
+            pv_calc.adicionar_bonus(
+                fonte=f"{hab.nome} (+{v_pv_pat} PV × {patamares} patamar{'es' if patamares > 1 else ''})",
+                categoria="Poder",
+                valor=int(v_pv_pat) * patamares,
+            )
         v_2nv = ef_pm.get("pm_por_2_niveis", 0) or ef_pm.get("pm_cada_2_niveis", 0)
         if v_2nv and nivel_total >= 2:
             pm_calc.adicionar_bonus(
@@ -585,7 +594,7 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 valor=bonus_carapaca
             )
 
-        if hab.nome == "Esquiva":
+        if hab.nome == "Esquiva" and not efeitos.get("defesa_bonus"):
             defesa_calc.adicionar_bonus(
                 fonte="Poder: Esquiva",
                 categoria="Poder",
@@ -635,6 +644,16 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 fonte=f"Condições ({', '.join(ef_cond['condicoes_efetivas'])})",
                 categoria="Condição",
                 valor=ef_cond["defesa"],
+            )
+
+    # Regra Opcional: Defesa Épica (Heróis de Arton, p. 297): +1 Defesa por nível par
+    if "defesa_epica" in (getattr(ficha, "regras_opcionais_ativas", None) or []):
+        bonus_epica = nivel_total // 2
+        if bonus_epica > 0:
+            defesa_calc.adicionar_bonus(
+                fonte=f"Defesa Épica (+{bonus_epica})",
+                categoria="Regra Opcional",
+                valor=bonus_epica,
             )
 
     # Buffs ativos
@@ -748,6 +767,20 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 deslocamento_calc.adicionar_bonus(
                     fonte=f"Buff: {b.origem}", categoria="Magia", valor=b.valor
                 )
+
+    # Complicação Vagaroso (condição lento permanente): deslocamento reduzido à metade
+    if any((h.efeitos or {}).get("condicao_permanente") == "lento" for h in ficha.habilidades):
+        desl_antigo = desl
+        desl = max(1.5, round((desl / 2.0) * 2) / 2)
+        diff_lento = desl - desl_antigo
+        if diff_lento != 0:
+            deslocamento_calc.fontes.append(FonteBonus(
+                fonte="Complicação: Vagaroso (Lento)",
+                categoria="Complicação",
+                valor=int(diff_lento),
+                descricao="Deslocamento reduzido à metade",
+            ))
+            deslocamento_calc.total = int(desl)
 
     # 💾 SALVAR
     ficha.status.deslocamento_calc = deslocamento_calc

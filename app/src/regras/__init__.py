@@ -90,6 +90,16 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     sincronizar_poderes_habilidades(ficha, memoria_escolhas)
     sincronizar_escolhas_de_caminho(ficha)
 
+    # 3.5 Regras Opcionais (Heróis de Arton — estritamente opt-in)
+    from .regras_opcionais_herois import (
+        sincronizar_complicacoes,
+        sincronizar_papel_grupo,
+        sincronizar_idades_variadas,
+    )
+    sincronizar_complicacoes(ficha, memoria_escolhas)
+    sincronizar_papel_grupo(ficha)
+    sincronizar_idades_variadas(ficha)
+
     # 4. Processamentos Adicionais de Habilidades
     sincronizar_magias_habilidades(ficha)
     sincronizar_magias_raciais(ficha)
