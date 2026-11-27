@@ -169,7 +169,44 @@ PODERES_COM_ESCOLHA = {
         {"chave": "tatuagem", "rotulo": "Tatuagem Mística", "catalogo": "TATUAGENS_MISTICAS_TAMALU"},
         {"chave": "magia_1", "rotulo": "Magia de 1º Círculo (se escolheu Magia)", "tipo_dinamico": "magia_1_qualquer", "depende_de": {"chave": "tatuagem", "igual": "magia_1"}},
     ],
+
+    # Heróis de Arton (Raça: Duende, p. 8–11)
+    "Dons": [
+        {"chave": "atributo_1", "rotulo": "1º Atributo (+1)", "catalogo": "ATRIBUTOS"},
+        {"chave": "atributo_2", "rotulo": "2º Atributo (+1, diferente do 1º)", "catalogo": "ATRIBUTOS"},
+    ],
+    "Natureza Animal": [
+        {"chave": "atributo", "rotulo": "Atributo da Natureza Animal (+1, pode acumular com Dons)", "catalogo": "ATRIBUTOS"},
+    ],
+    "Maldição": [
+        {"chave": "resistencia", "rotulo": "Resistência da Maldição (CD Car)", "catalogo": "RESISTENCIAS_MALDICAO_DUENDE"},
+        {"chave": "efeito_maldicao", "rotulo": "Efeito da Maldição", "catalogo": "MALDICOES_DUENDE"},
+    ],
+    "Metamorfose Animal": [
+        {"chave": "forma_selvagem", "rotulo": "Forma Selvagem Básica", "catalogo": "FORMAS_SELVAGENS_BASICAS"},
+    ],
+    "Limitações de Duende": [
+        {"chave": "sonhos_malucos", "rotulo": "Sonhos Malucos (criação aleatória: +2 PM)", "catalogo": "OPCOES_SONHOS_MALUCOS"},
+    ],
 }
+
+RESISTENCIAS_MALDICAO_DUENDE = ["Fortitude", "Vontade"]
+
+MALDICOES_DUENDE = [
+    {"valor": "Apatia Profunda", "rotulo": "Apatia Profunda (alquebrada e frustrada)"},
+    {"valor": "Coração de Geleia", "rotulo": "Coração de Geleia (abalada; 1ª ação hostil/cena repete TR ou perde ação)"},
+    {"valor": "Envelhecimento Súbito", "rotulo": "Envelhecimento Súbito (fraca e lenta)"},
+    {"valor": "Loucura do Verão", "rotulo": "Loucura do Verão (início de cada cena repete TR ou fica confusa)"},
+    {"valor": "Mil Verrugas", "rotulo": "Mil Verrugas (-2 Car; criaturas em alcance curto testam Von ou pioram atitude)"},
+    {"valor": "Ruína do Corpo", "rotulo": "Ruína do Corpo (fatigada e vulnerável)"},
+]
+
+FORMAS_SELVAGENS_BASICAS = ["Ágil", "Feroz", "Resistente", "Sorrateira", "Veloz"]
+
+OPCOES_SONHOS_MALUCOS = [
+    {"valor": "nao", "rotulo": "Não (criação escolhida)"},
+    {"valor": "sim", "rotulo": "Sim — Sonhos Malucos (+2 PM)"},
+]
 
 # Escolhas fixas de classe (UI futura: Bardo/Druida escolhem 3 escolas)
 ESCOLHAS_DE_CLASSE = {
@@ -239,6 +276,10 @@ def montar_catalogo_escolhas() -> dict:
         "PERICIAS_PAPEL_TRIBAL": PERICIAS_PAPEL_TRIBAL,
         "TATUAGENS_MISTICAS_TAMALU": TATUAGENS_MISTICAS_TAMALU,
         "FORMATOS_DE_OUTRO_MUNDO": FORMATOS_DE_OUTRO_MUNDO,
+        "RESISTENCIAS_MALDICAO_DUENDE": RESISTENCIAS_MALDICAO_DUENDE,
+        "MALDICOES_DUENDE": MALDICOES_DUENDE,
+        "FORMAS_SELVAGENS_BASICAS": FORMAS_SELVAGENS_BASICAS,
+        "OPCOES_SONHOS_MALUCOS": OPCOES_SONHOS_MALUCOS,
         "HABILIDADES_CLASSE_NV1": _habilidades_classe_nv1(),
         "CAMINHOS_ARCANISTA_INFO": CAMINHOS_ARCANISTA_INFO,
         "PODERES_COM_ESCOLHA": poderes,

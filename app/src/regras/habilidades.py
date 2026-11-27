@@ -27,10 +27,14 @@ def _sanitizar_escolhas_aplicadas(efeitos: Dict[str, Any], escolhas: Dict[str, A
         if k in efeitos and v == efeitos.get(k):
             continue
 
-        # *_escolha só é escolha real se for string não vazia.
+        # *_escolha só é escolha real se for string não vazia ou lista de strings não vazias.
         if k.endswith("_escolha"):
             if isinstance(v, str) and v.strip():
                 limpas[k] = v
+            elif isinstance(v, list):
+                itens_validos = [x for x in v if isinstance(x, str) and x.strip()]
+                if itens_validos:
+                    limpas[k] = itens_validos
             continue
 
         # Preserva escolhas reais auxiliares: pericia_bonus_0, poder_ambicao_0 etc.

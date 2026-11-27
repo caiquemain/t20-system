@@ -683,8 +683,9 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
             categoria="Item",
             valor=3,
         )
+    # 1ª passada: sobrescritas de deslocamento base (ex.: Tamanho do Duende, Pernas Caprinas)
     for hab in ficha.habilidades:
-        efeitos = hab.efeitos or {}
+        efeitos = dict(hab.efeitos or {})
         if hab.escolhas_aplicadas:
             efeitos.update(hab.escolhas_aplicadas)
         if "deslocamento" in efeitos:
@@ -695,6 +696,11 @@ def calcular_defesa_e_deslocamento(ficha: Personagem):
                 valor=novo_val, descricao="Define o deslocamento"
             ))
             deslocamento_calc.total = novo_val
+    # 2ª passada: bônus aditivos de deslocamento (ex.: Voo do Duende +3m, Indolente -3m)
+    for hab in ficha.habilidades:
+        efeitos = dict(hab.efeitos or {})
+        if hab.escolhas_aplicadas:
+            efeitos.update(hab.escolhas_aplicadas)
         if "deslocamento_bonus" in efeitos:
             bonus_desl = int(efeitos["deslocamento_bonus"])
             desl += bonus_desl
