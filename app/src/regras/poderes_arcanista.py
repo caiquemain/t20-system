@@ -277,6 +277,12 @@ def aplicar_poderes_arcanista(ficha: Personagem):
         cd_calc.adicionar_bonus(
             fonte="Poder: Fortalecimento Arcano", categoria="Poder",
             valor=2 if (ficha.combate.circulo_maximo or 0) >= 4 else 1)
+    for h in ficha.habilidades:
+        ef_cd = h.efeitos or {}
+        bonus_cd_arc = ef_cd.get("cd_magias_arcana_bonus")
+        if isinstance(bonus_cd_arc, (int, float)) and bonus_cd_arc:
+            cd_calc.adicionar_bonus(
+                fonte=h.nome, categoria="Origem/Poder", valor=int(bonus_cd_arc))
     for b in ficha.status.buffs:
         if b.origem == "Magia Pungente" and b.atributo == "cd_magias":
             cd_calc.adicionar_bonus(

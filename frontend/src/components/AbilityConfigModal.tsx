@@ -228,6 +228,37 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                 {(() => {
                     const bloqueioOrigem = habilidadesEmEdicao.find(h => h.efeitos && h.efeitos.sem_origem);
                     if (bloqueioOrigem) return <div className="origem-box" style={{ border: '1px dashed #d32f2f', background: 'rgba(211, 47, 47, 0.1)', marginBottom: 20 }}><p style={{ color: '#ff8a80', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}><T20Icon name="imunidade" size={15} /> <strong>Origem Bloqueada:</strong> {bloqueioOrigem.nome}</p></div>;
+                    const infoOrigemAtual = dadosOrigens?.[origemNome];
+                    if (infoOrigemAtual?.regional || qtdEscolhasOrigem === 0) {
+                        const periciasFixasReg: string[] = infoOrigemAtual?.pericias_fixas || [];
+                        return (
+                            <div className="origem-box" style={{ borderColor: '#2e7d32', background: 'rgba(46, 125, 50, 0.12)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                                    <h3 className="section-subtitle" style={{ margin: 0, color: '#81c784' }}>
+                                        Origem Regional: {origemNome} — Benefício Único (Automático)
+                                    </h3>
+                                    {infoOrigemAtual?.regiao && (
+                                        <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: 999, background: 'rgba(46,125,50,0.35)', color: '#dcedc8' }}>
+                                            {infoOrigemAtual.regiao}
+                                        </span>
+                                    )}
+                                </div>
+                                <p style={{ color: '#e2e8f0', fontSize: '0.88rem', margin: '0 0 6px', lineHeight: 1.45 }}>
+                                    {infoOrigemAtual?.beneficio_texto || infoOrigemAtual?.descricao}
+                                </p>
+                                {periciasFixasReg.length > 0 && (
+                                    <p style={{ color: '#a5d6a7', fontSize: '0.8rem', margin: '0 0 4px' }}>
+                                        <strong>Perícias treinadas automaticamente:</strong> {periciasFixasReg.join(', ')} (se já for treinado pela classe, recebe +1 perícia de classe na aba de Perícias).
+                                    </p>
+                                )}
+                                {infoOrigemAtual?.itens && (
+                                    <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: 0 }}>
+                                        <strong>Itens iniciais:</strong> {infoOrigemAtual.itens}
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    }
                     return (
                         <div className="origem-box">
                             <h3 className="section-subtitle">Benefícios de Origem ({origemNome})</h3>

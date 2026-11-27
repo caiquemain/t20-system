@@ -22,9 +22,22 @@ export function StepPericias({ ficha, updateFicha, dadosClasses }: WizardStepPro
     const periciasClasseLista: string[] = Array.isArray(dadosClasse.pericias_lista)
         ? dadosClasse.pericias_lista
         : [];
-    const qtdClasse = typeof dadosClasse.pericias_escolha === 'number'
+    // Perícias fixas de Origens Regionais (Atlas/Heróis)
+    const periciasOrigemFixas: string[] = [];
+    for (const h of (ficha.habilidades || [])) {
+        if ((h.fonte || '').startsWith('Origem:') && Array.isArray(h.efeitos?.pericia_treino)) {
+            for (const p of h.efeitos.pericia_treino) {
+                if (typeof p === 'string' && !periciasOrigemFixas.includes(p)) {
+                    periciasOrigemFixas.push(p);
+                }
+            }
+        }
+    }
+    const bonusSobrepostasOrigem = periciasOrigemFixas.filter(p => periciasFixas.includes(p)).length;
+
+    const qtdClasse = (typeof dadosClasse.pericias_escolha === 'number'
         ? dadosClasse.pericias_escolha
-        : Number(dadosClasse.pericias_qtd || dadosClasse.qtd_pericias || 0);
+        : Number(dadosClasse.pericias_qtd || dadosClasse.qtd_pericias || 0)) + bonusSobrepostasOrigem;
     const bonusInt = Math.max(0, Number(ficha.atributos?.inteligencia || 0));
     const totalEscolhasSugeridas = qtdClasse + bonusInt + (periciasFixasSelecao.length > 0 ? 1 : 0);
 
@@ -49,10 +62,10 @@ export function StepPericias({ ficha, updateFicha, dadosClasses }: WizardStepPro
         () => Object.entries(ficha.pericias || {}).filter(([, p]) => (p?.treino || 0) > 0).map(([k]) => k),
         [ficha.pericias]
     );
-    const escolhidasCount = treinadasAtuais.filter(k => !periciasFixas.includes(k)).length;
+    const escolhidasCount = treinadasAtuais.filter(k => !periciasFixas.includes(k) && !periciasOrigemFixas.includes(k)).length;
 
     const handleTogglePericia = (nome: string) => {
-        if (periciasFixas.includes(nome)) return;
+        if (periciasFixas.includes(nome) || periciasOrigemFixas.includes(nome)) return;
         const atual = ficha.pericias?.[nome];
         const novoTreino = (atual?.treino || 0) > 0 ? 0 : 2;
         const novasPericias = {

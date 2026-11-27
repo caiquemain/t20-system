@@ -494,6 +494,7 @@ _reg(
     "Você é treinado em Atletismo e recebe +2 em rolagens de dano com armas naturais e ataques desarmados.",
     "Trapos surrados, carcaça de couro (gibão de peles).",
     pericias_fixas=["Atletismo"],
+    efeitos={"bonus_dano_arma": {"ataque desarmado": 2}},
 )
 _reg(
     "Tradicionalista Svalano", "Svalas",
