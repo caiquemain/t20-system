@@ -317,7 +317,26 @@ export const useFicha = (id: string | undefined) => {
         });
             void _sanitizarEscolhasAplicadas(h);
             if (gatilhos.escolha_subclasse) escolhas.subclasse = subclasseEmEdicao;
+            const extraEscolhas = poderesEscolhasEmEdicao[h.nome];
+            if (extraEscolhas && typeof extraEscolhas === 'object') {
+                Object.assign(escolhas, extraEscolhas);
+            }
             return { ...h, escolhas_aplicadas: escolhas };
+        });
+        // Preserva escolhas feitas em habilidades de Origem Regional (que não vêm da lista racial)
+        (ficha.habilidades || []).forEach((hOrig: any) => {
+            if ((hOrig.fonte || '').startsWith('Origem: ') && poderesEscolhasEmEdicao[hOrig.nome]) {
+                const jaExiste = habilidadesFinais.some((x: any) => x.nome === hOrig.nome);
+                if (!jaExiste) {
+                    habilidadesFinais.push({
+                        ...hOrig,
+                        escolhas_aplicadas: {
+                            ...(hOrig.escolhas_aplicadas || {}),
+                            ...poderesEscolhasEmEdicao[hOrig.nome],
+                        },
+                    });
+                }
+            }
         });
         const novosPoderesClasse: Habilidade[] = classPowersEmEdicao.filter(Boolean).map(nome => {
             let d = Object.values(dadosHabilidadesClasse).find((x: any) => x.nome === nome) as any;

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { WizardStepProps } from '../../../types/wizard';
 import type { Habilidade } from '../../../types';
 import { PowerSelectorModal } from '../../PowerSelectorModal';
+import { EscolhasDinamicasPanel } from '../../EscolhasDinamicasPanel';
 import { T20Icon } from '../../T20Icon';
 
 const FONT_BODY = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
@@ -9,7 +10,7 @@ const FONT_BODY = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 const ehPoderDeSlotClasse = (h: any): boolean => {
     const tipo = (h?.tipo || '').toString();
     const fonte = (h?.fonte || '').toString();
-    if (fonte.startsWith('Origem:') || fonte.startsWith('Habilidade:') || fonte.startsWith('Devoção:')) {
+    if (fonte.startsWith('Origem:') || fonte.startsWith('Habilidade:') || fonte.startsWith('Devoção:') || fonte.startsWith('Escolha:')) {
         return false;
     }
     return tipo.includes('Poder de') || tipo.includes('Poder Geral') || tipo === 'Poder da Tormenta';
@@ -25,6 +26,7 @@ export function StepPoderes({
     dadosHabilidades,
     dadosHabilidadesRaciais,
     dadosMagias,
+    dadosEscolhas,
     listaPoderes,
     listaTodasPericias,
 }: WizardStepProps) {
@@ -215,6 +217,30 @@ export function StepPoderes({
                     </div>
                 )}
             </div>
+
+            {/* 1.5 Escolhas Interativas de Raça & Origem Regional (Suplementos) */}
+            <EscolhasDinamicasPanel
+                ficha={ficha}
+                habilidades={ficha.habilidades || []}
+                dadosEscolhas={dadosEscolhas}
+                dadosHabilidadesClasse={dadosHabilidadesClasse}
+                dadosMagias={dadosMagias}
+                listaPoderes={listaPoderes}
+                onChangeEscolha={(habNome, chave, valor) => {
+                    const novas = (ficha.habilidades || []).map((h: any) =>
+                        h.nome === habNome
+                            ? {
+                                ...h,
+                                escolhas_aplicadas: {
+                                    ...(h.escolhas_aplicadas || {}),
+                                    [chave]: valor,
+                                },
+                            }
+                            : h
+                    );
+                    updateFicha({ habilidades: novas }, true);
+                }}
+            />
 
             {/* 2. Poder Concedido da Divindade */}
             {deusNome && poderesDeus.length > 0 && (

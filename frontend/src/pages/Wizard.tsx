@@ -57,7 +57,7 @@ function Wizard() {
     listaPoderes, listaDeuses,
     dadosRacas, dadosClasses, dadosOrigens, dadosHabilidadesClasse,
     dadosMagias, dadosHabilidades, dadosDeuses, dadosPoderesConcedidos,
-    dadosHabilidadesRaciais,
+    dadosHabilidadesRaciais, dadosEscolhas,
     // Funções de regra
     handleAtributoBaseChange,
     montarHabilidadesParaPanel,
@@ -108,7 +108,7 @@ function Wizard() {
       listaPoderes, listaDeuses,
       dadosRacas, dadosClasses, dadosOrigens, dadosHabilidadesClasse,
       dadosMagias, dadosHabilidades, dadosDeuses, dadosPoderesConcedidos,
-      dadosHabilidadesRaciais,
+      dadosHabilidadesRaciais, dadosEscolhas,
       // Funções
       handleAtributoBaseChange,
       montarHabilidadesParaPanel,
