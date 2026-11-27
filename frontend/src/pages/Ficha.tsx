@@ -1,4 +1,4 @@
-import { gerarPDF, gerarODT } from '../utils/gerarPDF';
+import { gerarPDF, gerarODT, gerarXLSX } from '../utils/gerarPDF';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../Ficha.css';
@@ -85,6 +85,7 @@ function Ficha() {
     const [isAquatic, setIsAquatic] = useState(false);
     const [exportandoPdf, setExportandoPdf] = useState(false);
     const [exportandoOdt, setExportandoOdt] = useState(false);
+    const [exportandoXlsx, setExportandoXlsx] = useState(false);
 
     const [selectorModalOpen, setSelectorModalOpen] = useState(false);
     const [selectorConfig, setSelectorConfig] = useState<any>({});
@@ -544,6 +545,34 @@ if (loading || !ficha) return <div className="loading-screen">Carregando grimór
                             }}
                         >
                             <T20Icon name="pdf" size={15} /> {exportandoOdt ? "Gerando ODT..." : "Baixar ODT"}
+                        </button>
+                        <button
+                            disabled={exportandoXlsx}
+                            title="Exportar planilha Excel auditada com fórmulas automáticas (.xlsx)"
+                            onClick={async () => {
+                                if (exportandoXlsx) return;
+                                setExportandoXlsx(true);
+                                try {
+                                    await gerarXLSX(ficha, id);
+                                } finally {
+                                    setExportandoXlsx(false);
+                                }
+                            }}
+                            style={{
+                                padding: "8px 14px",
+                                backgroundColor: exportandoXlsx ? "#555" : "#2e7d32",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: exportandoXlsx ? "wait" : "pointer",
+                                fontWeight: "bold",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                opacity: exportandoXlsx ? 0.8 : 1,
+                            }}
+                        >
+                            📊 {exportandoXlsx ? "Gerando Excel..." : "Baixar Excel"}
                         </button>
                     </div>
                 </div>

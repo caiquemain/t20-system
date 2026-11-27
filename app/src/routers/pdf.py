@@ -907,3 +907,53 @@ async def exportar_odt_stateless(personagem: Personagem):
     except Exception as e:
         logger.error(f"Erro ao gerar ODT stateless: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Erro ao gerar ODT: {str(e)}")
+
+
+@router.get("/{personagem_id}/xlsx")
+async def exportar_xlsx_personagem(personagem_id: str, request: Request):
+    """Gera planilha Excel (.xlsx) auditada com fórmulas automáticas a partir do MongoDB."""
+    from ..xlsx_export import XLSX_MIMETYPE, gerar_xlsx_bytes
+    try:
+        db = get_db(request)
+        if db is None:
+            raise HTTPException(status_code=400, detail="Use POST /personagens/exportar/xlsx no modo stateless.")
+        try:
+            obj_id = ObjectId(personagem_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="ID inválido")
+
+        doc = await db["personagens"].find_one({"_id": obj_id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Personagem não encontrado")
+
+        personagem = atualizar_ficha(Personagem(**doc))
+        xlsx_bytes = gerar_xlsx_bytes(personagem)
+        nome_slug = _sanitizar_nome_arquivo(personagem.cabecalho.nome)
+        return Response(
+            content=xlsx_bytes,
+            media_type=XLSX_MIMETYPE,
+            headers={"Content-Disposition": f"attachment; filename=ficha-auditoria-{nome_slug}.xlsx"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao gerar XLSX: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar XLSX: {str(e)}")
+
+
+@router.post("/exportar/xlsx")
+async def exportar_xlsx_stateless(personagem: Personagem):
+    """Gera planilha Excel (.xlsx) auditada diretamente a partir do JSON da ficha (modo localStorage / stateless)."""
+    from ..xlsx_export import XLSX_MIMETYPE, gerar_xlsx_bytes
+    try:
+        xlsx_bytes = gerar_xlsx_bytes(atualizar_ficha(personagem))
+        nome_slug = _sanitizar_nome_arquivo(personagem.cabecalho.nome)
+        return Response(
+            content=xlsx_bytes,
+            media_type=XLSX_MIMETYPE,
+            headers={"Content-Disposition": f"attachment; filename=ficha-auditoria-{nome_slug}.xlsx"},
+        )
+    except Exception as e:
+        logger.error(f"Erro ao gerar XLSX stateless: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar XLSX: {str(e)}")
+
