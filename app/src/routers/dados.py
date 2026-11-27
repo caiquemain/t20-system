@@ -217,3 +217,16 @@ def get_dados_treinador():
     """Catálogo oficial da classe Treinador: habilidades, mascotes, tipos e truques do Melhor Amigo."""
     from src.dados_treinador_herois import obter_catalogo_treinador
     return obter_catalogo_treinador()
+
+
+@router.get("/dados/distincoes", tags=["Dados Estáticos"])
+def get_dados_distincoes():
+    """Catálogo oficial das 36 Distinções — Heróis de Arton (Cap. 2, p. 104–211)."""
+    from src.dados_distincoes_herois import (
+        DADOS_DISTINCOES_HEROIS,
+        REGRAS_DISTINCOES_GERAIS,
+    )
+    return {
+        "regras": REGRAS_DISTINCOES_GERAIS,
+        "distincoes": DADOS_DISTINCOES_HEROIS,
+    }

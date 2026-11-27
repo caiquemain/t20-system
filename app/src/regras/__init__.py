@@ -100,6 +100,10 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     sincronizar_papel_grupo(ficha)
     sincronizar_idades_variadas(ficha)
 
+    # 3.6 Distinções (Heróis de Arton, Cap. 2)
+    from .distincoes import sincronizar_distincoes
+    sincronizar_distincoes(ficha, memoria_escolhas)
+
     # 4. Processamentos Adicionais de Habilidades
     sincronizar_magias_habilidades(ficha)
     sincronizar_magias_raciais(ficha)

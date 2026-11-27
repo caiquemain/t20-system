@@ -22,7 +22,7 @@ Rastreamento por fase e lote. Documentação arquitetural completa em [`docs/SUP
 - [x] **Cap. 1 (30 Novas Origens Especiais, p. 46–53):** Todas as 30 origens com efeitos mecânicos e escolhas interativas
 - [ ] **Cap. 1 (Classe Frade):** Características, habilidades fixas, poderes de Frade e progressão de magias
 - [x] **Cap. 1 (Novos Poderes, p. 54–95):** 288 novos poderes para as 14 classes básicas (+ 7 novos efeitos de *Golpe Pessoal*) e 155 novos poderes gerais (25 Combate, 13 Destino, 14 Magia, 6 Tormenta, 77 Raça, 20 Grupo) + categorias `Raça` e `Grupo` em `GET /poderes`
-- [ ] **Cap. 2 (Distinções):** Catálogo de Distinções, marcas, admissão e poderes exclusivos
+- [x] **Cap. 2 (Distinções, p. 104–211):** Catálogo completo das 36 Distinções, 36 Marcas e 185 Poderes exclusivos (`dados_distincoes_herois.py`), motor `regras/distincoes.py` e endpoint `GET /dados/distincoes`
 - [ ] **Cap. 3 (Equipamentos, Itens e Bases):** Novos equipamentos, melhorias, itens alquímicos e sistema de Bases
 
 ## Fase 3 — *Deuses de Arton*
