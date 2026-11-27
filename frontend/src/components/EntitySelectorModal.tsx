@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { T20Icon, type IconName } from './T20Icon';
 import { EntityDetailPanel } from './EntityDetailPanel';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -81,14 +82,14 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
 
     if (!aberto) return null;
 
-    return (
+    return createPortal(
         <div
             className="modal-overlay"
             onClick={(e) => { if (e.target === e.currentTarget) onFechar(); }}
             style={{
                 position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                 background: 'rgba(0,0,0,0.85)', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', zIndex: 3500,
+                alignItems: 'center', justifyContent: 'center', zIndex: 9600,
                 padding: 20,
             }}
         >
@@ -330,6 +331,7 @@ export const EntitySelectorModal: React.FC<EntitySelectorModalProps> = ({
                     <span>Passe o mouse para ver detalhes • Clique para escolher • ESC para fechar</span>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
