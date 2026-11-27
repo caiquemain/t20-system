@@ -18,7 +18,7 @@ nunca "mente".
 | **Banco** | MongoDB 7.0 |
 | **Frontend** | React 19 · TypeScript 5.9 · Vite 7 · react-router-dom 7 · axios |
 | **Infra** | Docker Compose (api + web + db) |
-| **Testes** | pytest (34 arquivos, 429 testes do motor de regras e PDF) |
+| **Testes** | pytest (80 arquivos, 1.033 testes do motor de regras, suplementos e exportações) |
 | **Extras** | Extensão de browser `t20-roll20-bridge` (Manifest V3) |
 
 ---
@@ -30,8 +30,14 @@ nunca "mente".
 - **Home** (`/`) com listagem das fichas salvas e atalhos rápidos
 - **Atributos** por pool de pontos (10 iniciais) com tabela de custo crescente
 - **Modificadores raciais** fixos + escolhas (+1 em atributo à escolha)
-- **Raças, Classes (14 base + suplementos), Origens, Deuses** com validações cruzadas
-- Bloqueios de regra aplicados automaticamente (ex.: Golem não escolhe Origem)
+- **Raças, Classes (14 base + Treinador + 14 Variantes + Frade), Origens (Básicas + 66 Regionais + 30 Especiais), Deuses** com filtros por livro e validações cruzadas
+- Bloqueios de regra aplicados automaticamente (ex.: Golem não escolhe Origem; Meio-Elfo exclui Constituição; multiclasse bloqueada entre classe básica e variante)
+
+### Suplementos Oficiais ([`docs/SUPLEMENTOS.md`](./docs/SUPLEMENTOS.md))
+- **Ameaças de Arton:** 40 raças jogáveis (incl. 12 Moreau), regras adicionais (Armas Naturais, condições `Avariado`/`Destruído`), equipamentos, materiais especiais, recursos naturais, itens mágicos, artefatos e 7 magias.
+- **Heróis de Arton:** 5 raças (Duende com criação completa + *Sonhos Malucos*, Eiradaan, Galokk, Meio-Elfo, Sátiro), classe **Treinador** com motor completo do **Melhor Amigo**, **14 Classes Variantes**, **30 Origens Especiais** e **Regras Opcionais opt-in** (73 Complicações, 7 Idades Variadas, 9 Papéis no Grupo, 7 Objetivos Heroicos, Defesa Épica).
+- **Atlas de Arton:** 66 Origens Regionais com benefício único automático e escolhas interativas (*Duplo Feérico*, *Aspirante a Herói*, *Futura Lenda*, *Cosmopolita*, etc.).
+- **Deuses de Arton:** fundação pronta para os próximos lotes.
 
 ### Bestiário & Grimório Global
 - **Bestiário** (`/bestiario` e `/bestiario/:id`): catálogo com **297 monstros/ameaças** importados, busca/filtros, ficha detalhada e botão de envio direto para o Roll20
@@ -44,18 +50,19 @@ nunca "mente".
   Ofícios customizados, penalidade de armadura, bônus condicionais
 - **Defesa & Deslocamento**: pilha de bônus explicada, deslocamentos especiais
   (natação, voo) com toggle de forma
-- **Combate**: BBA, ataques, bônus de dano por arma, proficiências
-- **Classes**: Arcanista (24/24) e Bárbaro (24/24) com poderes e testes completos; demais 12 classes do Livro Básico em expansão (ver `docs/checklists/classes-livro-basico.md`)
-- **Magias**: grimório com ~198 magias, custo PM por círculo (Tabela 4-1),
+- **Combate**: BBA, ataques, bônus de dano por arma, proficiências, ficha automática do Melhor Amigo (`treinador_calc`)
+- **Classes**: 14 classes do Livro Básico + Treinador + 14 Classes Variantes (ver `docs/checklists/classes-livro-basico.md` e `docs/SUPLEMENTOS.md`)
+- **Magias**: grimório com 205+ magias (JdA + Ameaças), custo PM por círculo (Tabela 4-1),
   aprimoramentos, CD por atributo-chave, reduções condicionais de custo
 - **Habilidades ativáveis**: custo PM, ação, duração, buffs com origem rastreada
 - **Condições situacionais**: toggle no card da habilidade
   (Reptiliano, Conhecimento das Rochas) que alimenta `condicoes_ativas`
 - **Histórico/level-up**: linha do tempo da ficha com level-up assistido
-- **Inventário/equipamentos** com efeitos mecânicos
+- **Inventário/equipamentos** com efeitos mecânicos e condições de item (`Avariado` / `Destruído`)
 
 ### UX de Escolhas
-- **Modais de seleção** com busca, blacklist e listas restritas
+- **Painel unificado de escolhas dinâmicas** (`EscolhasDinamicasPanel.tsx` alimentado por `GET /dados/escolhas`) no Wizard e na Ficha
+- **Modais de seleção** com busca, filtros por livro, blacklist e listas restritas
   (ex.: Canção dos Mares oferece só as 6 magias da regra, com match exato)
 - **Slots flexíveis**: perícia OU poder OU racial (Versátil, Memória Póstuma,
   Deformidade) com abas e troca de modo
@@ -68,7 +75,8 @@ nunca "mente".
 - Salvamento automático com debounce (PUT) + criação (POST) + exclusão (DELETE)
 - Recálculo completo (`atualizar_ficha`) em todo GET/PUT — fonte única de verdade
 - Descanso completo, buffs temporários, efeitos ativos por aba dedicada
-- **Exportação da ficha em PDF** (`GET /personagens/{id}/pdf`, via **PyMuPDF**, com testes em `app/tests/test_pdf.py`)
+- **Exportação da ficha em PDF** (`GET /personagens/{id}/pdf`, via **PyMuPDF**)
+- **Exportação editável para LibreOffice** em **ODT** (`GET /personagens/{id}/odt`) e **ODG** (`GET /personagens/{id}/odg`)
 
 ### Ponte Roll20 (`t20-roll20-bridge/`)
 - Extensão Manifest V3 que envia a ficha do T20 System (e ameaças do Bestiário) para a ficha oficial
@@ -111,21 +119,22 @@ t20-system/
 │   │       ├── inventario.py              # equipamentos
 │   │       ├── historico.py               # level-up assistido
 │   │       └── utils.py
-│   └── tests/                             # suíte pytest (16 arquivos, ~156 testes)
+│   └── tests/                             # suíte pytest (80 arquivos, 1.033 testes)
 ├── frontend/                              # Frontend (imagem t20-system-web)
 │   ├── Dockerfile                         # Node 22 + Vite dev server :5173
 │   ├── public/fonts/Tormenta.ttf          # fonte oficial T20
 │   └── src/
 │       ├── pages/                         # Home.tsx, Wizard.tsx, Ficha.tsx
 │       ├── components/                    # AbilityCard, SkillList, RacialAbilityRow,
-│       │                                  #   DesejosButton, StatusBars, modais...
+│       │                                  #   EscolhasDinamicasPanel, StatusBars, modais...
 │       ├── hooks/useFicha.ts              # estado global + autosave + catálogos
 │       ├── services/api.ts                # cliente HTTP
 │       └── types.ts                       # tipos do domínio
 ├── t20-roll20-bridge/                     # Extensão browser → ficha JdA Roll20
 ├── docs/
+│   ├── SUPLEMENTOS.md                     # arquitetura e progresso dos suplementos oficiais
 │   ├── roll20-field-mapping.md
-│   └── checklists/                        # estado de features (rolagens, raças E2E...)
+│   └── checklists/                        # estado de features (suplementos, raças E2E...)
 ├── data/db/                               # volume do MongoDB
 ├── docker-compose.yml                     # db (:27017) + api (:8000) + web (:5173)
 ├── COMO_RODAR_LINUX.md / GUIA_COMPLETO_LINUX.md
@@ -193,7 +202,7 @@ docker compose up -d --build
 
 ```bash
 docker compose exec -T api python -m pytest tests/ -q
-# 34 arquivos, 429 testes do motor de regras e exportação PDF
+# 80 arquivos, 1.033 testes do motor de regras, suplementos e exportações
 ```
 
 > ⚠️ Os testes rodam **dentro do container** (`docker compose exec api`) ou via `poetry run pytest tests/ -q` em `app/`.
