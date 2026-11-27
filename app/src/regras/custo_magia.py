@@ -355,11 +355,19 @@ CLASSES_CONJURADORAS_DIVINAS = {"Clérigo", "Druida"}
 
 def obter_atributo_chave_magia(ficha: Personagem, classe_nome: Optional[str] = None) -> Optional[str]:
     """Retorna o atributo-chave de magia da classe conjuradora (T20 JdA p.170)."""
+    conds = getattr(ficha, "condicoes_ativas", None) or []
+    usa_sab_arcana = "magia_instintiva_sab" in conds and any(
+        (h.efeitos or {}).get("atributo_magia_arcana_opcao") == "sab"
+        for h in (ficha.habilidades or [])
+    )
+    arcanas = CLASSES_CONJURADORAS_ARCANAS | {"Necromante", "Magimarcialista", "Inovador"}
     for c in (ficha.classes or []):
         nome = (c.nome or "").strip()
         if classe_nome and nome != classe_nome:
             continue
         sub = (c.subclasse or "").strip()
+        if usa_sab_arcana and nome in arcanas:
+            return "sabedoria"
         if nome == "Arcanista":
             return "carisma" if sub == "Feiticeiro" else "inteligencia"
         if nome in ATRIBUTO_CHAVE_POR_CLASSE:

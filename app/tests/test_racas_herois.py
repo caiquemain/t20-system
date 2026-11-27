@@ -158,6 +158,14 @@ def test_eiradaan_galokk_meio_elfo_satiro():
     assert f_eir.atributos.carisma == 2
     assert f_eir.atributos.forca == 0
     assert "sab" in f_eir.pericias["Misticismo"].atributos_possiveis
+
+    # Magia Instintiva: ao ativar magia_instintiva_sab, CD e PM passam a usar Sabedoria (4) em vez de Inteligência (0)
+    cd_int = f_eir.combate.cd_magias
+    pm_int = f_eir.status.pm.maximo
+    f_eir.condicoes_ativas = ["magia_instintiva_sab"]
+    atualizar_ficha(f_eir)
+    assert f_eir.combate.cd_magias == cd_int + 4
+    assert f_eir.status.pm.maximo == pm_int + 4
     assert DADOS_RACAS["Eiradaan"]["devotos"] == ["Allihanna", "Lena", "Thyatis", "Wynna"]
 
     # Galokk: For +1, Con +1, Car -1, +1 escolha; Grande; Intimidação com For
