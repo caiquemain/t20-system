@@ -14,6 +14,7 @@ Quando uma checklist for 100% concluída, mover o arquivo para `docs/checklists/
 | [roll20-bridge.md](./roll20-bridge.md) | Ponte Roll20 (ficha + monstros) | 🟡 Ficha completa — ficha nova / Fase 3 parciais |
 | [rolagens.md](./rolagens.md) | Sistema de rolagens de dados | ❌ Não iniciada |
 | [historico-nivel.md](./historico-nivel.md) | Histórico da ficha / level-up com memória | ✅ MVP completo |
+| [suplementos.md](./suplementos.md) | Suplementos Oficiais (Ameaças, Heróis, Deuses, Atlas) | 🟡 Em andamento (Fase 0, Ameaças, Atlas 4A, Heróis Cap. 1+4) |
 
 ## Como usar
 - Ao iniciar uma frente, abra a checklist correspondente
