@@ -135,7 +135,8 @@ def test_sereia_bonus_dano_arma_agregado(personagem_base):
     garantir_habilidades_iniciais(f)
     sincronizar_ataques(f)
     assert f.combate.bonus_dano_arma == {
-        "azagaia": 2, "lança": 2, "lança montada": 2, "tridente": 2
+        "azagaia": 2, "lança": 2, "lança montada": 2,
+        "lança de justa": 2, "lança de falange": 2, "tridente": 2,
     }
 
 

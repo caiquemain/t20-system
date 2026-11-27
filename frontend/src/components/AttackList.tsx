@@ -158,11 +158,12 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
             {(!ataques || ataques.length === 0) ? (
                 <p style={{ color: '#666', textAlign: 'center', fontSize: '0.85rem' }}>Nenhum ataque ou poder ofensivo.</p>
             ) : (
+                <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead>
                         <tr style={{ color: '#888', textTransform: 'uppercase', fontSize: '0.7rem' }}>
                             {['Arma / Magia', 'Bônus / CD', 'Dano', 'Crít.', 'Tipo', 'Alcance', 'Teste', ''].map(h => (
-                                <th key={h} style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '1px solid #333' }}>{h}</th>
+                                <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #333', whiteSpace: 'nowrap' }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
@@ -173,55 +174,61 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                             const danoExibido = cfg?.formulaEfetiva || a.dano;
                             return (
                                 <tr key={i} style={{ borderBottom: '1px solid #252525' }}>
-                                    <td style={{ padding: '6px' }} className="tooltip-container">
-                                        <strong
-                                            onClick={() => ehMagia && onOpenSpell && onOpenSpell(a.nome)}
-                                            title={ehMagia && onOpenSpell ? 'Clique para abrir aprimoramentos da magia' : undefined}
-                                            style={{ color: ehMagia ? '#ce93d8' : '#e0e0e0', cursor: ehMagia && onOpenSpell ? 'pointer' : 'default' }}
-                                        >
-                                            {a.nome}
-                                        </strong>
-                                        {cfg && (
-                                            <span style={{ marginLeft: 6, fontSize: '0.7rem', color: '#ce93d8', background: 'rgba(156,39,176,0.16)', border: '1px solid rgba(206,147,216,0.4)', borderRadius: 3, padding: '1px 5px' }}>
-                                                {cfg.custoTotalPm} PM
-                                            </span>
-                                        )}
-                                        {a.especial && (
-                                            <>
-                                                <span
-                                                    style={{ marginLeft: 6, cursor: 'help', display: 'inline-flex', alignItems: 'center' }}
-                                                    title={ehPenalidade(a.especial) ? 'Há penalidades neste ataque' : 'Efeitos especiais'}
-                                                >
-                                                    <T20Icon
-                                                        name={ehPenalidade(a.especial) ? 'alerta' : ehMagia ? 'grimorio' : 'efeito'}
-                                                        size={13}
-                                                        color={ehPenalidade(a.especial) ? '#ffb74d' : ehMagia ? '#ce93d8' : '#80deea'}
-                                                    />
-                                                </span>
-                                                <div className="ataque-tooltip">
-                                                    {a.especial.split('; ').map((t, idx) => (
-                                                        <div
-                                                            key={idx}
-                                                            className="tooltip-row"
-                                                            style={{
-                                                                color: ehPenalidade(t) ? '#ff8a80' : ehBuff(t) ? '#80deea' : '#ccc',
-                                                                fontWeight: (ehPenalidade(t) || ehBuff(t)) ? 'bold' : 'normal',
-                                                            }}
+                                    <td style={{ padding: '8px', minWidth: 190 }} className="tooltip-container">
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 6px' }}>
+                                            <strong
+                                                onClick={() => ehMagia && onOpenSpell && onOpenSpell(a.nome)}
+                                                title={ehMagia && onOpenSpell ? 'Clique para abrir aprimoramentos da magia' : undefined}
+                                                style={{ color: ehMagia ? '#ce93d8' : '#e0e0e0', cursor: ehMagia && onOpenSpell ? 'pointer' : 'default', lineHeight: 1.25 }}
+                                            >
+                                                {a.nome}
+                                            </strong>
+                                            {(cfg || a.especial) && (
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                    {cfg && (
+                                                        <span style={{ fontSize: '0.7rem', color: '#ce93d8', background: 'rgba(156,39,176,0.18)', border: '1px solid rgba(206,147,216,0.45)', borderRadius: 4, padding: '1px 6px', whiteSpace: 'nowrap', lineHeight: 1.25 }}>
+                                                            {cfg.custoTotalPm} PM
+                                                        </span>
+                                                    )}
+                                                    {a.especial && (
+                                                        <span
+                                                            style={{ cursor: 'help', display: 'inline-flex', alignItems: 'center' }}
+                                                            title={ehPenalidade(a.especial) ? 'Há penalidades neste ataque' : 'Efeitos especiais'}
                                                         >
-                                                            {t}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </>
+                                                            <T20Icon
+                                                                name={ehPenalidade(a.especial) ? 'alerta' : ehMagia ? 'grimorio' : 'efeito'}
+                                                                size={13}
+                                                                color={ehPenalidade(a.especial) ? '#ffb74d' : ehMagia ? '#ce93d8' : '#80deea'}
+                                                            />
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {a.especial && (
+                                            <div className="ataque-tooltip">
+                                                {a.especial.split('; ').map((t, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="tooltip-row"
+                                                        style={{
+                                                            color: ehPenalidade(t) ? '#ff8a80' : ehBuff(t) ? '#80deea' : '#ccc',
+                                                            fontWeight: (ehPenalidade(t) || ehBuff(t)) ? 'bold' : 'normal',
+                                                        }}
+                                                    >
+                                                        {t}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         )}
                                     </td>
-                                    <td style={{ padding: '6px', color: ehMagia ? '#ce93d8' : '#ccc', fontWeight: ehMagia ? 'bold' : 'normal' }}>{a.bonus_ataque}</td>
-                                    <td style={{ padding: '6px', color: '#ffcc80', fontWeight: 'bold' }}>{danoExibido}</td>
-                                    <td style={{ padding: '6px', color: '#ccc' }}>{a.critico}</td>
-                                    <td style={{ padding: '6px', color: '#ccc' }}>{a.tipo}</td>
-                                    <td style={{ padding: '6px', color: '#ccc' }}>{a.alcance}</td>
-                                    <td style={{ padding: '6px', color: '#ccc' }}>{a.teste}</td>
-                                    <td style={{ padding: '6px', textAlign: 'right' }}>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: ehMagia ? '#ce93d8' : '#ccc', fontWeight: ehMagia ? 'bold' : 'normal' }}>{a.bonus_ataque}</td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ffcc80', fontWeight: 'bold' }}>{danoExibido}</td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.critico}</td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.tipo}</td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.alcance}</td>
+                                    <td style={{ padding: '8px', whiteSpace: 'nowrap', color: '#ccc' }}>{a.teste}</td>
+                                    <td style={{ padding: '8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                         <button
                                             type="button"
                                             onClick={() => handleRolarAtaque(a)}
@@ -237,6 +244,7 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 gap: 4,
+                                                whiteSpace: 'nowrap',
                                             }}
                                         >
                                             <T20Icon name="dado" size={12} /> Rolar
@@ -247,6 +255,7 @@ export const AttackList: React.FC<AttackListProps> = ({ ataques, fluxoDeMana, fo
                         })}
                     </tbody>
                 </table>
+                </div>
             )}
         </div>
     );
