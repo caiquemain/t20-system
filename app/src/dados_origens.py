@@ -254,3 +254,7 @@ DADOS_ORIGENS = {
         "beneficios_lista": ["Atletismo", "Fortitude", "Atlético", "Esforçado"],
     },
 }
+
+from .dados_origens_atlas import DADOS_ORIGENS_ATLAS
+
+DADOS_ORIGENS.update(DADOS_ORIGENS_ATLAS)

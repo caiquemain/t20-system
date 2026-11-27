@@ -211,23 +211,39 @@ def garantir_habilidades_iniciais(ficha: Personagem, memoria_global: Optional[Di
                             if fonte_classe not in (existente.fonte or ""):
                                 existente.fonte = f"{existente.fonte} + {fonte_classe}" if existente.fonte else fonte_classe
 
-    # C. ORIGEM
+    # C. ORIGEM (inclui poder_fixo de Amnésico e todas as Origens Regionais do Atlas de Arton)
+    from ..dados_origens import DADOS_ORIGENS
+
     origem_nome = (ficha.cabecalho.origem or "").strip()
-    if origem_nome == "Amnésico" and "Lembranças Graduais" not in nomes_existentes:
-        dados_lg = next(
-            (v for k, v in HABILIDADES_GERAIS.items() if v["nome"] == "Lembranças Graduais"),
+    dados_orig = DADOS_ORIGENS.get(origem_nome) or {}
+    poder_fixo_origem = dados_orig.get("poder_fixo")
+
+    # Remove poderes fixos de origens antigas caso o jogador tenha trocado de origem
+    if ficha.habilidades:
+        ficha.habilidades = [
+            h for h in ficha.habilidades
+            if not (
+                (h.fonte or "").startswith("Origem: ")
+                and (h.fonte or "") != f"Origem: {origem_nome}"
+            )
+        ]
+        nomes_existentes = {h.nome for h in ficha.habilidades}
+
+    if poder_fixo_origem and poder_fixo_origem not in nomes_existentes:
+        dados_pf = next(
+            (v for _, v in HABILIDADES_GERAIS.items() if v.get("nome") == poder_fixo_origem),
             None,
         )
-        efeitos_lg = dict(dados_lg.get("efeitos", {})) if dados_lg else {}
+        efeitos_pf = dict(dados_pf.get("efeitos", {})) if dados_pf else {}
         novas_habs.append(Habilidade(
-            nome="Lembranças Graduais",
+            nome=poder_fixo_origem,
             tipo="Origem",
-            descricao=dados_lg.get("descricao", "Benefício de Origem") if dados_lg else "Benefício único.",
-            fonte="Origem: Amnésico",
-            escolhas_aplicadas=efeitos_lg,
-            efeitos=efeitos_lg,
+            descricao=dados_pf.get("descricao", "Benefício de Origem") if dados_pf else "Benefício único.",
+            fonte=f"Origem: {origem_nome}",
+            escolhas_aplicadas=dict(efeitos_pf),
+            efeitos=efeitos_pf,
         ))
-        nomes_existentes.add("Lembranças Graduais")
+        nomes_existentes.add(poder_fixo_origem)
 
     if ficha.escolhas_origem:
         for escolha in ficha.escolhas_origem:
