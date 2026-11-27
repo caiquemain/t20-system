@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from pymongo import ReturnDocument
 from bson import ObjectId
@@ -6,6 +8,27 @@ from src.models import Ameaca
 from src.dependencies import get_db
 
 router = APIRouter(prefix="/ameacas", tags=["Ameaças"])
+
+_SEED_PATH = Path(__file__).resolve().parent.parent / "data" / "bestiario_seed.json"
+
+
+def carregar_seed_bestiario() -> List[dict]:
+    if not _SEED_PATH.exists():
+        return []
+    return json.loads(_SEED_PATH.read_text(encoding="utf-8"))
+
+
+async def garantir_seed_bestiario(db) -> int:
+    """Popula automaticamente a collection `ameacas` quando estiver vazia."""
+    col = db["ameacas"]
+    if await col.count_documents({}) > 0:
+        return 0
+    docs = carregar_seed_bestiario()
+    if not docs:
+        return 0
+    await col.insert_many(docs)
+    print(f"🐉 Bestiário populado automaticamente com {len(docs)} ameaças!")
+    return len(docs)
 
 
 def _parse_id(ameaca_id: str):
