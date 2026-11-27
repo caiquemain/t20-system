@@ -359,6 +359,43 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                                         <strong>Itens iniciais:</strong> {infoOrigemAtual.itens}
                                     </p>
                                 )}
+                                {/* Escolha dinâmica da própria Origem Regional (ex.: Duplo Feérico, Futura Lenda, De Outro Mundo, Cosmopolita) */}
+                                <div style={{ marginTop: 10 }}>
+                                    {(() => {
+                                        const habsOrig = (ficha?.habilidades || []).filter(
+                                            (h: any) => (h.fonte || '').startsWith('Origem:') || (infoOrigemAtual?.poder_fixo && h.nome === infoOrigemAtual.poder_fixo)
+                                        );
+                                        if (infoOrigemAtual?.poder_fixo && !habsOrig.some((h: any) => h.nome === infoOrigemAtual.poder_fixo)) {
+                                            habsOrig.push({
+                                                nome: infoOrigemAtual.poder_fixo,
+                                                tipo: 'Origem',
+                                                fonte: `Origem: ${origemNome}`,
+                                                descricao: infoOrigemAtual.beneficio_texto || '',
+                                                escolhas_aplicadas: {},
+                                            });
+                                        }
+                                        return (
+                                            <EscolhasDinamicasPanel
+                                                titulo={`Configurar ${origemNome}`}
+                                                ficha={ficha}
+                                                habilidades={habsOrig.map((h: any) => ({
+                                                    ...h,
+                                                    escolhas_aplicadas: {
+                                                        ...(h.escolhas_aplicadas || {}),
+                                                        ...((poderesEscolhasEmEdicao || {})[h.nome] || {}),
+                                                    },
+                                                }))}
+                                                dadosEscolhas={dadosEscolhas}
+                                                dadosHabilidadesClasse={dadosHabilidadesClasse}
+                                                dadosMagias={dadosMagias}
+                                                listaPoderes={listaPoderesGerais}
+                                                onChangeEscolha={(habNome, chave, valor) => {
+                                                    updatePoderEscolha(habNome, chave, valor);
+                                                }}
+                                            />
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         );
                     }
@@ -453,14 +490,17 @@ export const AbilityConfigModal: React.FC<AbilityConfigModalProps> = ({
                     </div>
                 ) : <p className="text-muted">Disponível no nível 2.</p>}
 
-                {/* 7. ESCOLHAS DE RAÇA & ORIGEM REGIONAL (Suplementos) */}
+                {/* 7. ESCOLHAS DE RAÇA & OUTRAS HABILIDADES (Suplementos) */}
                 <div style={{ marginTop: 20 }}>
                     <EscolhasDinamicasPanel
+                        titulo="Escolhas de Raça & Outras Habilidades"
                         ficha={ficha}
                         habilidades={[
                             ...(habilidadesEmEdicao || []),
                             ...((ficha?.habilidades || []).filter(
-                                (h: any) => !(habilidadesEmEdicao || []).some((e: any) => e.nome === h.nome)
+                                (h: any) =>
+                                    !(habilidadesEmEdicao || []).some((e: any) => e.nome === h.nome) &&
+                                    !((dadosOrigens?.[origemNome]?.regional || qtdEscolhasOrigem === 0) && (h.fonte || '').startsWith('Origem:'))
                             )),
                         ].map((h: any) => ({
                             ...h,
