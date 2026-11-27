@@ -231,15 +231,8 @@ function Ficha() {
         if (!confirm(`Subir do nível ${nivelAtual} para ${nivelAtual + 1}?\nIsso recalculará a ficha e gravará o evento no histórico.`)) return;
 
         try {
-            const resp = await fetch(`http://localhost:8000/personagens/${id}/level-up`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: '{}'
-            });
-            if (!resp.ok) throw new Error(await resp.text());
-            await resp.json();
-
-            // Recarrega a ficha do servidor (novo nível + ganhos)
+            const { subirNivelPersonagem } = await import('../services/api');
+            await subirNivelPersonagem(id, ficha);
             window.location.reload();
         } catch (err) {
             alert("Erro ao subir de nível: " + (err as Error).message);
@@ -251,10 +244,9 @@ function Ficha() {
         if (!id) return;
         setLoadingHistorico(true);
         try {
-            const resp = await fetch(`http://localhost:8000/personagens/${id}/historico`);
-            if (!resp.ok) throw new Error(await resp.text());
-            const data = await resp.json();
-            setHistoricoData(data);
+            const { fetchHistoricoPersonagem } = await import('../services/api');
+            const resp = await fetchHistoricoPersonagem(id);
+            setHistoricoData(resp.data || []);
         } catch (err) {
             console.error("Erro ao carregar histórico:", err);
             setHistoricoData([]);
@@ -267,14 +259,10 @@ function Ficha() {
         if (!id) return;
         const evento = historicoData.find(e => e.id === eventoId);
         if (!evento) return;
-        if (!confirm(`Restaurar ficha ao nível ${evento.nivel}?\n\nResumo: ${evento.resumo.join(', ')}\n\nIsso criará um novo evento de restauração no histórico.`)) return;
+        if (!confirm(`Restaurar ficha ao nível ${evento.nivel}?\n\nResumo: ${(evento.resumo || []).join(', ')}\n\nIsso criará um novo evento de restauração no histórico.`)) return;
         try {
-            const resp = await fetch(`http://localhost:8000/personagens/${id}/historico/${eventoId}/restaurar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: '{}'
-            });
-            if (!resp.ok) throw new Error(await resp.text());
+            const { restaurarEventoHistorico } = await import('../services/api');
+            await restaurarEventoHistorico(id, eventoId);
             alert("✅ Ficha restaurada com sucesso!");
             window.location.reload();
         } catch (err) {
