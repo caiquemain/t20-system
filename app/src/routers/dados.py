@@ -206,3 +206,10 @@ def rolar_duende_sonhos_malucos(seed: Optional[int] = None):
     """Gera um Duende aleatório oficial (1d3, 1d4, 2d6, 3d12 + 2 PM — Heróis de Arton, p. 9)."""
     from src.regras.duende import gerar_duende_aleatorio
     return gerar_duende_aleatorio(seed=seed)
+
+
+@router.get("/dados/treinador", tags=["Dados Estáticos"])
+def get_dados_treinador():
+    """Catálogo oficial da classe Treinador: habilidades, mascotes, tipos e truques do Melhor Amigo."""
+    from src.dados_treinador_herois import obter_catalogo_treinador
+    return obter_catalogo_treinador()

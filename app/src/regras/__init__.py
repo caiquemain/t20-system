@@ -138,6 +138,8 @@ def atualizar_ficha(ficha: Personagem) -> Personagem:
     ficha.combate.briga_calc = calcular_briga(ficha)
     ficha.combate.nobre_calc = calcular_nobre(ficha)
     ficha.combate.paladino_calc = calcular_paladino(ficha)
+    from .treinador import calcular_treinador
+    ficha.combate.treinador_calc = calcular_treinador(ficha)
     sincronizar_ataques(ficha)
     sincronizar_ataques_equipamento(ficha)
     sincronizar_carga(ficha)

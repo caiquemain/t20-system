@@ -3590,3 +3590,6 @@ DADOS_HABILIDADES_CLASSE = {
         "efeitos": {"virtude_paladinesca": True, "virtude_temperanca": True},
     },
 }
+
+from .dados_treinador_herois import DADOS_HABILIDADES_TREINADOR
+DADOS_HABILIDADES_CLASSE.update(DADOS_HABILIDADES_TREINADOR)

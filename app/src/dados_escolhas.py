@@ -188,7 +188,31 @@ PODERES_COM_ESCOLHA = {
     "Limitações de Duende": [
         {"chave": "sonhos_malucos", "rotulo": "Sonhos Malucos (criação aleatória: +2 PM)", "catalogo": "OPCOES_SONHOS_MALUCOS"},
     ],
+
+    # Heróis de Arton (Classe: Treinador, p. 16–21)
+    "Treino Especializado": [
+        {"chave": "treino_especializado", "rotulo": "Treino Especializado (5º nível)", "catalogo": "TREINOS_ESPECIALIZADOS_TREINADOR"},
+    ],
+    "Mascote": [
+        {"chave": "mascote", "rotulo": "Mascote do Treinador", "catalogo": "MASCOTES_TREINADOR"},
+    ],
 }
+
+TREINOS_ESPECIALIZADOS_TREINADOR = [
+    {"valor": "Conquistar pelos Números", "rotulo": "Conquistar pelos Números (2º Melhor Amigo; 3 PM ação padrão extra)"},
+    {"valor": "Treino Intensivo", "rotulo": "Treino Intensivo (+4 PV/nível, RD 5/10/15, +1 truque no 5º e 11º)"},
+]
+
+MASCOTES_TREINADOR = [
+    {"valor": "Águia Real", "rotulo": "Águia Real (+1d6 dano com arma 1×/rodada)"},
+    {"valor": "Bicho Preguiça", "rotulo": "Bicho Preguiça (garra 1d6 x2 corte; 1 PM ataque extra)"},
+    {"valor": "Camundongo Espiritual", "rotulo": "Camundongo Espiritual (+1 CD de habilidades mágicas)"},
+    {"valor": "Fada-Borboleta", "rotulo": "Fada-Borboleta (-1 PM em habilidades mágicas)"},
+    {"valor": "Gekko Malhado", "rotulo": "Gekko Malhado (+2 Defesa e +2 Reflexos)"},
+    {"valor": "Mico-Leão Dourado", "rotulo": "Mico-Leão Dourado (punga com Ladinagem em alcance curto)"},
+    {"valor": "Minivaca", "rotulo": "Minivaca (+1 ataque; +2 em investidas)"},
+    {"valor": "Ossinhos", "rotulo": "Ossinhos (RD 2 contra corte, frio e perfuração)"},
+]
 
 RESISTENCIAS_MALDICAO_DUENDE = ["Fortitude", "Vontade"]
 
@@ -280,6 +304,8 @@ def montar_catalogo_escolhas() -> dict:
         "MALDICOES_DUENDE": MALDICOES_DUENDE,
         "FORMAS_SELVAGENS_BASICAS": FORMAS_SELVAGENS_BASICAS,
         "OPCOES_SONHOS_MALUCOS": OPCOES_SONHOS_MALUCOS,
+        "TREINOS_ESPECIALIZADOS_TREINADOR": TREINOS_ESPECIALIZADOS_TREINADOR,
+        "MASCOTES_TREINADOR": MASCOTES_TREINADOR,
         "HABILIDADES_CLASSE_NV1": _habilidades_classe_nv1(),
         "CAMINHOS_ARCANISTA_INFO": CAMINHOS_ARCANISTA_INFO,
         "PODERES_COM_ESCOLHA": poderes,

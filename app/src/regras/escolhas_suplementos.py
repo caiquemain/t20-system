@@ -285,5 +285,20 @@ def processar_escolhas_suplementos(ficha: Personagem) -> None:
                     efeitos={"pm_max_ini": 2},
                 )
 
+        # ── HERÓIS: TREINADOR — MASCOTE ──
+        elif hab.nome == "Mascote":
+            m_nome = str(esc.get("mascote") or "").strip()
+            if m_nome:
+                from ..dados_treinador_herois import DADOS_MASCOTES_TREINADOR
+                dados_m = DADOS_MASCOTES_TREINADOR.get(m_nome)
+                if dados_m:
+                    _injetar(
+                        nome=f"Mascote: {dados_m['nome']}",
+                        tipo="Poder de Treinador",
+                        descricao=dados_m.get("descricao", ""),
+                        origem_hab=hab.nome,
+                        efeitos=dict(dados_m.get("efeitos") or {}),
+                    )
+
     if extras:
         ficha.habilidades.extend(extras)
