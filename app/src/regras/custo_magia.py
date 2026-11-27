@@ -347,10 +347,11 @@ ATRIBUTO_CHAVE_POR_CLASSE = {
     "Bardo": "carisma",
     "Clérigo": "sabedoria",
     "Druida": "sabedoria",
+    "Frade": "sabedoria",
 }
 
 CLASSES_CONJURADORAS_ARCANAS = {"Arcanista", "Bardo", "Bruxo", "Mago", "Feiticeiro"}
-CLASSES_CONJURADORAS_DIVINAS = {"Clérigo", "Druida"}
+CLASSES_CONJURADORAS_DIVINAS = {"Clérigo", "Druida", "Frade"}
 
 
 def obter_atributo_chave_magia(ficha: Personagem, classe_nome: Optional[str] = None) -> Optional[str]:

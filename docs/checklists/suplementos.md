@@ -26,7 +26,7 @@ Rastreamento por fase e lote. Documentação arquitetural completa em [`docs/SUP
 - [ ] **Cap. 3 (Sistema de Bases):** Regras e painel de Bases de aventureiros (pendente)
 
 ## Fase 3 — *Deuses de Arton*
-- [ ] **Classe Frade:** Características, habilidades fixas, poderes de Frade e progressão de magias
+- [x] **Classe Frade (Cap. 1, p. 38–41):** Características (12/+3 PV, 6 PM/nv + Sab), 6 habilidades fixas, 29 poderes (incl. 8 Sacrários), progressão de magias 1º–5º círculo (`dados_frade_deuses.py`)
 - [ ] **3A:** Expansão dos 20 Deuses Maiores (novos poderes concedidos e regras de devoção)
 - [ ] **3B:** Deuses Menores (catálogo, seletor na ficha/wizard e poderes concedidos)
 - [ ] **3C:** Novas Magias Divinas, Itens Litúrgicos/Mágicos e Distinções Divinas

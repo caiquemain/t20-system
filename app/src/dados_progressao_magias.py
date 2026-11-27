@@ -10,6 +10,7 @@ PROGRESSAO_CIRCULOS_POR_CLASSE = {
     # Tabela 1-5 / 1-11: 1º no 1, 2º no 5, 3º no 9, 4º no 13, 5º no 17
     "Arcanista":       {1: 1, 5: 2, 9: 3, 13: 4, 17: 5},
     "Clérigo":         {1: 1, 5: 2, 9: 3, 13: 4, 17: 5},
+    "Frade":           {1: 1, 5: 2, 9: 3, 13: 4, 17: 5},
     "Necromante":      {1: 1, 5: 2, 9: 3, 13: 4, 17: 5},
     "Usurpador":       {1: 1, 5: 2, 9: 3, 13: 4, 17: 5},
     # Tabela 1-7 / 1-12: 1º no 1, 2º no 6, 3º no 10, 4º no 14 (para no 4º)

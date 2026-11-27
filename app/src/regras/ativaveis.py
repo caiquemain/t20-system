@@ -15,6 +15,8 @@ from ..models import Buff, Habilidade, Personagem
 def _inferir_acao(efeitos: Dict[str, Any], desc: str) -> str:
     if isinstance(efeitos.get("postura_combate"), dict):
         return efeitos["postura_combate"].get("acao", "movimento")
+    if isinstance(efeitos.get("sacrario"), dict):
+        return efeitos["sacrario"].get("acao", "padrão")
     if isinstance(efeitos.get("missa"), dict):
         return efeitos["missa"].get("tempo", "1 hora")
     if isinstance(efeitos.get("habilidade_ativavel"), dict):
@@ -51,6 +53,8 @@ def _inferir_frequencia(desc: str) -> str:
 def _inferir_duracao(efeitos: Dict[str, Any], desc: str) -> str:
     if isinstance(efeitos.get("postura_combate"), dict):
         return efeitos["postura_combate"].get("duracao", "cena")
+    if isinstance(efeitos.get("sacrario"), dict):
+        return efeitos["sacrario"].get("duracao", "cena")
     if isinstance(efeitos.get("missa"), dict):
         return efeitos["missa"].get("duracao", "1 dia")
     low = desc.lower()
@@ -72,6 +76,8 @@ def _inferir_custo_pm(efeitos: Dict[str, Any], desc: str) -> int:
         return int(efeitos["custo_pm"])
     if isinstance(efeitos.get("postura_combate"), dict):
         return int(efeitos["postura_combate"].get("custo_pm", 2))
+    if isinstance(efeitos.get("sacrario"), dict):
+        return int(efeitos["sacrario"].get("custo_pm", 3))
     if isinstance(efeitos.get("habilidade_ativavel"), dict):
         c = efeitos["habilidade_ativavel"].get("custo_pm")
         if isinstance(c, (int, float)):

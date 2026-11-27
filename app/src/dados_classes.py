@@ -124,6 +124,7 @@ DADOS_CLASSES = {
 
     # ------------------- CLASSES EXTRAS MANTIDAS -------------------
     "Frade": {
+        "fonte": "Deuses de Arton",
         "pv_inicial": 12, "pv_nivel": 3,
         "pm_inicial": 6, "pm_nivel": 6,
         "pm_atributo": "sab",
