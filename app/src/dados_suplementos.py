@@ -38,7 +38,7 @@ SUPLEMENTOS_CATALOGO = [
         "sigla": "Heróis",
         "cor": "#1565c0",
         "basico": False,
-        "descricao": "Novas classes (Frade, Treinador), variantes, distinções, complicações, poderes e itens.",
+        "descricao": "Nova classe (Treinador), variantes, distinções, complicações, poderes e itens.",
     },
     {
         "id": FONTE_DEUSES,
@@ -46,7 +46,7 @@ SUPLEMENTOS_CATALOGO = [
         "sigla": "Deuses",
         "cor": "#c77800",
         "basico": False,
-        "descricao": "Expansão dos 20 Deuses Maiores, Deuses Menores, poderes concedidos e magias divinas.",
+        "descricao": "Classe Frade, expansão dos 20 Deuses Maiores, Deuses Menores, poderes concedidos e magias divinas.",
     },
     {
         "id": FONTE_ATLAS,
@@ -60,8 +60,9 @@ SUPLEMENTOS_CATALOGO = [
 
 # Mapeamento de fallback para entradas de suplementos já existentes nos catálogos
 _RACAS_HEROIS = {"Duende", "Eiradaan", "Galokk", "Meio-Elfo", "Sátiro"}
+_CLASSES_DEUSES = {"Frade"}
 _CLASSES_HEROIS = {
-    "Frade", "Treinador",
+    "Treinador",
     "Alquimista", "Atleta", "Burguês", "Duelista", "Ermitão",
     "Inovador", "Machado de Pedra", "Magimarcialista", "Necromante",
     "Santo", "Seteiro", "Usurpador", "Vassalo", "Ventanista",
@@ -80,6 +81,8 @@ def inferir_fonte(tipo: str, nome: str, dados: Dict[str, Any]) -> str:
         return FONTE_AMEACAS
 
     if tipo == "classe":
+        if nome in _CLASSES_DEUSES:
+            return FONTE_DEUSES
         if nome in _CLASSES_HEROIS:
             return FONTE_HEROIS
         return FONTE_LIVRO_BASICO
