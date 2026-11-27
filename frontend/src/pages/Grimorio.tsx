@@ -38,7 +38,12 @@ const Grimorio: React.FC = () => {
         return magias.filter(m => {
             const matchBusca = m.nome.toLowerCase().includes(busca.toLowerCase());
             const matchCirculo = filtroCirculo ? m.circulo.toString() === filtroCirculo : true;
-            const matchTipo = filtroTipo ? (m.tipo || 'Universal') === filtroTipo : true;
+            const tipoMagia = m.tipo || 'Universal';
+            const matchTipo = !filtroTipo
+                ? true
+                : filtroTipo === 'Universal'
+                    ? tipoMagia === 'Universal'
+                    : tipoMagia === filtroTipo || tipoMagia === 'Universal';
             const matchEscola = filtroEscola ? m.escola === filtroEscola : true;
             return matchBusca && matchCirculo && matchTipo && matchEscola;
         });

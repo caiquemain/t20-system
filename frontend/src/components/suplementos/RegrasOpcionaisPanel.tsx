@@ -1,16 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { ComplicacaoPersonagem, Personagem } from '../../types';
 import { fetchDadosRegrasOpcionais } from '../../services/api';
+import { EntitySelectorModal, type EntityItem } from '../EntitySelectorModal';
 
 interface Props {
     ficha: Personagem;
     onUpdate: (dados: Partial<Personagem>) => void;
 }
 
+interface ComplicacaoCatalogoItem {
+    nome: string;
+    categoria: string;
+    descricao: string;
+    classe?: string;
+}
+
 export const RegrasOpcionaisPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
     const [catalogo, setCatalogo] = useState<any>(null);
-    const [compSelecionada, setCompSelecionada] = useState('');
-    const [buscaComp, setBuscaComp] = useState('');
+    const [modalCompAberto, setModalCompAberto] = useState(false);
 
     useEffect(() => {
         fetchDadosRegrasOpcionais()
@@ -32,28 +39,58 @@ export const RegrasOpcionaisPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
         });
     };
 
-    const listaComplicacoes = useMemo(() => {
-        if (!catalogo?.complicacoes) return [];
-        const jaTem = new Set(complicacoes.map(c => c.nome));
-        const q = buscaComp.trim().toLowerCase();
-        return Object.keys(catalogo.complicacoes)
-            .filter(n => !jaTem.has(n) && (!q || n.toLowerCase().includes(q)))
-            .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-    }, [catalogo, complicacoes, buscaComp]);
+    // Unifica as 73 complicações oficiais (32 gerais + 22 de classe + 19 de idade)
+    const todasComplicacoes = useMemo<Record<string, ComplicacaoCatalogoItem>>(() => {
+        const mapa: Record<string, ComplicacaoCatalogoItem> = {};
+        if (!catalogo) return mapa;
+        const addDict = (dict: any, categoriaPadrao: string) => {
+            if (!dict || typeof dict !== 'object') return;
+            Object.entries(dict).forEach(([chave, val]: [string, any]) => {
+                const nome = val?.nome || chave;
+                const cat = val?.classe
+                    ? `Restrição de Classe (${val.classe})`
+                    : categoriaPadrao;
+                mapa[nome] = {
+                    nome,
+                    categoria: cat,
+                    descricao: val?.descricao || '',
+                    classe: val?.classe,
+                };
+            });
+        };
+        addDict(catalogo.complicacoes, 'Geral');
+        addDict(catalogo.complicacoes_gerais, 'Complicação Geral');
+        addDict(catalogo.complicacoes_classe, 'Restrição de Classe');
+        addDict(catalogo.complicacoes_idade, 'Complicação de Idade');
+        return mapa;
+    }, [catalogo]);
 
-    const handleAddComp = () => {
-        const alvo = compSelecionada || listaComplicacoes[0];
-        if (!alvo || !catalogo?.complicacoes?.[alvo]) return;
-        const info = catalogo.complicacoes[alvo];
+    const itensModalComplicacoes = useMemo<EntityItem[]>(() => {
+        const jaTem = new Set(complicacoes.map(c => c.nome));
+        return Object.values(todasComplicacoes)
+            .filter(c => !jaTem.has(c.nome))
+            .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+            .map((c): EntityItem => ({
+                nome: c.nome,
+                icone: 'alerta',
+                bonus: c.categoria,
+                descricao: c.descricao,
+                tooltip: `${c.nome} — ${c.categoria}\nDescrição: ${c.descricao}\nBenefício: Concede +1 Poder Geral adicional (Heróis de Arton, Cap. 4).`,
+                fonte: 'Heróis de Arton',
+            }));
+    }, [todasComplicacoes, complicacoes]);
+
+    const handleAddComp = (nomeAlvo: string) => {
+        const info = todasComplicacoes[nomeAlvo];
+        if (!info) return;
         const nova: ComplicacaoPersonagem = {
-            nome: alvo,
+            nome: info.nome,
             descricao: info.descricao || '',
             poder_bonus: '',
             fonte: 'Heróis de Arton',
         };
         onUpdate({ complicacoes: [...complicacoes, nova] });
-        setCompSelecionada('');
-        setBuscaComp('');
+        setModalCompAberto(false);
     };
 
     const handleRemComp = (nome: string) => {
@@ -62,6 +99,7 @@ export const RegrasOpcionaisPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
 
     const papeis = catalogo?.papeis_grupo ? Object.keys(catalogo.papeis_grupo) : [];
     const objetivos = catalogo?.objetivos_heroicos ? Object.keys(catalogo.objetivos_heroicos) : [];
+    const totalComplicacoesCatalogo = Object.keys(todasComplicacoes).length;
 
     return (
         <div className="section-card" style={{ marginBottom: 16 }}>
@@ -130,46 +168,66 @@ export const RegrasOpcionaisPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
             </div>
 
             <div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase' }}>
-                    Complicações ({complicacoes.length}) — cada complicação concede +1 Poder Geral
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                    <input
-                        type="text"
-                        value={buscaComp}
-                        onChange={e => setBuscaComp(e.target.value)}
-                        placeholder="Filtrar 73 complicações..."
-                        style={{ flex: '1 1 160px', background: '#141418', border: '1px solid #333', color: '#eee', borderRadius: 4, padding: '6px 10px', fontSize: '0.82rem' }}
-                    />
-                    <select
-                        value={compSelecionada}
-                        onChange={e => setCompSelecionada(e.target.value)}
-                        style={{ flex: '2 1 200px', background: '#141418', border: '1px solid #333', color: '#eee', borderRadius: 4, padding: '6px 10px', fontSize: '0.82rem' }}
-                    >
-                        <option value="">Selecione uma complicação ({listaComplicacoes.length})</option>
-                        {listaComplicacoes.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase' }}>
+                        Complicações ({complicacoes.length}) — cada complicação concede +1 Poder Geral
+                    </div>
                     <button
                         type="button"
-                        onClick={handleAddComp}
-                        disabled={listaComplicacoes.length === 0}
-                        style={{ background: '#ffd700', color: '#111', border: 'none', borderRadius: 4, padding: '6px 12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.82rem' }}
+                        onClick={() => setModalCompAberto(true)}
+                        disabled={itensModalComplicacoes.length === 0}
+                        style={{
+                            background: '#ffd700',
+                            color: '#111',
+                            border: 'none',
+                            borderRadius: 6,
+                            padding: '7px 14px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            fontSize: '0.82rem',
+                        }}
                     >
-                        + Adicionar
+                        + Escolher Complicação ({totalComplicacoesCatalogo})
                     </button>
                 </div>
+
                 {complicacoes.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {complicacoes.map(c => (
-                            <div key={c.nome} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, background: '#16161c', border: '1px solid #2d2d36', borderRadius: 4, padding: '6px 10px', fontSize: '0.8rem' }}>
+                            <div
+                                key={c.nome}
+                                style={{
+                                    background: '#16161c',
+                                    border: '1px solid rgba(255, 183, 77, 0.35)',
+                                    borderRadius: 6,
+                                    padding: '8px 12px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                    gap: 10,
+                                }}
+                            >
                                 <div>
-                                    <strong style={{ color: '#ffab91' }}>{c.nome}</strong>
-                                    {c.descricao && <span style={{ color: '#94a3b8', marginLeft: 8 }}>{c.descricao}</span>}
+                                    <div style={{ fontWeight: 'bold', color: '#ffb74d', fontSize: '0.88rem' }}>
+                                        {c.nome}
+                                    </div>
+                                    <div style={{ fontSize: '0.78rem', color: '#cbd5e1', marginTop: 3, lineHeight: 1.4 }}>
+                                        {c.descricao || todasComplicacoes[c.nome]?.descricao}
+                                    </div>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => handleRemComp(c.nome)}
-                                    style={{ background: 'transparent', border: '1px solid #555', color: '#ef9a9a', borderRadius: 4, padding: '2px 7px', cursor: 'pointer', fontSize: '0.72rem' }}
+                                    style={{
+                                        background: '#3a2222',
+                                        color: '#ff8a80',
+                                        border: '1px solid #663333',
+                                        borderRadius: 4,
+                                        padding: '4px 9px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.76rem',
+                                        whiteSpace: 'nowrap',
+                                    }}
                                 >
                                     Remover
                                 </button>
@@ -178,6 +236,15 @@ export const RegrasOpcionaisPanel: React.FC<Props> = ({ ficha, onUpdate }) => {
                     </div>
                 )}
             </div>
+
+            <EntitySelectorModal
+                aberto={modalCompAberto}
+                titulo={`Escolher Complicação (${totalComplicacoesCatalogo})`}
+                iconeTitulo="alerta"
+                itens={itensModalComplicacoes}
+                onConfirm={handleAddComp}
+                onFechar={() => setModalCompAberto(false)}
+            />
         </div>
     );
 };

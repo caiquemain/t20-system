@@ -18,7 +18,7 @@ interface GrimorioModalProps {
 }
 
 export const GrimorioModal: React.FC<GrimorioModalProps> = ({
-    isOpen, onClose, onAddMagia,
+    ficha, isOpen, onClose, onAddMagia,
     dadosMagias, limiteMagias, magiasConhecidas, pmAtual, pmMaximo, circuloMaximo
 }) => {
     const [busca, setBusca] = useState('');
@@ -51,14 +51,68 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
         limiteMagias !== null && limiteMagias !== undefined &&
         magiasManuais.length >= limiteMagias;
 
+    // Trava T20 por círculo/nível: ex. Frade nv 6 libera 2º círculo no nv 5 → máx 2 magias de 2º círculo
+    const limitesPorCirculo: Record<string, number> = ficha?.combate?.limite_magias_por_circulo || {};
+    const motivoBloqueioCotaCirculo = (circulo: number): string | null => {
+        if (circulo < 2) return null;
+        for (let c = 2; c <= circulo; c++) {
+            const maxC = limitesPorCirculo[String(c)] ?? (limitesPorCirculo as any)[c];
+            if (typeof maxC === 'number') {
+                const atuaisC = magiasManuais.filter(m => (m.circulo || 1) >= c).length;
+                if (atuaisC >= maxC) {
+                    return `Limite de magias de ${c}º círculo ou maior atingido para o seu nível (${atuaisC}/${maxC}). As demais magias aprendidas antes de liberar o ${c}º círculo precisam ser de círculo inferior.`;
+                }
+            }
+        }
+        return null;
+    };
+
+    // Regra oficial: Feiticeiro de Linhagem Abençoada (Deuses de Arton, p. 33)
+    const habLinhagemAbencoada = (ficha?.habilidades || []).find(
+        (h: any) => (h.nome || '').trim().toLowerCase() === 'linhagem abençoada'
+    );
+    const circulosDivinosAbencoado: number[] | null = habLinhagemAbencoada
+        ? (
+            Array.isArray(habLinhagemAbencoada.efeitos?.circulos_divinos_feiticeiro)
+                ? habLinhagemAbencoada.efeitos.circulos_divinos_feiticeiro
+                : (ficha?.habilidades || []).some((h: any) => h.nome === 'Herança Superior')
+                    ? [1, 2, 3, 4, 5]
+                    : (ficha?.habilidades || []).some((h: any) => h.nome === 'Herança Aprimorada')
+                        ? [1, 2, 3]
+                        : [1]
+        )
+        : null;
+    const maxCirculoDivinoAbencoado = circulosDivinosAbencoado ? Math.max(...circulosDivinosAbencoado) : 0;
+
+    const motivoBloqueioDivinaAbencoado = (m: Magia): string | null => {
+        if (!circulosDivinosAbencoado) return null;
+        const tipoM = (m.tipo || 'Universal').toLowerCase();
+        if (tipoM !== 'divina') return null;
+        const circ = m.circulo || 1;
+        if (!circulosDivinosAbencoado.includes(circ)) {
+            const req = circ <= 3 ? 'Herança Aprimorada' : 'Herança Superior';
+            return `Linhagem Abençoada permite magias divinas até o ${maxCirculoDivinoAbencoado}º círculo. Para aprender ${m.nome} (${circ}º círculo divina), é necessário o poder ${req}.`;
+        }
+        return null;
+    };
+
     const todasMagias = Object.values(dadosMagias);
     const magiasFiltradas = todasMagias.filter(m => {
         const matchNome = m.nome.toLowerCase().includes(busca.toLowerCase());
         const matchCirculo = filtroCirculo === 'todos' || m.circulo === filtroCirculo;
         const tipoAtual = m.tipo || 'Universal';
-        const matchTipo = filtroTipo === 'todos' || tipoAtual === filtroTipo;
+        const matchTipo =
+            filtroTipo === 'todos'
+                ? true
+                : filtroTipo === 'Universal'
+                    ? tipoAtual === 'Universal'
+                    : tipoAtual === filtroTipo || tipoAtual === 'Universal';
         const naoConhecida = !magiasConhecidas.some(k => k.nome === m.nome);
-        const acessivel = !filtroAcessiveis || (m.circulo || 1) <= circuloAtual;
+        const acessivel = !filtroAcessiveis || (
+            (m.circulo || 1) <= circuloAtual
+            && !motivoBloqueioCotaCirculo(m.circulo || 1)
+            && !motivoBloqueioDivinaAbencoado(m)
+        );
         return matchNome && matchCirculo && matchTipo && naoConhecida && acessivel;
     }).sort((a, b) => a.circulo - b.circulo || a.nome.localeCompare(b.nome));
 
@@ -69,6 +123,16 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
             alert(`${magiaSelecionada.nome} é uma magia de ${circulo}º círculo.\nSeu círculo máximo atual é ${circuloAtual}º (definido pela sua classe e nível).`);
             return;
         }
+        const erroDivina = motivoBloqueioDivinaAbencoado(magiaSelecionada);
+        if (erroDivina) {
+            alert(erroDivina);
+            return;
+        }
+        const erroCota = motivoBloqueioCotaCirculo(circulo);
+        if (erroCota) {
+            alert(erroCota);
+            return;
+        }
         if (limiteAtingido) {
             alert(`Você já conhece o máximo de magias para o seu nível (${limiteMagias}).\nNovas magias vêm com subida de nível ou poderes como Conhecimento Mágico.`);
             return;
@@ -77,7 +141,13 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
         setMagiaSelecionada(null);
     };
 
-    const magiaEhIlegal = !!magiaSelecionada && (magiaSelecionada.circulo || 1) > circuloAtual;
+    const erroDivinaSelecionada = magiaSelecionada ? motivoBloqueioDivinaAbencoado(magiaSelecionada) : null;
+    const erroCotaSelecionada = magiaSelecionada ? motivoBloqueioCotaCirculo(magiaSelecionada.circulo || 1) : null;
+    const magiaEhIlegal = !!magiaSelecionada && (
+        (magiaSelecionada.circulo || 1) > circuloAtual
+        || Boolean(erroCotaSelecionada)
+        || Boolean(erroDivinaSelecionada)
+    );
     const botaoBloqueado = !magiaSelecionada || magiaEhIlegal || limiteAtingido;
     const selectedTypeColor = getTypeColor(magiaSelecionada?.tipo);
     const selectedSchoolColor = getSchoolColor(magiaSelecionada?.escola);
@@ -146,6 +216,45 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                         />
                         Só acessíveis
                     </label>
+                    {[2, 3, 4, 5].map(c => {
+                        const maxC = limitesPorCirculo[String(c)] ?? (limitesPorCirculo as any)[c];
+                        if (typeof maxC !== 'number' || c > circuloAtual) return null;
+                        const atuaisC = magiasManuais.filter(m => (m.circulo || 1) >= c).length;
+                        const cheio = atuaisC >= maxC;
+                        return (
+                            <span
+                                key={c}
+                                title={`Máximo de magias de ${c}º círculo ou superior permitidas no seu nível atual`}
+                                style={{
+                                    fontSize: '0.76rem',
+                                    padding: '4px 9px',
+                                    borderRadius: 999,
+                                    background: cheio ? 'rgba(239, 68, 68, 0.16)' : 'rgba(56, 189, 248, 0.14)',
+                                    border: `1px solid ${cheio ? 'rgba(239, 68, 68, 0.45)' : 'rgba(56, 189, 248, 0.35)'}`,
+                                    color: cheio ? '#fca5a5' : '#bae6fd',
+                                    fontWeight: 600,
+                                }}
+                            >
+                                {c}º+ círc: {atuaisC}/{maxC} {cheio ? '🔒' : ''}
+                            </span>
+                        );
+                    })}
+                    {circulosDivinosAbencoado && (
+                        <span
+                            title="Linhagem Abençoada (Deuses de Arton p. 33): Básica = divinas de 1º círculo; Aprimorada = até 3º; Superior = até 5º."
+                            style={{
+                                fontSize: '0.76rem',
+                                padding: '4px 9px',
+                                borderRadius: 999,
+                                background: 'rgba(255, 215, 0, 0.14)',
+                                border: '1px solid rgba(255, 215, 0, 0.45)',
+                                color: '#fde68a',
+                                fontWeight: 600,
+                            }}
+                        >
+                            ✨ Abençoada: Divinas até {maxCirculoDivinoAbencoado}º círc.
+                        </span>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -159,7 +268,7 @@ export const GrimorioModal: React.FC<GrimorioModalProps> = ({
                                 const isSelected = magiaSelecionada?.nome === m.nome;
                                 const schoolColor = getSchoolColor(m.escola);
                                 const circulo = m.circulo || 1;
-                                const travadaCirculo = circulo > circuloAtual;
+                                const travadaCirculo = circulo > circuloAtual || Boolean(motivoBloqueioCotaCirculo(circulo)) || Boolean(motivoBloqueioDivinaAbencoado(m));
 
                                 return (
                                     <div

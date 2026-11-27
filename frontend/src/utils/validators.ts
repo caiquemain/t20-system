@@ -6,16 +6,21 @@ interface ValidationResult {
 }
 
 const CLASSES_COM_HABILIDADE_MAGIAS = new Set([
-    'arcanista', 'bardo', 'clérigo', 'clerigo', 'druida', 'bruxo', 'mago', 'feiticeiro',
+    'arcanista', 'bardo', 'clérigo', 'clerigo', 'druida', 'frade', 'ermitão', 'ermitao', 'bruxo', 'mago', 'feiticeiro',
+]);
+
+const CLASSES_MAGIAS_DIVINAS = new Set([
+    'clérigo', 'clerigo', 'druida', 'frade', 'ermitão', 'ermitao',
 ]);
 
 function temHabilidadeMagias(ficha: Personagem): boolean {
     const porClasse = (ficha.classes || []).some(c =>
         CLASSES_COM_HABILIDADE_MAGIAS.has((c.nome || '').trim().toLowerCase())
     );
-    const porHabilidade = (ficha.habilidades || []).some(h =>
-        (h.nome || '').trim().toLowerCase() === 'magias'
-    );
+    const porHabilidade = (ficha.habilidades || []).some(h => {
+        const n = (h.nome || '').trim().toLowerCase();
+        return n === 'magias' || n.startsWith('magias (');
+    });
     return porClasse || porHabilidade;
 }
 
@@ -33,6 +38,15 @@ function podeLancarMagias(ficha: Personagem): boolean {
     );
 }
 
+function podeLancarMagiasDivinas(ficha: Personagem): boolean {
+    const porClasse = (ficha.classes || []).some(c =>
+        CLASSES_MAGIAS_DIVINAS.has((c.nome || '').trim().toLowerCase())
+    );
+    const linhagemAbencoada = (ficha.habilidades || []).some(h => (h.nome || '').trim().toLowerCase() === 'linhagem abençoada');
+    const temMagiaDivina = (ficha.combate?.magias || []).some(m => (m.tipo || '').toLowerCase() === 'divina');
+    return porClasse || linhagemAbencoada || temMagiaDivina;
+}
+
 export const verificarRequisito = (
     ficha: Personagem,
     req: string,
@@ -41,7 +55,49 @@ export const verificarRequisito = (
 ): ValidationResult => {
     const reqLower = req.toLowerCase().trim();
 
-    // 0. Requisitos de Magia ("Lançar magias", "Habilidade Magias", "Lançar magias de Xº círculo")
+    // 0a. Requisitos de Raça (Ex: "Raça: Duende, Eiradaan, Sílfide", "Raça: Várias", "Não humano")
+    if (reqLower.startsWith('raça:') || reqLower.startsWith('raca:')) {
+        const bruto = req.split(':').slice(1).join(':').trim();
+        const opcoes = bruto.split(/,|\s+ou\s+/i).map(s => s.trim().toLowerCase()).filter(Boolean);
+        if (opcoes.includes('várias') || opcoes.includes('varias') || opcoes.includes('qualquer')) {
+            return { ok: true, msg: 'Ok' };
+        }
+        const racaAtual = (ficha.cabecalho?.raca || '').trim().toLowerCase();
+        const okRaca = Boolean(racaAtual) && opcoes.some(op => {
+            if (racaAtual === op) return true;
+            // Ex.: "Suraggel" casa com "Suraggel (Aggelus)" e "Suraggel (Sulfure)"; "Moreau do Lobo" casa com "Moreau"
+            if (racaAtual.startsWith(op) || op.startsWith(racaAtual)) return true;
+            if (op === 'sereia/tritão' && (racaAtual.includes('sereia') || racaAtual.includes('tritão') || racaAtual.includes('tritao'))) return true;
+            return false;
+        });
+        return {
+            ok: okRaca,
+            msg: `Requer Raça: ${bruto} (Atual: ${ficha.cabecalho?.raca || 'Nenhuma'})`,
+        };
+    }
+
+    if (reqLower === 'não humano' || reqLower === 'nao humano') {
+        const racaAtual = (ficha.cabecalho?.raca || '').trim().toLowerCase();
+        return {
+            ok: Boolean(racaAtual) && racaAtual !== 'humano',
+            msg: 'Requer raça não humana',
+        };
+    }
+
+    // 0b. Requisitos de Magia ("Lançar magias", "Lançar magias divinas", "Habilidade Magias", "Lançar magias de Xº círculo")
+    if (reqLower === 'lançar magias divinas' || reqLower === 'lancar magias divinas') {
+        return {
+            ok: podeLancarMagiasDivinas(ficha),
+            msg: 'Requer: Lançar magias divinas',
+        };
+    }
+
+    if (reqLower === 'possuir um familiar') {
+        const temFam = (ficha.habilidades || []).some(h => (h.nome || '').toLowerCase().includes('familiar'))
+            || poderesEscolhidos.some(p => p.toLowerCase().includes('familiar'));
+        return { ok: temFam, msg: 'Requer: Possuir um familiar' };
+    }
+
     const matchCirculo = reqLower.match(/lançar magias de (\d+)[º°o]?\s*c[íi]rculo|lancar magias de (\d+)[º°o]?\s*c[íi]rculo/);
     if (matchCirculo) {
         const circReq = parseInt(matchCirculo[1] || matchCirculo[2], 10);

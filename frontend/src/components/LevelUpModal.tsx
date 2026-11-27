@@ -76,17 +76,23 @@ function calcularPendencias(ficha: Personagem): PendenciaItem[] {
         });
     }
 
-    // 3. Devoção (Poder Concedido)
+    // 3. Devoção (Poderes Concedidos: 1 base + 1 Devoto Fiel + 1 Fundamentalista)
     const deus = (ficha.cabecalho?.deus || '').trim();
     if (deus && !['panteão', 'panteao', 'arton', 'bem'].includes(deus.toLowerCase())) {
-        const temPoderDevocao = habs.some(
+        const classesDevotoFiel = ['Clérigo', 'Druida', 'Paladino', 'Frade', 'Ermitão'];
+        const temDevotoFiel =
+            classesDevotoFiel.includes(classe) ||
+            habs.some(h => (h.nome || '').toLowerCase().includes('devoto fiel'));
+        const esperadosDevocao = 1 + (temDevotoFiel ? 1 : 0) + (ficha.cabecalho?.fundamentalista ? 1 : 0);
+        const poderesDevocao = habs.filter(
             h => (h.tipo || '').toLowerCase().includes('concedido') || (h.fonte || '').toLowerCase().includes('devoção')
-        );
-        if (!temPoderDevocao) {
+        ).length;
+        if (poderesDevocao < esperadosDevocao) {
+            const faltamDev = esperadosDevocao - poderesDevocao;
             lista.push({
                 id: 'devocao',
-                titulo: `Poder Concedido (${deus})`,
-                detalhe: `Você é devoto de ${deus}, mas ainda não escolheu seu Poder Concedido.`,
+                titulo: `Poderes Concedidos — ${deus} (${poderesDevocao}/${esperadosDevocao})`,
+                detalhe: `Falta escolher ${faltamDev} poder(es) concedido(s) de ${deus}.`,
                 acaoLabel: 'Escolher Devoção',
                 acao: 'poderes',
                 resolvido: false,
